@@ -1,0 +1,33 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from 'src/routes/authRoutes';
+import projectRoutes from 'src/routes/projectRoutes';
+import { errorHandler } from 'src/middleware/errorHandler';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use('/auth', authRoutes);
+app.use('/projects', projectRoutes);
+
+app.use('/health', (req, res) => {
+  return res.status(200).json({
+    message: 'Server is running',
+  });
+});
+
+// Error handling middleware
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+export default app;

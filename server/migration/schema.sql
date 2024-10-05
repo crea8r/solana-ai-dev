@@ -17,7 +17,6 @@ CREATE TABLE Organisation (
     id UUID PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    password TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -75,6 +74,7 @@ CREATE TABLE Task (
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     creator_id UUID REFERENCES Creator(id),
+    result TEXT,
     status VARCHAR(50) CHECK (status IN ('queued', 'doing', 'finished'))
 );
 
