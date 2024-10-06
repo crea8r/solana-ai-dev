@@ -10,47 +10,50 @@ import CodePage from './pages/code/CodePage';
 import DocPage from './pages/DocPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
+import { ProjectProvider } from './contexts/ProjectContext';
 
 const App: React.FC = () => {
   return (
     <ChakraProvider>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path='/' element={<LandingPage />} />
-            <Route path='/login' element={<LoginPage />} />
-            <Route path='/register' element={<RegisterPage />} />
-            <Route
-              path='/design'
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <DesignPage />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/code'
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <CodePage />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/doc'
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <DocPage />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <ProjectProvider>
+            <Routes>
+              <Route path='/' element={<LandingPage />} />
+              <Route path='/login' element={<LoginPage />} />
+              <Route path='/register' element={<RegisterPage />} />
+              <Route
+                path='/design'
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <DesignPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/code'
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <CodePage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/doc'
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <DocPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </ProjectProvider>
         </AuthProvider>
       </Router>
     </ChakraProvider>

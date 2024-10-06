@@ -8,46 +8,33 @@ import { FaFile, FaFolder } from 'react-icons/fa';
 export interface FileTreeItemType {
   name: string;
   ext?: string;
-  type: 'directory' | 'file';
+  type?: 'directory' | 'file';
   children?: FileTreeItemType[];
-  path: string;
+  path?: string;
 }
-const mockFileTree = [
-  {
-    name: 'src',
-    type: 'directory',
-    path: 'src',
-    children: [
-      { name: 'main.rs', type: 'file', path: 'src/main.rs', ext: 'rs' },
-      { name: 'lib.rs', type: 'file', path: 'src/lib.rs', ext: 'rs' },
-    ],
-  },
-  {
-    name: 'tests',
-    type: 'folder',
-    path: 'tests',
-    children: [
-      {
-        name: 'integration_tests.rs',
-        type: 'file',
-        ext: 'rs',
-        path: 'tests/integration_tests.rs',
-      },
-    ],
-  },
-  { name: 'Cargo.toml', type: 'file', path: 'Cargo.toml', ext: 'toml' },
-] as FileTreeItemType[];
+const mockFileTree = {
+  name: 'src',
+  type: 'directory',
+  path: 'src',
+  children: [
+    { name: 'main.rs', type: 'file', path: 'src/main.rs', ext: 'rs' },
+    { name: 'lib.rs', type: 'file', path: 'src/lib.rs', ext: 'rs' },
+  ],
+} as FileTreeItemType;
 
 export interface FileTreeItemProps {
   item: FileTreeItemType;
-  onSelectFile: (fileName: string) => void;
+  onSelectFile: (item: FileTreeItemType) => void;
 }
 const FileTreeItem = ({ item, onSelectFile }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleFolder = () => setIsOpen(!isOpen);
 
-  if (item.type === 'directory') {
+  if (
+    item.type === 'directory' ||
+    (item.children && item.children.length > 0)
+  ) {
     return (
       <VStack align='stretch' ml={2}>
         <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
@@ -70,7 +57,7 @@ const FileTreeItem = ({ item, onSelectFile }: FileTreeItemProps) => {
         alignItems='center'
         ml={2}
         cursor='pointer'
-        onClick={() => onSelectFile(item.name)}
+        onClick={() => onSelectFile(item)}
       >
         <FaFile color='#87CEFA' />
         <Text ml={2}>{item.name}</Text>
@@ -81,15 +68,14 @@ const FileTreeItem = ({ item, onSelectFile }: FileTreeItemProps) => {
 
 type FileTreeProps = {
   onSelectFile: any;
+  files?: FileTreeItemType;
 };
 
-const FileTree = ({ onSelectFile }: FileTreeProps) => {
+const FileTree = ({ onSelectFile, files = mockFileTree }: FileTreeProps) => {
   return (
     <VStack align='stretch' spacing={2} p={4}>
       <Text fontWeight='bold'>Project Files</Text>
-      {mockFileTree.map((item, index) => (
-        <FileTreeItem key={index} item={item} onSelectFile={onSelectFile} />
-      ))}
+      <FileTreeItem item={files} onSelectFile={onSelectFile} />
     </VStack>
   );
 };

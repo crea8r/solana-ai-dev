@@ -24,18 +24,37 @@ import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
 import promptAI from '../../services/prompt';
+import LoadingModal from '../../components/LoadingModal';
+import { useProject } from '../../contexts/ProjectContext';
+import { FileTreeItemType } from '../../components/FileTree';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
+function setFileTreePaths(
+  item: FileTreeItemType,
+  parentPath: string = ''
+): void {
+  const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
+  item.path = currentPath;
+
+  if (item.children) {
+    for (const child of item.children) {
+      setFileTreePaths(child, currentPath);
+    }
+  }
+}
+
 const DesignPage: React.FC = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
+  const { project, setProject } = useProject();
+  const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
+  const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     initGA(GA_MEASUREMENT_ID);
     logPageView();
@@ -134,16 +153,22 @@ const DesignPage: React.FC = () => {
   };
 
   const handlePrompt = async (nodes: Node[], edges: Edge[]) => {
-    console.log('start handle prompt');
     const ai_prompt = genStructure(nodes, edges);
     setPromptString(ai_prompt);
-    const choices = await promptAI(ai_prompt);
-    console.log('choices:', choices);
     setIsLoading(true);
+    const choices = await promptAI(ai_prompt);
     try {
       if (choices && choices.length > 0) {
-        const files = JSON.parse(choices[0].message?.content);
-        console.log('files:', files);
+        const files = JSON.parse(
+          choices[0].message?.content
+        ) as FileTreeItemType;
+        setFileTreePaths(files);
+
+        setProject({
+          nodes,
+          edges,
+          files,
+        });
       }
     } catch (e) {
     } finally {
@@ -219,17 +244,7 @@ const DesignPage: React.FC = () => {
           Help
         </Button>
       </Flex>
-      <Modal isOpen={isLoading} onClose={() => setIsLoading(false)}>
-        <ModalOverlay />
-        <Flex
-          direction='column'
-          alignItems='center'
-          justifyContent='center'
-          height='100vh'
-        >
-          <Spinner size='xl' />
-        </Flex>
-      </Modal>
+      <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
     </>
   );
 };

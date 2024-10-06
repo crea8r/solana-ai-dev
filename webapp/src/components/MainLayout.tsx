@@ -3,6 +3,7 @@ import { Box, VStack, Icon, Tooltip, Flex } from '@chakra-ui/react';
 import { FaCog, FaFile, FaComments, FaUser } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useProject } from '../contexts/ProjectContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,10 +13,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { project } = useProject();
 
   const menuItems = [
     { icon: FaCog, label: 'System Design', path: '/design' },
-    { icon: FaFile, label: 'Coding', path: '/code' },
+    { icon: FaFile, label: 'Coding', path: '/code', disabled: !project?.files },
     { icon: FaComments, label: 'Documentation', path: '/doc' },
     { icon: FaUser, label: 'User Account', path: '/account' },
   ];
@@ -36,14 +38,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {menuItems.map((item) => (
             <Tooltip key={item.path} label={item.label} placement='right'>
               <Box
-                as='button'
-                onClick={() => handleNavigation(item.path)}
+                as={!item.disabled ? 'button' : 'text'}
+                onClick={
+                  !item.disabled ? () => handleNavigation(item.path) : () => {}
+                }
                 p={2}
                 borderRadius='md'
                 bg={
                   location.pathname === item.path ? 'blue.500' : 'transparent'
                 }
-                _hover={{ bg: 'blue.600' }}
+                _hover={{ bg: !item.disabled ? 'blue.600' : 'tranperant' }}
               >
                 <Icon as={item.icon} w={6} h={6} color='white' />
               </Box>
