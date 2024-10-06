@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, ChakraProvider, Flex } from '@chakra-ui/react';
+import { Button, Flex, Modal, ModalOverlay, Spinner } from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -12,16 +12,18 @@ import {
   applyNodeChanges,
   MarkerType,
 } from 'react-flow-renderer';
-import TopPanel from '../components/TopPanel';
-import Toolbox from '../components/Toolbox';
-import Canvas from '../components/Canvas';
-import PropertyPanel from '../components/PropertyPanel';
-import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { prompt } from '../utils/promptFactory';
-import PromptModal from '../components/PromptModal';
-import WalkthroughDialog from '../components/WalkthroughDialog';
+import TopPanel from './TopPanel';
+import Toolbox from '../../components/Toolbox';
+import Canvas from '../../components/Canvas';
+import PropertyPanel from '../../components/PropertyPanel';
+import { ToolboxItem } from '../../interfaces/ToolboxItem';
+import { prompt } from '../../utils/promptFactory';
+import PromptModal from '../../components/PromptModal';
+import WalkthroughDialog from '../../components/WalkthroughDialog';
 import { FaQuestion } from 'react-icons/fa';
-import { initGA, logPageView } from '../utils/analytics';
+import { initGA, logPageView } from '../../utils/analytics';
+import genStructure from '../../prompts/genStructure';
+import promptAI from '../../services/prompt';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
@@ -33,7 +35,7 @@ const DesignPage: React.FC = () => {
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     initGA(GA_MEASUREMENT_ID);
     logPageView();
@@ -131,10 +133,22 @@ const DesignPage: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
   };
 
-  const handlePrompt = (nodes: Node[], edges: Edge[]) => {
-    const ai_prompt = prompt(nodes, edges);
+  const handlePrompt = async (nodes: Node[], edges: Edge[]) => {
+    console.log('start handle prompt');
+    const ai_prompt = genStructure(nodes, edges);
     setPromptString(ai_prompt);
-    setIsPromptModalOpen(true);
+    const choices = await promptAI(ai_prompt);
+    console.log('choices:', choices);
+    setIsLoading(true);
+    try {
+      if (choices && choices.length > 0) {
+        const files = JSON.parse(choices[0].message?.content);
+        console.log('files:', files);
+      }
+    } catch (e) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCloseWalkthrough = () => {
@@ -154,7 +168,7 @@ const DesignPage: React.FC = () => {
   }, []);
 
   return (
-    <ChakraProvider>
+    <>
       <PromptModal
         isOpen={isPromptModalOpen}
         onClose={() => setIsPromptModalOpen(false)}
@@ -205,7 +219,18 @@ const DesignPage: React.FC = () => {
           Help
         </Button>
       </Flex>
-    </ChakraProvider>
+      <Modal isOpen={isLoading} onClose={() => setIsLoading(false)}>
+        <ModalOverlay />
+        <Flex
+          direction='column'
+          alignItems='center'
+          justifyContent='center'
+          height='100vh'
+        >
+          <Spinner size='xl' />
+        </Flex>
+      </Modal>
+    </>
   );
 };
 

@@ -6,6 +6,7 @@ import projectRoutes from 'src/routes/projectRoutes';
 import fileRoutes from 'src/routes/fileRoutes';
 import orgRoutes from 'src/routes/orgRoutes';
 import taskRoutes from 'src/routes/taskRoutes';
+import aiRoutes from 'src/routes/aiRoutes';
 import { errorHandler } from 'src/middleware/errorHandler';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use('/projects', projectRoutes);
 app.use('/files', fileRoutes);
 app.use('/org', orgRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/ai', aiRoutes);
 
 app.use('/health', (req, res) => {
   return res.status(200).json({

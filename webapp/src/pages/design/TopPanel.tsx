@@ -11,7 +11,7 @@ import {
   Avatar,
 } from '@chakra-ui/react';
 import { FaCog } from 'react-icons/fa';
-import { logEvent } from '../utils/analytics';
+import { logEvent } from '../../utils/analytics';
 
 interface TopPanelProps {
   generatePrompt: () => void;
@@ -27,23 +27,24 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
     >
       <Flex>
         <Menu>
-          <MenuButton as={Button} mr={2} isDisabled={true} title='Coming soon'>
-            File
+          <MenuButton as={Button} mr={2}>
+            Project
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Load')}>Load</MenuItem>
-            <MenuItem onClick={() => console.log('New project')}>
-              New project
-            </MenuItem>
+            <MenuItem onClick={() => console.log('Load')}>Open</MenuItem>
+            <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
+            <MenuItem onClick={() => console.log('New project')}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button} isDisabled={true} title='Coming soon'>
-            Edit
-          </MenuButton>
+          <MenuButton as={Button}>Team</MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
-            <MenuItem onClick={() => console.log('Edit')}>Edit</MenuItem>
+            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>
+              Manage
+            </MenuItem>
+            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>
+              Invite
+            </MenuItem>
           </MenuList>
         </Menu>
         <Button

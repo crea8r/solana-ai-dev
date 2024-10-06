@@ -56,16 +56,12 @@ export const deleteProjectFolder = async (
     await fs.promises.rm(projectPath, { recursive: true, force: true });
     await updateTaskStatus(
       taskId,
-      'finished',
+      'succeed',
       'Project folder deleted successfully'
     );
   } catch (error) {
     console.error('Error deleting project folder:', error);
-    await updateTaskStatus(
-      taskId,
-      'finished',
-      'Failed to delete project folder'
-    );
+    await updateTaskStatus(taskId, 'failed', 'Failed to delete project folder');
   }
 };
 
@@ -130,33 +126,22 @@ export const startGenerateFileTreeTask = async (
   rootPath: string,
   creatorId: string
 ): Promise<string> => {
-  const client = await pool.connect();
   try {
-    const taskId = uuidv4();
-    await client.query(
-      'INSERT INTO Task (id, name, created_at, creator_id, status) VALUES ($1, $2, NOW(), $3, $4)',
-      [taskId, 'Generate File Tree', creatorId, 'doing']
-    );
-
+    const taskId = await createTask('Generate File Tree', creatorId, projectId);
     // Start the file tree generation process in a separate thread
     setImmediate(async () => {
-      const client1 = await pool.connect();
       try {
         const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
         const fileTree = await generateFileTree(projectPath);
         const result = JSON.stringify(fileTree);
-        await client1.query(
-          'UPDATE Task SET status = $1, result = $2 WHERE id = $3',
-          ['finished', result, taskId]
-        );
+        await updateTaskStatus(taskId, 'succeed', result);
       } catch (error) {
         console.error('Error generating file tree:', error);
-        await client1.query(
-          'UPDATE Task SET status = $1, result = $2 WHERE id = $3',
-          ['finished', 'Failed to generate file tree', taskId]
+        await updateTaskStatus(
+          taskId,
+          'failed',
+          'Failed to generate file tree'
         );
-      } finally {
-        client1.release();
       }
     });
 
@@ -164,8 +149,6 @@ export const startGenerateFileTreeTask = async (
   } catch (error) {
     console.error('Error starting generate file tree task:', error);
     throw new AppError('Failed to start generate file tree task', 500);
-  } finally {
-    client.release();
   }
 };
 
@@ -186,10 +169,10 @@ export const startGetFileContentTask = async (
       );
       console.log('Reading file:', fullPath);
       const content = await fs.promises.readFile(fullPath, 'utf-8');
-      await updateTaskStatus(taskId, 'finished', content);
+      await updateTaskStatus(taskId, 'succeed', content);
     } catch (error) {
       console.error('Error reading file:', error);
-      await updateTaskStatus(taskId, 'finished', 'Failed to read file');
+      await updateTaskStatus(taskId, 'failed', 'Failed to read file');
     }
   });
 
@@ -214,10 +197,10 @@ export const startCreateFileTask = async (
       );
       await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
       await fs.promises.writeFile(fullPath, content, 'utf-8');
-      await updateTaskStatus(taskId, 'finished', 'File created successfully');
+      await updateTaskStatus(taskId, 'succeed', 'File created successfully');
     } catch (error) {
       console.error('Error creating file:', error);
-      await updateTaskStatus(taskId, 'finished', 'Failed to create file');
+      await updateTaskStatus(taskId, 'failed', 'Failed to create file');
     }
   });
 
@@ -241,10 +224,10 @@ export const startUpdateFileTask = async (
         filePath
       );
       await fs.promises.writeFile(fullPath, content, 'utf-8');
-      await updateTaskStatus(taskId, 'finished', 'File updated successfully');
+      await updateTaskStatus(taskId, 'succeed', 'File updated successfully');
     } catch (error) {
       console.error('Error updating file:', error);
-      await updateTaskStatus(taskId, 'finished', 'Failed to update file');
+      await updateTaskStatus(taskId, 'failed', 'Failed to update file');
     }
   });
 
@@ -267,10 +250,10 @@ export const startDeleteFileTask = async (
         filePath
       );
       await fs.promises.unlink(fullPath);
-      await updateTaskStatus(taskId, 'finished', 'File deleted successfully');
+      await updateTaskStatus(taskId, 'succeed', 'File deleted successfully');
     } catch (error) {
       console.error('Error deleting file:', error);
-      await updateTaskStatus(taskId, 'finished', 'Failed to delete file');
+      await updateTaskStatus(taskId, 'failed', 'Failed to delete file');
     }
   });
 

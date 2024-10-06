@@ -19,7 +19,7 @@ const runCommand = async (
       } else {
         result = `Stdout: ${stdout}\n\nStderr: ${stderr}`;
       }
-      await updateTaskStatus(taskId, 'finished', result);
+      await updateTaskStatus(taskId, 'failed', result);
       resolve();
     });
   });
@@ -68,7 +68,7 @@ export const startAnchorBuildTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
       await runCommand('anchor build', projectPath, taskId);
     } catch (error: any) {
-      await updateTaskStatus(taskId, 'finished', `Error: ${error.message}`);
+      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
     }
   });
 
@@ -87,7 +87,7 @@ export const startAnchorTestTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
       await runCommand('anchor test', projectPath, taskId);
     } catch (error: any) {
-      await updateTaskStatus(taskId, 'finished', `Error: ${error.message}`);
+      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
     }
   });
 

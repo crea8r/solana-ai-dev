@@ -87,7 +87,6 @@ export const getTaskStatus = async (
   if (!userId || !orgId) {
     return next(new AppError('User information not found', 400));
   }
-
   try {
     const result = await pool.query(
       `

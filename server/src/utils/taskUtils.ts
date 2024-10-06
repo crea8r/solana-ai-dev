@@ -21,7 +21,7 @@ export const createTask = async (
 
 export async function updateTaskStatus(
   taskId: string,
-  status: 'queued' | 'doing' | 'finished',
+  status: 'queued' | 'doing' | 'finished' | 'failed' | 'succeed',
   result?: string
 ): Promise<void> {
   const client = await pool.connect();
