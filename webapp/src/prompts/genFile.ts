@@ -19,6 +19,8 @@ Each instruction should be in its own file, grouped by groups of users.
 The function inside the file should be run_[the name of the file]
 Remember to add mod.rs in the folder and sub-folders in the instructions.
 The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
+The code you are generating is Solana Anchor program, it only relate to rust, typescript, json, md and toml code.
+DO NOT use any other programming language. Stay focus, do not lazy, do not make thing up!
 --- Library ---
 Use @coral-xyz/anchor for typescript test code
 Use Anchor version >= 0.30.0
