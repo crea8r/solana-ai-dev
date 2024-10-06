@@ -32,37 +32,41 @@ List all project of an organisation, with a search string to query on the name a
 
 Get the detail of a project, return everything in the SolanaProject table, and return all ProjectFile rows related to the project.
 
-#### POST /project
+#### POST /projects
 
 Create a project. The root_path should be generated randomly on the server, it is a folder name with 8 characters.
 
-#### PUT /project
+#### PUT /projects
 
 Edit a project. Check permission, make sure user within the same organisation can edit a project.
 
-#### DELETE /project
+#### DELETE /projects
 
 Delete a project. Check permission, make sure only admin of the same organisation can delete a project.
 
 ### IO handler
 
-#### POST /project/{:id}/init
+#### POST /projects/{:id}/init
 
 Init the a Anchor project, the name is the same with SolanaProject name field. The folder of the project is root folder from the env + root_path of the SolanaProject.
 Before running the process, create a task with status: "doing" in the Task table.
 The init process will run for a long time so run it on a seperate thread with the webserver. Once it finishes, update the task with status "finished" and store the terminal output to result field.
 
-#### POST /project/{:id}/build
+#### POST /projects/{:id}/build
 
 Build the project with Anchor. To build, take files from a folder of which the root folder is in env file, and the project folder is the root_path of the SolanaProject.
 Before running the process, create a task with status: "doing" in the Task table.
 The init process will run for a long time so run it on a seperate thread with the webserver. Once it finishes, update the task with status "finished" and store the terminal output to result field.
 
-#### POST /project/{:id}/test
+#### POST /projects/{:id}/test
 
 Test the project.
 Before running the process, create a task with status: "doing" in the Task table.
 The init process will run for a long time so run it on a seperate thread with the webserver. Once it finishes, update the task with status "finished" and store the terminal output to result field.
+
+#### GET /projects/{:id}/list
+
+Dive deep into the project folder to list all files and sub-folder and return a tree of file and folder, each node holder the parent folder and the absolute path from the project folder. Skip following folders: .anchor, .github, target. Skip following files: Cargo.lock, package-lock.json, yarn.lock.
 
 #### GET /file/{:path}
 

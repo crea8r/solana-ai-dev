@@ -1,18 +1,26 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import pool from 'src/config/database';
 import { AppError } from 'src/middleware/errorHandler';
+import { startDeleteProjectFolderTask } from 'src/utils/fileUtils';
+import { normalizeProjectName } from 'src/utils/stringUtils';
 import {
-  createProjectFolder,
-  startDeleteProjectFolderTask,
-} from 'src/utils/fileUtils';
+  startAnchorBuildTask,
+  startAnchorInitTask,
+  startAnchorTestTask,
+} from 'src/utils/projectUtils';
 
-export const createProject = async (req: Request, res: Response) => {
+export const createProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { name, description } = req.body;
   const org_id = req.user?.org_id;
+  const userId = req.user?.id;
 
-  if (!org_id) {
-    throw new AppError('User organization not found', 400);
+  if (!org_id || !userId) {
+    return next(new AppError('User organization not found', 400));
   }
 
   const client = await pool.connect();
@@ -20,42 +28,51 @@ export const createProject = async (req: Request, res: Response) => {
   try {
     await client.query('BEGIN');
 
-    const root_path = uuidv4().slice(0, 8); // Generate a random 8-character string for root_path
-
-    // Create project folder
-    createProjectFolder(root_path);
+    const normalizedName = normalizeProjectName(name);
+    const randomSuffix = uuidv4().slice(0, 8);
+    const root_path = `${normalizedName}-${randomSuffix}`;
 
     const result = await client.query(
       'INSERT INTO SolanaProject (id, name, description, org_id, root_path, details, last_updated, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING *',
       [uuidv4(), name, description, org_id, root_path, '{}', new Date()]
     );
 
+    const newProject = result.rows[0];
+
+    // Start the Anchor init task
+    const taskId = await startAnchorInitTask(
+      newProject.id,
+      root_path,
+      name,
+      userId
+    );
+
     await client.query('COMMIT');
 
-    const newProject = result.rows[0];
     res.status(201).json({
-      message: 'Project created successfully',
+      message: 'Project creation process started',
       project: newProject,
+      taskId: taskId,
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error in createProject:', error);
-    if (error instanceof AppError) {
-      throw error;
-    }
-    throw new AppError('Failed to create project', 500);
+    next(error);
   } finally {
     client.release();
   }
 };
 
-export const editProject = async (req: Request, res: Response) => {
+export const editProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { id } = req.params;
   const { name, description, details } = req.body;
   const org_id = req.user?.org_id;
 
   if (!org_id) {
-    throw new AppError('User organization not found', 400);
+    return next(new AppError('User organization not found', 400));
   }
 
   const client = await pool.connect();
@@ -117,21 +134,26 @@ export const editProject = async (req: Request, res: Response) => {
     await client.query('ROLLBACK');
     console.error('Error in editProject:', error);
     if (error instanceof AppError) {
-      throw error;
+      next(error);
+    } else {
+      next(new AppError('Failed to update project', 500));
     }
-    throw new AppError('Failed to update project', 500);
   } finally {
     client.release();
   }
 };
 
-export const deleteProject = async (req: Request, res: Response) => {
+export const deleteProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { id } = req.params;
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
   if (!userId || !orgId) {
-    throw new AppError('User information not found', 400);
+    return next(new AppError('User information not found', 400));
   }
 
   const client = await pool.connect();
@@ -183,10 +205,170 @@ export const deleteProject = async (req: Request, res: Response) => {
     await client.query('ROLLBACK');
     console.error('Error in deleteProject:', error);
     if (error instanceof AppError) {
-      throw error;
+      next(error);
+    } else {
+      next(new AppError('Failed to delete project', 500));
     }
-    throw new AppError('Failed to delete project', 500);
   } finally {
     client.release();
+  }
+};
+
+export const buildProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
+  try {
+    // Check if the project exists and belongs to the user's organization
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to access it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startAnchorBuildTask(id, userId);
+
+    res.status(200).json({
+      message: 'Anchor build process started',
+      taskId: taskId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const testProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
+
+  try {
+    // Check if the project exists and belongs to the user's organization
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to access it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startAnchorTestTask(id, userId);
+
+    res.status(200).json({
+      message: 'Anchor test process started',
+      taskId: taskId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProjectDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
+
+  try {
+    // Get project details
+    const projectResult = await pool.query(
+      `
+      SELECT id, name, description, org_id, root_path, details, last_updated, created_at
+      FROM SolanaProject
+      WHERE id = $1 AND org_id = $2
+    `,
+      [id, orgId]
+    );
+
+    if (projectResult.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to access it',
+          404
+        )
+      );
+    }
+
+    const project = projectResult.rows[0];
+
+    // Get recent tasks (e.g., last 5 tasks)
+    const tasksResult = await pool.query(
+      `
+      SELECT id, name, status, created_at, last_updated
+      FROM Task
+      WHERE project_id = $1
+      ORDER BY last_updated DESC
+      LIMIT 5
+    `,
+      [id]
+    );
+
+    // Get file tree (assuming you have a function to generate this)
+    const fileTreeResult = await pool.query(
+      `
+      SELECT result
+      FROM Task
+      WHERE project_id = $1 AND name = 'Generate File Tree'
+      ORDER BY last_updated DESC
+      LIMIT 1
+    `,
+      [id]
+    );
+
+    const fileTree =
+      fileTreeResult.rows.length > 0
+        ? JSON.parse(fileTreeResult.rows[0].result)
+        : null;
+
+    // Combine all information
+    const projectDetails = {
+      ...project,
+      recentTasks: tasksResult.rows,
+      fileTree: fileTree,
+    };
+
+    res.status(200).json({
+      message: 'Project details retrieved successfully',
+      project: projectDetails,
+    });
+  } catch (error) {
+    next(error);
   }
 };

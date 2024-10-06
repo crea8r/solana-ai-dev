@@ -4,21 +4,42 @@ import { APP_CONFIG } from 'src/config/appConfig';
 import { AppError } from 'src/middleware/errorHandler';
 import pool from 'src/config/database';
 import { v4 as uuidv4 } from 'uuid';
+import { exec } from 'child_process';
+import { createTask, updateTaskStatus } from 'src/utils/taskUtils';
 
-export const createProjectFolder = (rootPath: string): void => {
-  const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
+const SKIP_FOLDERS = ['.anchor', '.github', '.git', 'target', 'node_modules'];
+const SKIP_FILES = [
+  'Cargo.lock',
+  'package-lock.json',
+  'yarn.lock',
+  '.DS_Store',
+  '.gitignore',
+  '.prettierignore',
+];
 
-  if (fs.existsSync(projectPath)) {
-    throw new AppError('Project folder already exists', 400);
-  }
+interface FileNode {
+  name: string;
+  type: 'file' | 'directory';
+  ext?: string;
+  path: string;
+  children?: FileNode[];
+}
 
+export async function getProjectRootPath(projectId: string): Promise<string> {
+  const client = await pool.connect();
   try {
-    fs.mkdirSync(projectPath, { recursive: true });
-  } catch (error) {
-    console.error('Error creating project folder:', error);
-    throw new AppError('Failed to create project folder', 500);
+    const result = await client.query(
+      'SELECT root_path FROM SolanaProject WHERE id = $1',
+      [projectId]
+    );
+    if (result.rows.length === 0) {
+      throw new AppError('Project not found', 404);
+    }
+    return result.rows[0].root_path;
+  } finally {
+    client.release();
   }
-};
+}
 
 export const deleteProjectFolder = async (
   rootPath: string,
@@ -48,24 +69,6 @@ export const deleteProjectFolder = async (
   }
 };
 
-async function updateTaskStatus(
-  taskId: string,
-  status: 'queued' | 'doing' | 'finished',
-  result?: string
-): Promise<void> {
-  const client = await pool.connect();
-  try {
-    await client.query(
-      'UPDATE Task SET status = $1, result = $2 WHERE id = $3',
-      [status, result, taskId]
-    );
-  } catch (error) {
-    console.error('Error updating task status:', error);
-  } finally {
-    client.release();
-  }
-}
-
 export const startDeleteProjectFolderTask = async (
   rootPath: string,
   creatorId: string
@@ -88,4 +91,188 @@ export const startDeleteProjectFolderTask = async (
   } finally {
     client.release();
   }
+};
+
+async function generateFileTree(
+  dir: string,
+  relativePath: string = ''
+): Promise<FileNode[]> {
+  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  const tree: FileNode[] = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry.name);
+    const entryRelativePath = path.join(relativePath, entry.name);
+
+    if (entry.isDirectory() && !SKIP_FOLDERS.includes(entry.name)) {
+      const children = await generateFileTree(entryPath, entryRelativePath);
+      tree.push({
+        name: entry.name,
+        type: 'directory',
+        path: entryRelativePath,
+        children,
+      });
+    } else if (entry.isFile() && !SKIP_FILES.includes(entry.name)) {
+      tree.push({
+        name: entry.name,
+        ext: entry.name.split('.').pop(),
+        type: 'file',
+        path: entryRelativePath,
+      });
+    }
+  }
+
+  return tree;
+}
+
+export const startGenerateFileTreeTask = async (
+  projectId: string,
+  rootPath: string,
+  creatorId: string
+): Promise<string> => {
+  const client = await pool.connect();
+  try {
+    const taskId = uuidv4();
+    await client.query(
+      'INSERT INTO Task (id, name, created_at, creator_id, status) VALUES ($1, $2, NOW(), $3, $4)',
+      [taskId, 'Generate File Tree', creatorId, 'doing']
+    );
+
+    // Start the file tree generation process in a separate thread
+    setImmediate(async () => {
+      const client1 = await pool.connect();
+      try {
+        const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
+        const fileTree = await generateFileTree(projectPath);
+        const result = JSON.stringify(fileTree);
+        await client1.query(
+          'UPDATE Task SET status = $1, result = $2 WHERE id = $3',
+          ['finished', result, taskId]
+        );
+      } catch (error) {
+        console.error('Error generating file tree:', error);
+        await client1.query(
+          'UPDATE Task SET status = $1, result = $2 WHERE id = $3',
+          ['finished', 'Failed to generate file tree', taskId]
+        );
+      } finally {
+        client1.release();
+      }
+    });
+
+    return taskId;
+  } catch (error) {
+    console.error('Error starting generate file tree task:', error);
+    throw new AppError('Failed to start generate file tree task', 500);
+  } finally {
+    client.release();
+  }
+};
+
+export const startGetFileContentTask = async (
+  projectId: string,
+  filePath: string,
+  creatorId: string
+): Promise<string> => {
+  const taskId = await createTask('Get File Content', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const projectRootPath = await getProjectRootPath(projectId);
+      const fullPath = path.join(
+        APP_CONFIG.ROOT_FOLDER,
+        projectRootPath,
+        filePath
+      );
+      console.log('Reading file:', fullPath);
+      const content = await fs.promises.readFile(fullPath, 'utf-8');
+      await updateTaskStatus(taskId, 'finished', content);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      await updateTaskStatus(taskId, 'finished', 'Failed to read file');
+    }
+  });
+
+  return taskId;
+};
+
+export const startCreateFileTask = async (
+  projectId: string,
+  filePath: string,
+  content: string,
+  creatorId: string
+): Promise<string> => {
+  const taskId = await createTask('Create File', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const projectRootPath = await getProjectRootPath(projectId);
+      const fullPath = path.join(
+        APP_CONFIG.ROOT_FOLDER,
+        projectRootPath,
+        filePath
+      );
+      await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.promises.writeFile(fullPath, content, 'utf-8');
+      await updateTaskStatus(taskId, 'finished', 'File created successfully');
+    } catch (error) {
+      console.error('Error creating file:', error);
+      await updateTaskStatus(taskId, 'finished', 'Failed to create file');
+    }
+  });
+
+  return taskId;
+};
+
+export const startUpdateFileTask = async (
+  projectId: string,
+  filePath: string,
+  content: string,
+  creatorId: string
+): Promise<string> => {
+  const taskId = await createTask('Update File', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const projectRootPath = await getProjectRootPath(projectId);
+      const fullPath = path.join(
+        APP_CONFIG.ROOT_FOLDER,
+        projectRootPath,
+        filePath
+      );
+      await fs.promises.writeFile(fullPath, content, 'utf-8');
+      await updateTaskStatus(taskId, 'finished', 'File updated successfully');
+    } catch (error) {
+      console.error('Error updating file:', error);
+      await updateTaskStatus(taskId, 'finished', 'Failed to update file');
+    }
+  });
+
+  return taskId;
+};
+
+export const startDeleteFileTask = async (
+  projectId: string,
+  filePath: string,
+  creatorId: string
+): Promise<string> => {
+  const taskId = await createTask('Delete File', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const projectRootPath = await getProjectRootPath(projectId);
+      const fullPath = path.join(
+        APP_CONFIG.ROOT_FOLDER,
+        projectRootPath,
+        filePath
+      );
+      await fs.promises.unlink(fullPath);
+      await updateTaskStatus(taskId, 'finished', 'File deleted successfully');
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      await updateTaskStatus(taskId, 'finished', 'Failed to delete file');
+    }
+  });
+
+  return taskId;
 };

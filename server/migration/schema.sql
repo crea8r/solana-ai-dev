@@ -75,6 +75,8 @@ CREATE TABLE Task (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     creator_id UUID REFERENCES Creator(id),
     result TEXT,
+    last_updated TIMESTAMP,
+    project_id UUID REFERENCES SolanaProject(id),
     status VARCHAR(50) CHECK (status IN ('queued', 'doing', 'finished'))
 );
 
@@ -100,5 +102,11 @@ EXECUTE FUNCTION update_last_updated_column();
 -- Create trigger for ProjectFile table
 CREATE TRIGGER update_project_file_last_updated
 BEFORE UPDATE ON ProjectFile
+FOR EACH ROW
+EXECUTE FUNCTION update_last_updated_column();
+
+-- Create a trigger for Task table
+CREATE TRIGGER update_task_last_updated
+BEFORE UPDATE ON Task
 FOR EACH ROW
 EXECUTE FUNCTION update_last_updated_column();
