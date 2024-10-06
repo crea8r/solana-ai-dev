@@ -28,7 +28,7 @@ Write test cases using typescript for each of the functions. The test-case shoul
 The SDK should cover all instructions and function to get all accounts with filters.\n`;
   const program_insruction = `--- The app ---
   This is a ${program_name} for ${program_description}.
-  Give me the code for the ${file_name} at this path ${file_path} related to the root folder.
+  Give me the code for the ${file_name} at this path ${file_path} related to the root folder. The code should be text, friendly to display in browser. Omit any additional instruction, I just need the code.
   \n`;
   return (
     general_instruction + program_insruction + account_text + instruction_text

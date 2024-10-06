@@ -9,6 +9,29 @@ import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 
+function extractCodeBlock(text: string): string {
+  const lines = text.split('\n');
+  let isInCodeBlock = false;
+  const codeBlockLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      if (isInCodeBlock) {
+        break; // End of code block
+      } else {
+        isInCodeBlock = true; // Start of code block
+        continue; // Skip the opening ```
+      }
+    }
+
+    if (isInCodeBlock) {
+      codeBlockLines.push(line);
+    }
+  }
+
+  return codeBlockLines.join('\n');
+}
+
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<
     FileTreeItemType | undefined
@@ -27,12 +50,15 @@ const CodePage = () => {
         // generate code content and set Project
         setIsLoading(true);
         const { nodes, edges } = project || { nodes: [], edges: [] };
-        const content = genFile(nodes, edges, file.name || '', file.path || '');
+        const content = extractCodeBlock(
+          genFile(nodes, edges, file.name || '', file.path || '')
+        );
         const choices = await promptAI(content);
         try {
           if (choices && choices.length > 0) {
             const content = choices[0].message?.content;
             codes[file.path || ''] = content;
+            console.log('content: ', content);
             if (project?.files) {
               setProject({
                 nodes,
@@ -51,7 +77,7 @@ const CodePage = () => {
   };
   const selectedContent = selectedFile
     ? project?.codes
-      ? [selectedFile.path || '']
+      ? [project?.codes[selectedFile.path as keyof typeof project.codes] || '']
       : 'Empty file'
     : 'Empty file';
   return (
@@ -62,10 +88,15 @@ const CodePage = () => {
           <FileTree
             onSelectFile={handleSelectFile}
             files={project?.files || undefined}
+            selectedItem={selectedFile}
           />
         </Box>
         <Box flex={1}>
-          <CodeEditor content={selectedContent} />
+          <CodeEditor
+            content={selectedContent.toString()}
+            selectedFile={selectedFile}
+          />
+          {/* <div>{selectedContent.toString()}</div> */}
         </Box>
         <Box w='20%' borderLeft='1px' borderColor='gray.200'>
           <AIChat />
