@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import DesignPage from './pages/design/DesignPage';
 import CodePage from './pages/code/CodePage';
 import DocPage from './pages/DocPage';
+import AccountPage from './pages/AccountPage'; // Import AccountPage
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -48,6 +49,16 @@ const App: React.FC = () => {
                   <ProtectedRoute>
                     <MainLayout>
                       <DocPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/account'
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <AccountPage />
                     </MainLayout>
                   </ProtectedRoute>
                 }
