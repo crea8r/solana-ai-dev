@@ -50,14 +50,16 @@ const CodePage = () => {
         // generate code content and set Project
         setIsLoading(true);
         const { nodes, edges } = project || { nodes: [], edges: [] };
-        const content = extractCodeBlock(
+        const content = genFile(nodes, edges, file.name || '', file.path || '');
+        console.log(
+          'request: ',
           genFile(nodes, edges, file.name || '', file.path || '')
         );
         const choices = await promptAI(content);
         try {
           if (choices && choices.length > 0) {
             const content = choices[0].message?.content;
-            codes[file.path || ''] = content;
+            codes[file.path || ''] = extractCodeBlock(content);
             console.log('content: ', content);
             if (project?.files) {
               setProject({

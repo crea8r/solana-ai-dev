@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from 'src/middleware/errorHandler';
+import { logMessages } from 'src/utils/aiLog';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const MISTRAL_API_KEY_1 = process.env.MISTRAL_API_KEY_1;
@@ -34,6 +35,7 @@ export const generateAIResponse = async (
       },
       body: JSON.stringify({
         model: 'codestral-latest',
+        temperature: 0.2,
         messages: transformMessages,
       }),
     });
@@ -45,8 +47,8 @@ export const generateAIResponse = async (
         response.status
       );
     }
-
     const data = await response.json();
+    await logMessages(messages, data);
 
     res.status(200).json({
       message: 'AI response generated successfully',

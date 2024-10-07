@@ -49,6 +49,14 @@ CREATE TABLE SolanaProject (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- log all AI requests
+CREATE TABLE AIRequestLog (
+    id UUID PRIMARY KEY,
+    request TEXT,
+    response TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes on SolanaProject name and org_id
 CREATE INDEX idx_solana_project_name ON SolanaProject(name);
 CREATE INDEX idx_solana_project_org_id ON SolanaProject(org_id);

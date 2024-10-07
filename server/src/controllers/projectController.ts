@@ -39,6 +39,7 @@ export const createProject = async (
 
     const newProject = result.rows[0];
 
+    await client.query('COMMIT');
     // Start the Anchor init task
     const taskId = await startAnchorInitTask(
       newProject.id,
@@ -46,8 +47,6 @@ export const createProject = async (
       name,
       userId
     );
-
-    await client.query('COMMIT');
 
     res.status(201).json({
       message: 'Project creation process started',
