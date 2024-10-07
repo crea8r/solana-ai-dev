@@ -9,6 +9,7 @@ interface CodeFile {
 }
 
 interface InMemoryProject {
+  id?: string;
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;

@@ -1,5 +1,14 @@
 import React from 'react';
-import { Box, VStack, Icon, Tooltip, Flex } from '@chakra-ui/react';
+import {
+  Box,
+  VStack,
+  Icon,
+  Tooltip,
+  Flex,
+  Text,
+  Button,
+  CloseButton,
+} from '@chakra-ui/react';
 import { FaCog, FaFile, FaComments, FaUser } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -14,6 +23,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const { logout } = useAuth();
   const { project } = useProject();
+  const [isBannerShown, setIsBannerShown] = React.useState(true);
 
   const menuItems = [
     { icon: FaCog, label: 'System Design', path: '/design' },
@@ -28,6 +38,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       navigate('/');
     } else {
       navigate(path);
+    }
+  };
+
+  const isThereUnsavedChanges = () => {
+    if (!project?.id) {
+      return true;
     }
   };
 
@@ -56,6 +72,32 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </VStack>
       </Box>
       <Box flex={1} overflow='auto'>
+        {isThereUnsavedChanges() && isBannerShown && (
+          <Flex width={'100%'} alignItems={'center'} background={'yellow.100'}>
+            <Flex
+              p={1}
+              justifyContent={'center'}
+              alignItems={'center'}
+              fontSize={'sm'}
+              grow={1}
+            >
+              <Text>Project is not saved!</Text>
+              <Button
+                ml={2}
+                size='xs'
+                colorScheme='yellow'
+                onClick={() => navigate('/design')}
+              >
+                Save
+              </Button>
+            </Flex>
+            <CloseButton
+              size='sm'
+              mb={0}
+              onClick={() => setIsBannerShown(false)}
+            />
+          </Flex>
+        )}
         {children}
       </Box>
     </Flex>
