@@ -122,7 +122,7 @@ const DocPage: React.FC = () => {
               key={title}
               onClick={() => setSelectedSection(title)}
               className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-100 ${
-                selectedSection === title ? 'bg-gray-200 font-semibold' : ''
+                selectedSection === title ? 'bg-blue-200 text-blue-800 font-semibold' : ''
               }`}
             >
               <Icon className="h-5 w-5 mr-2" />
@@ -138,9 +138,8 @@ const DocPage: React.FC = () => {
           <button onClick={toggleSidebar} className="lg:hidden">
             <Menu className="h-6 w-6" />
           </button>
-          <h2 className="text-xl font-semibold">{selectedSection}</h2>
-          <div className="flex items-center space-x-4">
-            <button className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
+          <div className="flex-1 flex items-center justify-end space-x-4">
+            <button className="rounded bg-blue-400 px-4 py-2 text-white hover:bg-blue-600">
               Edit
             </button>
             <button className="rounded border border-gray-300 px-4 py-2 hover:bg-gray-100">
@@ -150,11 +149,11 @@ const DocPage: React.FC = () => {
         </header>
         <div className="p-6">
           <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="mb-4 text-2xl font-bold">{selectedSection}</h3>
+            <h3 className="mb-4 text-xl font-bold">{selectedSection}</h3>
             <div
               className="text-gray-600"
               dangerouslySetInnerHTML={{
-                __html: sections[selectedSection] || 'This is the content for the selected section. Replace this with your actual documentation content.',
+                __html: sections[selectedSection] || '',
               }}
             />
           </div>

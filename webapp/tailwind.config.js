@@ -5,6 +5,9 @@ module.exports = {
       colors: {
         primary: '#4DABF7',
       },
+      fontFamily: {
+        'roboto-mono': ['"Roboto Mono"', 'monospace'],
+      },
     },
   },
   plugins: [],

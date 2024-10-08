@@ -158,7 +158,7 @@ const AccountPage: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-4 lg:p-6">
                     <h1 className="text-2xl font-semibold mb-6">Account Details</h1>
                     <div className="grid gap-6 mb-6 md:grid-cols-2">
-                        <Card>
+                        <Card className="bg-white border border-gray-200">
                             <CardHeader>
                                 <CardTitle>Personal Information</CardTitle>
                                 <CardDescription>Manage your personal details</CardDescription>
@@ -185,7 +185,7 @@ const AccountPage: React.FC = () => {
                                 </form>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="bg-white border border-gray-200">
                             <CardHeader>
                                 <CardTitle>Company Information</CardTitle>
                                 <CardDescription>Your role and company details</CardDescription>
@@ -209,7 +209,7 @@ const AccountPage: React.FC = () => {
                         </Card>
                     </div>
                     <h2 className="text-xl font-semibold mb-4">Team Members</h2>
-                    <Card>
+                    <Card className="bg-white border border-gray-200">
                         <Table>
                             <TableHeader>
                                 <TableRow>
