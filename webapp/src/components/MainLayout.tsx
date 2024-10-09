@@ -24,8 +24,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const handleNavigation = (path: string) => {
     if (path === '/account') {
-      logout();
-      navigate('/');
+      navigate('/account'); 
     } else {
       navigate(path);
     }

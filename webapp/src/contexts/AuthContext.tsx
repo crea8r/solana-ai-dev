@@ -9,6 +9,7 @@ interface User {
   id: string;
   username: string;
   org_id: string;
+  orgName: string;
 }
 
 interface AuthContextType {
