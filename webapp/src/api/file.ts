@@ -1,19 +1,10 @@
 import { api } from '../utils/apiHelper';
+import { TaskResponse } from '../interfaces/task';
+import { FileTreeNode } from '../interfaces/file';
 
-interface FileTreeNode {
-  name: string;
-  type: 'file' | 'directory';
-  children?: FileTreeNode[];
-}
-
-interface FileContent {
-  content: string;
-}
-
-interface TaskResponse {
-  message: string;
-  taskId: string;
-}
+// interface FileContent {
+//   content: string;
+// }
 
 export const fileApi = {
   // Get project file tree

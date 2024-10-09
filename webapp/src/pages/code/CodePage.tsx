@@ -8,29 +8,7 @@ import { useProject } from '../../contexts/ProjectContext';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-
-function extractCodeBlock(text: string): string {
-  const lines = text.split('\n');
-  let isInCodeBlock = false;
-  const codeBlockLines: string[] = [];
-
-  for (const line of lines) {
-    if (line.trim().startsWith('```')) {
-      if (isInCodeBlock) {
-        break; // End of code block
-      } else {
-        isInCodeBlock = true; // Start of code block
-        continue; // Skip the opening ```
-      }
-    }
-
-    if (isInCodeBlock) {
-      codeBlockLines.push(line);
-    }
-  }
-
-  return codeBlockLines.join('\n');
-}
+import { extractCodeBlock } from '../../utils/text';
 
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<
@@ -82,6 +60,7 @@ const CodePage = () => {
       ? [project?.codes[selectedFile.path as keyof typeof project.codes] || '']
       : 'Empty file'
     : 'Empty file';
+  // TODO: need to figure out when to enable the save button
   return (
     <Flex direction='column' height='100vh'>
       <TopPanel />

@@ -8,8 +8,28 @@ interface CodeFile {
   content: string;
 }
 
+// project detail coming from the server
+// created_at: string
+// description: string
+// details: any // nodes, edges, files, ...
+// fileTree: []any // []{ext, name, path, type: "file"|"description"}
+// id: string
+// last_updated: string
+// name: string
+// org_id: string
+// recentTasks: []any // []{created_at, id, last_updated, name, status}
+// root_path: string
+
+// fileTree fetched from the server, not always the real data structure
+// how do I decide if it is the latest data structure?
+
+// TODO: those are information fetched from the server, how you want to keep them in the client?
+
+// in the client, you are dealing with these info:
+// nodes: Node[], edges: Edge[], files: FileTreeItemType, codes?: CodeFile[]
+// later on, you will have docfiles: FileTreeItemType, docs: DocFile[]
+
 interface InMemoryProject {
-  id?: string;
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;

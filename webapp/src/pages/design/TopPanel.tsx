@@ -15,9 +15,17 @@ import { logEvent } from '../../utils/analytics';
 
 interface TopPanelProps {
   generatePrompt: () => void;
+  onClickOpen: () => void;
+  onClickSave: () => void;
+  onClickNew: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
+const TopPanel: React.FC<TopPanelProps> = ({
+  generatePrompt,
+  onClickOpen,
+  onClickSave,
+  onClickNew,
+}) => {
   return (
     <Flex
       justifyContent='space-between'
@@ -31,9 +39,9 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
             Project
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Load')}>Open</MenuItem>
-            <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
-            <MenuItem onClick={() => console.log('New project')}>New</MenuItem>
+            <MenuItem onClick={onClickOpen}>Open</MenuItem>
+            <MenuItem onClick={onClickSave}>Save</MenuItem>
+            <MenuItem onClick={onClickNew}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>

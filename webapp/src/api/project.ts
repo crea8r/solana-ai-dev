@@ -1,50 +1,11 @@
 import { api } from '../utils/apiHelper';
-
-interface ProjectListItem {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  last_updated: string;
-}
-
-interface ProjectDetail {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  org_id: string;
-  root_path: string;
-  last_updated: string;
-  details: any;
-  recentTasks?: any[];
-  fileTree?: any;
-}
-
-interface ProjectInfoToSave {
-  id?: string;
-  name: string;
-  description: string;
-  details: any;
-}
-
-interface ListProjectsResponse {
-  projects: ProjectListItem[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-interface SaveProjectResponse {
-  message: string;
-  project: ProjectListItem;
-}
-
-interface TaskResponse {
-  message: string;
-  taskId: string;
-}
+import {
+  ProjectDetail,
+  ProjectInfoToSave,
+  SaveProjectResponse,
+  ListProjectsResponse,
+} from '../interfaces/project';
+import { TaskResponse } from '../interfaces/task';
 
 export const projectApi = {
   // List projects

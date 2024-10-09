@@ -2,7 +2,15 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, Flex, Modal, ModalOverlay, Spinner } from '@chakra-ui/react';
+import {
+  Button,
+  Flex,
+  Modal,
+  ModalOverlay,
+  Spinner,
+  useDisclosure,
+  useToast,
+} from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -27,6 +35,9 @@ import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { useProject } from '../../contexts/ProjectContext';
 import { FileTreeItemType } from '../../components/FileTree';
+import ListProject from './ListProject';
+import { projectApi } from '../../api/project';
+import ProjectBanner from './ProjectBanner';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
@@ -54,6 +65,13 @@ const DesignPage: React.FC = () => {
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
+  const {
+    isOpen: isProjectBannerOpen,
+    onClose: closeProjectBanner,
+    onOpen: openProjectBanner,
+  } = useDisclosure();
+  const toast = useToast();
 
   useEffect(() => {
     initGA(GA_MEASUREMENT_ID);
@@ -192,6 +210,33 @@ const DesignPage: React.FC = () => {
     }
   }, []);
 
+  const handleOpenClick = () => {
+    setIsListProjectModalShown(true);
+  };
+  const handleSaveClick = () => {};
+  const handleNewClick = () => {};
+  const handleLoadProject = async (projectId: string, projectName: string) => {
+    setIsLoading(true);
+    try {
+      const project = await projectApi.getProjectDetails(projectId);
+      console.log('load details: ', project);
+      setProject({
+        id: project.id,
+        ...project.details,
+      });
+    } catch (e) {
+      toast({
+        title: 'Something went wrong!',
+        description: `Cannot load ${projectName} project`,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <PromptModal
@@ -204,10 +249,19 @@ const DesignPage: React.FC = () => {
         onClose={handleCloseWalkthrough}
       />
       <Flex direction='column' height='100vh'>
+        <ProjectBanner
+          isOpen={isListProjectModalShown}
+          onClickSave={() => {}}
+          closeBanner={closeProjectBanner}
+          project={project}
+        />
         <TopPanel
           generatePrompt={() => {
             handlePrompt(nodes, edges);
           }}
+          onClickNew={handleNewClick}
+          onClickOpen={handleOpenClick}
+          onClickSave={handleSaveClick}
         />
         <Flex flex={1}>
           <Toolbox />
@@ -244,6 +298,11 @@ const DesignPage: React.FC = () => {
           Help
         </Button>
       </Flex>
+      <ListProject
+        isOpen={isListProjectModalShown}
+        onClose={() => setIsListProjectModalShown(false)}
+        onProjectClick={handleLoadProject}
+      />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
     </>
   );
