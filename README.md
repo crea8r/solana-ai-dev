@@ -47,7 +47,7 @@ REACT_APP_API_URL=[endpoint of the server, e.g: http://localhost:9999]
 
 ## How to reproduce the Demo?
 
-**Note:** Those the server is completed, the current webapp project do not use all the endpoint yet.
+**Note:** Though the server is completed, the current webapp project do not use all the endpoint yet.
 
 Steps to reproduce the demo.
 
