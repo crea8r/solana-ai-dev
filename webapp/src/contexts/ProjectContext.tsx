@@ -25,6 +25,10 @@ interface InMemoryProject {
 interface ProjectContextType {
   project: InMemoryProject | null;
   setProject: (project: InMemoryProject | null) => void;
+  updateNodes: (nodes: Node[]) => void;
+  updateEdges: (edges: Edge[]) => void;
+  updateFiles: (files: FileTreeItemType) => void;
+  updateCodes: (codes: CodeFile[]) => void;
   updateDocs: (docs: Docs[]) => void;
 }
 
@@ -35,6 +39,46 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [project, setProject] = useState<InMemoryProject | null>(null);
 
+  const updateNodes = (nodes: Node[]) => {
+    setProject((prevProject) => {
+      if (!prevProject) return null;
+      return {
+        ...prevProject,
+        nodes,
+      };
+    });
+  };
+
+  const updateEdges = (edges: Edge[]) => {
+    setProject((prevProject) => {
+      if (!prevProject) return null;
+      return {
+        ...prevProject,
+        edges,
+      };
+    });
+  };
+  
+  const updateFiles = (files: FileTreeItemType) => {
+    setProject((prevProject) => {
+      if (!prevProject) return null;
+      return {
+        ...prevProject,
+        files,  // Update files while keeping the rest intact
+      };
+    });
+  };
+
+  const updateCodes = (codes: CodeFile[]) => {
+    setProject((prevProject) => {
+      if (!prevProject) return null;
+      return {
+        ...prevProject,
+        codes,  // Update codes while keeping the rest intact
+      };
+    });
+  };
+
   const updateDocs = (docs: Docs[]) => {
     setProject((prevProject) => {
       if (!prevProject) return null;
@@ -44,9 +88,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       };
     });
   };
+  
+  
 
   return (
-    <ProjectContext.Provider value={{ project, setProject, updateDocs }}>
+    <ProjectContext.Provider value={{
+      project, 
+      setProject, 
+      updateNodes, 
+      updateEdges, 
+      updateFiles, 
+      updateCodes, 
+      updateDocs
+    }}>
       {children}
     </ProjectContext.Provider>
   );
