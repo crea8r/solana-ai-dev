@@ -10,10 +10,10 @@ export const useGenDocs = () => {
   const { nodes, edges, files, codes } = project;
 
   // Log the user data context
-  console.log('Nodes:', nodes);
-  console.log('Edges:', edges);
-  console.log('Files:', files);
-  console.log('Codes:', codes);
+  // console.log('Nodes:', nodes);
+  // console.log('Edges:', edges);
+  // console.log('Files:', files);
+  // console.log('Codes:', codes);
 
   // Check if any of the required data is missing
   if (!nodes || !edges || !files || !codes) {
@@ -41,6 +41,7 @@ Edges:
 ${edgesStr}
 
 Using this information, generate a detailed wiki page that includes the following sections:
+It is important that you format each section title starting with the number followed by the title.
 
 1. Overview
 - Summarize the dApp's purpose and core feature/functionality.
@@ -72,6 +73,6 @@ Include a step-by-step description of the most important workflows, mapping each
 - Include instructions for deploying the Solana program to the devnet or mainnet, and how to configure the frontend and backend services for production.
 `;
 
-  console.log(docs_prompt); // Log the docs_prompt before returning it
+  // console.log(docs_prompt); // Log the docs_prompt before returning it
   return docs_prompt;
 };

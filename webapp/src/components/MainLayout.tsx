@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, VStack, Icon, Tooltip, Flex } from '@chakra-ui/react';
-import { FaCog, FaFile, FaComments, FaUser } from 'react-icons/fa';
+import { FaCog, FaFile, FaComments, FaUser, FaAtom } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProject } from '../contexts/ProjectContext';
@@ -20,6 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { icon: FaFile, label: 'Coding', path: '/code', disabled: !project?.files },
     { icon: FaComments, label: 'Documentation', path: '/doc' },
     { icon: FaUser, label: 'User Account', path: '/account' },
+    { icon: FaAtom, label: 'Coming Soon', path: '/comingsoon' },
   ];
 
   const handleNavigation = (path: string) => {

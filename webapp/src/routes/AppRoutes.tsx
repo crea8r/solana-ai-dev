@@ -9,11 +9,13 @@ import DocPage from '../pages/DocPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { ChakraProvider } from '@chakra-ui/react';
 import AccountPage from '../pages/AccountPage';
+import ComingSoonPage from '../pages/ComingSoonPage';
 
 const AppRoutes: React.FC = () => {
   return (
     <ChakraProvider>
       <Routes>
+        <Route path='/comingsoon' element={<ComingSoonPage />} />
         <Route path='/' element={<LandingPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />

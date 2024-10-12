@@ -104,7 +104,6 @@ const DocPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside
         className={`${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -132,7 +131,6 @@ const DocPage: React.FC = () => {
         </nav>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 overflow-auto">
         <header className="flex h-16 items-center justify-between bg-white px-4 shadow-sm">
           <button onClick={toggleSidebar} className="lg:hidden">

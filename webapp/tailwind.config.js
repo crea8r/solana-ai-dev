@@ -7,6 +7,8 @@ module.exports = {
       },
       fontFamily: {
         'roboto-mono': ['"Roboto Mono"', 'monospace'],
+        'red-hat-mono': ['"Red Hat Mono"', 'monospace'],
+        'inconsolata': ['"Inconsolata"', 'monospace'],
       },
     },
   },

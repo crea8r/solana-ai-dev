@@ -11,6 +11,7 @@ import DocPage from './pages/DocPage';
 import AccountPage from './pages/AccountPage'; // Import AccountPage
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
+import ComingSoonPage from './pages/ComingSoonPage';
 import { ProjectProvider } from './contexts/ProjectContext';
 
 const App: React.FC = () => {
@@ -20,6 +21,7 @@ const App: React.FC = () => {
         <AuthProvider>
           <ProjectProvider>
             <Routes>
+              <Route path='/comingsoon' element={<ComingSoonPage />} />
               <Route path='/' element={<LandingPage />} />
               <Route path='/login' element={<LoginPage />} />
               <Route path='/register' element={<RegisterPage />} />
