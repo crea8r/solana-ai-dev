@@ -7,9 +7,10 @@ import { Button } from "../components/ui/button";
 import logo from '../assets/brand/solai_logo_png.png';
 import YouTube from 'react-youtube';
 import { FaXTwitter } from "react-icons/fa6";
+import { IoSunnyOutline, IoMoonOutline, IoMoon } from "react-icons/io5"; 
 
 
-const ParticlesContainer = () => {
+const ParticlesContainer = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [ init, setInit ] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const ParticlesContainer = () => {
           options={{
               background: {
                   color: {
-                      value: "#ffffff",
+                    value: isDarkMode ? "#232734" : "#fafafa",
                   },
               },
               fpsLimit: 130,
@@ -52,7 +53,7 @@ const ParticlesContainer = () => {
                   },
                   modes: {
                       grab: {
-                          distance: 220,
+                          distance: 250,
                       },
                       bubble: {
                           color: "#7aa0ff",
@@ -92,7 +93,7 @@ const ParticlesContainer = () => {
                           default: "bounce",
                       },
                       random: true,
-                      speed: 4,
+                      speed: 3,
                       straight: false,
                   },
                   number: {
@@ -123,6 +124,12 @@ const ParticlesContainer = () => {
 
 
 export default function ComingSoon() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const opts = {
     height: '350',
     width: '600',
@@ -131,40 +138,47 @@ export default function ComingSoon() {
     },
   };
   return (
-    <>
-      <ParticlesContainer/>
+    <div className={`${isDarkMode ? 'dark' : ''}`}>
+      <ParticlesContainer isDarkMode={isDarkMode} />
       <div className="flex flex-row w-full h-full">
           <div className="flex-[25vw] z-10 h-[100vh] flex flex-col items-center justify-center">
             <YouTube videoId='6xZNdc48EhQ' opts={opts} />
           </div>
 
-        <div className="h-[100vh] flex-1 flex flex-col items-center justify-between text-center z-10 bg-white rounded-lg pb-4 pt-4 shadow-xl">
-          <div className="w-full flex flex-row items-center p-2 pl-6 mb-20 ">
-            <img src={logo} alt="SolAI Logo" className="w-20 h-20" />
-            <h1 className="text-3xl text-[#7aa0ff] font-inconsolata">SolAI</h1>
+        <div className="h-[100vh] flex-1 flex flex-col items-center justify-between text-center z-10 bg-white dark:bg-gray-800 rounded-lg pb-4 pt-2 shadow-2xl">
+          <div className="w-full flex flex-row items-center justify-between p-2 pl-6 mb-20 ">
+            <div className="flex flex-row items-center gap-2">
+              <img src={logo} alt="SolAI Logo" className="w-20 h-20" />
+              <h1 className="text-3xl text-[#7aa0ff] font-inconsolata">SolAI</h1>
+            </div>
+            <span className="pb-8 pr-8 pt-8 text-[#7aa0ff]" onClick={toggleDarkMode}>
+              {isDarkMode ? <IoMoonOutline /> : <IoSunnyOutline />}
+            </span>
           </div>
           <div className="w-full flex-1 flex flex-col items-center justify-between">
             <span className="w-full flex-1/2 flex flex-col items-center justify-center p-10">
-              <h1 className="text-2xl mb-4 text-gray-700 font-semibold font-roboto-mono">Coming Soon...</h1>
-              <p className="text-md text-gray-700"> We're working hard to bring you something amazing. Stay tuned! </p>
+              <h1 className="text-2xl mb-4 text-gray-400 dark:text-gray-400 font-semibold font-roboto-mono">Coming Soon...</h1>
+              <p className="text-md text-gray-400 dark:text-gray-500"> We're working hard to bring you something amazing. Stay tuned! </p>
             </span>
           </div>
           
           <div className="w-full flex flex-row items-center justify-between p-10 pr-20 pl-20">
+            
+            {/* Possible feature: Email Subscription ? */}
             <div className="flex flex-col sm:flex-row gap-2">
-              <Input type="email" placeholder="Enter your email" className="text-xs flex-grow max-w-xs bg-white text-black border border-gray-300 shadow-none" />
-              <Button className="text-xs bg-[#ffffff] hover:bg-[#ffffff] text-[#7aa0ff] border border-gray-300 shadow-none"> Notify Me </Button>
+              <Input type="email" placeholder="Enter your email" className="h-6 w-full text-xs flex-grow max-w-xs bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 shadow-none" />
+              <Button className="h-6 text-xs bg-[#ffffff] dark:bg-gray-700 hover:bg-[#ffffff] dark:hover:bg-[#222222] text-[#7aa0ff] border border-gray-300 shadow-none"> Notify Me </Button>
             </div>
             <div>
-              <a href="https://x.com/usesolai" className="text-[#7aa0ff] hover:text-[#6690ff] flex flex-row items-center gap-2">
+              <a href="https://x.com/usesolai" className="text-[#7aa0ff] hover:text-[#6690ff] flex flex-row items-center gap-1">
                 <FaXTwitter className="text-sm" />
-                <span className="text-sm">@usesolai</span>
+                <span className="text-sm pb-1">@usesolai</span>
               </a>
             </div>
           </div>
 
         </div>
       </div>
-    </>
+    </div>
   );
 }
