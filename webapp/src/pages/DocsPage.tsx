@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useGenDocs } from '../hooks/useGenDocs';
+import { genDocs } from '../prompts/genDocs';
 import promptAI from '../services/prompt';
 import { useProject } from '../contexts/ProjectContext';
 import {
@@ -21,10 +21,11 @@ const DocPage: React.FC = () => {
   const [sections, setSections] = useState<Record<string, string>>({});
   const [selectedSection, setSelectedSection] = useState('Overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const docsPrompt = useGenDocs();
-  const { docs, updateDocs } = useDocs();
   const { project, updateProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
+
+  const docsPrompt = genDocs(project);
+  const { updateDocs } = useDocs();
 
   const fetchDocumentation = async () => {
     if (docsPrompt) {

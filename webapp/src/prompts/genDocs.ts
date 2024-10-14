@@ -1,25 +1,17 @@
-import { useProject } from '../contexts/ProjectContext';
+import { InMemoryProject } from '../contexts/ProjectContext'; 
 
-export const useGenDocs = () => {
-  const { project } = useProject();
-
+export const genDocs = (project: InMemoryProject | null) => {
   if (!project) {
     return null;
   }
 
   const { nodes, edges, files, codes } = project;
 
-  // console.log('Nodes:', nodes);
-  // console.log('Edges:', edges);
-  // console.log('Files:', files);
-  // console.log('Codes:', codes);
-
   if (!nodes || !edges || !files || !codes) {
     console.warn('Missing data for documentation generation');
     return null;
   }
 
-  // Convert objects to strings
   const nodesStr = JSON.stringify(nodes, null, 2);
   const edgesStr = JSON.stringify(edges, null, 2);
   const filesStr = JSON.stringify(files, null, 2);
@@ -70,6 +62,5 @@ Include a step-by-step description of the most important workflows, mapping each
 - Include instructions for deploying the Solana program to the devnet or mainnet, and how to configure the frontend and backend services for production.
 `;
 
-  // console.log(docs_prompt); // Log the docs_prompt before returning it
   return docs_prompt;
 };

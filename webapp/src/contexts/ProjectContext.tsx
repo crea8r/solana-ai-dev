@@ -4,7 +4,7 @@ import { FileTreeItemType } from '../components/FileTree';
 import { Docs } from './DocsContext';
 import { CodeFile } from './CodeFileContext';
 
-interface InMemoryProject {
+export interface InMemoryProject {
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;
