@@ -20,24 +20,36 @@ interface TopPanelProps {
 const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
   return (
     <Flex
-      justifyContent='space-between'
-      alignItems='center'
-      p={2}
-      bg='blue.100'
+      as="header"
+      borderBottom="1px solid"
+      borderColor="gray.200"
+      justifyContent="space-between"
+      alignItems="center"
+      height="14"
+      px={4}
+      shadow="md"
     >
+      <Flex alignItems="center" gap={4}>
+        <Button variant="ghost" size="sm">
+          <FaCog className="h-6 w-6" />
+        </Button>
+        <h1 className="text-lg font-semibold">Project Name</h1>
+      </Flex>
       <Flex>
         <Menu>
-          <MenuButton as={Button} mr={2}>
+          <MenuButton as={Button} variant="ghost" size="sm">
             Project
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Load')}>Open</MenuItem>
+            <MenuItem onClick={() => console.log('Open')}>Open</MenuItem>
             <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
             <MenuItem onClick={() => console.log('New project')}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button}>Team</MenuButton>
+          <MenuButton as={Button} variant="ghost" size="sm">
+            Team
+          </MenuButton>
           <MenuList>
             <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>
               Manage
@@ -49,9 +61,8 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
         </Menu>
         <Button
           leftIcon={React.createElement(FaCog)}
-          style={{
-            marginLeft: '10px',
-          }}
+          variant="ghost"
+          size="sm"
           onClick={() => {
             logEvent('Prompt', 'Generate', 'click');
             generatePrompt();
@@ -59,9 +70,13 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
         >
           Prompt
         </Button>
-        {/* <MenuItem onClick={() => console.log('Build')}>Build</MenuItem> */}
       </Flex>
-      <Avatar size='sm' />
+      <Flex alignItems="center" gap={4}>
+        <Button variant="ghost" size="sm">
+          <FaCog className="h-5 w-5" />
+        </Button>
+        <Avatar size="sm" src="/placeholder.svg" />
+      </Flex>
     </Flex>
   );
 };

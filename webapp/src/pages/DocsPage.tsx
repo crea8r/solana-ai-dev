@@ -3,8 +3,6 @@ import { genDocs } from '../prompts/genDocs';
 import promptAI from '../services/prompt';
 import { useProject } from '../contexts/ProjectContext';
 import {
-  ChevronLeft,
-  Menu,
   FileText,
   Database,
   Code,
@@ -14,6 +12,32 @@ import {
   Shield,
   Download,
 } from 'lucide-react';
+import { 
+  Text,
+  Box,
+  Button,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider,
+ } from '@chakra-ui/react';
+import { 
+  ChevronLeftIcon,
+  ChevronDownIcon
+ } from '@chakra-ui/icons';
+import { TbListTree } from "react-icons/tb";
+import { PiShareNetwork } from "react-icons/pi";
+import { GrTest } from "react-icons/gr";
+import { GoZap } from "react-icons/go";
+import { MdErrorOutline } from "react-icons/md";
+import { BsCoin } from "react-icons/bs";
+import { MdOutlineSecurity } from "react-icons/md";
+import { IoRocketOutline } from "react-icons/io5";
+import { FaRegFileAlt } from "react-icons/fa";
 import LoadingModal from '../components/LoadingModal';
 import { useDocs } from '../contexts/DocsContext';
 
@@ -128,83 +152,112 @@ const DocPage: React.FC = () => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const sectionList = [
-    { title: 'Overview', icon: FileText },
-    { title: 'File Structure', icon: FileText },
-    { title: 'On-Chain Data', icon: Database },
-    { title: 'Test Script', icon: Code },
-    { title: 'Key Actions & Interactions', icon: Zap },
-    { title: 'Error Handling and Debugging', icon: AlertTriangle },
-    { title: 'Tokenomics & Asset Management', icon: Coins },
-    { title: 'Security & Best Practices', icon: Shield },
-    { title: 'Installation & Deployment', icon: Download },
+    { title: 'Overview', icon: FaRegFileAlt },
+    { title: 'File Structure', icon: TbListTree },
+    { title: 'On-Chain Data', icon: PiShareNetwork },
+    { title: 'Tests', icon: GrTest },
+    { title: 'Key Actions & Interactions', icon: GoZap },
+    { title: 'Error Handling and Debugging', icon: MdErrorOutline },
+    { title: 'Tokenomics & Asset Management', icon: BsCoin },
+    { title: 'Security & Best Practices', icon: MdOutlineSecurity },
+    { title: 'Installation & Deployment', icon: IoRocketOutline },
   ];
 
   return (
-    <div className='flex h-screen bg-gray-100'>
-      {/* Sidebar */}
-      <aside
-        className={`${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0`}
+    <Box className='flex h-screen bg-gray-100'>
+      <Box
+        as="aside"
+        w="72"
+        bg="white"
+        shadow="lg"
+        position="relative"
+        h="full"
+        display={{ base: "none", lg: "block" }} // Always visible on large screens
       >
-        <div className='flex h-16 items-center justify-between px-4'>
-          <h1 className='text-xl font-bold'>Documentation</h1>
-          <button onClick={toggleSidebar} className='lg:hidden'>
-            <ChevronLeft className='h-6 w-6' />
-          </button>
-        </div>
-        <nav className='mt-4'>
+        <Box className='flex h-16 items-center justify-between px-4'>
+          <Text className='text-xl font-bold'>Documentation</Text>
+          <Button onClick={toggleSidebar} display={{ base: "block", lg: "none" }} variant="ghost">
+            {/* Button content goes here */}
+          </Button>
+        </Box>
+        <Box as="nav" className='mt-4'>
           {sectionList.map(({ title, icon: Icon }) => (
-            <button
+            <Button
               key={title}
               onClick={() => setSelectedSection(title)}
-              className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-100 ${
-                selectedSection === title
-                  ? 'bg-blue-200 text-blue-800 font-semibold'
-                  : ''
-              }`}
+              width="full"
+              display="flex"
+              alignItems="center"
+              justifyContent="left"
+              px={4}
+              py={7}
+              textAlign="left"
+              fontSize="sm"
+              borderBottomWidth="1px"
+              borderBottomColor="gray.200"
+              bg={selectedSection === title ? "blue.200" : "transparent"}
+              color={selectedSection === title ? "blue.800" : "inherit"}
+              fontWeight={selectedSection === title ? "semibold" : "normal"}
+              _hover={{ bg: "gray.100" }}
+              variant="ghost"
             >
               <Icon className='h-5 w-5 mr-2' />
               {title}
-            </button>
+            </Button>
           ))}
-        </nav>
-      </aside>
+        </Box>
+      </Box>
 
-      {/* Main content */}
-      <main className='flex-1 overflow-auto'>
-        <header className='flex h-16 items-center justify-between bg-white px-4 shadow-sm'>
-          <button onClick={toggleSidebar} className='lg:hidden'>
-            <Menu className='h-6 w-6' />
-          </button>
-          <div className='flex-1 flex items-center justify-end space-x-4'>
-            <button className='rounded bg-blue-400 px-4 py-2 text-white hover:bg-blue-600'>
+      <Box as="main" flex="1" overflow="auto">
+        <Box as="header" display="flex" h="16" alignItems="center" justifyContent="space-between" px={4}>
+         <Button onClick={toggleSidebar} display={{ base: "block", lg: "none" }} variant="ghost">
+            <Menu >
+              <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+              </MenuButton>
+            </Menu>
+          </Button>
+          <Box className='flex-1 flex items-center justify-end space-x-4'>
+            <Button
+              bg="blue.400"
+              color="white"
+              _hover={{ bg: "blue.600" }}
+              px={4}
+              py={2}
+              borderRadius="md"
+            >
               Edit
-            </button>
-            <button className='rounded border border-gray-300 px-4 py-2 hover:bg-gray-100'>
+            </Button>
+            <Button
+              variant="outline"
+              borderColor="gray.300"
+              _hover={{ bg: "gray.100" }}
+              px={4}
+              py={2}
+              borderRadius="md"
+            >
               Share
-            </button>
-          </div>
-        </header>
-        <div className='p-6'>
-          <div className='rounded-lg bg-white p-6 shadow'>
-            <h3 className='mb-4 text-xl font-bold'>{selectedSection}</h3>
-            <div
+            </Button>
+          </Box>
+        </Box>
+        <Box className='p-6'>
+          <Box className='rounded-lg bg-white p-6 shadow'>
+            <Text as="h3" className='mb-4 text-xl font-bold'>{selectedSection}</Text>
+            <Box
               className='text-gray-600'
               dangerouslySetInnerHTML={{
                 __html: sections[selectedSection] || '',
               }}
             />
-          </div>
-        </div>
-      </main>
+          </Box>
+        </Box>
+      </Box>
       <LoadingModal
         isOpen={isLoading}
         onClose={() => {
           setIsLoading(false);
         }}
       />
-    </div>
+    </Box>
   );
 };
 

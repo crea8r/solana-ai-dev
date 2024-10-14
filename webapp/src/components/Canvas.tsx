@@ -105,7 +105,6 @@ const Canvas: React.FC<CanvasProps> = ({
         nodeTypes={nodeTypes}
       >
         <Controls />
-        <Background />
       </ReactFlow>
     </Box>
   );

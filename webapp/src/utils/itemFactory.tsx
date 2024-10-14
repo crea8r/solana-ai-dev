@@ -11,17 +11,11 @@ import { Handle, Position, NodeProps } from 'react-flow-renderer';
 export function createItem(type: string): ToolboxItem | null {
   switch (type) {
     case 'account':
-      return new Account(`account-${Date.now()}`, 'New Account', '', '');
+      return new Account(`account-${Date.now()}`, 'Account', '', '');
     case 'instruction':
-      return new Instruction(
-        `instruction-${Date.now()}`,
-        'New Instruction',
-        '',
-        '',
-        ''
-      );
+      return new Instruction(`instruction-${Date.now()}`,'Instruction','','','');
     case 'program':
-      return new Program(`program-${Date.now()}`, 'New Program', '');
+      return new Program(`program-${Date.now()}`, 'Program', '');
     default:
       return null;
   }
@@ -46,19 +40,27 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 
 export const getNodeTypes = (): NodeTypes => ({
   account: createNodeComponent({
-    background: 'lavender',
-    padding: 10,
-    borderRadius: 5,
-  }),
-  instruction: createNodeComponent({
-    border: '2px solid green',
-    padding: 10,
-    borderRadius: 5,
-  }),
-  program: createNodeComponent({
-    background: 'red',
+    background: '#c7a6e2', // purple
     color: 'white',
     padding: 10,
     borderRadius: 5,
+    border: 'none',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', 
+  }),
+  instruction: createNodeComponent({
+    background: '#72cf8e', // green
+    color: 'white',
+    padding: 10,
+    borderRadius: 5,
+    border: 'none',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', 
+  }),
+  program: createNodeComponent({
+    background: '#f05247', //red
+    color: 'white',
+    padding: 10,
+    borderRadius: 5,
+    border: 'none',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
 });
