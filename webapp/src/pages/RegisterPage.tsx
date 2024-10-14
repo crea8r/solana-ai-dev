@@ -52,7 +52,7 @@ const RegisterPage: React.FC = () => {
           </Text>
         </CardHeader>
         <CardBody>
-          <FormControl onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Box className="space-y-2">
               <FormLabel htmlFor="username">Username</FormLabel>
               <Input 
@@ -101,7 +101,7 @@ const RegisterPage: React.FC = () => {
               Create account
             </Button>
 
-          </FormControl>
+          </form>
         </CardBody>
         <CardFooter>
           <Text className="text-sm text-center text-muted-foreground w-full">

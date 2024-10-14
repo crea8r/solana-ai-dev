@@ -18,7 +18,7 @@ import {
  import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState(''); // Changed from email to username
+  const [username, setUsername] = useState(''); 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -27,11 +27,10 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(username, password); // Use username instead of email
+      await login(username, password); 
       navigate('/design');
     } catch (error) {
       console.error('Login failed:', error);
-      // Handle error (e.g., show a toast notification)
     }
   };
 
@@ -48,7 +47,7 @@ const LoginPage: React.FC = () => {
           </Text>
         </CardHeader>
         <CardBody>
-          <FormControl onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Box className="space-y-2">
               <FormLabel htmlFor="username">Username</FormLabel>
               <Input 
@@ -82,10 +81,10 @@ const LoginPage: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-            <Button type="submit" className="w-full px-4 py-2 text-white rounded inline-block text-center">
+            <Button type="submit" className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center">
               Sign in
             </Button>
-          </FormControl>
+          </form>
         </CardBody>
         <CardFooter className="flex flex-wrap items-center justify-between gap-2">
           <Text className="text-sm text-muted-foreground">
