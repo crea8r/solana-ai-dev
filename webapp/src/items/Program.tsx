@@ -1,6 +1,6 @@
 // src/items/Program.ts
 import { memo } from 'react';
-import { FaBox } from 'react-icons/fa';
+import { BsBox } from "react-icons/bs";
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { Node, Handle, Position, NodeProps } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
@@ -85,15 +85,15 @@ export class Program implements ToolboxItem {
   }
 
   getIcon(): IconType {
-    return FaBox;
+    return BsBox;
   }
 
   static NodeType = memo(({ data }: NodeProps) => {
     return (
       <div
         style={{
-          background: 'red',
-          color: 'white',
+          background: 'white',
+          color: 'black',
           padding: 10,
           borderRadius: 5,
         }}

@@ -4,7 +4,7 @@ import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { VStack, Input, Textarea, Select } from '@chakra-ui/react';
 import { Node, Handle, Position, NodeProps } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
-import { FaHandPointer } from 'react-icons/fa';
+import { IoIosCode } from "react-icons/io";
 
 export class Instruction implements ToolboxItem {
   id: string;
@@ -146,7 +146,7 @@ export class Instruction implements ToolboxItem {
   }
 
   getIcon(): IconType {
-    return FaHandPointer;
+    return IoIosCode;
   }
 
   static NodeType = memo(({ data }: NodeProps) => {

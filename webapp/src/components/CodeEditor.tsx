@@ -37,7 +37,15 @@ const CodeEditor = ({
         value={content}
         options={options}
       />
-      <Box h='20%' bg='gray.700' color='white' p={2} overflowY='auto'>
+      <Box 
+        h='20%' 
+        bg='white' 
+        color='black' 
+        p={2} 
+        overflowY='auto' 
+        borderTop='1px solid' 
+        borderColor='gray.200' 
+        shadow='md'>
         <Text>Terminal Output</Text>
       </Box>
     </Box>
