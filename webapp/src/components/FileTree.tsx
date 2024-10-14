@@ -2,7 +2,7 @@
 
 import { VStack, Text, Flex } from '@chakra-ui/react';
 import { useState } from 'react';
-import { FaFile, FaFolder } from 'react-icons/fa';
+import { CiFolderOn, CiFileOn } from "react-icons/ci";
 
 // name, ext, type, path, children
 export interface FileTreeItemType {
@@ -42,7 +42,7 @@ const FileTreeItem = ({
     return (
       <VStack align='stretch' ml={2}>
         <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
-          <FaFolder color='#F8D775' />
+          <CiFolderOn />
           <Text ml={2}>{item.name}</Text>
         </Flex>
         {isOpen &&
@@ -64,7 +64,7 @@ const FileTreeItem = ({
         cursor='pointer'
         onClick={() => onSelectFile(item)}
       >
-        <FaFile color='#87CEFA' />
+        <CiFileOn />
         <Text
           ml={2}
           background={item.path === selectedItem?.path ? 'yello.100' : ''}

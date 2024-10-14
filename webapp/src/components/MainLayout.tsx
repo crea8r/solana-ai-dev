@@ -1,6 +1,9 @@
 import React from 'react';
 import { Box, VStack, Icon, Tooltip, Flex } from '@chakra-ui/react';
-import { FaCog, FaFile, FaComments, FaUser } from 'react-icons/fa';
+import { PiGraphLight } from "react-icons/pi";
+import { CiFileOn } from "react-icons/ci";
+import { IoBookOutline } from "react-icons/io5";
+import { HiOutlineUserCircle } from "react-icons/hi2";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProject } from '../contexts/ProjectContext';
@@ -16,10 +19,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { project } = useProject();
 
   const menuItems = [
-    { icon: FaCog, label: 'System Design', path: '/design' },
-    { icon: FaFile, label: 'Coding', path: '/code', disabled: !project?.files },
-    { icon: FaComments, label: 'Documentation', path: '/doc' },
-    { icon: FaUser, label: 'User Account', path: '/account' },
+    { icon: PiGraphLight, label: 'System Design', path: '/design' },
+    { icon: CiFileOn, label: 'Coding', path: '/code', disabled: !project?.files },
+    { icon: IoBookOutline, label: 'Documentation', path: '/doc' },
+    { icon: HiOutlineUserCircle, label: 'User Account', path: '/account' },
   ];
 
   const handleNavigation = (path: string) => {
@@ -32,7 +35,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <Flex h='100vh'>
-      <Box w='60px' bg='gray.800' p={2}>
+      <Box w='60px' bg='white' p={4} pr={6} pl={6} borderRight="1px solid" borderColor="gray.300">
         <VStack spacing={4} align='center' h='full'>
           {menuItems.map((item) => (
             <Tooltip key={item.path} label={item.label} placement='right'>
@@ -44,11 +47,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 p={2}
                 borderRadius='md'
                 bg={
-                  location.pathname === item.path ? 'blue.500' : 'transparent'
+                  location.pathname === item.path ? 'blue.100' : 'transparent'
                 }
-                _hover={{ bg: !item.disabled ? 'blue.600' : 'tranperant' }}
+                _hover={{ bg: !item.disabled ? 'blue.100' : 'tranperant' }}
               >
-                <Icon as={item.icon} w={6} h={6} color='white' />
+                <Icon as={item.icon} w={6} h={6} color='black' />
               </Box>
             </Tooltip>
           ))}
