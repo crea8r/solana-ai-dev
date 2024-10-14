@@ -9,15 +9,13 @@ export const useGenDocs = () => {
 
   const { nodes, edges, files, codes } = project;
 
-  // Log the user data context
   // console.log('Nodes:', nodes);
   // console.log('Edges:', edges);
   // console.log('Files:', files);
   // console.log('Codes:', codes);
 
-  // Check if any of the required data is missing
   if (!nodes || !edges || !files || !codes) {
-    // console.warn('Missing data for documentation generation');
+    console.warn('Missing data for documentation generation');
     return null;
   }
 
@@ -51,7 +49,7 @@ Using this information, generate a detailed wiki page that includes the followin
 - Use the nodes and edges from the graph to describe each on-chain account and program.
 - Provide a detailed explanation of the instructions that interact with these accounts and programs, including their purpose and expected inputs/outputs.
 Describe the relationships between accounts, including ownership and state management, as illustrated by the graph edges.
-4. Test Script
+4. Test
 - Give an explanation of how the test script functions and what it tests in the programs.
 5. Key Actions & Interactions
 - Based on the nodes and edges in the graph, explain the key actions users can take within the dApp, such as sending transactions, interacting with programs, or managing on-chain assets.

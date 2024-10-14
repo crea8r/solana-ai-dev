@@ -15,13 +15,15 @@ import {
   Download,
 } from 'lucide-react';
 import LoadingModal from '../components/LoadingModal';
+import { useDocs } from '../contexts/DocsContext';
 
 const DocPage: React.FC = () => {
   const [sections, setSections] = useState<Record<string, string>>({});
   const [selectedSection, setSelectedSection] = useState('Overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const docsPrompt = useGenDocs();
-  const { project, updateDocs } = useProject();
+  const { docs, updateDocs } = useDocs();
+  const { project, updateProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchDocumentation = async () => {
@@ -33,9 +35,11 @@ const DocPage: React.FC = () => {
         const content = choices[0].message?.content || '';
         // console.log('Fetched documentation content:', content);
         setSections(splitIntoSections(content));
-        updateDocs([
+        const newDocs = [
           { title: 'Documentation', content, lastUpdated: new Date() },
-        ]);
+        ];
+        updateDocs(newDocs); 
+        updateProject({ docs: newDocs });
       }
       setIsLoading(false);
     }
@@ -43,7 +47,7 @@ const DocPage: React.FC = () => {
 
   useEffect(() => {
     if (project?.docs && project.docs.length > 0) {
-      console.log('Using cached documentation:', project.docs[0].content);
+      //console.log('Using cached documentation:', project.docs[0].content);
       setSections(splitIntoSections(project.docs[0].content));
     } else {
       fetchDocumentation();
