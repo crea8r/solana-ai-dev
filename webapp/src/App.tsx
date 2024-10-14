@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 import ComingSoonPage from './pages/ComingSoonPage';
 import { ProjectProvider } from './contexts/ProjectContext';
+import { UserInputProvider } from './contexts/UserInputContext';
 
 const App: React.FC = () => {
   return (
@@ -20,52 +21,54 @@ const App: React.FC = () => {
       <Router>
         <AuthProvider>
           <ProjectProvider>
-            <Routes>
-              <Route path='/comingsoon' element={<ComingSoonPage />} />
-              <Route path='/' element={<LandingPage />} />
-              <Route path='/login' element={<LoginPage />} />
-              <Route path='/register' element={<RegisterPage />} />
-              <Route
-                path='/design'
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <DesignPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/code'
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <CodePage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/doc'
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <DocPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/account'
-                element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <AccountPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+            <UserInputProvider>
+              <Routes>
+                <Route path='/comingsoon' element={<ComingSoonPage />} />
+                <Route path='/' element={<LandingPage />} />
+                <Route path='/login' element={<LoginPage />} />
+                <Route path='/register' element={<RegisterPage />} />
+                <Route
+                  path='/design'
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <DesignPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/code'
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <CodePage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/doc'
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <DocPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/account'
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AccountPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </UserInputProvider>
           </ProjectProvider>
         </AuthProvider>
       </Router>

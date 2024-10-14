@@ -22,40 +22,28 @@ const toolboxItems = [
 
 const Toolbox: React.FC = () => {
   return (
-    <Box width='30%' maxWidth='200px' bg='gray.100' p={4}>
-      <VStack spacing={2} align='stretch'>
-        <Text fontWeight='light' textAlign='left'>
-          Drag items into canvas
-        </Text>
-        <Divider />
-        <SimpleGrid columns={2} spacing={4}>
-          {toolboxItems.map((item) => (
-            <Tooltip key={item.id} label={item.getName()} placement='right'>
-              <Box
-                as='button'
-                draggable
-                onDragStart={(e: any) =>
-                  e.dataTransfer.setData('text/plain', item.getType())
-                }
-                p={2}
-                borderRadius='md'
-                border='1px solid'
-                borderColor='gray.300'
-                _hover={{ bg: 'gray.200' }}
-                display='flex'
-                flexDirection='column'
-                alignItems='center'
-                justifyContent='center'
-                height='80px'
-              >
-                <Icon as={item.getIcon()} boxSize={6} mb={2} />
-                <Text fontSize='sm'>{item.getName()}</Text>
-              </Box>
-            </Tooltip>
-          ))}
-        </SimpleGrid>
-      </VStack>
-    </Box>
+    <div className='w-full h-1/6 border border-gray-100 shadow-sm flex flex-col justify-center items-center'>
+      <div className='flex flex-row gap-4 justify-center items-center'>
+        {toolboxItems.map((item) => (
+          <Tooltip key={item.id} label={item.getName()} placement='right'>
+            <div
+              draggable
+              onDragStart={(e: any) =>
+                e.dataTransfer.setData('text/plain', item.getType())
+              }
+              className='h-16 w-16 p-2 rounded-md border border-gray-300 hover:bg-gray-200 flex flex-col items-center justify-center'
+            >
+              <div className='h-12 w-12 mb-2'>
+                {React.createElement(item.getIcon())}
+              </div>
+              <div className='text-xs'>
+                {item.getName()}
+              </div>
+            </div>
+          </Tooltip>
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
 // src/App.tsx
 
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { Button, Flex, Modal, ModalOverlay, Spinner } from '@chakra-ui/react';
 import {
   Node,
@@ -27,6 +27,10 @@ import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { useProject } from '../../contexts/ProjectContext';
 import { FileTreeItemType } from '../../components/FileTree';
+import AIChat from '../../components/AIChat';
+import { useUserInput } from '../../contexts/UserInputContext';
+import { ChatBox } from '../../components/ChatBox2';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
@@ -192,8 +196,17 @@ const DesignPage: React.FC = () => {
     }
   }, []);
 
+  const authContext = useContext(AuthContext);
+
+  if (!authContext) {
+    throw new Error('DesignPage must be used within an AuthProvider');
+  }
+
+  const { user } = authContext;
+  const userName = user ? user.username : 'Guest';
+
   return (
-    <>
+    <div className="flex flex-col h-screen">
       <PromptModal
         isOpen={isPromptModalOpen}
         onClose={() => setIsPromptModalOpen(false)}
@@ -203,35 +216,45 @@ const DesignPage: React.FC = () => {
         isOpen={isWalkthroughOpen}
         onClose={handleCloseWalkthrough}
       />
-      <Flex direction='column' height='100vh'>
+      <div className="flex flex-col h-screen">
         <TopPanel
           generatePrompt={() => {
             handlePrompt(nodes, edges);
           }}
         />
-        <Flex flex={1}>
-          <Toolbox />
-          <Canvas
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onSelectNode={handleSelectNode}
-            onSelectEdge={handleSelectEdge}
-            onAddNode={handleAddNode}
-          />
-          <PropertyPanel
-            selectedNode={selectedNode}
-            selectedEdge={selectedEdge}
-            onDeleteNode={handleDeleteNode}
-            onDeleteEdge={handleDeleteEdge}
-            onUpdateNode={handleUpdateNode}
-            onUpdateEdge={handleUpdateEdge}
-            programs={nodes.filter((node) => node.type === 'program')}
-            nodes={nodes}
-          />
-        </Flex>
+        <div className='flex flex-row flex-1'>
+            
+          <div className="flex flex-col justify-between flex-1" style={{ flex: 2 }}>
+              <Toolbox />
+              <div className='flex-1 flex flex-row pointer-events-auto'>
+                <Canvas
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onSelectNode={handleSelectNode}
+                  onSelectEdge={handleSelectEdge}
+                  onAddNode={handleAddNode}
+                />
+                <PropertyPanel
+                  selectedNode={selectedNode}
+                  selectedEdge={selectedEdge}
+                  onDeleteNode={handleDeleteNode}
+                  onDeleteEdge={handleDeleteEdge}
+                  onUpdateNode={handleUpdateNode}
+                  onUpdateEdge={handleUpdateEdge}
+                  programs={nodes.filter((node) => node.type === 'program')}
+                  nodes={nodes}
+                />
+              </div>
+              
+            
+          </div>
+          <div className='flex-1 h-[90vh]' style={{ flex: 1 }}>
+            <ChatBox userName={userName} />
+          </div>
+        </div>
         <Button
           position='fixed'
           bottom='4'
@@ -243,9 +266,10 @@ const DesignPage: React.FC = () => {
         >
           Help
         </Button>
-      </Flex>
+        
+      </div>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
-    </>
+    </div>
   );
 };
 

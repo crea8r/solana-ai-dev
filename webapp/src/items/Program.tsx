@@ -90,14 +90,7 @@ export class Program implements ToolboxItem {
 
   static NodeType = memo(({ data }: NodeProps) => {
     return (
-      <div
-        style={{
-          background: 'red',
-          color: 'white',
-          padding: 10,
-          borderRadius: 5,
-        }}
-      >
+      <div className='flex flex-row items-center justify-center bg-white text-black border border-gray-300 rounded-md'>
         <Handle type='target' position={Position.Top} />
         <div>{data.label}</div>
         <Handle type='source' position={Position.Bottom} />

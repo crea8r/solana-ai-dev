@@ -85,10 +85,9 @@ const Canvas: React.FC<CanvasProps> = ({
   }, [onSelectNode, onSelectEdge]);
 
   return (
-    <Box
+    <div
       ref={canvasRef}
-      flex={1}
-      height='100%'
+      className='flex-1 h-full'
       onDrop={onDrop}
       onDragOver={(event) => event.preventDefault()}
     >
@@ -105,9 +104,8 @@ const Canvas: React.FC<CanvasProps> = ({
         nodeTypes={nodeTypes}
       >
         <Controls />
-        <Background />
       </ReactFlow>
-    </Box>
+    </div>
   );
 };
 
