@@ -51,7 +51,7 @@ REACT_APP_API_URL=[endpoint of the server, e.g: http://localhost:9999]
 
 Steps to reproduce the demo.
 
-- [ ] Step 1: Register a organisation, username & password.
+- [ ] Step 1: Register an organisation, username & password.
 - [ ] Step 2: Login and start drag & drop to build the system design. Start with the Program (red), then Account (Purple) and finally Instruction (green). Remember to connect all accounts, instructions to the program. The idea is that you can design multiple programs in a project, but please test with one program-per project for now.
 - [ ] Step 3: After finish the design, click button `Prompt` on the top panel to generate the code structure (not every code files)
 - [ ] Step 4: Click the `Code` section on the left handside panel, click each of the code file to generate the real code; it will take sometime.
