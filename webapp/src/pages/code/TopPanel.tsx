@@ -16,12 +16,12 @@ interface TopPanelProps {}
 const TopPanel: React.FC<TopPanelProps> = () => {
   return (
     <Flex
-      justifyContent='space-between'
+      justifyContent='space-evenly'
       alignItems='center'
       p={2}
-      bg='blue.100'
+      bg='gray.800'
     >
-      <Flex>
+      <Flex flexDirection="row" justifyContent="space-between" alignItems="center" gap={4}>
         <Menu>
           <MenuButton as={Button} mr={2}>
             Project

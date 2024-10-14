@@ -11,17 +11,11 @@ import { Handle, Position, NodeProps } from 'react-flow-renderer';
 export function createItem(type: string): ToolboxItem | null {
   switch (type) {
     case 'account':
-      return new Account(`account-${Date.now()}`, 'New Account', '', '');
+      return new Account(`account-${Date.now()}`, 'Account', '', '');
     case 'instruction':
-      return new Instruction(
-        `instruction-${Date.now()}`,
-        'New Instruction',
-        '',
-        '',
-        ''
-      );
+      return new Instruction(`instruction-${Date.now()}`,'Instruction','','','');
     case 'program':
-      return new Program(`program-${Date.now()}`, 'New Program', '');
+      return new Program(`program-${Date.now()}`, 'Program', '');
     default:
       return null;
   }
@@ -46,19 +40,24 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 
 export const getNodeTypes = (): NodeTypes => ({
   account: createNodeComponent({
-    background: 'lavender',
+    background: 'white',
+    color: 'black',
     padding: 10,
     borderRadius: 5,
+    border: '1px solid black',
   }),
   instruction: createNodeComponent({
-    border: '2px solid green',
+    background: 'white',
+    color: 'black',
     padding: 10,
     borderRadius: 5,
+    border: '1px solid black',
   }),
   program: createNodeComponent({
-    background: 'red',
-    color: 'white',
+    background: 'white',
+    color: 'black',
     padding: 10,
     borderRadius: 5,
+    border: '1px solid black',
   }),
 });
