@@ -1,8 +1,7 @@
 import React, { useContext, useState } from 'react';
-// --- Context
 import { AuthContext } from '../contexts/AuthContext';
-// Chakra UI - React
 import { 
+    //Avatar,
     Text,
     Button,
     Input,
@@ -39,12 +38,9 @@ import {
     DrawerContent,
     DrawerCloseButton,
 } from '@chakra-ui/react';
-// --- Icons
 import { Avatar, ChevronDownIcon } from "@chakra-ui/icons";
 import { FaUserCircle } from "react-icons/fa";
 import { FaRegBell } from "react-icons/fa6";
-import { GoChevronDown } from "react-icons/go";
-import { RxAvatar } from "react-icons/rx";
 import { MdOutlineLogout } from "react-icons/md";
 import { IoMdMenu } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
@@ -53,7 +49,6 @@ const AccountPage: React.FC = () => {
     const authContext = useContext(AuthContext);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Placeholder user data
     const placeholderUser = {
         username: 'exampleUser',
         email: 'user@example.com',
@@ -62,7 +57,6 @@ const AccountPage: React.FC = () => {
         orgName: 'Example Organization',
     };
 
-    // Use user data from context if available, otherwise use placeholder
     const user = {
         username: authContext?.user?.username || placeholderUser.username,
         email: placeholderUser.email,
@@ -81,7 +75,6 @@ const AccountPage: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-gray-100">
-            {/* Sidebar for larger screens */}
             <aside className="hidden w-64 bg-white border-r lg:block">
                 <div className="flex items-center justify-between p-4 border-b">
                     <h2 className="text-xl font-semibold">Organization Name</h2>
@@ -104,7 +97,6 @@ const AccountPage: React.FC = () => {
                 </nav>
             </aside>
 
-            {/* Mobile sidebar using Chakra UI Drawer */}
             <Drawer isOpen={isSidebarOpen} placement="left" onClose={() => setIsSidebarOpen(false)}>
                 <DrawerOverlay />
                 <DrawerContent>
@@ -139,9 +131,7 @@ const AccountPage: React.FC = () => {
                 </DrawerContent>
             </Drawer>
 
-            {/* Main content */}
             <div className="flex flex-col flex-1 overflow-hidden">
-                {/* Top navigation */}
                 <header className="flex items-center justify-between px-4 py-3 bg-white border-b lg:px-6">
                     <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
                         <IoMdMenu className="w-6 h-6" />
@@ -177,7 +167,6 @@ const AccountPage: React.FC = () => {
                     </div>
                 </header>
 
-                {/* Page content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-6">
                     <h1 className="text-2xl font-semibold mb-6">Account Details</h1>
                     <div className="grid gap-6 mb-6 md:grid-cols-2">
