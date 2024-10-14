@@ -8,37 +8,24 @@ interface CodeFile {
   content: string;
 }
 
-// project detail coming from the server
-// created_at: string
-// description: string
-// details: any // nodes, edges, files, ...
-// fileTree: []any // []{ext, name, path, type: "file"|"description"}
-// id: string
-// last_updated: string
-// name: string
-// org_id: string
-// recentTasks: []any // []{created_at, id, last_updated, name, status}
-// root_path: string
-
-// fileTree fetched from the server, not always the real data structure
-// how do I decide if it is the latest data structure?
-
-// TODO: those are information fetched from the server, how you want to keep them in the client?
-
-// in the client, you are dealing with these info:
-// nodes: Node[], edges: Edge[], files: FileTreeItemType, codes?: CodeFile[]
-// later on, you will have docfiles: FileTreeItemType, docs: DocFile[]
+interface Docs {
+  title: string;
+  content: string;
+  lastUpdated: Date;
+}
 
 interface InMemoryProject {
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;
   codes?: CodeFile[];
+  docs?: Docs[];
 }
 
 interface ProjectContextType {
   project: InMemoryProject | null;
   setProject: (project: InMemoryProject | null) => void;
+  updateDocs: (docs: Docs[]) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -48,8 +35,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [project, setProject] = useState<InMemoryProject | null>(null);
 
+  const updateDocs = (docs: Docs[]) => {
+    setProject((prevProject) => {
+      if (!prevProject) return null;
+      return {
+        ...prevProject,
+        docs,
+      };
+    });
+  };
+
   return (
-    <ProjectContext.Provider value={{ project, setProject }}>
+    <ProjectContext.Provider value={{ project, setProject, updateDocs }}>
       {children}
     </ProjectContext.Provider>
   );

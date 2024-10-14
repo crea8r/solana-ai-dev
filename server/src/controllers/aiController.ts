@@ -3,7 +3,6 @@ import { AppError } from 'src/middleware/errorHandler';
 import { logMessages } from 'src/utils/aiLog';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-const MISTRAL_API_KEY_1 = process.env.MISTRAL_API_KEY_1;
 const MISTRAL_API_URL = 'https://codestral.mistral.ai/v1/chat/completions';
 
 export const generateAIResponse = async (

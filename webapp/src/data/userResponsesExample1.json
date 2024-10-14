@@ -1,0 +1,72 @@
+{
+    "General": {
+      "dAppName": "ArtMarket",
+      "Description": "A decentralized platform for artists to showcase, sell, and auction digital art as NFTs.",
+      "MainPurpose": "To empower artists by providing a decentralized marketplace where they can sell and auction their digital art as NFTs, allowing collectors to discover and purchase unique pieces in a transparent and secure way."
+    },
+    "Actions": {
+      "OnChainActions": {
+        "KeyFeatures": "Create NFTs, list NFTs for sale, bid on auctions, buy NFTs, transfer ownership of NFTs",
+        "UserActions": "Mint new NFTs, place bids on active auctions, purchase listed NFTs, and transfer ownership after a sale or auction ends.",
+        "ActionSpecificInput": "Yes, for creating NFTs, users must provide metadata such as title, description, and media file (image/video). For bidding, users provide their bid amount.",
+        "TriggersAndEvents": "Yes, when an auction ends, an event should trigger the transfer of ownership and payout to the seller. Notifications should also be sent to the winner and seller.",
+        "Conditions": "For auctions, users must place a bid higher than the current highest bid, and only the winner of the auction can claim the NFT at the end.",
+        "SecurityFeatures": "Yes, bids should be final and locked, and users must provide a signature to confirm their actions. Ownership transfers should also be cryptographically secure.",
+        "ConditionalActions": "Yes, only the NFT owner can list it for sale or auction, and only the auction winner can claim the NFT after an auction.",
+        "InstructionTiming": "Yes, auctions should automatically end after a set time (e.g., 24 hours), and ownership should transfer automatically to the highest bidder.",
+        "TransactionBatching": "Yes, during the auction end, the NFT ownership transfer and payout to the seller should occur in the same transaction.",
+        "Preconditions": "Yes, a valid auction must exist before users can place bids, and the NFT must be in the seller’s possession before listing it for sale.",
+        "Outputs": "The result of a sale or auction is the transfer of NFT ownership and the seller receiving the payment in their wallet.",
+        "ResourceLimits": "Gas fees should be minimized during minting and transactions. Large media files for NFTs should be stored off-chain, and only the metadata should be stored on-chain."
+      },
+      "OffChainActions": {
+        "EventTracking": "Yes, we should track user bids, auction history, and sales off-chain for analytics and user profiles.",
+        "Notifications": "Yes, users should be notified when they are outbid in an auction or when their NFT has been sold.",
+        "UserInteraction": "Users will interact with the dApp through a web interface where they can browse NFTs, place bids, buy NFTs, and manage their account.",
+        "ExternalDataSources": "Yes, we will fetch market price data for tokens used in the platform (e.g., SOL) and use it to display price conversions.",
+        "DataProcessing": "Yes, we will store user profiles, preferences, and analytics off-chain for a better user experience.",
+        "Authorization": "Only authorized users (the NFT owner or auction creator) can manage listings or auctions off-chain.",
+        "Triggers": "An auction ending, a sale occurring, and user actions like bids or purchases should trigger off-chain actions such as notifications and data updates.",
+        "Relationships": "Off-chain actions such as tracking auction history are related to bids and sales. Notifications depend on user actions like bidding or selling."
+      }
+    },
+    "Data": {
+      "OnChainData": {
+        "AccountTypes": "User accounts to manage NFT ownership, a marketplace account for listing and tracking NFTs, and auction accounts for bids.",
+        "TokenManagement": "Yes, user accounts will manage both NFTs and payments in SOL (or another token).",
+        "SystemManagedAccounts": "Yes, we will use program-derived addresses (PDAs) for marketplace and auction accounts.",
+        "AccountData": "User accounts will store NFT ownership, and auction accounts will store the bid history and highest bid.",
+        "AccountInteractions": "User accounts need to interact with the auction and marketplace accounts during listing, bidding, and purchasing.",
+        "AccountStates": "Yes, NFTs can have 'listed', 'sold', or 'auctioned' states, and auctions can be in 'active' or 'ended' states.",
+        "AccountStateBehavior": "When an auction ends, the NFT should transfer to the winner’s account, and the seller should receive the payment.",
+        "DataStorage": "Metadata for NFTs, ownership history, auction status, and bid history.",
+        "SensitiveData": "Ownership and auction data should be public, but user profiles and private information should remain off-chain."
+      },
+      "OffChainData": {
+        "DataTypes": "User profiles, bidding history, auction results, and NFT media files.",
+        "DataInteraction": "User profiles will link to their on-chain wallets, and NFT media files will be referenced by the on-chain metadata.",
+        "DataLinkage": "Yes, auction results, bidding history, and NFT media files should be linked to the relevant on-chain events."
+      }
+    },
+    "Assets": {
+      "TokenNFTUse": "Yes, users will create and trade NFTs, and transactions will occur using SOL.",
+      "UserActionsForTokens": "Users should be able to mint, buy, sell, and auction NFTs.",
+      "RewardsIncentives": "Yes, sellers can earn royalties on secondary sales of their NFTs.",
+      "Fees": "Yes, a marketplace fee will apply for each sale or auction, and gas fees for transactions.",
+      "TokenDistribution": "Sellers will receive payments directly in SOL, and royalties will be automatically distributed for secondary sales."
+    },
+    "ErrorHandling": {
+      "ErrorResponse": "If a bid or purchase fails, the transaction should be rolled back and users should be notified.",
+      "RetryFallbackLogic": "Yes, failed transactions should have a retry option.",
+      "ErrorCommunication": "Users should receive a notification in the app and a detailed error message explaining the issue."
+    },
+    "SecurityAuthorization": {
+      "RolesPermissions": "Only NFT owners can list their items, and only authorized users can place bids or make purchases.",
+      "MultiSignature": "Yes, high-value auctions may require multiple signatures for secure transfers."
+    },
+    "Additional": {
+      "TransactionOptimization": "Yes, minimizing gas fees is critical, especially during high activity on the marketplace.",
+      "GasPriceStrategy": "Users should have the option to prioritize speed or cost when making purchases or bidding."
+    }
+  }
+  
