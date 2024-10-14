@@ -1,21 +1,53 @@
 import React, { useContext, useState } from 'react';
+// --- Context
 import { AuthContext } from '../contexts/AuthContext';
-import { Bell, ChevronDown, LogOut, Menu, Settings, User } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+// Chakra UI - React
+import { 
+    Text,
+    Button,
+    Input,
+    Card, 
+    CardHeader, 
+    CardBody, 
+    CardFooter,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    MenuItemOption,
+    MenuGroup,
+    MenuOptionGroup,
+    MenuDivider,
+    FormControl,
+    FormLabel,
+    FormErrorMessage,
+    FormHelperText,
+    Table,
+    Thead,
+    Tbody,
+    Tfoot,
+    Tr,
+    Th,
+    Td,
+    TableCaption,
+    TableContainer,
+    Drawer,
+    DrawerBody,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerOverlay,
+    DrawerContent,
+    DrawerCloseButton,
+} from '@chakra-ui/react';
+// --- Icons
+import { Avatar, ChevronDownIcon } from "@chakra-ui/icons";
+import { FaUserCircle } from "react-icons/fa";
+import { FaRegBell } from "react-icons/fa6";
+import { GoChevronDown } from "react-icons/go";
+import { RxAvatar } from "react-icons/rx";
+import { MdOutlineLogout } from "react-icons/md";
+import { IoMdMenu } from "react-icons/io";
+import { IoSettingsOutline } from "react-icons/io5";
 
 const AccountPage: React.FC = () => {
     const authContext = useContext(AuthContext);
@@ -58,13 +90,13 @@ const AccountPage: React.FC = () => {
                     <ul className="space-y-2">
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100">
-                                <User className="w-5 h-5 mr-3" />
+                                <FaUserCircle className="w-5 h-5 mr-3" />
                                 Account
                             </a>
                         </li>
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100">
-                                <Settings className="w-5 h-5 mr-3" />
+                                <IoSettingsOutline className="w-5 h-5 mr-3" />
                                 Settings
                             </a>
                         </li>
@@ -72,85 +104,76 @@ const AccountPage: React.FC = () => {
                 </nav>
             </aside>
 
-            {/* Mobile sidebar */}
-            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-                <SheetContent side="left">
-                    <SheetHeader>
-                        <SheetTitle>Company Name</SheetTitle>
-                        <SheetDescription>Navigation</SheetDescription>
-                    </SheetHeader>
-                    <nav className="py-4">
-                        <ul className="space-y-2">
-                            <li>
-                                <a
-                                    href="#"
-                                    className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                                    onClick={() => setIsSidebarOpen(false)}
-                                >
-                                    <User className="w-5 h-5 mr-3" />
-                                    Account
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="#"
-                                    className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                                    onClick={() => setIsSidebarOpen(false)}
-                                >
-                                    <Settings className="w-5 h-5 mr-3" />
-                                    Settings
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </SheetContent>
-            </Sheet>
+            {/* Mobile sidebar using Chakra UI Drawer */}
+            <Drawer isOpen={isSidebarOpen} placement="left" onClose={() => setIsSidebarOpen(false)}>
+                <DrawerOverlay />
+                <DrawerContent>
+                    <DrawerCloseButton />
+                    <DrawerHeader>Company Name</DrawerHeader>
+                    <DrawerBody>
+                        <nav className="py-4">
+                            <ul className="space-y-2">
+                                <li>
+                                    <a
+                                        href="#"
+                                        className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
+                                        onClick={() => setIsSidebarOpen(false)}
+                                    >
+                                        <FaUserCircle className="w-5 h-5 mr-3" />
+                                        Account
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        href="#"
+                                        className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
+                                        onClick={() => setIsSidebarOpen(false)}
+                                    >
+                                        <IoSettingsOutline className="w-5 h-5 mr-3" />
+                                        Settings
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </DrawerBody>
+                </DrawerContent>
+            </Drawer>
 
             {/* Main content */}
             <div className="flex flex-col flex-1 overflow-hidden">
                 {/* Top navigation */}
                 <header className="flex items-center justify-between px-4 py-3 bg-white border-b lg:px-6">
                     <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-                        <Menu className="w-6 h-6" />
+                        <IoMdMenu className="w-6 h-6" />
                         <span className="sr-only">Open sidebar</span>
                     </Button>
                     <div className="flex items-center space-x-4">
                         <Button variant="ghost" size="icon">
-                            <Bell className="w-5 h-5" />
+                            <FaRegBell className="w-5 h-5" />
                             <span className="sr-only">Notifications</span>
                         </Button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative w-8 h-8 rounded-full">
-                                    <Avatar className="w-8 h-8">
-                                        <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                                        <AvatarFallback>JD</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end" forceMount>
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
-                                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <User className="w-4 h-4 mr-2" />
-                                    <span>Profile</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Settings className="w-4 h-4 mr-2" />
-                                    <span>Settings</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <LogOut className="w-4 h-4 mr-2" />
-                                    <span>Log out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Menu>
+                            <MenuButton as={Button} variant="ghost" className="relative w-8 h-8 rounded-full">
+                                <Avatar className="w-8 h-8" />
+                            </MenuButton>
+                            <MenuList className="w-56">
+                                <div className="flex flex-col space-y-1 p-2">
+                                    <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
+                                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                                </div>
+                                <MenuDivider />
+                                <MenuItem icon={<FaUserCircle className="w-4 h-4 mr-2" />}>
+                                    Profile
+                                </MenuItem>
+                                <MenuItem icon={<IoSettingsOutline className="w-4 h-4 mr-2" />}>
+                                    Settings
+                                </MenuItem>
+                                <MenuDivider />
+                                <MenuItem icon={<MdOutlineLogout className="w-4 h-4 mr-2" />}>
+                                    Log out
+                                </MenuItem>
+                            </MenuList>
+                        </Menu>
                     </div>
                 </header>
 
@@ -160,79 +183,79 @@ const AccountPage: React.FC = () => {
                     <div className="grid gap-6 mb-6 md:grid-cols-2">
                         <Card className="bg-white border border-gray-200">
                             <CardHeader>
-                                <CardTitle>Personal Information</CardTitle>
-                                <CardDescription>Manage your personal details</CardDescription>
+                                <Text>Personal Information</Text>
+                                <Text>Manage your personal details</Text>
                             </CardHeader>
-                            <CardContent>
+                            <CardBody>
                                 <form className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="username">Username</Label>
+                                        <FormLabel htmlFor="username">Username</FormLabel>
                                         <Input id="username" value={user.username} readOnly />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Full Name</Label>
+                                        <FormLabel htmlFor="name">Full Name</FormLabel>
                                         <Input id="name" placeholder={`${user.firstName} ${user.lastName}`} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="email">Email</Label>
+                                        <FormLabel htmlFor="email">Email</FormLabel>
                                         <Input id="email" type="email" placeholder={user.email} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="phone">Phone Number</Label>
+                                        <FormLabel htmlFor="phone">Phone Number</FormLabel>
                                         <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
                                     </div>
                                     <Button>Save Changes</Button>
                                 </form>
-                            </CardContent>
+                            </CardBody>
                         </Card>
                         <Card className="bg-white border border-gray-200">
                             <CardHeader>
-                                <CardTitle>Company Information</CardTitle>
-                                <CardDescription>Your role and company details</CardDescription>
+                                <Text>Company Information</Text>
+                                <Text>Your role and company details</Text>
                             </CardHeader>
-                            <CardContent>
+                            <CardBody>
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label>Company</Label>
+                                        <FormLabel>Company</FormLabel>
                                         <p className="text-sm font-medium">{user.orgName}</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Role</Label>
+                                        <FormLabel>Role</FormLabel>
                                         <p className="text-sm font-medium">Senior Developer</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Department</Label>
+                                        <FormLabel>Department</FormLabel>
                                         <p className="text-sm font-medium">Engineering</p>
                                     </div>
                                 </div>
-                            </CardContent>
+                            </CardBody>
                         </Card>
                     </div>
                     <h2 className="text-xl font-semibold mb-4">Team Members</h2>
                     <Card className="bg-white border border-gray-200">
                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                            <Thead>
+                                <Tr>
+                                    <Th>Name</Th>
+                                    <Th>Role</Th>
+                                    <Th>Email</Th>
+                                    <Th className="text-right">Actions</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
                                 {teamMembers.map((member) => (
-                                    <TableRow key={member.email}>
-                                        <TableCell className="font-medium">{member.name}</TableCell>
-                                        <TableCell>{member.role}</TableCell>
-                                        <TableCell>{member.email}</TableCell>
-                                        <TableCell className="text-right">
+                                    <Tr key={member.email}>
+                                        <Td className="font-medium">{member.name}</Td>
+                                        <Td>{member.role}</Td>
+                                        <Td>{member.email}</Td>
+                                        <Td className="text-right">
                                             <Button variant="ghost" size="sm">
                                                 View
                                             </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                        </Td>
+                                    </Tr>
                                 ))}
-                            </TableBody>
+                            </Tbody>
                         </Table>
                     </Card>
                 </main>
