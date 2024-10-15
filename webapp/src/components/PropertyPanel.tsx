@@ -1,7 +1,8 @@
 // src/components/PropertyPanel.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Box, VStack, Text, Input, Button } from '@chakra-ui/react';
+import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
+import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 
@@ -79,7 +80,14 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const fromNode = nodes.find((n) => n.id === selectedEdge?.source);
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
   return (
-    <Box width='300px' bg='gray.100' p={4}>
+    <Box 
+    width='300px' 
+    bg='white' 
+    p={4} 
+    borderLeft="1px solid" 
+    borderColor="gray.200" 
+    shadow="md"
+    >
       <VStack spacing={4} align='stretch'>
         {selectedNode && (
           <>
@@ -111,12 +119,34 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             />
           </>
         )}
-        <Button colorScheme='blue' onClick={handleSave}>
-          Save
-        </Button>
-        <Button colorScheme='red' onClick={handleDelete}>
-          Delete
-        </Button>
+        <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center" gap={4}>
+          <Button 
+            width="70%"
+            bg="white" 
+            color="black" 
+            _hover={{ bg: "gray.100" }} 
+            onClick={handleSave}
+            leftIcon={<IoSaveOutline />}
+            border="1px solid"
+            borderColor="gray.300"
+            shadow="md"
+          >
+            Save
+          </Button>
+          <Button 
+            width="70%"
+            bg="white" 
+            color="black" 
+            _hover={{ bg: "gray.100" }} 
+            onClick={handleDelete}
+            leftIcon={<IoTrashOutline />}
+            border="1px solid"
+            borderColor="gray.300"
+            shadow="md"
+          >
+            Delete
+          </Button>
+        </Flex>
       </VStack>
     </Box>
   );

@@ -3,7 +3,6 @@ import { Box, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
-import AIChat from '../../components/AIChat';
 import { useProject } from '../../contexts/ProjectContext';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
@@ -78,9 +77,6 @@ const CodePage = () => {
             selectedFile={selectedFile}
           />
           {/* <div>{selectedContent.toString()}</div> */}
-        </Box>
-        <Box w='20%' borderLeft='1px' borderColor='gray.200'>
-          <AIChat />
         </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />

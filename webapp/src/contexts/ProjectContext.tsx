@@ -1,20 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Edge, Node } from 'react-flow-renderer';
 import { FileTreeItemType } from '../components/FileTree';
+import { Docs } from './DocsContext';
+import { CodeFile } from './CodeFileContext';
 
-interface CodeFile {
-  name: string;
-  path: string;
-  content: string;
-}
-
-interface Docs {
-  title: string;
-  content: string;
-  lastUpdated: Date;
-}
-
-interface InMemoryProject {
+export interface InMemoryProject {
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;
@@ -25,7 +15,7 @@ interface InMemoryProject {
 interface ProjectContextType {
   project: InMemoryProject | null;
   setProject: (project: InMemoryProject | null) => void;
-  updateDocs: (docs: Docs[]) => void;
+  updateProject: (updatedData: Partial<InMemoryProject>) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -35,18 +25,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [project, setProject] = useState<InMemoryProject | null>(null);
 
-  const updateDocs = (docs: Docs[]) => {
+  const updateProject = (updatedData: Partial<InMemoryProject>) => {
     setProject((prevProject) => {
       if (!prevProject) return null;
       return {
         ...prevProject,
-        docs,
+        ...updatedData,
       };
     });
   };
 
   return (
-    <ProjectContext.Provider value={{ project, setProject, updateDocs }}>
+    <ProjectContext.Provider value={{ project, setProject, updateProject }}>
       {children}
     </ProjectContext.Provider>
   );

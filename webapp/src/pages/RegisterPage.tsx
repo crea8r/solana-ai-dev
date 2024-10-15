@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { EyeIcon, EyeOffIcon, MoveLeft } from 'lucide-react'; // Import MoveLeft
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
+
+import { 
+  Text,
+  Button,
+  Box,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  FormHelperText,
+  Input
+ } from "@chakra-ui/react";
+ import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
+
 
 const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,28 +35,26 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    // Handle registration logic here
-    console.log('Registration attempt with:', { username, password });
-    // On successful registration, navigate to another page
-    // navigate('/somepage');
+    //console.log('Registration attempt with:', { username, password });
+    navigate('/design');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
+    <Box className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md bg-white border border-gray-200">
         <CardHeader className="space-y-1 relative">
           <Link to="/" className="absolute left-0 top-0 p-5">
-            <MoveLeft className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+            <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
           </Link>
-          <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-          <CardDescription className="text-center">
+          <CardHeader className="text-2xl font-bold text-center">Create an account</CardHeader>
+          <Text className="text-center">
             Enter your details to create an account
-          </CardDescription>
+          </Text>
         </CardHeader>
-        <CardContent>
+        <CardBody>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+            <Box className="space-y-2">
+              <FormLabel htmlFor="username">Username</FormLabel>
               <Input 
                 id="username" 
                 type="text" 
@@ -52,10 +62,10 @@ const RegisterPage: React.FC = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+            </Box>
+            <Box className="space-y-2">
+              <FormLabel htmlFor="password">Password</FormLabel>
+              <Box className="relative flex flex-row items-center gap-2">
                 <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"} 
@@ -63,21 +73,21 @@ const RegisterPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
+                    <ViewOffIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5" />
+                    <ViewIcon className="h-5 w-5" />
                   )}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
+                </Button>
+              </Box>
+            </Box>
+            <Box className="space-y-2">
+              <FormLabel htmlFor="confirm-password">Confirm Password</FormLabel>
               <Input 
                 id="confirm-password" 
                 type="password" 
@@ -85,22 +95,22 @@ const RegisterPage: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-            </div>
+            </Box>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full bg-gradient-to-tr from-[#ca3bf7] via-[#7292d3] to-[#2fd6b7] text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center">
+            <Button type="submit" className="w-full px-4 py-2 text-white rounded inline-block text-center">
               Create account
             </Button>
 
           </form>
-        </CardContent>
+        </CardBody>
         <CardFooter>
-          <p className="text-sm text-center text-muted-foreground w-full">
+          <Text className="text-sm text-center text-muted-foreground w-full">
             Already have an account?{' '}
             <Link to='/login' className="hover:text-primary underline underline-offset-4">Sign in</Link>
-          </p>
+          </Text>
         </CardFooter>
       </Card>
-    </div>
+    </Box>
   );
 };
 

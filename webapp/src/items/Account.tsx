@@ -4,9 +4,9 @@ import React, { memo } from 'react';
 import { Node } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { VStack, Input, Textarea, Select } from '@chakra-ui/react';
-import { FaFile } from 'react-icons/fa';
 import { IconType } from 'react-icons';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
+import { VscJson } from "react-icons/vsc";
 
 export class Account implements ToolboxItem {
   id: string;
@@ -125,7 +125,7 @@ export class Account implements ToolboxItem {
   }
 
   getIcon(): IconType {
-    return FaFile;
+    return VscJson;
   }
 
   static NodeType = memo(({ data }: NodeProps) => {

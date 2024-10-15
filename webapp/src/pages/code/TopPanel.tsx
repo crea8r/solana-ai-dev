@@ -15,14 +15,18 @@ interface TopPanelProps {}
 const TopPanel: React.FC<TopPanelProps> = () => {
   return (
     <Flex
-      justifyContent='space-between'
-      alignItems='center'
-      p={2}
-      bg='blue.100'
+      as="header"
+      borderBottom="1px solid"
+      borderColor="gray.200"
+      justifyContent="space-between"
+      alignItems="center"
+      height="14"
+      px={4}
+      shadow="md"
     >
-      <Flex>
+      <Flex flexDirection="row" justifyContent="space-between" alignItems="center" gap={4}>
         <Menu>
-          <MenuButton as={Button} mr={2}>
+          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>
             Project
           </MenuButton>
           <MenuList>
@@ -32,7 +36,7 @@ const TopPanel: React.FC<TopPanelProps> = () => {
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button} mr={2}>
+          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>
             Team
           </MenuButton>
           <MenuList>
@@ -44,15 +48,11 @@ const TopPanel: React.FC<TopPanelProps> = () => {
             </MenuItem>
           </MenuList>
         </Menu>
-        <Button mr={2} onClick={() => {}}>
-          Save
-        </Button>
-        <Button mr={2}>Build</Button>
-        <Button>Test</Button>
-
-        {/* <MenuItem onClick={() => console.log('Build')}>Build</MenuItem> */}
+        <Button variant="ghost" size="sm" mr={2}>Save</Button>
+        <Button variant="ghost" size="sm" mr={2}>Build</Button>
+        <Button variant="ghost" size="sm">Test</Button>
       </Flex>
-      <Avatar size='sm' />
+      <Avatar size='sm' src="/placeholder.svg" />
     </Flex>
   );
 };
