@@ -15,7 +15,7 @@ export const createProject = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { name, description } = req.body;
+  const { name, description, details } = req.body;
   const org_id = req.user?.org_id;
   const userId = req.user?.id;
 
@@ -34,7 +34,7 @@ export const createProject = async (
 
     const result = await client.query(
       'INSERT INTO SolanaProject (id, name, description, org_id, root_path, details, last_updated, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING *',
-      [uuidv4(), name, description, org_id, root_path, '{}', new Date()]
+      [uuidv4(), name, description, org_id, root_path, JSON.stringify(details), new Date()]
     );
 
     const newProject = result.rows[0];
