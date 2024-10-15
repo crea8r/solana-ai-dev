@@ -12,6 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { FaCog } from 'react-icons/fa';
 import { logEvent } from '../../utils/analytics';
+import { GoPencil } from "react-icons/go";
+import { useProject } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
   generatePrompt: () => void;
@@ -26,6 +28,30 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onClickSave,
   onClickNew,
 }) => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [projectName, setProjectName] = React.useState('Project Name');
+  const { updateProject } = useProject();
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProjectName(event.target.value);
+  };
+
+  const handleInputBlur = () => {
+    updateProject({ name: projectName });
+    setIsEditing(false);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      updateProject({ name: projectName });
+      setIsEditing(false);
+    }
+  };
+
   return (
     <Flex
       as="header"
@@ -37,11 +63,36 @@ const TopPanel: React.FC<TopPanelProps> = ({
       px={4}
       shadow="md"
     >
-      <Flex alignItems="center" gap={4}>
+      <Flex alignItems="center" gap={6}>
         <Button variant="ghost" size="sm">
           <FaCog className="h-6 w-6" />
         </Button>
-        <h1 className="text-lg font-semibold">Project Name</h1>
+        <Flex
+          onClick={handleEditClick}
+          direction="row"
+          alignItems="center"
+          style={{ cursor: 'pointer' }}
+          gap={4}
+        >
+          {isEditing ? (
+            <input
+              type="text"
+              value={projectName}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyPress={handleKeyPress}
+              className="text-lg font-semibold"
+              style={{ border: 'none', outline: 'none' }}
+            />
+          ) : (
+            <>
+              <h1 className="text-lg font-semibold">
+                {projectName}
+              </h1>
+              <GoPencil className="h-5 w-5" />
+            </>
+          )}
+        </Flex>
       </Flex>
       <Flex>
         <Menu>

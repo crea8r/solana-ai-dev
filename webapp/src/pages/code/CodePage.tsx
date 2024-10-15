@@ -3,11 +3,12 @@ import { Box, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
-import { useProject } from '../../contexts/ProjectContext';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { extractCodeBlock } from '../../utils/text';
+import { useProject } from '../../contexts/ProjectContext';
+
 
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<
@@ -40,6 +41,7 @@ const CodePage = () => {
             console.log('content: ', content);
             if (project?.files) {
               setProject({
+                name: project?.name || '',
                 nodes,
                 edges,
                 files: project?.files,

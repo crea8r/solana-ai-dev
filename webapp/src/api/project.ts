@@ -6,8 +6,24 @@ import {
   ListProjectsResponse,
 } from '../interfaces/project';
 import { TaskResponse } from '../interfaces/task';
+import { InMemoryProject, useProject } from '../contexts/ProjectContext';
 
 export const projectApi = {
+
+  // save project (create new project on database)
+  saveProject: async (
+    projectInfo: ProjectInfoToSave,
+  ): Promise<SaveProjectResponse> => {
+    //console.log('inside projectApi.saveProject', projectInfo);
+    try {
+      const response = await api.post('/projects/save', projectInfo);
+      return response.data;
+    } catch (error) {
+      console.error('Error saving project:', error);
+      throw error;
+    }
+  },
+
   // List projects
   listProjects: async (
     page: number = 1,

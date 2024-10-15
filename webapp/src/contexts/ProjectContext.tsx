@@ -1,10 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Edge, Node } from 'react-flow-renderer';
 import { FileTreeItemType } from '../components/FileTree';
 import { Docs } from './DocsContext';
 import { CodeFile } from './CodeFileContext';
 
 export interface InMemoryProject {
+  //id: string;
+  name: string;
+  //description: string;
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;
@@ -27,13 +30,28 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateProject = (updatedData: Partial<InMemoryProject>) => {
     setProject((prevProject) => {
-      if (!prevProject) return null;
+      if (!prevProject) {
+        return {
+          name: updatedData.name || '',
+          nodes: updatedData.nodes || [],
+          edges: updatedData.edges || [],
+          files: updatedData.files || { name: '', children: [] },
+          codes: updatedData.codes || [],
+          docs: updatedData.docs || [],
+        };
+      }
       return {
         ...prevProject,
         ...updatedData,
       };
     });
   };
+
+  useEffect(() => {
+    if (project) {
+      console.log('Project updated:', project);
+    }
+  }, [project]);
 
   return (
     <ProjectContext.Provider value={{ project, setProject, updateProject }}>

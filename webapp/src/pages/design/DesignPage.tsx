@@ -38,6 +38,7 @@ import { FileTreeItemType } from '../../components/FileTree';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
+import { ProjectInfoToSave } from '../../interfaces/project';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
@@ -183,6 +184,8 @@ const DesignPage: React.FC = () => {
         setFileTreePaths(files);
 
         setProject({
+          name: project?.name || '',
+          //description: project?.description || '',
           nodes,
           edges,
           files,
@@ -210,11 +213,40 @@ const DesignPage: React.FC = () => {
     }
   }, []);
 
+  // Handle open project
   const handleOpenClick = () => {
     setIsListProjectModalShown(true);
   };
-  const handleSaveClick = () => {};
+
+  // Handle save project
+  const handleSaveClick = async () => {
+    if (!project) {
+      console.error('Project data is missing');
+      return;
+    }
+
+    // : ProjectInfoToSave
+    const projectInfo: any = {
+      name: project.name,
+      //description: project.description,
+      details: {
+        nodes: project.nodes,
+        edges: project.edges,
+      }
+    };
+
+    try {
+      const response = await projectApi.saveProject(projectInfo);
+      console.log('Project saved successfully:', response);
+    } catch (error) {
+      console.error('Error saving project:', error);
+    }
+  };
+
+  // Handle new project 
   const handleNewClick = () => {};
+
+  // Handle load project
   const handleLoadProject = async (projectId: string, projectName: string) => {
     setIsLoading(true);
     try {
@@ -236,6 +268,10 @@ const DesignPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    //console.log('project', project);
+  }, [project]);
 
   return (
     <>

@@ -1,17 +1,17 @@
 // src/components/Canvas.tsx
 
-import React, { useCallback, useRef, useMemo } from 'react';
+import React, { useCallback, useRef, useMemo, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
   Connection,
   Controls,
-  Background,
   NodeTypes,
 } from 'react-flow-renderer';
 import { Box } from '@chakra-ui/react';
 import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
+import { useProject } from '../contexts/ProjectContext';
 
 interface CanvasProps {
   nodes: Node[];
@@ -40,9 +40,13 @@ const Canvas: React.FC<CanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // update project function from project context
+  const { updateProject, project } = useProject();
+
   // Memoize nodeTypes
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
+  // Handle drop event for adding new nodes
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -83,6 +87,13 @@ const Canvas: React.FC<CanvasProps> = ({
     onSelectNode(null);
     onSelectEdge(null);
   }, [onSelectNode, onSelectEdge]);
+
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      updateProject({ nodes, edges });
+      //console.log('updateProject', project);
+    }
+  }, [nodes, edges]);
 
   return (
     <Box
