@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useGenDocs } from '../hooks/useGenDocs';
+import { genDocs } from '../prompts/genDocs';
 import promptAI from '../services/prompt';
 import { useProject } from '../contexts/ProjectContext';
 import {
@@ -39,14 +39,17 @@ import { MdOutlineSecurity } from "react-icons/md";
 import { IoRocketOutline } from "react-icons/io5";
 import { FaRegFileAlt } from "react-icons/fa";
 import LoadingModal from '../components/LoadingModal';
+import { useDocs } from '../contexts/DocsContext';
 
 const DocPage: React.FC = () => {
   const [sections, setSections] = useState<Record<string, string>>({});
   const [selectedSection, setSelectedSection] = useState('Overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const docsPrompt = useGenDocs();
-  const { project, updateDocs } = useProject();
+  const { project, updateProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
+
+  const docsPrompt = genDocs(project);
+  const { updateDocs } = useDocs();
 
   const fetchDocumentation = async () => {
     if (docsPrompt) {
@@ -57,9 +60,11 @@ const DocPage: React.FC = () => {
         const content = choices[0].message?.content || '';
         // console.log('Fetched documentation content:', content);
         setSections(splitIntoSections(content));
-        updateDocs([
+        const newDocs = [
           { title: 'Documentation', content, lastUpdated: new Date() },
-        ]);
+        ];
+        updateDocs(newDocs); 
+        updateProject({ docs: newDocs });
       }
       setIsLoading(false);
     }
@@ -67,7 +72,7 @@ const DocPage: React.FC = () => {
 
   useEffect(() => {
     if (project?.docs && project.docs.length > 0) {
-      console.log('Using cached documentation:', project.docs[0].content);
+      //console.log('Using cached documentation:', project.docs[0].content);
       setSections(splitIntoSections(project.docs[0].content));
     } else {
       fetchDocumentation();

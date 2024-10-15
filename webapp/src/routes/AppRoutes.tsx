@@ -5,7 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DesignPage from '../pages/design/DesignPage';
 import CodePage from '../pages/code/CodePage';
-import DocPage from '../pages/DocPage';
+import DocPage from '../pages/DocsPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { ChakraProvider } from '@chakra-ui/react';
 import AccountPage from '../pages/AccountPage';
