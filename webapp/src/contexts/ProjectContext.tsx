@@ -7,7 +7,7 @@ import { CodeFile } from './CodeFileContext';
 export interface InMemoryProject {
   //id: string;
   name: string;
-  //description: string;
+  description: string;
   nodes: Node[];
   edges: Edge[];
   files: FileTreeItemType;
@@ -32,7 +32,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     setProject((prevProject) => {
       if (!prevProject) {
         return {
-          name: updatedData.name || '',
+          name: updatedData.name || 'project name',
+          description: updatedData.description || 'project description',
           nodes: updatedData.nodes || [],
           edges: updatedData.edges || [],
           files: updatedData.files || { name: '', children: [] },

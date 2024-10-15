@@ -185,7 +185,7 @@ const DesignPage: React.FC = () => {
 
         setProject({
           name: project?.name || '',
-          //description: project?.description || '',
+          description: project?.description || '',
           nodes,
           edges,
           files,
@@ -228,7 +228,7 @@ const DesignPage: React.FC = () => {
     // : ProjectInfoToSave
     const projectInfo: any = {
       name: project.name,
-      //description: project.description,
+      description: project.description,
       details: {
         nodes: project.nodes,
         edges: project.edges,

@@ -42,6 +42,7 @@ const CodePage = () => {
             if (project?.files) {
               setProject({
                 name: project?.name || '',
+                description: project?.description || '',
                 nodes,
                 edges,
                 files: project?.files,

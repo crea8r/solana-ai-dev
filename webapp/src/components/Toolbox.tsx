@@ -2,6 +2,8 @@
 
 import React from 'react';
 import {
+  Flex,
+  Textarea,
   Box,
   SimpleGrid,
   Icon,
@@ -13,6 +15,8 @@ import {
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { useProject } from '../contexts/ProjectContext';
+import { GoPencil } from 'react-icons/go';
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}'),
@@ -21,6 +25,30 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [projectDesc, setProjectDesc] = React.useState('Project Description');
+  const { updateProject } = useProject();
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setProjectDesc(event.target.value);
+  };
+
+  const handleInputBlur = () => {
+    updateProject({ description: projectDesc });
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter') {
+      updateProject({ description: projectDesc });
+      setIsEditing(false);
+    }
+  };
+
   return (
     <Box
       width="30%"
@@ -33,6 +61,37 @@ const Toolbox: React.FC = () => {
       shadow="md"
     >
       <VStack spacing={2} align='stretch'>
+      <Flex
+          onClick={handleEditClick}
+          direction="row"
+          alignItems="center"
+          style={{ cursor: 'pointer' }}
+          gap={4}
+          mb={6}
+          mt={4}
+          ml={2}
+          mr={2}
+        >
+          {isEditing ? (
+            <Textarea
+              value={projectDesc}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDown}
+              className="text-sm"
+              border="none"
+              outline="none"
+              resize="none"
+            />
+          ) : (
+            <>
+              <h1 className="text-sm">
+                {projectDesc}
+              </h1>
+              <GoPencil className="h-4 w-4" />
+            </>
+          )}
+        </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas
         </Text>

@@ -64,15 +64,13 @@ const TopPanel: React.FC<TopPanelProps> = ({
       shadow="md"
     >
       <Flex alignItems="center" gap={6}>
-        <Button variant="ghost" size="sm">
-          <FaCog className="h-6 w-6" />
-        </Button>
         <Flex
           onClick={handleEditClick}
           direction="row"
           alignItems="center"
           style={{ cursor: 'pointer' }}
           gap={4}
+          ml={4}
         >
           {isEditing ? (
             <input
