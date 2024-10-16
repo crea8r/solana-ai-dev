@@ -1,6 +1,6 @@
 // src/components/Toolbox.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Flex,
   Textarea,
@@ -15,8 +15,9 @@ import {
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
-import { useProject } from '../contexts/ProjectContext';
 import { GoPencil } from 'react-icons/go';
+import { useProject } from '../contexts/ProjectContext';
+
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}'),
@@ -27,7 +28,7 @@ const toolboxItems = [
 const Toolbox: React.FC = () => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [projectDesc, setProjectDesc] = React.useState('Project Description');
-  const { updateProject } = useProject();
+  const { project, savedProject, updateProject, updateSavedProject } = useProject();
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -38,16 +39,22 @@ const Toolbox: React.FC = () => {
   };
 
   const handleInputBlur = () => {
-    updateProject({ description: projectDesc });
+    updateSavedProject({ description: projectDesc });
     setIsEditing(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter') {
-      updateProject({ description: projectDesc });
+      updateSavedProject({ description: projectDesc });
       setIsEditing(false);
     }
   };
+
+  useEffect(() => {
+    if (savedProject) {
+      setProjectDesc(savedProject.description);
+    }
+  }, [savedProject]);
 
   return (
     <Box

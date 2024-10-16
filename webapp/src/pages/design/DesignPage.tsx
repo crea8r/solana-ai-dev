@@ -33,12 +33,14 @@ import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-import { useProject } from '../../contexts/ProjectContext';
 import { FileTreeItemType } from '../../components/FileTree';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
 import { ProjectInfoToSave } from '../../interfaces/project';
+import { useProject } from '../../contexts/ProjectContext';
+import { createItem } from '../../utils/itemFactory';
+
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
@@ -57,7 +59,8 @@ function setFileTreePaths(
 }
 
 const DesignPage: React.FC = () => {
-  const { project, setProject } = useProject();
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
+
   const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
   const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -93,6 +96,7 @@ const DesignPage: React.FC = () => {
 
   const handleSelectNode = (node: Node | null) => {
     setSelectedNode(node);
+    console.log('[DesignPage] selectedNode', node);
     setSelectedEdge(null);
   };
 
@@ -220,23 +224,23 @@ const DesignPage: React.FC = () => {
 
   // Handle save project
   const handleSaveClick = async () => {
-    if (!project) {
-      console.error('Project data is missing');
+    if (!savedProject) {
+      console.error('Saved project data is missing');
       return;
     }
-
-    // : ProjectInfoToSave
+    console.log('[DesignPage] savedProject', savedProject);
     const projectInfo: ProjectInfoToSave = {
-      name: project.name,
-      description: project.description,
+      name: savedProject.name,
+      description: savedProject.description,
       details: {
-        nodes: project.nodes,
-        edges: project.edges,
+        nodes: savedProject.details.nodes,
+        edges: savedProject.details.edges,
       }
     };
 
     try {
       const response = await projectApi.saveProject(projectInfo);
+      console.log('[DesignPage - handleSaveClick] projectInfo', projectInfo);
       console.log('Project saved successfully:', response);
     } catch (error) {
       console.error('Error saving project:', error);
@@ -251,11 +255,42 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const project = await projectApi.getProjectDetails(projectId);
-      console.log('load details: ', project);
-      setProject({
-        id: project.id,
-        ...project.details,
+
+      // recreate the toolbox item
+      const nodesWithTypedItems = project.details.nodes.map((node: Node) => {
+        // Rebuild the item using the createItem function based on the type
+        const restoredItem = createItem(node.data.item.type);  // Creates a ToolboxItem (e.g., Account, Instruction, Program)
+  
+        if (restoredItem) {
+          // Restore any saved properties from the fetched data
+          restoredItem.setName(node.data.item.name);  // Set name and other properties from fetched data
+          restoredItem.setDescription(node.data.item.description);
+        }
+  
+        // Return the node with the updated item (now it's a ToolboxItem with methods)
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            item: restoredItem,  // Updated with the re-created ToolboxItem
+          },
+        };
       });
+
+      
+      updateSavedProject({
+        name: project.name,
+        description: project.description,
+        details: {
+          nodes: project.details.nodes,
+          edges: project.details.edges,
+        }
+      });
+
+
+      setNodes(nodesWithTypedItems || []);
+      setEdges(project.details.edges || []);
+
     } catch (e) {
       toast({
         title: 'Something went wrong!',
@@ -266,12 +301,26 @@ const DesignPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      handleCloseWalkthrough();
     }
   };
 
+  /*
   useEffect(() => {
-    //console.log('project', project);
-  }, [project]);
+    console.log('selectedNode', selectedNode);
+  }, [selectedNode]);
+  */
+
+  useEffect(() => {
+    updateSavedProject({
+      name: savedProject?.name || '',
+      description: savedProject?.description || '',
+      details: {
+        nodes: nodes,
+        edges: edges,
+      }
+    });
+  }, [nodes, edges]);
 
   return (
     <>

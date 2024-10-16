@@ -1,6 +1,6 @@
 // src/components/TopPanel.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Flex,
   Menu,
@@ -30,7 +30,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
 }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [projectName, setProjectName] = React.useState('Project Name');
-  const { updateProject } = useProject();
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -41,16 +41,22 @@ const TopPanel: React.FC<TopPanelProps> = ({
   };
 
   const handleInputBlur = () => {
-    updateProject({ name: projectName });
+    updateSavedProject({ name: projectName });
     setIsEditing(false);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      updateProject({ name: projectName });
+      updateSavedProject({ name: projectName });
       setIsEditing(false);
     }
   };
+
+  useEffect(() => {
+    if (savedProject) {
+      setProjectName(savedProject.name);
+    }
+  }, [savedProject]);
 
   return (
     <Flex

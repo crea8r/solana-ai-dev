@@ -5,6 +5,7 @@ import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
+import { useProject } from '../contexts/ProjectContext';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -29,10 +30,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 }) => {
   const [localValues, setLocalValues] = useState<any>({});
   const [edgeLabel, setEdgeLabel] = useState('');
+  const { project, setProject, updateProject } = useProject();
+
 
   useEffect(() => {
     if (selectedNode) {
       const item = selectedNode.data.item as ToolboxItem;
+      console.log('[PropertyPanel] selectedNode: ', selectedNode.data);
       setLocalValues(item.getPropertyValues());
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
@@ -61,6 +65,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       };
 
       onUpdateNode(updatedNode);
+
+      updateProject({
+        nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node)
+      });
+
     } else if (selectedEdge) {
       const updatedEdge = {
         ...selectedEdge,

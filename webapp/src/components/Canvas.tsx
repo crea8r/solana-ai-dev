@@ -39,9 +39,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onAddNode,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-
-  // update project function from project context
-  const { updateProject, project } = useProject();
+  const { project, setProject, updateProject } = useProject();
 
   // Memoize nodeTypes
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
