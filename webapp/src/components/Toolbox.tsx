@@ -72,32 +72,15 @@ const Toolbox: React.FC = () => {
           onClick={handleEditClick}
           direction="row"
           alignItems="center"
-          style={{ cursor: 'pointer' }}
           gap={4}
           mb={6}
           mt={4}
           ml={2}
           mr={2}
         >
-          {isEditing ? (
-            <Textarea
-              value={projectDesc}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={handleKeyDown}
-              className="text-sm"
-              border="none"
-              outline="none"
-              resize="none"
-            />
-          ) : (
-            <>
-              <h1 className="text-sm">
-                {projectDesc}
-              </h1>
-              <GoPencil className="h-4 w-4" />
-            </>
-          )}
+          <h1 className="text-sm">
+            {projectDesc}
+          </h1>
         </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas

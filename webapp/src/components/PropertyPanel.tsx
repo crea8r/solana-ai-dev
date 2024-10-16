@@ -30,13 +30,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 }) => {
   const [localValues, setLocalValues] = useState<any>({});
   const [edgeLabel, setEdgeLabel] = useState('');
-  const { project, setProject, updateProject } = useProject();
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
 
 
   useEffect(() => {
     if (selectedNode) {
       const item = selectedNode.data.item as ToolboxItem;
-      console.log('[PropertyPanel] selectedNode: ', selectedNode.data);
+      //console.log('[PropertyPanel] selectedNode: ', selectedNode.data);
       setLocalValues(item.getPropertyValues());
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
@@ -68,6 +68,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
       updateProject({
         nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node)
+      });
+
+      console.log('[PropertyPanel] handleSave: ', localValues);
+      // Update the project name in the savedProject
+      updateSavedProject({
+        name: localValues.name || savedProject?.name || '[Default Project Name]',
+        description: localValues.description || savedProject?.description || '[Default Project Description]'
       });
 
     } else if (selectedEdge) {

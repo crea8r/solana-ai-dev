@@ -74,28 +74,12 @@ const TopPanel: React.FC<TopPanelProps> = ({
           onClick={handleEditClick}
           direction="row"
           alignItems="center"
-          style={{ cursor: 'pointer' }}
           gap={4}
           ml={4}
         >
-          {isEditing ? (
-            <input
-              type="text"
-              value={projectName}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyPress={handleKeyPress}
-              className="text-lg font-semibold"
-              style={{ border: 'none', outline: 'none' }}
-            />
-          ) : (
-            <>
-              <h1 className="text-lg font-semibold">
-                {projectName}
-              </h1>
-              <GoPencil className="h-5 w-5" />
-            </>
-          )}
+          <h1 className="text-lg font-semibold">
+            {projectName}
+          </h1>
         </Flex>
       </Flex>
       <Flex>
