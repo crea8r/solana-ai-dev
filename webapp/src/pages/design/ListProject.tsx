@@ -95,7 +95,7 @@ const ListProject: React.FC<ListProjectProps> = ({
               >
                 <Text fontWeight='bold'>{project.name}</Text>
                 <Text fontSize='sm' color='gray.600'>
-                  {shortenText(project.description)}
+                  {shortenText(project.description || 'No description available')}
                 </Text>
                 <Text fontSize='xs' color='gray.400'>
                   Last updated:{' '}

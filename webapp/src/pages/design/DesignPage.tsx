@@ -226,7 +226,7 @@ const DesignPage: React.FC = () => {
     }
 
     // : ProjectInfoToSave
-    const projectInfo: any = {
+    const projectInfo: ProjectInfoToSave = {
       name: project.name,
       description: project.description,
       details: {
