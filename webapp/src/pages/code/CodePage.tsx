@@ -3,33 +3,12 @@ import { Box, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
-import { useProject } from '../../contexts/ProjectContext';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
+import { extractCodeBlock } from '../../utils/text';
+import { useProject } from '../../contexts/ProjectContext';
 
-function extractCodeBlock(text: string): string {
-  const lines = text.split('\n');
-  let isInCodeBlock = false;
-  const codeBlockLines: string[] = [];
-
-  for (const line of lines) {
-    if (line.trim().startsWith('```')) {
-      if (isInCodeBlock) {
-        break; // End of code block
-      } else {
-        isInCodeBlock = true; // Start of code block
-        continue; // Skip the opening ```
-      }
-    }
-
-    if (isInCodeBlock) {
-      codeBlockLines.push(line);
-    }
-  }
-
-  return codeBlockLines.join('\n');
-}
 
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<
@@ -62,6 +41,8 @@ const CodePage = () => {
             console.log('content: ', content);
             if (project?.files) {
               setProject({
+                name: project?.name || '',
+                description: project?.description || '',
                 nodes,
                 edges,
                 files: project?.files,
@@ -81,6 +62,7 @@ const CodePage = () => {
       ? [project?.codes[selectedFile.path as keyof typeof project.codes] || '']
       : 'Empty file'
     : 'Empty file';
+  // TODO: need to figure out when to enable the save button
   return (
     <Flex direction='column' height='100vh'>
       <TopPanel />

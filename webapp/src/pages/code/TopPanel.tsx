@@ -12,7 +12,6 @@ import {
 } from '@chakra-ui/react';
 
 interface TopPanelProps {}
-
 const TopPanel: React.FC<TopPanelProps> = () => {
   return (
     <Flex
@@ -31,9 +30,9 @@ const TopPanel: React.FC<TopPanelProps> = () => {
             Project
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Load')}>Open</MenuItem>
-            <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
-            <MenuItem onClick={() => console.log('New project')}>New</MenuItem>
+            <MenuItem onClick={() => {}}>Open</MenuItem>
+            <MenuItem onClick={() => {}}>Save</MenuItem>
+            <MenuItem onClick={() => {}}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>

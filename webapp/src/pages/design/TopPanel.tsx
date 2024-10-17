@@ -1,6 +1,6 @@
 // src/components/TopPanel.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Flex,
   Menu,
@@ -12,12 +12,52 @@ import {
 } from '@chakra-ui/react';
 import { FaCog } from 'react-icons/fa';
 import { logEvent } from '../../utils/analytics';
+import { GoPencil } from "react-icons/go";
+import { useProject } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
   generatePrompt: () => void;
+  onClickOpen: () => void;
+  onClickSave: () => void;
+  onClickNew: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
+const TopPanel: React.FC<TopPanelProps> = ({
+  generatePrompt,
+  onClickOpen,
+  onClickSave,
+  onClickNew,
+}) => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [projectName, setProjectName] = React.useState('Project Name');
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProjectName(event.target.value);
+  };
+
+  const handleInputBlur = () => {
+    updateSavedProject({ name: projectName });
+    setIsEditing(false);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      updateSavedProject({ name: projectName });
+      setIsEditing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (savedProject) {
+      setProjectName(savedProject.name);
+    }
+  }, [savedProject]);
+
   return (
     <Flex
       as="header"
@@ -29,11 +69,18 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
       px={4}
       shadow="md"
     >
-      <Flex alignItems="center" gap={4}>
-        <Button variant="ghost" size="sm">
-          <FaCog className="h-6 w-6" />
-        </Button>
-        <h1 className="text-lg font-semibold">Project Name</h1>
+      <Flex alignItems="center" gap={6}>
+        <Flex
+          onClick={handleEditClick}
+          direction="row"
+          alignItems="center"
+          gap={4}
+          ml={4}
+        >
+          <h1 className="text-lg font-semibold">
+            {projectName}
+          </h1>
+        </Flex>
       </Flex>
       <Flex>
         <Menu>
@@ -41,9 +88,9 @@ const TopPanel: React.FC<TopPanelProps> = ({ generatePrompt }) => {
             Project
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Open')}>Open</MenuItem>
-            <MenuItem onClick={() => console.log('Save')}>Save</MenuItem>
-            <MenuItem onClick={() => console.log('New project')}>New</MenuItem>
+            <MenuItem onClick={onClickOpen}>Open</MenuItem>
+            <MenuItem onClick={onClickSave}>Save</MenuItem>
+            <MenuItem onClick={onClickNew}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>

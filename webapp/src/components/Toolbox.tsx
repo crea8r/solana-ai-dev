@@ -1,7 +1,9 @@
 // src/components/Toolbox.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
+  Flex,
+  Textarea,
   Box,
   SimpleGrid,
   Icon,
@@ -13,6 +15,9 @@ import {
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { GoPencil } from 'react-icons/go';
+import { useProject } from '../contexts/ProjectContext';
+
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}'),
@@ -21,6 +26,36 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [projectDesc, setProjectDesc] = React.useState('Project Description');
+  const { project, savedProject, updateProject, updateSavedProject } = useProject();
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setProjectDesc(event.target.value);
+  };
+
+  const handleInputBlur = () => {
+    updateSavedProject({ description: projectDesc });
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter') {
+      updateSavedProject({ description: projectDesc });
+      setIsEditing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (savedProject) {
+      setProjectDesc(savedProject.description);
+    }
+  }, [savedProject]);
+
   return (
     <Box
       width="30%"
@@ -33,6 +68,20 @@ const Toolbox: React.FC = () => {
       shadow="md"
     >
       <VStack spacing={2} align='stretch'>
+      <Flex
+          onClick={handleEditClick}
+          direction="row"
+          alignItems="center"
+          gap={4}
+          mb={6}
+          mt={4}
+          ml={2}
+          mr={2}
+        >
+          <h1 className="text-sm">
+            {projectDesc}
+          </h1>
+        </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas
         </Text>
