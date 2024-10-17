@@ -4,6 +4,7 @@ export interface ProjectListItem {
   description: string;
   created_at: string;
   last_updated: string;
+  root_path: string;
 }
 
 export interface ProjectDetail {

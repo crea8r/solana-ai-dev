@@ -267,7 +267,7 @@ const DesignPage: React.FC = () => {
 
       const result = await projectApi.createProject(newProjectInfo);
 
-      console.log('New project created:', result.project);
+      console.log('New project created:', result);
 
       updateSavedProject({
         id: result.project.id,
@@ -277,11 +277,11 @@ const DesignPage: React.FC = () => {
           nodes: [],
           edges: [],
         },
+        rootPath: result.project.root_path, 
       });
 
       setNodes([]);
       setEdges([]);
-
 
     } catch (error) {
       console.error('Error creating new project:', error);
@@ -322,10 +322,11 @@ const DesignPage: React.FC = () => {
         details: {
           nodes: fetchedProject.details.nodes,
           edges: fetchedProject.details.edges,
-        }
+        },
+        rootPath: fetchedProject.root_path,
       });
 
-      console.log('[DesignPage] savedProject context updated', savedProject);
+      console.log('[DesignPage] - handleLoadProject: savedProject context updated');
 
       setNodes(nodesWithTypedItems || []);
       setEdges(fetchedProject.details.edges || []);
@@ -344,17 +345,20 @@ const DesignPage: React.FC = () => {
     }
   };
 
-  /*
+  
   useEffect(() => {
-    console.log('selectedNode', selectedNode);
-  }, [selectedNode]);
-  */
+      console.log('Project ID:', savedProject?.id);
+      console.log('Root Path:', savedProject?.rootPath);
+      console.log('Name:', savedProject?.name);
+      console.log('Description:', savedProject?.description);
+  }, [savedProject]);
+  
 
   useEffect(() => {
     updateSavedProject({
-      id: savedProject?.id || undefined,
-      name: savedProject?.name || '',
-      description: savedProject?.description || '',
+      id: savedProject?.id,
+      name: savedProject?.name,
+      description: savedProject?.description,
       details: {
         nodes: nodes,
         edges: edges,

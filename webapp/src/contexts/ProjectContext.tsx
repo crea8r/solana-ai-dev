@@ -36,6 +36,7 @@ export interface SavedProject {
   name: string;
   description: string;
   details: ProjectDetails;
+  rootPath: string;
 }
 
 interface ProjectContextType {
@@ -66,6 +67,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
             edges: updatedData.details?.edges || [],
           },
           files: { name: '', children: [] },
+          rootPath: updatedData.rootPath || '',
           codes: [],
           docs: [],
         };
@@ -78,6 +80,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
           nodes: updatedData.details?.nodes || prevProject.details.nodes,
           edges: updatedData.details?.edges || prevProject.details.edges,
         },
+        rootPath: updatedData.rootPath || prevProject.rootPath,
       };
     });
   };
