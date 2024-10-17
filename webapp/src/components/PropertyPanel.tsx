@@ -1,5 +1,3 @@
-// src/components/PropertyPanel.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
@@ -36,12 +34,10 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   useEffect(() => {
     if (selectedNode) {
       const item = selectedNode.data.item as ToolboxItem;
-      //console.log('[PropertyPanel] selectedNode: ', selectedNode.data);
       setLocalValues(item.getPropertyValues());
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
     } else {
-      // Reset states when nothing is selected
       setLocalValues({});
       setEdgeLabel('');
     }
@@ -71,11 +67,18 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       });
 
       console.log('[PropertyPanel] handleSave: ', localValues);
-      // Update the project name in the savedProject
-      updateSavedProject({
-        name: localValues.name || savedProject?.name || '[Default Project Name]',
-        description: localValues.description || savedProject?.description || '[Default Project Description]'
-      });
+
+      const isProgramNode = programs.some(p => p.id === selectedNode.id);
+
+      if (isProgramNode) {
+        const programNode = programs.find(p => p.id === selectedNode.id);
+        const programItem = programNode?.data.item as ToolboxItem;
+
+        updateSavedProject({
+          name: programItem?.name || '[Default Project Name]',
+          description: programItem?.description || '[Default Project Description]'
+        });
+      }
 
     } else if (selectedEdge) {
       const updatedEdge = {

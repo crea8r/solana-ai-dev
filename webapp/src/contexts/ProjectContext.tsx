@@ -59,8 +59,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       if (!prevProject) {
         return {
           id: updatedData.id || undefined,
-          name: updatedData.name || '[Project Context] Project name',
-          description: updatedData.description || '[Project Context] project description',
+          name: updatedData.name || '',
+          description: updatedData.description || '',
           details: {
             nodes: updatedData.details?.nodes || [],
             edges: updatedData.details?.edges || [],
