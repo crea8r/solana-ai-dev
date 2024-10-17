@@ -32,7 +32,7 @@ interface ProjectDetails {
 }
 
 export interface SavedProject {
-  id?: string;
+  id?: string | undefined;
   name: string;
   description: string;
   details: ProjectDetails;

@@ -57,7 +57,7 @@ export const projectApi = {
     projectInfo: ProjectInfoToSave
   ): Promise<SaveProjectResponse> => {
     try {
-      const response = await api.post('/projects', projectInfo);
+      const response = await api.post('/projects/create', projectInfo);
       return response.data;
     } catch (error) {
       console.error('Error creating project:', error);

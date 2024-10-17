@@ -60,6 +60,7 @@ function setFileTreePaths(
 
 const DesignPage: React.FC = () => {
   const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
+  const isSaveDisabled = !savedProject || !savedProject.id || !savedProject.name || !savedProject.details;
 
   const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
   const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
@@ -224,12 +225,16 @@ const DesignPage: React.FC = () => {
 
   // Handle save project
   const handleSaveClick = async () => {
-    if (!savedProject) {
-      console.error('Saved project data is missing');
+    // Check if savedProject is defined and has the necessary properties
+    if (!savedProject || !savedProject.id || !savedProject.name) {
+      console.error('Saved project data is missing or incomplete');
       return;
     }
+
     console.log('[DesignPage] savedProject', savedProject);
+
     const projectInfo: ProjectInfoToSave = {
+      id: savedProject.id,
       name: savedProject.name,
       description: savedProject.description,
       details: {
@@ -239,7 +244,7 @@ const DesignPage: React.FC = () => {
     };
 
     try {
-      const response = await projectApi.saveProject(projectInfo);
+      const response = await projectApi.updateProject(savedProject.id, projectInfo);
       console.log('[DesignPage - handleSaveClick] projectInfo', projectInfo);
       console.log('Project saved successfully:', response);
     } catch (error) {
@@ -248,48 +253,82 @@ const DesignPage: React.FC = () => {
   };
 
   // Handle new project 
-  const handleNewClick = () => {};
+  const handleNewClick = async () => {
+    setIsLoading(true);
+    try {
+      const newProjectInfo: ProjectInfoToSave = {
+        name: 'New Project',
+        description: 'Description of new project',
+        details: {
+          nodes: [],
+          edges: [],
+        },
+      };
+
+      const result = await projectApi.createProject(newProjectInfo);
+
+      console.log('New project created:', result.project);
+
+      updateSavedProject({
+        id: result.project.id,
+        name: result.project.name,
+        description: result.project.description,
+        details: {
+          nodes: [],
+          edges: [],
+        },
+      });
+
+      setNodes([]);
+      setEdges([]);
+
+
+    } catch (error) {
+      console.error('Error creating new project:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle load project
   const handleLoadProject = async (projectId: string, projectName: string) => {
     setIsLoading(true);
     try {
-      const project = await projectApi.getProjectDetails(projectId);
+      const fetchedProject = await projectApi.getProjectDetails(projectId);
 
       // recreate the toolbox item
-      const nodesWithTypedItems = project.details.nodes.map((node: Node) => {
-        // Rebuild the item using the createItem function based on the type
-        const restoredItem = createItem(node.data.item.type);  // Creates a ToolboxItem (e.g., Account, Instruction, Program)
+      const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
+        const restoredItem = createItem(node.data.item.type);
   
         if (restoredItem) {
-          // Restore any saved properties from the fetched data
-          restoredItem.setName(node.data.item.name);  // Set name and other properties from fetched data
+          restoredItem.setName(node.data.item.name);
           restoredItem.setDescription(node.data.item.description);
         }
   
-        // Return the node with the updated item (now it's a ToolboxItem with methods)
         return {
           ...node,
           data: {
             ...node.data,
-            item: restoredItem,  // Updated with the re-created ToolboxItem
+            item: restoredItem,
           },
         };
       });
 
       
       updateSavedProject({
-        name: project.name,
-        description: project.description,
+        id: fetchedProject.id,
+        name: fetchedProject.name,
+        description: fetchedProject.description,
         details: {
-          nodes: project.details.nodes,
-          edges: project.details.edges,
+          nodes: fetchedProject.details.nodes,
+          edges: fetchedProject.details.edges,
         }
       });
 
+      console.log('[DesignPage] savedProject context updated', savedProject);
 
       setNodes(nodesWithTypedItems || []);
-      setEdges(project.details.edges || []);
+      setEdges(fetchedProject.details.edges || []);
 
     } catch (e) {
       toast({
@@ -313,6 +352,7 @@ const DesignPage: React.FC = () => {
 
   useEffect(() => {
     updateSavedProject({
+      id: savedProject?.id || undefined,
       name: savedProject?.name || '',
       description: savedProject?.description || '',
       details: {

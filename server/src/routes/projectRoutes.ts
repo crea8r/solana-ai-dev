@@ -10,7 +10,8 @@ import { buildProject, testProject } from 'src/controllers/projectController';
 
 const router = express.Router();
 
-router.post('/save', authMiddleware, createProject);
+//router.post('/save', authMiddleware, createProject);
+router.post('/create', authMiddleware, createProject);
 router.put('/:id', authMiddleware, editProject);
 router.get('/:id', authMiddleware, getProjectDetails);
 router.delete('/:id', authMiddleware, deleteProject);
