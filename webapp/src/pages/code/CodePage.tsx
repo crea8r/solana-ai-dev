@@ -23,7 +23,7 @@ const CodePage = () => {
     // For now, we'll just set a placeholder
     const codes: any = project?.codes || {};
     const codeList = window.Object.keys(codes);
-    if (file.type === 'file' || file.type !== 'directory') {
+    if (file.type === 'file' || file.type !== 'directory') { // if (file.type === 'file') {
       if (!codeList.includes(file.path || '')) {
         // generate code content and set Project
         setIsLoading(true);

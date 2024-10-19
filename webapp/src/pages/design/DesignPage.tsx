@@ -178,6 +178,8 @@ const DesignPage: React.FC = () => {
 
   const handlePrompt = async (nodes: Node[], edges: Edge[]) => {
     const ai_prompt = genStructure(nodes, edges);
+    console.log(`[DesignPage] ai_prompt: ${ai_prompt}`);
+    /*
     setPromptString(ai_prompt);
     setIsLoading(true);
     const choices = await promptAI(ai_prompt);
@@ -200,6 +202,7 @@ const DesignPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+    */
   };
 
   const handleCloseWalkthrough = () => {
@@ -347,10 +350,7 @@ const DesignPage: React.FC = () => {
 
   
   useEffect(() => {
-      console.log('Project ID:', savedProject?.id);
-      console.log('Root Path:', savedProject?.rootPath);
-      console.log('Name:', savedProject?.name);
-      console.log('Description:', savedProject?.description);
+      console.log(`[DesignPage] savedProject Context: \n Project ID: ${savedProject?.id} \n Root Path: ${savedProject?.rootPath} \n Name: ${savedProject?.name} \n Description: ${savedProject?.description}`);
   }, [savedProject]);
   
 

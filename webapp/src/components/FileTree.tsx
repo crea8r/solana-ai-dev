@@ -77,7 +77,7 @@ const FileTreeItem = ({
 };
 
 type FileTreeProps = {
-  onSelectFile: any;
+  onSelectFile: any; // (item: FileTreeItemType) => void;
   files?: FileTreeItemType;
   selectedItem?: FileTreeItemType;
 };
