@@ -120,10 +120,9 @@ const DesignPage: React.FC = () => {
   const handleUpdateNode = (updatedNode: Node) => {
     // Check if ownerProgramId has changed
     const oldNode = nodes.find((node) => node.id === updatedNode.id);
-    const newOwnerProgramId = (updatedNode.data.localValues as any)
-      .ownerProgramId;
-    const oldOwnerProgramId =
-      oldNode && (oldNode.data.item as any).ownerProgramId;
+    const newOwnerProgramId = (updatedNode.data.localValues as any).ownerProgramId;
+    const oldOwnerProgramId = oldNode && (oldNode.data.item as any).ownerProgramId;
+    
     if (newOwnerProgramId !== oldOwnerProgramId) {
       // Remove old edge if it exists
       if (oldOwnerProgramId) {
@@ -159,10 +158,18 @@ const DesignPage: React.FC = () => {
     }
     const item = updatedNode.data.item as ToolboxItem;
     item.setPropertyValues(updatedNode.data.localValues);
-    setNodes(
-      nodes.map((node) => (node.id === updatedNode.id ? updatedNode : node))
+    //setNodes(nodes.map((node) => (node.id === updatedNode.id ? updatedNode : node)));
+    //setSelectedNode(updatedNode);
+    const updatedNodes = nodes.map((node) =>
+      node.id === updatedNode.id ? updatedNode : node
     );
+    
+    setNodes(updatedNodes);
     setSelectedNode(updatedNode);
+
+    updateProject({
+      nodes: updatedNodes,
+    });
   };
 
   const handleUpdateEdge = (updatedEdge: Edge) => {
@@ -329,8 +336,6 @@ const DesignPage: React.FC = () => {
         rootPath: fetchedProject.root_path,
       });
 
-      console.log('[DesignPage] - handleLoadProject: savedProject context updated');
-
       setNodes(nodesWithTypedItems || []);
       setEdges(fetchedProject.details.edges || []);
 
@@ -348,12 +353,26 @@ const DesignPage: React.FC = () => {
     }
   };
 
-  
   useEffect(() => {
-      console.log(`[DesignPage] savedProject Context: \n Project ID: ${savedProject?.id} \n Root Path: ${savedProject?.rootPath} \n Name: ${savedProject?.name} \n Description: ${savedProject?.description}`);
+    const _project_id = savedProject?.id;
+    const _root_path = savedProject?.rootPath;
+    const _name = savedProject?.name;
+    const _description = savedProject?.description;
+    const _nodes_count = savedProject?.details.nodes.length;
+    const _nodes_names = savedProject?.details.nodes.map((node: Node) => node.data.item.name);
+    const _edges_count = savedProject?.details.edges.length;
+
+    const log = `-- [DesignPage] - handleLoadProject --
+    'savedProject' context updated: 
+    Project ID: ${_project_id}
+    Root Path: ${_root_path}
+    Name: ${_name}
+    Description: ${_description}  
+    nodes: ${_nodes_count} (${_nodes_names?.join(', ')})
+    edges: ${_edges_count}`;
+    console.log(log);
   }, [savedProject]);
   
-
   useEffect(() => {
     updateSavedProject({
       id: savedProject?.id,

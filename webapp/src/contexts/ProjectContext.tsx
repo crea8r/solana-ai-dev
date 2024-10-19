@@ -106,6 +106,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
+  /*
   useEffect(() => {
     if (savedProject) {
       console.log(`[Project Context] savedProject updated: \n Project ID: ${savedProject.id} \n Root Path: ${savedProject.rootPath} \n Name: ${savedProject.name} \n Description: ${savedProject.description}`);
@@ -117,6 +118,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       console.log(`[Project Context] project updated: \n Project Name: ${project.name} \n ProjectDescription: ${project.description} \n Nodes: ${JSON.stringify(project.nodes)}`);
     }
   }, [project]);
+  */
 
   return (
     <ProjectContext.Provider value={{ project, savedProject, setProject, updateProject, updateSavedProject }}>
