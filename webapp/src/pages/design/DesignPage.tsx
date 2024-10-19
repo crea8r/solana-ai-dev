@@ -97,7 +97,6 @@ const DesignPage: React.FC = () => {
 
   const handleSelectNode = (node: Node | null) => {
     setSelectedNode(node);
-    console.log('[DesignPage] selectedNode', node);
     setSelectedEdge(null);
   };
 
@@ -152,14 +151,13 @@ const DesignPage: React.FC = () => {
             strokeWidth: 2,
           },
         };
-        console.log(newEdge);
+        //console.log(newEdge);
         setEdges((edges) => [...edges, newEdge]);
       }
     }
     const item = updatedNode.data.item as ToolboxItem;
     item.setPropertyValues(updatedNode.data.localValues);
-    //setNodes(nodes.map((node) => (node.id === updatedNode.id ? updatedNode : node)));
-    //setSelectedNode(updatedNode);
+
     const updatedNodes = nodes.map((node) =>
       node.id === updatedNode.id ? updatedNode : node
     );
@@ -241,8 +239,6 @@ const DesignPage: React.FC = () => {
       return;
     }
 
-    console.log('[DesignPage] savedProject', savedProject);
-
     const projectInfo: ProjectInfoToSave = {
       id: savedProject.id,
       name: savedProject.name,
@@ -255,8 +251,6 @@ const DesignPage: React.FC = () => {
 
     try {
       const response = await projectApi.updateProject(savedProject.id, projectInfo);
-      console.log('[DesignPage - handleSaveClick] projectInfo', projectInfo);
-      console.log('Project saved successfully:', response);
     } catch (error) {
       console.error('Error saving project:', error);
     }
@@ -277,7 +271,7 @@ const DesignPage: React.FC = () => {
 
       const result = await projectApi.createProject(newProjectInfo);
 
-      console.log('New project created:', result);
+      //console.log('New project created:', result);
 
       updateSavedProject({
         id: result.project.id,
@@ -313,6 +307,7 @@ const DesignPage: React.FC = () => {
         if (restoredItem) {
           restoredItem.setName(node.data.item.name);
           restoredItem.setDescription(node.data.item.description);
+          restoredItem.setPropertyValues(node.data.localValues);
         }
   
         return {
@@ -368,7 +363,7 @@ const DesignPage: React.FC = () => {
     Root Path: ${_root_path}
     Name: ${_name}
     Description: ${_description}  
-    nodes: ${_nodes_count} (${_nodes_names?.join(', ')})
+    nodes: ${_nodes_count} (${_nodes_names?.join(', ')});
     edges: ${_edges_count}`;
     console.log(log);
   }, [savedProject]);

@@ -66,8 +66,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node)
       });
 
-      console.log('[PropertyPanel] handleSave: ', localValues);
-
       const isProgramNode = programs.some(p => p.id === selectedNode.id);
 
       if (isProgramNode) {

@@ -89,7 +89,6 @@ const Canvas: React.FC<CanvasProps> = ({
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
       updateProject({ nodes, edges });
-      //console.log('updateProject', project);
     }
   }, [nodes, edges]);
 
