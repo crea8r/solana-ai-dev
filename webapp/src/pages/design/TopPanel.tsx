@@ -12,8 +12,6 @@ import {
 } from '@chakra-ui/react';
 import { FaCog } from 'react-icons/fa';
 import { logEvent } from '../../utils/analytics';
-import { GoPencil } from "react-icons/go";
-import { useProject } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
   generatePrompt: () => void;
@@ -28,35 +26,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onClickSave,
   onClickNew,
 }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [projectName, setProjectName] = React.useState('Project Name');
-  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setProjectName(event.target.value);
-  };
-
-  const handleInputBlur = () => {
-    updateSavedProject({ name: projectName });
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      updateSavedProject({ name: projectName });
-      setIsEditing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (savedProject) {
-      setProjectName(savedProject.name);
-    }
-  }, [savedProject]);
 
   return (
     <Flex
@@ -71,14 +40,13 @@ const TopPanel: React.FC<TopPanelProps> = ({
     >
       <Flex alignItems="center" gap={6}>
         <Flex
-          onClick={handleEditClick}
           direction="row"
           alignItems="center"
           gap={4}
           ml={4}
         >
           <h1 className="text-lg font-semibold">
-            {projectName}
+            {/* Removed {projectName} */}
           </h1>
         </Flex>
       </Flex>
@@ -110,10 +78,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           leftIcon={React.createElement(FaCog)}
           variant="ghost"
           size="sm"
-          onClick={() => {
-            logEvent('Prompt', 'Generate', 'click');
-            generatePrompt();
-          }}
+          onClick={generatePrompt}
         >
           Prompt
         </Button>

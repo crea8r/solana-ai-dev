@@ -40,6 +40,7 @@ import ProjectBanner from './ProjectBanner';
 import { ProjectInfoToSave } from '../../interfaces/project';
 import { useProject } from '../../contexts/ProjectContext';
 import { createItem } from '../../utils/itemFactory';
+import { TaskModal } from './TaskModal';
 
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
@@ -62,6 +63,7 @@ const DesignPage: React.FC = () => {
   const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
   const isSaveDisabled = !savedProject || !savedProject.id || !savedProject.name || !savedProject.details;
 
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
   const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -77,6 +79,7 @@ const DesignPage: React.FC = () => {
     onOpen: openProjectBanner,
   } = useDisclosure();
   const toast = useToast();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   useEffect(() => {
     initGA(GA_MEASUREMENT_ID);
@@ -181,33 +184,8 @@ const DesignPage: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
   };
 
-  const handlePrompt = async (nodes: Node[], edges: Edge[]) => {
-    const ai_prompt = genStructure(nodes, edges);
-    console.log(`[DesignPage] ai_prompt: ${ai_prompt}`);
-    /*
-    setPromptString(ai_prompt);
-    setIsLoading(true);
-    const choices = await promptAI(ai_prompt);
-    try {
-      if (choices && choices.length > 0) {
-        const files = JSON.parse(
-          choices[0].message?.content
-        ) as FileTreeItemType;
-        setFileTreePaths(files);
-
-        setProject({
-          name: project?.name || '',
-          description: project?.description || '',
-          nodes,
-          edges,
-          files,
-        });
-      }
-    } catch (e) {
-    } finally {
-      setIsLoading(false);
-    }
-    */
+  const handlePrompt = () => {
+    setIsTaskModalOpen((prev) => !prev);
   };
 
   const handleCloseWalkthrough = () => {
@@ -260,28 +238,14 @@ const DesignPage: React.FC = () => {
   const handleNewClick = async () => {
     setIsLoading(true);
     try {
-      const newProjectInfo: ProjectInfoToSave = {
-        name: 'New Project',
-        description: 'Description of new project',
-        details: {
-          nodes: [],
-          edges: [],
-        },
-      };
-
-      const result = await projectApi.createProject(newProjectInfo);
-
-      //console.log('New project created:', result);
-
       updateSavedProject({
-        id: result.project.id,
-        name: result.project.name,
-        description: result.project.description,
+        id: '',
+        name: '',
+        description: '',
         details: {
           nodes: [],
           edges: [],
         },
-        rootPath: result.project.root_path, 
       });
 
       setNodes([]);
@@ -328,7 +292,6 @@ const DesignPage: React.FC = () => {
           nodes: fetchedProject.details.nodes,
           edges: fetchedProject.details.edges,
         },
-        rootPath: fetchedProject.root_path,
       });
 
       setNodes(nodesWithTypedItems || []);
@@ -350,16 +313,15 @@ const DesignPage: React.FC = () => {
 
   useEffect(() => {
     const _project_id = savedProject?.id;
-    const _root_path = savedProject?.rootPath;
     const _name = savedProject?.name;
     const _description = savedProject?.description;
     const _nodes_count = savedProject?.details.nodes.length;
     const _nodes_names = savedProject?.details.nodes.map((node: Node) => node.data.item.name);
     const _edges_count = savedProject?.details.edges.length;
-
-    const log = `-- [DesignPage] - handleLoadProject --
+    const _root_path = savedProject?.rootPath;
+    const log = `-- [DesignPage] - useEffect --
     'savedProject' context updated: 
-    Project ID: ${_project_id}
+    Project Id: ${_project_id}
     Root Path: ${_root_path}
     Name: ${_name}
     Description: ${_description}  
@@ -380,6 +342,10 @@ const DesignPage: React.FC = () => {
     });
   }, [nodes, edges]);
 
+  const toggleTaskModal = () => {
+    setIsTaskModalOpen((prev) => !prev);
+  };
+
   return (
     <>
       <PromptModal
@@ -399,9 +365,7 @@ const DesignPage: React.FC = () => {
           project={project}
         />
         <TopPanel
-          generatePrompt={() => {
-            handlePrompt(nodes, edges);
-          }}
+          generatePrompt={handlePrompt}
           onClickNew={handleNewClick}
           onClickOpen={handleOpenClick}
           onClickSave={handleSaveClick}
@@ -447,6 +411,7 @@ const DesignPage: React.FC = () => {
         onProjectClick={handleLoadProject}
       />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} />
     </>
   );
 };

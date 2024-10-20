@@ -1,6 +1,6 @@
 // src/components/Toolbox.tsx
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Flex,
   Textarea,
@@ -15,8 +15,6 @@ import {
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
-import { GoPencil } from 'react-icons/go';
-import { useProject } from '../contexts/ProjectContext';
 
 
 const toolboxItems = [
@@ -26,35 +24,6 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [projectDesc, setProjectDesc] = React.useState('Project Description');
-  const { project, savedProject, updateProject, updateSavedProject } = useProject();
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setProjectDesc(event.target.value);
-  };
-
-  const handleInputBlur = () => {
-    updateSavedProject({ description: projectDesc });
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter') {
-      updateSavedProject({ description: projectDesc });
-      setIsEditing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (savedProject) {
-      setProjectDesc(savedProject.description);
-    }
-  }, [savedProject]);
 
   return (
     <Box
@@ -69,7 +38,6 @@ const Toolbox: React.FC = () => {
     >
       <VStack spacing={2} align='stretch'>
       <Flex
-          onClick={handleEditClick}
           direction="row"
           alignItems="center"
           gap={4}
@@ -78,9 +46,6 @@ const Toolbox: React.FC = () => {
           ml={2}
           mr={2}
         >
-          <h1 className="text-sm">
-            {projectDesc}
-          </h1>
         </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas

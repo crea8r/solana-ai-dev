@@ -90,6 +90,21 @@ export const projectApi = {
     }
   },
 
+  // Initialize Anchor project
+  initAnchorProject: async (
+    projectId: string, 
+    rootPath: string,
+    projectName: string,
+  ): Promise<TaskResponse> => {
+    try {
+      const response = await api.post(`/projects/init`, { projectId, rootPath, projectName });
+      return response.data;
+    } catch (error) {
+      console.error('Error initializing Anchor project:', error);
+      throw error;
+    }
+  },
+
   // Build a project
   buildProject: async (projectId: string): Promise<TaskResponse> => {
     try {

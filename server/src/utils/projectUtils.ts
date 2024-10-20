@@ -5,6 +5,8 @@ import { exec } from 'child_process';
 import path from 'path';
 import { AppError } from 'src/middleware/errorHandler';
 import { getProjectRootPath } from './fileUtils';
+import { v4 as uuidv4 } from 'uuid';
+import { normalizeProjectName } from './stringUtils';
 
 const runCommand = async (
   command: string,
@@ -12,7 +14,12 @@ const runCommand = async (
   taskId: string
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd }, async (error, stdout, stderr) => {
+    //console.log('Current PATH:', process.env.PATH);
+    const env = { 
+      ...process.env, // Inherit existing environment variables
+      PATH: `${process.env.PATH};C:\\Users\\1hhod\\.cargo\\bin` // Ensure this path matches where anchor.exe is installed
+    };
+    exec(command, { cwd, env }, async (error, stdout, stderr) => {
       let result = '';
       if (error) {
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
@@ -48,11 +55,10 @@ export const startAnchorInitTask = async (
   creatorId: string
 ): Promise<string> => {
   const taskId = await createTask('Anchor Init', creatorId, projectId);
-
   setImmediate(async () => {
-    await runCommand(`anchor init ${rootPath}`, APP_CONFIG.ROOT_FOLDER, taskId);
+    const anchorPath = 'C:\\Users\\1hhod\\.cargo\\bin\\anchor.exe';
+    await runCommand(`${anchorPath} init ${projectName}`, APP_CONFIG.ROOT_FOLDER, taskId);
   });
-
   return taskId;
 };
 

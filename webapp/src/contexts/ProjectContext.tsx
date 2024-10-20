@@ -6,6 +6,19 @@ import { CodeFile } from './CodeFileContext';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { ProjectInfoToSave } from '../interfaces/project';
 
+interface ProjectDetails {
+  nodes: Node[];
+  edges: Edge[];
+}
+
+export interface SavedProject {
+  id?: string | undefined;
+  rootPath?: string | undefined;
+  name: string;
+  description: string;
+  details: ProjectDetails;
+}
+
 export interface InMemoryProject {
   //id: string;
   name: string;
@@ -24,19 +37,6 @@ interface Program {
     name: string;
     description?: string;
   };
-}
-
-interface ProjectDetails {
-  nodes: Node[];
-  edges: Edge[];
-}
-
-export interface SavedProject {
-  id?: string | undefined;
-  name: string;
-  description: string;
-  details: ProjectDetails;
-  rootPath: string;
 }
 
 interface ProjectContextType {
@@ -67,7 +67,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
             edges: updatedData.details?.edges || [],
           },
           files: { name: '', children: [] },
-          rootPath: updatedData.rootPath || '',
           codes: [],
           docs: [],
         };
@@ -80,7 +79,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
           nodes: updatedData.details?.nodes || prevProject.details.nodes,
           edges: updatedData.details?.edges || prevProject.details.edges,
         },
-        rootPath: updatedData.rootPath || prevProject.rootPath,
       };
     });
   };

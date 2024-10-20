@@ -37,5 +37,6 @@ export interface ListProjectsResponse {
 
 export interface SaveProjectResponse {
   message: string;
-  project: ProjectListItem;
+  projectId: string;
+  rootPath: string;
 }
