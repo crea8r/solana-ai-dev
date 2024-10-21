@@ -6,9 +6,39 @@ import FileTree, { FileTreeItemType } from '../../components/FileTree';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-import { extractCodeBlock } from '../../utils/text';
+import AIChat from '../../components/AIChat';
+import { CodeFile } from '../../contexts/CodeFileContext';
 import { useProject } from '../../contexts/ProjectContext';
+function getLanguage(fileName: string) {
+  const ext = fileName.split('.').pop();
+  if (ext === 'ts') return 'typescript';
+  if (ext === 'js') return 'javascript';
+  if (ext === 'rs') return 'rust';
+  return 'md';
+}
 
+function extractCodeBlock(text: string): string {
+  const lines = text.split('\n');
+  let isInCodeBlock = false;
+  const codeBlockLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      if (isInCodeBlock) {
+        break; // End of code block
+      } else {
+        isInCodeBlock = true; // Start of code block
+        continue; // Skip the opening ```
+      }
+    }
+
+    if (isInCodeBlock) {
+      codeBlockLines.push(line);
+    }
+  }
+
+  return codeBlockLines.join('\n');
+}
 
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<
@@ -21,9 +51,9 @@ const CodePage = () => {
     setSelectedFile(file);
     // Here you would typically load the file content
     // For now, we'll just set a placeholder
-    const codes: any = project?.codes || {};
-    const codeList = window.Object.keys(codes);
-    if (file.type === 'file' || file.type !== 'directory') { // if (file.type === 'file') {
+    const codes: any = project?.codes || [];
+    const codeList = codes.map((code: any) => code.path);
+    if (file.type === 'file' || file.type !== 'directory') {
       if (!codeList.includes(file.path || '')) {
         // generate code content and set Project
         setIsLoading(true);
@@ -59,7 +89,11 @@ const CodePage = () => {
   };
   const selectedContent = selectedFile
     ? project?.codes
-      ? [project?.codes[selectedFile.path as keyof typeof project.codes] || '']
+      ? [
+          project?.codes.find((item: CodeFile) => {
+            return item.path === selectedFile.path;
+          })?.content || '',
+        ]
       : 'Empty file'
     : 'Empty file';
   // TODO: need to figure out when to enable the save button
@@ -78,8 +112,12 @@ const CodePage = () => {
           <CodeEditor
             content={selectedContent.toString()}
             selectedFile={selectedFile}
+            language={getLanguage(selectedFile?.name || '')}
           />
           {/* <div>{selectedContent.toString()}</div> */}
+        </Box>
+        <Box w={'400px'} borderLeft='1px' borderColor='gray.200'>
+          <AIChat />
         </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />

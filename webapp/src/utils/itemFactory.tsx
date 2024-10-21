@@ -11,11 +11,44 @@ import { Handle, Position, NodeProps } from 'react-flow-renderer';
 export function createItem(type: string): ToolboxItem | null {
   switch (type) {
     case 'account':
-      return new Account(`account-${Date.now()}`, 'Account', '', '');
+      return new Account(`account-${Date.now()}`, 'Account', '', '', '');
     case 'instruction':
-      return new Instruction(`instruction-${Date.now()}`,'Instruction','','','');
+      return new Instruction(
+        `instruction-${Date.now()}`,
+        'Instruction',
+        '',
+        '',
+        '',
+        ''
+      );
     case 'program':
       return new Program(`program-${Date.now()}`, 'Program', '');
+    default:
+      return null;
+  }
+}
+
+export function loadItem(type: string, data: any): ToolboxItem | null {
+  switch (type) {
+    case 'account':
+      return new Account(
+        data.id,
+        data.name,
+        data.description,
+        data.json,
+        data.ownerProgramId
+      );
+    case 'instruction':
+      return new Instruction(
+        data.id,
+        data.name,
+        data.description,
+        data.parameters,
+        data.aiInstruction,
+        data.ownerProgramId
+      );
+    case 'program':
+      return new Program(data.id, data.name, data.description);
     default:
       return null;
   }
@@ -45,7 +78,7 @@ export const getNodeTypes = (): NodeTypes => ({
     padding: 10,
     borderRadius: 5,
     border: 'none',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', 
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   instruction: createNodeComponent({
     background: '#72cf8e', // green
@@ -53,7 +86,7 @@ export const getNodeTypes = (): NodeTypes => ({
     padding: 10,
     borderRadius: 5,
     border: 'none',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', 
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   program: createNodeComponent({
     background: '#f05247', //red

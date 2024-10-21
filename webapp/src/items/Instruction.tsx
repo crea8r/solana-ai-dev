@@ -4,7 +4,7 @@ import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { VStack, Input, Textarea, Select } from '@chakra-ui/react';
 import { Node, Handle, Position, NodeProps } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
-import { IoIosCode } from "react-icons/io";
+import { IoIosCode } from 'react-icons/io';
 
 export class Instruction implements ToolboxItem {
   id: string;
@@ -20,13 +20,15 @@ export class Instruction implements ToolboxItem {
     name: string,
     description: string,
     parameters: string,
-    aiInstruction: string
+    aiInstruction: string,
+    ownerProgramId: string
   ) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.parameters = parameters;
     this.aiInstruction = aiInstruction;
+    if (ownerProgramId) this.ownerProgramId = ownerProgramId;
   }
 
   getName(): string {
@@ -131,7 +133,7 @@ export class Instruction implements ToolboxItem {
     return {
       name: this.name || '',
       description: this.description || '',
-      parameters: this.parameters || [],
+      parameters: this.parameters || '',
       aiInstruction: this.aiInstruction || '',
       ownerProgramId: this.ownerProgramId,
     };

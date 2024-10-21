@@ -21,7 +21,7 @@ const CodeEditor = ({
     automaticLayout: true,
   };
   // for content, only keep the content between the two line that start with '```'
-
+  console.log('language: ', language);
   return (
     <Box h='100%'>
       {selectedFile ? (
@@ -37,15 +37,16 @@ const CodeEditor = ({
         value={content}
         options={options}
       />
-      <Box 
-        h='20%' 
-        bg='white' 
-        color='black' 
-        p={2} 
-        overflowY='auto' 
-        borderTop='1px solid' 
-        borderColor='gray.200' 
-        shadow='md'>
+      <Box
+        h='20%'
+        bg='white'
+        color='black'
+        p={2}
+        overflowY='auto'
+        borderTop='1px solid'
+        borderColor='gray.200'
+        shadow='md'
+      >
         <Text>Terminal Output</Text>
       </Box>
     </Box>

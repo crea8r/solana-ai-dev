@@ -2,15 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
-import {
-  Button,
-  Flex,
-  Modal,
-  ModalOverlay,
-  Spinner,
-  useDisclosure,
-  useToast,
-} from '@chakra-ui/react';
+import { Button, Flex } from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -25,7 +17,6 @@ import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
 import PropertyPanel from '../../components/PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
-import { prompt } from '../../utils/promptFactory';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
 import { FaQuestion } from 'react-icons/fa';
@@ -34,6 +25,9 @@ import genStructure from '../../prompts/genStructure';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../components/FileTree';
+
+import { todoproject } from '../../data/mock';
+import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
@@ -44,6 +38,9 @@ import { TaskModal } from './TaskModal';
 
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
+// load env
+const isProduction =
+  (process.env.REACT_APP_ENV || 'development') === 'production';
 
 function setFileTreePaths(
   item: FileTreeItemType,
@@ -72,6 +69,27 @@ const DesignPage: React.FC = () => {
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const loadMock = useCallback(() => {
+    console.log('todoproject', todoproject);
+    setProject(todoproject);
+    const tmpNodes = [];
+    for (const node of todoproject.nodes) {
+      const item = loadItem(node.data.item.type, node.data.item);
+      if (item) {
+        const newNode = loadItem(node.data.item.type, node.data.item)?.toNode({
+          x: node.position.x,
+          y: node.position.y,
+        });
+        if (newNode) {
+          newNode.id = node.id;
+          tmpNodes.push(newNode);
+        }
+      }
+    }
+    setNodes(tmpNodes);
+    setEdges(todoproject.edges);
+  }, [setProject]);
   const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
   const {
     isOpen: isProjectBannerOpen,
@@ -82,9 +100,14 @@ const DesignPage: React.FC = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   useEffect(() => {
-    initGA(GA_MEASUREMENT_ID);
-    logPageView();
-  }, []);
+    if (isProduction) {
+      initGA(GA_MEASUREMENT_ID);
+      logPageView();
+    }
+    if (!isProduction) {
+      loadMock();
+    }
+  }, [setProject, loadMock]);
 
   const onNodesChange = useCallback((changes: any) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
