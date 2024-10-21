@@ -6,7 +6,7 @@ import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { VStack, Input, Textarea, Select } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
-import { VscJson } from "react-icons/vsc";
+import { VscJson } from 'react-icons/vsc';
 
 export class Account implements ToolboxItem {
   id: string;
@@ -16,11 +16,20 @@ export class Account implements ToolboxItem {
   json: string;
   ownerProgramId: string | null = null;
 
-  constructor(id: string, name: string, description: string, json: string) {
+  constructor(
+    id: string,
+    name: string,
+    description: string,
+    json: string,
+    ownerProgramId: string
+  ) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.json = json;
+    if (ownerProgramId) {
+      this.ownerProgramId = ownerProgramId;
+    }
   }
 
   getName(): string {

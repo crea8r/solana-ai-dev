@@ -6,7 +6,6 @@ import ReactFlow, {
   Edge,
   Connection,
   Controls,
-  Background,
   NodeTypes,
 } from 'react-flow-renderer';
 import { Box } from '@chakra-ui/react';

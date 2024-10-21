@@ -7,6 +7,7 @@ import { useProject } from '../../contexts/ProjectContext';
 import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
+import AIChat from '../../components/AIChat';
 
 function extractCodeBlock(text: string): string {
   const lines = text.split('\n');
@@ -98,6 +99,9 @@ const CodePage = () => {
             selectedFile={selectedFile}
           />
           {/* <div>{selectedContent.toString()}</div> */}
+        </Box>
+        <Box w={'400px'} borderLeft='1px' borderColor='gray.200'>
+          <AIChat />
         </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
