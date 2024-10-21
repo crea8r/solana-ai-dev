@@ -162,12 +162,18 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 if (choices && choices.length > 0) {
                     const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
                     setFileTreePaths(files);
-                    updateProject({ ...project, files });
-                    const fileList = getFileList(files); // Returns array of { name, path }
-                    console.log('fileList', fileList);
+
+                    const updatedFileList = getFileList(files).map(file => {
+                        const updatedPath = file.path.split('/').slice(1).join('/');
+
+                        return { ...file, path: updatedPath, name: file.name };
+                    });
+
+                    console.log('updatedFileList', updatedFileList);
+                   // updateProject({ ...project, files: updatedFileList });
 
                     let nextId = 4;
-                    const fileTasks = fileList.map(({ name, path }) => ({
+                    const fileTasks = updatedFileList.map(({ name, path }) => ({
                         id: nextId++,
                         name: name,
                         path: path,
