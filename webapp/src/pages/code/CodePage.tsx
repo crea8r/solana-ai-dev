@@ -9,6 +9,8 @@ import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { useProject } from '../../contexts/ProjectContext';
+import { extractCodeBlock } from '../../utils/genCodeUtils';
+
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
   if (ext === 'ts') return 'typescript';
@@ -17,28 +19,7 @@ function getLanguage(fileName: string) {
   return 'md';
 }
 
-function extractCodeBlock(text: string): string {
-  const lines = text.split('\n');
-  let isInCodeBlock = false;
-  const codeBlockLines: string[] = [];
 
-  for (const line of lines) {
-    if (line.trim().startsWith('```')) {
-      if (isInCodeBlock) {
-        break; // End of code block
-      } else {
-        isInCodeBlock = true; // Start of code block
-        continue; // Skip the opening ```
-      }
-    }
-
-    if (isInCodeBlock) {
-      codeBlockLines.push(line);
-    }
-  }
-
-  return codeBlockLines.join('\n');
-}
 
 const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<

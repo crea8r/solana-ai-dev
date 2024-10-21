@@ -8,7 +8,7 @@ import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
 import promptAI from "../../services/prompt";
-//import { genAiProject } from '../../utils/genAiProject';
+import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
 import { useProject } from '../../contexts/ProjectContext';
 
 interface genTaskProps {
@@ -21,23 +21,10 @@ type TaskStatus = 'completed' | 'loading' | 'failed' | 'succeed' | 'warning';
 type Task = {
     id: number;
     name: string;
+    path?: string;
     status: TaskStatus;
     type: 'main' | 'file';
 };
-
-function setFileTreePaths(
-    item: FileTreeItemType,
-    parentPath: string = ''
-): void {
-    const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
-    item.path = currentPath;
-  
-    if (item.children) {
-      for (const child of item.children) {
-        setFileTreePaths(child, currentPath);
-      }
-    }
-}
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const { project, updateProject, savedProject, updateSavedProject } = useProject();
@@ -46,8 +33,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [projectDescription, setProjectDescription] = useState<string>('');
     const [projectRootPath, setProjectRootPath] = useState<string>('');
     const [isProjectSaved, setisProjectSaved] = useState<boolean>(false);
+    const [tasks, setTasks] = useState<Task[]>([
+        { id: 1, name: 'Project saved', status: 'loading', type: 'main' },
+        { id: 2, name: 'Initializing Anchor project', status: 'loading', type: 'main' },
+        { id: 3, name: 'Generating files:', status: 'loading', type: 'main' },
+    ]);
 
-    // Initialize anchorInitCompleted from savedProject
     const [anchorInitCompleted, setAnchorInitCompleted] = useState<boolean>(
         savedProject?.anchorInitCompleted || false
     );
@@ -57,16 +48,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setAnchorInitCompleted(savedProject.anchorInitCompleted);
         }
     }, [savedProject]);
-
-    const [tasks, setTasks] = useState<Task[]>([
-        { id: 1, name: 'Project saved', status: 'loading', type: 'main' },
-        { id: 2, name: 'Initializing Anchor project', status: 'loading', type: 'main' },
-        { id: 3, name: 'Generating files:', status: 'loading', type: 'main' },
-        { id: 4, name: 'state.rs', status: 'loading', type: 'file' },
-        { id: 5, name: 'lib.rs', status: 'loading', type: 'file' },
-        { id: 6, name: 'lib.rs', status: 'loading', type: 'file' },
-        { id: 7, name: 'lib.rs', status: 'loading', type: 'file' },
-    ]);
 
     const handleCreateProject = async () => {
         if (!projectName || !projectDescription) {
@@ -146,56 +127,100 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleGenFilesTask = async () => {
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task.id === 3 ? { ...task, status: 'loading' } : task
-            )
-        );
+    
+
+    const handleGenCodesTask = async () => {
+        setTasks((prevTasks) => prevTasks.map((task) => task.id === 3 ? { ...task, status: 'loading' } : task));
 
         if (savedProject?.details?.nodes && savedProject?.details?.edges) {
-            const structurePrompt = genStructure(savedProject?.details?.nodes || [], savedProject?.details?.edges || []);
+            const structurePrompt = genStructure(savedProject.details.nodes, savedProject.details.edges);
             const choices = await promptAI(structurePrompt);
 
             try {
                 if (choices && choices.length > 0) {
-                    const files = JSON.parse(
-                    choices[0].message?.content
-                    ) as FileTreeItemType;
+                    const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
                     setFileTreePaths(files);
-                    updateProject({
-                        files: files,
+                    updateProject({ ...project, files });
+                    const fileList = getFileList(files); // Returns array of { name, path }
+
+                    let nextId = 4;
+                    const fileTasks = fileList.map(({ name, path }) => ({
+                        id: nextId++,
+                        name: name,
+                        path: path,
+                        status: 'loading',
+                        type: 'file',
+                    } as Task));
+
+                    setTasks((prevTasks) => {
+                        const mainTasks = prevTasks.filter((task) => task.type !== 'file');
+                        return [...mainTasks, ...fileTasks];
                     });
+
+                    for (const fileTask of fileTasks) {
+                        setTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task.id === fileTask.id ? { ...task, status: 'loading' } : task
+                            )
+                        );
+
+                        try {
+                            // Generate code content and update Project
+                            const { nodes, edges } = savedProject.details || { nodes: [], edges: [] };
+                            const fileName = fileTask.name;
+                            const filePath = fileTask.path;
+
+                            const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
+                            const fileChoices = await promptAI(promptContent);
+
+                            if (fileChoices && fileChoices.length > 0) {
+                                const aiContent = fileChoices[0].message?.content;
+                                const codeContent = extractCodeBlock(aiContent);
+
+                                // Update project codes
+                                updateProject({
+                                    ...project,
+                                    codes: [
+                                        ...(project?.codes || []),
+                                        { name: fileName || '', path: filePath || '', content: codeContent },
+                                    ],
+                                });
+
+                                setTasks((prevTasks) =>
+                                    prevTasks.map((task) =>
+                                        task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                    )
+                                );
+                            } else {
+                                throw new Error('No AI response for file generation');
+                            }
+                        } catch (error) {
+                            console.error('Error generating file content for', fileTask.name, error);
+                            setTasks((prevTasks) =>
+                                prevTasks.map((task) =>
+                                    task.id === fileTask.id ? { ...task, status: 'failed' } : task
+                                )
+                            );
+                        }
+                    }
+
+                    setTasks((prevTasks) =>
+                        prevTasks.map((task) =>
+                            task.id === 3 ? { ...task, status: 'completed' } : task
+                        )
+                    );
+                } else {
+                    throw new Error('No AI response for structure generation');
                 }
             } catch (error) {
-                console.error(error);
+                console.error('Error generating files:', error);
+                setTasks((prevTasks) =>
+                    prevTasks.map((task) =>
+                        task.id === 3 ? { ...task, status: 'failed' } : task
+                    )
+                );
             }
-
-           
         }
-    
-        const fileTaskIds = [4, 5, 6, 7];
-        for (const id of fileTaskIds) {
-            setTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === id ? { ...task, status: 'loading' } : task
-                )
-            );
-    
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-            setTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === id ? { ...task, status: 'completed' } : task
-                )
-            );
-        }
-    
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task.id === 3 ? { ...task, status: 'completed' } : task
-            )
-        );
     };
     
 
@@ -221,7 +246,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         anchorInitCompleted: true,
                     });
 
-                    handleGenFilesTask();
+                    handleGenCodesTask();
                 } else if (task.status === 'failed') {
                     setTasks((prevTasks) =>
                         prevTasks.map((prevTask) =>

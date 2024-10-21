@@ -18,6 +18,8 @@ export interface SavedProject {
   description: string;
   details: ProjectDetails;
   anchorInitCompleted: boolean;
+  // Files
+  // Codes
 }
 
 export interface InMemoryProject {
