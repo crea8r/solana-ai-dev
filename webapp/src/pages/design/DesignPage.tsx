@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, Flex, Modal, ModalOverlay, Spinner } from '@chakra-ui/react';
+import { Button, Flex } from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -17,7 +17,6 @@ import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
 import PropertyPanel from '../../components/PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
-import { prompt } from '../../utils/promptFactory';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
 import { FaQuestion } from 'react-icons/fa';
