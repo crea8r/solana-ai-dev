@@ -4,6 +4,11 @@ import { CheckCircleIcon, TimeIcon, ArrowForwardIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
 import { ProjectDetail, ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
+import { FileTreeItemType } from "../../components/FileTree";
+import genStructure from "../../prompts/genStructure";
+import genFiles from "../../prompts/genFile";
+import promptAI from "../../services/prompt";
+//import { genAiProject } from '../../utils/genAiProject';
 import { useProject } from '../../contexts/ProjectContext';
 
 interface genTaskProps {
@@ -20,14 +25,38 @@ type Task = {
     type: 'main' | 'file';
 };
 
+function setFileTreePaths(
+    item: FileTreeItemType,
+    parentPath: string = ''
+): void {
+    const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
+    item.path = currentPath;
+  
+    if (item.children) {
+      for (const child of item.children) {
+        setFileTreePaths(child, currentPath);
+      }
+    }
+}
+
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
-    const { savedProject, updateSavedProject } = useProject();
+    const { project, updateProject, savedProject, updateSavedProject } = useProject();
     const [projectId, setProjectId] = useState<string>('');
     const [projectName, setProjectName] = useState<string>('');
     const [projectDescription, setProjectDescription] = useState<string>('');
     const [projectRootPath, setProjectRootPath] = useState<string>('');
     const [isProjectSaved, setisProjectSaved] = useState<boolean>(false);
-    const [anchorInitCompleted, setAnchorInitCompleted] = useState<boolean>(false);
+
+    // Initialize anchorInitCompleted from savedProject
+    const [anchorInitCompleted, setAnchorInitCompleted] = useState<boolean>(
+        savedProject?.anchorInitCompleted || false
+    );
+
+    useEffect(() => {
+        if (savedProject && typeof savedProject.anchorInitCompleted !== 'undefined') {
+            setAnchorInitCompleted(savedProject.anchorInitCompleted);
+        }
+    }, [savedProject]);
 
     const [tasks, setTasks] = useState<Task[]>([
         { id: 1, name: 'Project saved', status: 'loading', type: 'main' },
@@ -123,6 +152,27 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 task.id === 3 ? { ...task, status: 'loading' } : task
             )
         );
+
+        if (savedProject?.details?.nodes && savedProject?.details?.edges) {
+            const structurePrompt = genStructure(savedProject?.details?.nodes || [], savedProject?.details?.edges || []);
+            const choices = await promptAI(structurePrompt);
+
+            try {
+                if (choices && choices.length > 0) {
+                    const files = JSON.parse(
+                    choices[0].message?.content
+                    ) as FileTreeItemType;
+                    setFileTreePaths(files);
+                    updateProject({
+                        files: files,
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+
+           
+        }
     
         const fileTaskIds = [4, 5, 6, 7];
         for (const id of fileTaskIds) {
@@ -165,6 +215,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     );
                     clearInterval(interval);
 
+                    // Update savedProject to include anchorInitCompleted
+                    updateSavedProject({
+                        ...savedProject,
+                        anchorInitCompleted: true,
+                    });
+
                     handleGenFilesTask();
                 } else if (task.status === 'failed') {
                     setTasks((prevTasks) =>
@@ -182,7 +238,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
 
-    // genStructure() - files to generate
     // genFile() - generate file
     // function to 'merge' files into anchor project, save all on server
 
@@ -197,12 +252,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     }, [isOpen, savedProject]);
 
     useEffect(() => {
-        if (isProjectSaved && !anchorInitCompleted) {
-            console.log('start anchor init task');
-            handleAnchorInitTask();
-            setAnchorInitCompleted(true);
+        if (isProjectSaved) {
+            if (savedProject && savedProject.anchorInitCompleted) {
+                console.log('Anchor init task already completed');
+                setAnchorInitCompleted(true);
+            } else if (!anchorInitCompleted) {
+                console.log('start anchor init task');
+                handleAnchorInitTask();
+                // No need to set anchorInitCompleted here; it's updated when the task completes
+            }
         }
-    }, [isProjectSaved]);
+    }, [isProjectSaved, savedProject, anchorInitCompleted]);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
