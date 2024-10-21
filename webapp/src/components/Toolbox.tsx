@@ -1,6 +1,6 @@
 // src/components/Toolbox.tsx
 
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Flex,
   Textarea,
@@ -11,10 +11,12 @@ import {
   VStack,
   Divider,
   Text,
+  Input,
 } from '@chakra-ui/react';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { useProject } from '../contexts/ProjectContext';
 
 
 const toolboxItems = [
@@ -24,6 +26,13 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
+  const { savedProject, updateSavedProject } = useProject();
+  const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
+
+  const handleSubmit = () => {
+    updateSavedProject({ name: projectName, description: projectDescription });
+  };
 
   return (
     <Box
@@ -38,14 +47,29 @@ const Toolbox: React.FC = () => {
     >
       <VStack spacing={2} align='stretch'>
       <Flex
-          direction="row"
-          alignItems="center"
+          direction="column"
+          alignItems="stretch"
           gap={4}
           mb={6}
           mt={4}
           ml={2}
           mr={2}
         >
+          <Input
+            placeholder='Project Name'
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            p={2}
+          />
+          <Textarea
+            placeholder='Project Description'
+            value={projectDescription}
+            onChange={(e) => setProjectDescription(e.target.value)}
+            p={2}
+          />
+          <Box as='button' onClick={handleSubmit} bg='blue.500' color='white' p={1} borderRadius='md' fontSize='sm'>
+            Save Project
+          </Box>
         </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas

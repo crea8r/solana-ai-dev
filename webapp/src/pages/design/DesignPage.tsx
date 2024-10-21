@@ -31,7 +31,7 @@ import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
-import { ProjectInfoToSave } from '../../interfaces/project';
+import { ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
 import { useProject } from '../../contexts/ProjectContext';
 import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
@@ -233,26 +233,42 @@ const DesignPage: React.FC = () => {
 
   // Handle save project
   const handleSaveClick = async () => {
-    // Check if savedProject is defined and has the necessary properties
-    if (!savedProject || !savedProject.id || !savedProject.name) {
-      console.error('Saved project data is missing or incomplete');
-      return;
-    }
-
-    const projectInfo: ProjectInfoToSave = {
-      id: savedProject.id,
-      name: savedProject.name,
-      description: savedProject.description,
-      details: {
-        nodes: savedProject.details.nodes,
-        edges: savedProject.details.edges,
+    // if no project id, then create new project
+    if (savedProject && !savedProject.id) {
+      const projectInfoToSave: ProjectInfoToSave = {
+        name: savedProject.name,
+        description: savedProject.description,
+        details: {
+          nodes: savedProject.details.nodes,
+          edges: savedProject.details.edges,
+        }
+      };
+      try {
+        const response: SaveProjectResponse = await projectApi.saveProject(projectInfoToSave);
+        updateSavedProject({
+          id: response.projectId,
+        });
+      } catch (error) {
+        console.error('Error saving project:', error);
       }
-    };
-
-    try {
-      const response = await projectApi.updateProject(savedProject.id, projectInfo);
-    } catch (error) {
-      console.error('Error saving project:', error);
+    }
+    // else update existing project
+    if (savedProject && savedProject.id) {
+      const projectInfoToUpdate: ProjectInfoToSave = {
+        id: savedProject.id,
+        name: savedProject.name,
+        description: savedProject.description,
+        details: {
+          nodes: savedProject.details.nodes,
+          edges: savedProject.details.edges,
+        }
+      };
+      try {
+        const response = await projectApi.updateProject(savedProject.id, projectInfoToUpdate);
+        console.log('response', response);
+      } catch (error) {
+        console.error('Error updating project:', error);
+      }
     }
   };
 

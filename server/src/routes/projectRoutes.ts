@@ -12,8 +12,8 @@ import { buildProject, testProject } from 'src/controllers/projectController';
 const router = express.Router();
 
 router.post('/create', authMiddleware, createProject);
-router.put('/:id', authMiddleware, editProject);
-router.get('/:id', authMiddleware, getProjectDetails);
+router.put('/update/:id', authMiddleware, editProject);
+router.get('/details/:id', authMiddleware, getProjectDetails);
 router.delete('/:id', authMiddleware, deleteProject);
 router.post('/init', authMiddleware, anchorInitProject);
 router.post('/:id/build', authMiddleware, buildProject);

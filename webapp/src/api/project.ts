@@ -16,7 +16,7 @@ export const projectApi = {
   ): Promise<SaveProjectResponse> => {
     //console.log('inside projectApi.saveProject', projectInfo);
     try {
-      const response = await api.post('/projects/save', projectInfo);
+      const response = await api.post('/projects/create', projectInfo);
       return response.data;
     } catch (error) {
       console.error('Error saving project:', error);
@@ -44,7 +44,7 @@ export const projectApi = {
   // Get project details
   getProjectDetails: async (projectId: string): Promise<ProjectDetail> => {
     try {
-      const response = await api.get(`/projects/${projectId}`);
+      const response = await api.get(`/projects/details/${projectId}`);
       return response.data.project;
     } catch (error) {
       console.error('Error getting project details:', error);
@@ -71,7 +71,7 @@ export const projectApi = {
     projectInfo: ProjectInfoToSave
   ): Promise<SaveProjectResponse> => {
     try {
-      const response = await api.put(`/projects/${projectId}`, projectInfo);
+      const response = await api.put(`/projects/update/${projectId}`, projectInfo);
       return response.data;
     } catch (error) {
       console.error('Error updating project:', error);
