@@ -10,6 +10,7 @@ import genFiles from "../../prompts/genFile";
 import promptAI from "../../services/prompt";
 import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
 import { useProject } from '../../contexts/ProjectContext';
+import { Spinner } from '@chakra-ui/react';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -345,6 +346,10 @@ function StatusSymbol({ status }: { status: TaskStatus }) {
     return status === 'completed' ? (
         <CheckCircleIcon color="green.500" />
     ) : (
-        <TimeIcon color="gray.300" />
+        <Spinner
+            color="gray.300"
+            size="sm"
+            style={{ animationDuration: '1.4s' }} 
+        />
     );
 }
