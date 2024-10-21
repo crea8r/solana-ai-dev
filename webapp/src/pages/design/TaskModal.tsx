@@ -12,10 +12,12 @@ interface genTaskProps {
     onClose: () => void;
 }   
 
+type TaskStatus = 'completed' | 'loading' | 'failed' | 'succeed' | 'warning';
+
 type Task = {
     id: number;
     name: string;
-    status: 'completed' | 'loading' | 'failed';
+    status: 'completed' | 'loading' | 'failed' | 'succeed' | 'warning';
     type: 'main' | 'file';
 };
 
@@ -31,12 +33,12 @@ export const TaskModal: React.FC<genTaskProps> = ({isOpen, onClose}) => {
 
     const [tasks, setTasks] = useState<Task[]>([
         { id: 1, name: 'Project saved', status: 'completed', type: 'main' },
-        { id: 3, name: 'Generating project structure', status: 'loading', type: 'main' },
-        { id: 4, name: 'Generating files:', status: 'loading', type: 'main' },
-        { id: 5, name: 'state.rs', status: 'loading', type: 'file' },
+        { id: 2, name: 'Generating project structure', status: 'loading', type: 'main' },
+        { id: 3, name: 'Generating files:', status: 'loading', type: 'main' },
+        { id: 4, name: 'state.rs', status: 'loading', type: 'file' },
+        { id: 5, name: 'lib.rs', status: 'loading', type: 'file' },
         { id: 6, name: 'lib.rs', status: 'loading', type: 'file' },
         { id: 7, name: 'lib.rs', status: 'loading', type: 'file' },
-        { id: 8, name: 'lib.rs', status: 'loading', type: 'file' },
     ]);
 
     const handleCreateProject = async () => {
@@ -44,20 +46,32 @@ export const TaskModal: React.FC<genTaskProps> = ({isOpen, onClose}) => {
             console.log('Project name and description are required.');
             return;
         }
+
         const projectInfo: ProjectInfoToSave = {
             name: projectName,
             description: projectDescription,
             details: savedProject?.details,
         };
-    
-        const response: SaveProjectResponse = await projectApi.createProject(projectInfo);
-        console.log(response);
 
-        setIsNewProject(false);
-        setisProjectSaved(true);
-        setProjectId(response.projectId);
-        setProjectRootPath(response.rootPath);
-    }
+        try {
+            const response: SaveProjectResponse = await projectApi.createProject(projectInfo);
+            console.log(response);
+
+            setIsNewProject(false);
+            setisProjectSaved(true);
+            setProjectId(response.projectId);
+            setProjectRootPath(response.rootPath);
+        } catch (error) {
+            console.error('Error saving project:', error);
+
+            // If project saving fails, mark the task as failed
+            setTasks((prevTasks) =>
+                prevTasks.map((task) =>
+                    task.id === 1 ? { ...task, status: 'failed' } : task
+                )
+            );
+        }
+    };
 
     const anchorInitTask = async () => {
         try {
@@ -92,14 +106,17 @@ export const TaskModal: React.FC<genTaskProps> = ({isOpen, onClose}) => {
                 const { task } = await taskApi.getTask(taskId);
                 console.log('task', task);
 
-                // Check if the task has succeeded or failed
-                if (task.status === 'succeed') {
+                // Check if the task has succeeded, completed with warnings, or failed
+                if (task.status === 'succeed' || task.status === 'warning') {
+                    // Mark the corresponding 'main' task as completed (even if it's a warning)
                     setTasks((prevTasks) =>
                         prevTasks.map((prevTask) =>
-                            prevTask.id === Number(taskId) ? { ...prevTask, status: 'completed' } : prevTask
+                            prevTask.type === 'main' && prevTask.name === 'Generating project structure'
+                                ? { ...prevTask, status: 'completed' }
+                                : prevTask
                         )
                     );
-                    clearInterval(interval); // Stop polling once task is complete
+                    clearInterval(interval); // Stop polling once task is complete or completed with warning
                 } else if (task.status === 'failed') {
                     setTasks((prevTasks) =>
                         prevTasks.map((prevTask) =>
@@ -205,7 +222,7 @@ export const TaskModal: React.FC<genTaskProps> = ({isOpen, onClose}) => {
     );
 }
 
-function StatusSymbol({ status }: { status: 'completed' | 'loading' | 'failed' }) {
+function StatusSymbol({ status }: { status: 'completed' | 'loading' | 'failed' | 'succeed' | 'warning'}) {
     return status === 'completed' ? (
         <CheckCircleIcon color="green.500" />
     ) : (

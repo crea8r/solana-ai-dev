@@ -5,7 +5,7 @@ interface Task {
   name: string;
   created_at: string;
   last_updated: string;
-  status: 'queued' | 'doing' | 'finished' | 'failed' | 'succeed';
+  status: 'queued' | 'doing' | 'finished' | 'failed' | 'succeed' | 'warning';
   project_id: string;
   project_name: string;
   result?: string;
@@ -24,7 +24,7 @@ interface ListTasksResponse {
 interface TaskQueryParams {
   page?: number;
   limit?: number;
-  status?: 'queued' | 'doing' | 'finished' | 'failed' | 'succeed';
+  status?: 'queued' | 'doing' | 'finished' | 'failed' | 'succeed' | 'warning';
   projectId?: string;
 }
 

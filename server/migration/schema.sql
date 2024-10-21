@@ -85,7 +85,7 @@ CREATE TABLE Task (
     result TEXT,
     last_updated TIMESTAMP,
     project_id UUID REFERENCES SolanaProject(id),
-    status VARCHAR(50) CHECK (status IN ('queued', 'doing', 'finished', 'succeed', 'failed'))
+    status VARCHAR(50) CHECK (status IN ('queued', 'doing', 'finished', 'succeed', 'failed', 'warning'))
 );
 
 -- Create indexes on Task creator_id and status

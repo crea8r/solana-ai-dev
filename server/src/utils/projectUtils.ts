@@ -14,20 +14,35 @@ const runCommand = async (
   taskId: string
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    //console.log('Current PATH:', process.env.PATH);
-    const env = { 
-      ...process.env, // Inherit existing environment variables
-      PATH: `${process.env.PATH};C:\\Users\\1hhod\\.cargo\\bin` // Ensure this path matches where anchor.exe is installed
-    };
-    exec(command, { cwd, env }, async (error, stdout, stderr) => {
+    console.log(`Running command: ${command} in directory: ${cwd}`);
+    
+    exec(command, { cwd }, async (error, stdout, stderr) => {
       let result = '';
+
+      console.log(`Command completed. Checking result for taskId: ${taskId}`);
+
       if (error) {
+        // Critical failure - mark as failed
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
+        console.log(`Error occurred for taskId: ${taskId}: ${result}`);
+        await updateTaskStatus(taskId, 'failed', result);
+        reject(new Error(result)); // Explicit rejection to handle stuck tasks
       } else {
-        result = `Stdout: ${stdout}\n\nStderr: ${stderr}`;
+        if (stderr) {
+          // Non-fatal warnings
+          result = `Warning: ${stderr}\n\nStdout: ${stdout}`;
+          console.log(`Warnings occurred for taskId: ${taskId}: ${stderr}`);
+          await updateTaskStatus(taskId, 'warning', result);
+        } else {
+          // Success
+          result = `Stdout: ${stdout}`;
+          console.log(`Success for taskId: ${taskId}: ${stdout}`);
+          await updateTaskStatus(taskId, 'succeed', result);
+        }
       }
-      await updateTaskStatus(taskId, 'failed', result);
-      resolve();
+
+      resolve(); // Mark task as done, whether it succeeded or failed
+      console.log(`Task ${taskId} resolved`);
     });
   });
 };
@@ -56,8 +71,7 @@ export const startAnchorInitTask = async (
 ): Promise<string> => {
   const taskId = await createTask('Anchor Init', creatorId, projectId);
   setImmediate(async () => {
-    const anchorPath = 'C:\\Users\\1hhod\\.cargo\\bin\\anchor.exe';
-    await runCommand(`${anchorPath} init ${projectName}`, APP_CONFIG.ROOT_FOLDER, taskId);
+    await runCommand(`anchor init ${projectName}`, APP_CONFIG.ROOT_FOLDER, taskId);
   });
   return taskId;
 };
