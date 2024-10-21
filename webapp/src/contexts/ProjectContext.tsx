@@ -17,9 +17,11 @@ export interface SavedProject {
   name: string;
   description: string;
   details: ProjectDetails;
+  projectSaved: boolean;
   anchorInitCompleted: boolean;
-  // Files
-  // Codes
+  filesAndCodesGenerated: boolean;
+  // Files[]
+  // Codes[]
 }
 
 export interface InMemoryProject {
@@ -72,7 +74,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
           files: { name: '', children: [] },
           codes: [],
           docs: [],
-          anchorInitCompleted: false,
+          projectSaved: updatedData.projectSaved || false,
+          anchorInitCompleted: updatedData.anchorInitCompleted || false,
+          filesAndCodesGenerated: updatedData.filesAndCodesGenerated || false,
         };
       }
       return {

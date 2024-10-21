@@ -33,22 +33,43 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [projectName, setProjectName] = useState<string>('');
     const [projectDescription, setProjectDescription] = useState<string>('');
     const [projectRootPath, setProjectRootPath] = useState<string>('');
-    const [isProjectSaved, setisProjectSaved] = useState<boolean>(false);
-    const [tasks, setTasks] = useState<Task[]>([
-        { id: 1, name: 'Project saved', status: 'loading', type: 'main' },
-        { id: 2, name: 'Initializing Anchor project', status: 'loading', type: 'main' },
-        { id: 3, name: 'Generating files:', status: 'loading', type: 'main' },
-    ]);
-
-    const [anchorInitCompleted, setAnchorInitCompleted] = useState<boolean>(
-        savedProject?.anchorInitCompleted || false
-    );
+    const [tasks, setTasks] = useState<Task[]>([]);
 
     useEffect(() => {
-        if (savedProject && typeof savedProject.anchorInitCompleted !== 'undefined') {
-            setAnchorInitCompleted(savedProject.anchorInitCompleted);
+        if (isOpen && savedProject) {
+            const initialTasks: Task[] = [
+                {
+                    id: 1,
+                    name: 'Project saved',
+                    status: savedProject.projectSaved ? 'completed' : 'loading',
+                    type: 'main',
+                },
+                {
+                    id: 2,
+                    name: 'Initializing Anchor project',
+                    status: savedProject.anchorInitCompleted ? 'completed' : 'loading',
+                    type: 'main',
+                },
+                {
+                    id: 3,
+                    name: 'Generating files:',
+                    status: savedProject.filesAndCodesGenerated ? 'completed' : 'loading',
+                    type: 'main',
+                },
+            ];
+            setTasks(initialTasks);
+
+            if (!savedProject.projectSaved) {
+                // Show input fields to save project
+            } else if (!savedProject.anchorInitCompleted) {
+                handleAnchorInitTask();
+            } else if (!savedProject.filesAndCodesGenerated) {
+                handleGenCodesTask();
+            } else {
+                console.log('All tasks completed');
+            }
         }
-    }, [savedProject]);
+    }, [isOpen, savedProject]);
 
     const handleCreateProject = async () => {
         if (!projectName || !projectDescription) {
@@ -88,9 +109,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     rootPath: response.rootPath,
                     name: projectName,
                     description: projectDescription,
+                    projectSaved: true,
                 });
-
-                setisProjectSaved(true);
             }, 2000);
         } catch (error) {
             console.error('Error saving project:', error);
@@ -128,8 +148,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    
-
     const handleGenCodesTask = async () => {
         setTasks((prevTasks) => prevTasks.map((task) => task.id === 3 ? { ...task, status: 'loading' } : task));
 
@@ -166,7 +184,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         );
 
                         try {
-                            // Generate code content and update Project
                             const { nodes, edges } = savedProject.details || { nodes: [], edges: [] };
                             const fileName = fileTask.name;
                             const filePath = fileTask.path;
@@ -178,7 +195,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                 const aiContent = fileChoices[0].message?.content;
                                 const codeContent = extractCodeBlock(aiContent);
 
-                                // Update project codes
                                 updateProject({
                                     ...project,
                                     codes: [
@@ -210,6 +226,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             task.id === 3 ? { ...task, status: 'completed' } : task
                         )
                     );
+
+                    updateSavedProject({
+                        filesAndCodesGenerated: true,
+                    });
                 } else {
                     throw new Error('No AI response for structure generation');
                 }
@@ -223,7 +243,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             }
         }
     };
-    
 
     const pollTaskStatus = async (taskId: string) => {
         const interval = setInterval(async () => {
@@ -241,9 +260,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     );
                     clearInterval(interval);
 
-                    // Update savedProject to include anchorInitCompleted
                     updateSavedProject({
-                        ...savedProject,
                         anchorInitCompleted: true,
                     });
 
@@ -263,40 +280,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }, 2000);
     };
 
-
-    // genFile() - generate file
-    // function to 'merge' files into anchor project, save all on server
-
-    useEffect(() => {
-        if (isOpen) {
-            if (savedProject && savedProject.name && savedProject.description) {
-                setisProjectSaved(true);
-            } else {
-                setisProjectSaved(false);
-            }
-        }
-    }, [isOpen, savedProject]);
-
-    useEffect(() => {
-        if (isProjectSaved) {
-            if (savedProject && savedProject.anchorInitCompleted) {
-                console.log('Anchor init task already completed');
-                setAnchorInitCompleted(true);
-            } else if (!anchorInitCompleted) {
-                console.log('start anchor init task');
-                handleAnchorInitTask();
-                // No need to set anchorInitCompleted here; it's updated when the task completes
-            }
-        }
-    }, [isProjectSaved, savedProject, anchorInitCompleted]);
-
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
             <ModalContent>
                 <ModalBody>
                     <Box mt={4}>
-                        <Box mb={4} style={{ display: isProjectSaved ? 'none' : 'block' }}>
+                        <Box mb={4} style={{ display: savedProject?.projectSaved ? 'none' : 'block' }}>
                             <Input
                                 placeholder="Enter Project Name"
                                 value={projectName}
@@ -319,7 +309,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             />
                         </Box>
 
-                        <Box style={{ display: isProjectSaved ? 'block' : 'none' }}>
+                        <Box style={{ display: savedProject?.projectSaved ? 'block' : 'none' }}>
                             {tasks.filter(task => task.type === 'main').map((task) => (
                                 <Flex key={task.id} justify="space-between" align="center" mb={2}>
                                     <Text fontSize="sm" fontWeight="medium">{task.name}</Text>
