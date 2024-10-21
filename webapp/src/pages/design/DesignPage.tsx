@@ -28,7 +28,13 @@ import LoadingModal from '../../components/LoadingModal';
 import { useProject } from '../../contexts/ProjectContext';
 import { FileTreeItemType } from '../../components/FileTree';
 
+import { todoproject } from '../../data/mock';
+import { loadItem } from '../../utils/itemFactory';
+
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
+// load env
+const isProduction =
+  (process.env.REACT_APP_ENV || 'development') === 'production';
 
 function setFileTreePaths(
   item: FileTreeItemType,
@@ -55,10 +61,36 @@ const DesignPage: React.FC = () => {
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const loadMock = useCallback(() => {
+    console.log('todoproject', todoproject);
+    setProject(todoproject);
+    const tmpNodes = [];
+    for (const node of todoproject.nodes) {
+      const item = loadItem(node.data.item.type, node.data.item);
+      if (item) {
+        const newNode = loadItem(node.data.item.type, node.data.item)?.toNode({
+          x: node.position.x,
+          y: node.position.y,
+        });
+        if (newNode) {
+          newNode.id = node.id;
+          tmpNodes.push(newNode);
+        }
+      }
+    }
+    setNodes(tmpNodes);
+    setEdges(todoproject.edges);
+  }, [setProject]);
+
   useEffect(() => {
-    initGA(GA_MEASUREMENT_ID);
-    logPageView();
-  }, []);
+    if (isProduction) {
+      initGA(GA_MEASUREMENT_ID);
+      logPageView();
+    }
+    if (!isProduction) {
+      loadMock();
+    }
+  }, [setProject, loadMock]);
 
   const onNodesChange = useCallback((changes: any) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
