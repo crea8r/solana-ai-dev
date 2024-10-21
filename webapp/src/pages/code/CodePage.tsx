@@ -8,6 +8,15 @@ import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
+import { CodeFile } from '../../contexts/CodeFileContext';
+
+function getLanguage(fileName: string) {
+  const ext = fileName.split('.').pop();
+  if (ext === 'ts') return 'typescript';
+  if (ext === 'js') return 'javascript';
+  if (ext === 'rs') return 'rust';
+  return 'md';
+}
 
 function extractCodeBlock(text: string): string {
   const lines = text.split('\n');
@@ -43,8 +52,8 @@ const CodePage = () => {
     setSelectedFile(file);
     // Here you would typically load the file content
     // For now, we'll just set a placeholder
-    const codes: any = project?.codes || {};
-    const codeList = window.Object.keys(codes);
+    const codes: any = project?.codes || [];
+    const codeList = codes.map((code: any) => code.path);
     if (file.type === 'file' || file.type !== 'directory') {
       if (!codeList.includes(file.path || '')) {
         // generate code content and set Project
@@ -79,7 +88,11 @@ const CodePage = () => {
   };
   const selectedContent = selectedFile
     ? project?.codes
-      ? [project?.codes[selectedFile.path as keyof typeof project.codes] || '']
+      ? [
+          project?.codes.find((item: CodeFile) => {
+            return item.path === selectedFile.path;
+          })?.content || '',
+        ]
       : 'Empty file'
     : 'Empty file';
   return (
@@ -97,6 +110,7 @@ const CodePage = () => {
           <CodeEditor
             content={selectedContent.toString()}
             selectedFile={selectedFile}
+            language={getLanguage(selectedFile?.name || '')}
           />
           {/* <div>{selectedContent.toString()}</div> */}
         </Box>
