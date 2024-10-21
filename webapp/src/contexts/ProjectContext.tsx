@@ -12,8 +12,8 @@ interface ProjectDetails {
 }
 
 export interface SavedProject {
-  id?: string | undefined;
-  rootPath?: string | undefined;
+  id?: string;
+  rootPath?: string;
   name: string;
   description: string;
   details: ProjectDetails;

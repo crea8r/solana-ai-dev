@@ -11,6 +11,8 @@ import promptAI from "../../services/prompt";
 import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
 import { useProject } from '../../contexts/ProjectContext';
 import { Spinner } from '@chakra-ui/react';
+import { fileApi } from '../../api/file';
+import { FileTreeNode } from '../../interfaces/file';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -59,9 +61,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             ];
             setTasks(initialTasks);
 
-            if (!savedProject.projectSaved) {
-                // Show input fields to save project
-            } else if (!savedProject.anchorInitCompleted) {
+            if (!savedProject.anchorInitCompleted) {
                 handleAnchorInitTask();
             } else if (!savedProject.filesAndCodesGenerated) {
                 handleGenCodesTask();
@@ -135,7 +135,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
             console.log('taskId', taskId);
             console.log(response);
-
+            
             pollTaskStatus(taskId);
         } catch (error) {
             console.error('Error initializing Anchor project:', error);
@@ -151,6 +151,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const handleGenCodesTask = async () => {
         setTasks((prevTasks) => prevTasks.map((task) => task.id === 3 ? { ...task, status: 'loading' } : task));
 
+        if (!savedProject?.id) { console.error('Project ID is undefined'); return; }
+        console.log('savedProject.id', savedProject.id);
+
         if (savedProject?.details?.nodes && savedProject?.details?.edges) {
             const structurePrompt = genStructure(savedProject.details.nodes, savedProject.details.edges);
             const choices = await promptAI(structurePrompt);
@@ -161,6 +164,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     setFileTreePaths(files);
                     updateProject({ ...project, files });
                     const fileList = getFileList(files); // Returns array of { name, path }
+                    console.log('fileList', fileList);
 
                     let nextId = 4;
                     const fileTasks = fileList.map(({ name, path }) => ({
@@ -176,6 +180,24 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         return [...mainTasks, ...fileTasks];
                     });
 
+                    const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, projectRootPath);
+                    if (!existingFilesResponse) { console.error('Existing files not found'); return; }
+                    console.log('existingFilesResponse', existingFilesResponse);
+
+                    const existingFilePaths = new Set<string>();
+                    const traverseFileTree = (nodes: FileTreeNode[]) => {
+                        for (const node of nodes) {
+                            if (node.type === 'file' && node.path) {
+                                existingFilePaths.add(node.path);
+                            } else if (node.type === 'directory' && node.children) {
+                                traverseFileTree(node.children);
+                            }
+                        }
+                    };
+                    traverseFileTree(existingFilesResponse);
+
+                    const configFiles = ['Cargo.toml', 'Anchor.toml', '.gitignore'];
+
                     for (const fileTask of fileTasks) {
                         setTasks((prevTasks) =>
                             prevTasks.map((task) =>
@@ -188,12 +210,30 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             const fileName = fileTask.name;
                             const filePath = fileTask.path;
 
+                            if (configFiles.includes(fileName)) {
+                                console.log(`Skipping config file: ${fileName}`);
+                                setTasks((prevTasks) =>
+                                    prevTasks.map((task) =>
+                                        task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                    )
+                                );
+                                continue;
+                            }
+
                             const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
                             const fileChoices = await promptAI(promptContent);
 
                             if (fileChoices && fileChoices.length > 0) {
                                 const aiContent = fileChoices[0].message?.content;
                                 const codeContent = extractCodeBlock(aiContent);
+
+                                if (existingFilePaths.has(filePath || '')) {
+                                    await fileApi.updateFile(savedProject.id || projectId, filePath || '', codeContent);
+                                    console.log(`Updated existing file: ${filePath}`);
+                                } else {
+                                    await fileApi.createFile(savedProject.id || projectId, filePath || '', codeContent);
+                                    console.log(`Created new file: ${filePath}`);
+                                }
 
                                 updateProject({
                                     ...project,
@@ -262,7 +302,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
                     updateSavedProject({
                         anchorInitCompleted: true,
-                    });
+                    });                    
 
                     handleGenCodesTask();
                 } else if (task.status === 'failed') {

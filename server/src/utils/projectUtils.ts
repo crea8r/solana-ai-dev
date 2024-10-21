@@ -71,7 +71,7 @@ export const startAnchorInitTask = async (
 ): Promise<string> => {
   const taskId = await createTask('Anchor Init', creatorId, projectId);
   setImmediate(async () => {
-    await runCommand(`anchor init ${projectName}`, APP_CONFIG.ROOT_FOLDER, taskId);
+    await runCommand(`anchor init ${rootPath}`, APP_CONFIG.ROOT_FOLDER, taskId);
   });
   return taskId;
 };

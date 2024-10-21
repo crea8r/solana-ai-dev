@@ -7,6 +7,20 @@ import { FileTreeNode } from '../interfaces/file';
 // }
 
 export const fileApi = {
+  // Get directory structure
+  getDirectoryStructure: async (
+    projectName: string,
+    rootPath: string
+  ): Promise<FileTreeNode[]> => {
+    try {
+      const response = await api.get(`/files/directory/${projectName}/${rootPath}`);
+      return response.data.fileStructure;
+    } catch (error) {
+      console.error('Error getting directory structure:', error);
+      throw error;
+    }
+  },
+
   // Get project file tree
   getProjectFileTree: async (projectId: string): Promise<FileTreeNode[]> => {
     try {

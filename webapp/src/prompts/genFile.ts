@@ -58,8 +58,8 @@ const genFile = (
         )
       );
     });
-    console.log('nodes', nodes);
-    console.log('edges', edges);
+    //console.log('nodes', nodes);
+    //console.log('edges', edges);
     // find all instruction nodes that connected to a program node
     const instructionNodes = nodes.filter((node) => {
       return (
