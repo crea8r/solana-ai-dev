@@ -234,7 +234,16 @@ const DesignPage: React.FC = () => {
   // Handle save project
   const handleSaveClick = async () => {
     // if no project id, then create new project
-    if (savedProject && !savedProject.id) {
+    if (savedProject && !savedProject.id && !savedProject.rootPath) {
+      if (!savedProject.name || !savedProject.description) {
+        toast({
+          title: 'Project name and description are required',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       const projectInfoToSave: ProjectInfoToSave = {
         name: savedProject.name,
         description: savedProject.description,
@@ -245,9 +254,24 @@ const DesignPage: React.FC = () => {
       };
       try {
         const response: SaveProjectResponse = await projectApi.saveProject(projectInfoToSave);
-        updateSavedProject({
-          id: response.projectId,
-        });
+
+        if (response.projectId && response.rootPath) {
+          toast({
+            title: 'Project saved',
+            status: 'success',
+            duration: 4000,
+            isClosable: true,
+          });
+          updateSavedProject({id: response.projectId, rootPath: response.rootPath});
+          console.log("Saved new project on database", response.projectId, response.rootPath);
+        } else {
+          toast({
+            title: 'Something went wrong',
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+          });
+        }
       } catch (error) {
         console.error('Error saving project:', error);
       }
@@ -265,7 +289,22 @@ const DesignPage: React.FC = () => {
       };
       try {
         const response = await projectApi.updateProject(savedProject.id, projectInfoToUpdate);
-        console.log('response', response);
+        if (response.message === 'Project updated successfully') {
+          toast({
+            title: 'Project updated successfully!',
+            status: 'success',
+            duration: 4000,
+            isClosable: true,
+          });
+          console.log("Updated project on database", response.projectId, response.rootPath);
+        } else {
+          toast({
+            title: 'Something went wrong',
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+          });
+        }
       } catch (error) {
         console.error('Error updating project:', error);
       }
@@ -278,12 +317,16 @@ const DesignPage: React.FC = () => {
     try {
       updateSavedProject({
         id: '',
+        rootPath: '',
         name: '',
         description: '',
         details: {
           nodes: [],
           edges: [],
         },
+        projectSaved: false,
+        anchorInitCompleted: false,
+        filesAndCodesGenerated: false,
       });
 
       setNodes([]);
@@ -317,6 +360,7 @@ const DesignPage: React.FC = () => {
 
       updateSavedProject({
         id: fetchedProject.id,
+        rootPath: fetchedProject.root_path,
         name: fetchedProject.name,
         description: fetchedProject.description,
         details: {
@@ -357,7 +401,10 @@ const DesignPage: React.FC = () => {
     Name: ${_name}
     Description: ${_description}  
     nodes: ${_nodes_count} (${_nodes_names?.join(', ')});
-    edges: ${_edges_count}`;
+    edges: ${_edges_count}
+    anchorInitCompleted: ${savedProject?.anchorInitCompleted}
+    filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
+    
     console.log(log);
   }, [savedProject]);
   

@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Box, Text, Flex, Input } from '@chakra-ui/react';
-import { CheckCircleIcon, TimeIcon, ArrowForwardIcon } from '@chakra-ui/icons';
+import React, { useEffect, useState, useRef } from 'react';
+import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Box, Text, Flex, Input, Spinner } from '@chakra-ui/react';
+import { CheckCircleIcon, ArrowForwardIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
-import { ProjectDetail, ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
+import { ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
 import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
 import promptAI from "../../services/prompt";
 import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
 import { useProject } from '../../contexts/ProjectContext';
-import { Spinner } from '@chakra-ui/react';
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 
 interface genTaskProps {
     isOpen: boolean;
     onClose: () => void;
-}   
+}
 
 type TaskStatus = 'completed' | 'loading' | 'failed' | 'succeed' | 'warning';
 
@@ -31,52 +30,137 @@ type Task = {
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const { project, updateProject, savedProject, updateSavedProject } = useProject();
-    const [projectId, setProjectId] = useState<string>('');
-    const [projectName, setProjectName] = useState<string>('');
-    const [projectDescription, setProjectDescription] = useState<string>('');
-    const [projectRootPath, setProjectRootPath] = useState<string>('');
+    const [isAnchorInit, setIsAnchorInit] = useState(false);
+    const [isFilesGenerated, setIsFilesGenerated] = useState(false);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [projectNameInput, setProjectNameInput] = useState<string>(savedProject?.name || '');
+    const [projectDescriptionInput, setProjectDescriptionInput] = useState<string>(savedProject?.description || '');
+    const [contextReady, setContextReady] = useState(false);
+
+    const tasksInitializedRef = useRef(false);
 
     useEffect(() => {
-        if (isOpen && savedProject) {
+        if (savedProject) {
+            setContextReady(true);
+        }
+        const _project_id = savedProject?.id;
+        const _name = savedProject?.name;
+        const _description = savedProject?.description;
+        const _nodes_count = savedProject?.details.nodes.length;
+        const _edges_count = savedProject?.details.edges.length;
+        const _root_path = savedProject?.rootPath;
+        const log = `-- [TaskModal] - useEffect --
+        'savedProject' context updated: 
+        Project Id: ${_project_id}
+        Root Path: ${_root_path}
+        Name: ${_name}
+        Description: ${_description}  
+        nodes: ${_nodes_count}
+        edges: ${_edges_count}
+        prok
+        anchorInitCompleted: ${savedProject?.anchorInitCompleted}
+        filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
+        
+        console.log(log);
+    }, [savedProject]);
+
+    useEffect(() => {
+        if (isOpen && contextReady && !tasksInitializedRef.current) {
+            if (!savedProject) return;
+
             const initialTasks: Task[] = [
                 {
                     id: 1,
                     name: 'Project saved',
-                    status: savedProject.projectSaved ? 'completed' : 'loading',
+                    status: savedProject?.projectSaved ? 'completed' : 'loading',
                     type: 'main',
                 },
                 {
                     id: 2,
                     name: 'Initializing Anchor project',
-                    status: savedProject.anchorInitCompleted ? 'completed' : 'loading',
+                    status: savedProject?.anchorInitCompleted ? 'completed' : 'loading',
                     type: 'main',
                 },
                 {
                     id: 3,
                     name: 'Generating files:',
-                    status: savedProject.filesAndCodesGenerated ? 'completed' : 'loading',
+                    status: savedProject?.filesAndCodesGenerated ? 'completed' : 'loading',
                     type: 'main',
-                },
+                }
             ];
-            setTasks(initialTasks);
 
-            if (!savedProject.anchorInitCompleted) {
-                handleAnchorInitTask();
-            } else if (!savedProject.filesAndCodesGenerated) {
-                handleGenCodesTask();
-            } else {
-                console.log('All tasks completed');
+            setTasks(initialTasks);
+            tasksInitializedRef.current = true;
+
+            if (!savedProject?.anchorInitCompleted || !savedProject?.filesAndCodesGenerated) {
+                runTasksSequentially();
             }
         }
-    }, [isOpen, savedProject]);
+
+        if (!isOpen) {
+            setTasks([]);
+            tasksInitializedRef.current = false;
+        }
+    }, [isOpen, savedProject, contextReady]);
+
+    const isTaskCompleted = (taskStatus: TaskStatus) => {
+        return taskStatus === 'completed';
+    };
+
+    const runTasksSequentially = async () => {
+        if (!savedProject) {
+            console.error("Saved project not available.");
+            return;
+        }
+
+        if (!savedProject?.projectSaved) {
+            if (savedProject?.name && savedProject?.description) {
+                await handleCreateProject();
+            } else {
+                console.log('Project name and description are required.');
+                return;
+            }
+        }
+
+        if (!savedProject?.anchorInitCompleted) {
+            if (savedProject?.id && savedProject?.rootPath) {
+                await handleAnchorInitTask(savedProject.id, savedProject.rootPath, savedProject.name || '');
+            } else {
+                console.error('Project ID or root path is missing.');
+                return;
+            }
+        } else {
+            console.log('Anchor project is already initialized.');
+        }
+
+        if (!savedProject?.filesAndCodesGenerated) {
+            if (savedProject?.id && savedProject?.rootPath && savedProject?.name) {
+                await handleGenCodesTask(savedProject.id, savedProject.rootPath, savedProject.name);
+            } else {
+                console.error('Project root path or name is missing.');
+                return;
+            }
+        } else {
+            console.log('Files and codes have already been generated.');
+        }
+    };
 
     const handleCreateProject = async () => {
+        // If projectSaved is true, skip saving and return early
+        if (savedProject?.projectSaved) {
+            console.log('Project already saved to database. Skipping save...');
+            return;
+        }
+
+        const projectName = savedProject?.name || projectNameInput;
+        const projectDescription = savedProject?.description || projectDescriptionInput;
+
         if (!projectName || !projectDescription) {
             console.log('Project name and description are required.');
             return;
         }
 
+        // Update task status to 'loading' for project saving task
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
                 task.id === 1 ? { ...task, status: 'loading' } : task
@@ -91,19 +175,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             };
 
             const response: SaveProjectResponse = await projectApi.createProject(projectInfo);
-            console.log(response);
-
-            setProjectId(response.projectId);
-            setProjectRootPath(response.rootPath);
-
-            setTimeout(() => {
-                setTasks((prevTasks) =>
-                    prevTasks.map((task) =>
-                        task.id === 1 ? { ...task, status: 'completed' } : task
-                    )
-                );
-                console.log('project saved');
-
+            if (response) {
+                console.log("Project saved:", response);
                 updateSavedProject({
                     id: response.projectId,
                     rootPath: response.rootPath,
@@ -111,10 +184,24 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     description: projectDescription,
                     projectSaved: true,
                 });
-            }, 2000);
+
+                // Mark the save task as completed
+                setTasks((prevTasks) =>
+                    prevTasks.map((task) =>
+                        task.id === 1 ? { ...task, status: 'completed' } : task
+                    )
+                );
+                console.log('Project saved');
+
+                // Proceed to the next task (Anchor initialization) after saving
+                await handleAnchorInitTask(response.projectId, response.rootPath, projectName);
+            } else {
+                console.error('Error saving project:', response);
+            }
         } catch (error) {
             console.error('Error saving project:', error);
 
+            // Update task status to 'failed' if saving the project fails
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === 1 ? { ...task, status: 'failed' } : task
@@ -123,20 +210,33 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleAnchorInitTask = async () => {
+    const handleAnchorInitTask = async (projectId: string, rootPath: string, projectName: string) => {
         try {
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === 2 ? { ...task, status: 'loading' } : task
                 )
             );
-            const response = await projectApi.initAnchorProject(projectId, projectRootPath, projectName);
-            const { taskId } = response;
 
+            if (!projectId || !rootPath) {
+                console.error('Project ID or root path is undefined');
+                return;
+            }
+
+            if (!savedProject) {
+                console.error('Saved project is undefined');
+                return;
+            }
+            if (!projectId || !projectName || !rootPath) {
+                console.error('Project ID, name, or root path is missing.');
+                return;
+            }
+
+            const response = await projectApi.initAnchorProject(projectId, rootPath, projectName);
+            const { taskId } = response;
             console.log('taskId', taskId);
-            console.log(response);
-            
-            pollTaskStatus(taskId);
+            await pollTaskStatus(taskId, projectId, rootPath, projectName);
+
         } catch (error) {
             console.error('Error initializing Anchor project:', error);
 
@@ -148,13 +248,73 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleGenCodesTask = async () => {
-        setTasks((prevTasks) => prevTasks.map((task) => task.id === 3 ? { ...task, status: 'loading' } : task));
+    const pollTaskStatus = (taskId: string, projectId: string, rootPath: string, projectName: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            const interval = setInterval(async () => {
+                try {
+                    const { task } = await taskApi.getTask(taskId);
+                    console.log('task', task);
 
-        if (!savedProject?.id) { console.error('Project ID is undefined'); return; }
-        console.log('savedProject.id', savedProject.id);
+                    if (task.status === 'succeed' || task.status === 'warning') {
+                        setTasks((prevTasks) =>
+                            prevTasks.map((prevTask) =>
+                                prevTask.type === 'main' && prevTask.id === 2
+                                    ? { ...prevTask, status: 'completed' }
+                                    : prevTask
+                            )
+                        );
+                        clearInterval(interval);
 
-        if (savedProject?.details?.nodes && savedProject?.details?.edges) {
+                        updateSavedProject({
+                            anchorInitCompleted: true,
+                        });
+
+                        // Proceed to the next task
+                        await handleGenCodesTask(projectId, rootPath, projectName);
+                        resolve(); // Resolve the promise here
+
+                    } else if (task.status === 'failed') {
+                        setTasks((prevTasks) =>
+                            prevTasks.map((prevTask) =>
+                                prevTask.id === 2 ? { ...prevTask, status: 'failed' } : prevTask
+                            )
+                        );
+                        clearInterval(interval);
+                        reject(new Error('Task failed'));
+                    }
+                } catch (error) {
+                    console.error('Error fetching task status:', error);
+                    clearInterval(interval);
+                    reject(error);
+                }
+            }, 2000);
+        });
+    };
+
+    const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
+        if(savedProject?.filesAndCodesGenerated) {
+            console.log('Files and codes have already been generated.');
+            return;
+        } 
+
+        if(!savedProject?.details?.nodes || !savedProject?.details?.edges) {
+            
+            console.error('Nodes or edges are missing in saved project details.');
+            return;
+        }
+
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task.id === 3 ? { ...task, status: 'loading' } : task
+            )
+        );
+
+        if (!projectId) {
+            console.error('Project ID is undefined');
+            return;
+        }
+
+        if ((savedProject?.details?.nodes && savedProject?.details?.nodes.length > 0) && (savedProject?.details?.edges && savedProject?.details?.edges.length > 0)) {
             const structurePrompt = genStructure(savedProject.details.nodes, savedProject.details.edges);
             const choices = await promptAI(structurePrompt);
 
@@ -169,14 +329,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         return { ...file, path: updatedPath, name: file.name };
                     });
 
-                    console.log('updatedFileList', updatedFileList);
-                   // updateProject({ ...project, files: updatedFileList });
-
                     let nextId = 4;
                     const fileTasks = updatedFileList.map(({ name, path }) => ({
                         id: nextId++,
-                        name: name,
-                        path: path,
+                        name,
+                        path,
                         status: 'loading',
                         type: 'file',
                     } as Task));
@@ -186,9 +343,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         return [...mainTasks, ...fileTasks];
                     });
 
-                    const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, projectRootPath);
-                    if (!existingFilesResponse) { console.error('Existing files not found'); return; }
-                    console.log('existingFilesResponse', existingFilesResponse);
+                    if (!projectName || !rootPath) {
+                        console.error('(handleGenCodesTask) Project name or root path is missing.');
+                        return;
+                    }
+
+                    const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
+                    if (!existingFilesResponse) {
+                        console.error('Existing files not found');
+                        return;
+                    }
 
                     const existingFilePaths = new Set<string>();
                     const traverseFileTree = (nodes: FileTreeNode[]) => {
@@ -234,10 +398,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                 const codeContent = extractCodeBlock(aiContent);
 
                                 if (existingFilePaths.has(filePath || '')) {
-                                    await fileApi.updateFile(savedProject.id || projectId, filePath || '', codeContent);
+                                    await fileApi.updateFile(projectId, filePath || '', codeContent);
                                     console.log(`Updated existing file: ${filePath}`);
                                 } else {
-                                    await fileApi.createFile(savedProject.id || projectId, filePath || '', codeContent);
+                                    await fileApi.createFile(projectId, filePath || '', codeContent);
                                     console.log(`Created new file: ${filePath}`);
                                 }
 
@@ -290,41 +454,18 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const pollTaskStatus = async (taskId: string) => {
-        const interval = setInterval(async () => {
-            try {
-                const { task } = await taskApi.getTask(taskId);
-                console.log('task', task);
+    // Determine whether to show the project input fields
+    const showProjectInput = !savedProject?.projectSaved && (!savedProject?.name || !savedProject?.description);
 
-                if (task.status === 'succeed' || task.status === 'warning') {
-                    setTasks((prevTasks) =>
-                        prevTasks.map((prevTask) =>
-                            prevTask.type === 'main' && prevTask.id === 2
-                                ? { ...prevTask, status: 'completed' }
-                                : prevTask
-                        )
-                    );
-                    clearInterval(interval);
-
-                    updateSavedProject({
-                        anchorInitCompleted: true,
-                    });                    
-
-                    handleGenCodesTask();
-                } else if (task.status === 'failed') {
-                    setTasks((prevTasks) =>
-                        prevTasks.map((prevTask) =>
-                            prevTask.id === 2 ? { ...prevTask, status: 'failed' } : prevTask
-                        )
-                    );
-                    clearInterval(interval);
-                }
-            } catch (error) {
-                console.error('Error fetching task status:', error);
-                clearInterval(interval);
-            }
-        }, 2000);
-    };
+    if (!contextReady) {
+        return (
+            <Spinner
+                size="lg"
+                color="blue.500"
+                label="Loading project data..."
+            />
+        );
+    }
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
@@ -332,60 +473,78 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             <ModalContent>
                 <ModalBody>
                     <Box mt={4}>
-                        <Box mb={4} style={{ display: savedProject?.projectSaved ? 'none' : 'block' }}>
-                            <Input
-                                placeholder="Enter Project Name"
-                                value={projectName}
-                                onChange={(e) => setProjectName(e.target.value)}
-                                required
-                                mb={2}
-                            />
-                            <Input
-                                placeholder="Enter Project Description"
-                                value={projectDescription}
-                                onChange={(e) => setProjectDescription(e.target.value)}
-                                required
-                                mb={2}
-                            />
-                            <Button
-                                onClick={handleCreateProject}
-                                colorScheme="blue"
-                                mt={2}
-                                rightIcon={<ArrowForwardIcon />}
-                            />
-                        </Box>
-
-                        <Box style={{ display: savedProject?.projectSaved ? 'block' : 'none' }}>
-                            {tasks.filter(task => task.type === 'main').map((task) => (
-                                <Flex key={task.id} justify="space-between" align="center" mb={2}>
-                                    <Text fontSize="sm" fontWeight="medium">{task.name}</Text>
-                                    <StatusSymbol status={task.status} />
-                                </Flex>
-                            ))}
-                            <Box mt={4}>
-                                {tasks.filter(task => task.type === 'file').map((task) => (
-                                    <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
-                                        <Text fontSize="sm">{task.name}</Text>
-                                        <StatusSymbol status={task.status} />
-                                    </Flex>
-                                ))}
+                        {showProjectInput && (
+                            <Box mb={4}>
+                                <Input
+                                    placeholder="Enter Project Name"
+                                    value={projectNameInput}
+                                    onChange={(e) => setProjectNameInput(e.target.value)}
+                                    required
+                                    mb={2}
+                                />
+                                <Input
+                                    placeholder="Enter Project Description"
+                                    value={projectDescriptionInput}
+                                    onChange={(e) => setProjectDescriptionInput(e.target.value)}
+                                    required
+                                    mb={2}
+                                />
+                                <Button
+                                    onClick={() => {
+                                        updateSavedProject({
+                                            name: projectNameInput,
+                                            description: projectDescriptionInput,
+                                        });
+                                        handleCreateProject();
+                                    }}
+                                    colorScheme="blue"
+                                    mt={2}
+                                    rightIcon={<ArrowForwardIcon />}
+                                >
+                                    Save Project
+                                </Button>
                             </Box>
-                        </Box>
+                        )}
+
+                        {!showProjectInput && (
+                            <Box>
+                                {tasks
+                                    .filter((task) => task.type === 'main')
+                                    .map((task) => (
+                                        <Flex key={task.id} justify="space-between" align="center" mb={2}>
+                                            <Text fontSize="sm" fontWeight="medium">{task.name}</Text>
+                                            <StatusSymbol status={task.status} />
+                                        </Flex>
+                                    ))}
+                                <Box mt={4}>
+                                    {tasks
+                                        .filter((task) => task.type === 'file')
+                                        .map((task) => (
+                                            <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
+                                                <Text fontSize="sm">{task.name}</Text>
+                                                <StatusSymbol status={task.status} />
+                                            </Flex>
+                                        ))}
+                                </Box>
+                            </Box>
+                        )}
                     </Box>
                 </ModalBody>
             </ModalContent>
         </Modal>
     );
-}
+};
 
 function StatusSymbol({ status }: { status: TaskStatus }) {
     return status === 'completed' ? (
         <CheckCircleIcon color="green.500" />
+    ) : status === 'failed' ? (
+        <CheckCircleIcon color="red.500" />
     ) : (
         <Spinner
             color="gray.300"
             size="sm"
-            style={{ animationDuration: '1.4s' }} 
+            style={{ animationDuration: '1.4s' }}
         />
     );
 }

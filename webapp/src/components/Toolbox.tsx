@@ -30,9 +30,8 @@ const Toolbox: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
 
-  const handleSubmit = () => {
-    updateSavedProject({ name: projectName, description: projectDescription });
-  };
+  const handleSubmitName = (value: string) => { updateSavedProject({ name: value });};
+  const handleSubmitDescription = (value: string) => { updateSavedProject({ description: value });};
 
   return (
     <Box
@@ -57,19 +56,17 @@ const Toolbox: React.FC = () => {
         >
           <Input
             placeholder='Project Name'
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
+            value={projectName || savedProject?.name}
+            onChange={(e) => handleSubmitName(e.target.value)}
             p={2}
           />
           <Textarea
             placeholder='Project Description'
-            value={projectDescription}
-            onChange={(e) => setProjectDescription(e.target.value)}
+            value={projectDescription || savedProject?.description}
+            onChange={(e) => handleSubmitDescription(e.target.value)}
             p={2}
           />
-          <Box as='button' onClick={handleSubmit} bg='blue.500' color='white' p={1} borderRadius='md' fontSize='sm'>
-            Save Project
-          </Box>
+
         </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas

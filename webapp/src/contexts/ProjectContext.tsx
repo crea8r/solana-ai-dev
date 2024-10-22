@@ -64,7 +64,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     setSavedProject((prevProject) => {
       if (!prevProject) {
         return {
-          id: updatedData.id || undefined,
+          id: updatedData.id || '',
+          rootPath: updatedData.rootPath || '',
           name: updatedData.name || '',
           description: updatedData.description || '',
           details: {
@@ -82,7 +83,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       return {
         ...prevProject,
         ...updatedData,
-        id: updatedData.id || prevProject.id,
+        id: updatedData.id !== undefined ? updatedData.id : prevProject.id, // Allow empty string
         details: {
           nodes: updatedData.details?.nodes || prevProject.details.nodes,
           edges: updatedData.details?.edges || prevProject.details.edges,
