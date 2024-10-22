@@ -59,54 +59,44 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [project, setProject] = useState<InMemoryProject | null>(null);
-  const [savedProject, setSavedProject] = useState<SavedProject | null>(null);
+
+  // Initialize savedProject with default values
+  const [savedProject, setSavedProject] = useState<SavedProject>({
+    id: '',
+    rootPath: '',
+    name: '',
+    description: '',
+    details: {
+      nodes: [],
+      edges: [],
+    },
+    files: { name: '', children: [] },
+    codes: [],
+    docs: [],
+    projectSaved: false,
+    anchorInitCompleted: false,
+    filesAndCodesGenerated: false,
+  });
 
   const updateSavedProject = (updatedData: Partial<SavedProject>) => {
     setSavedProject((prevProject) => {
-      if (!prevProject) {
-        return {
-          id: updatedData.id || '',
-          rootPath: updatedData.rootPath || '',
-          name: updatedData.name || '',
-          description: updatedData.description || '',
-          details: {
-            nodes: updatedData.details?.nodes || [],
-            edges: updatedData.details?.edges || [],
-          },
-          files: updatedData.files || { name: '', children: [] },
-          codes: updatedData.codes || [],
-          docs: updatedData.docs || [],
-          projectSaved: updatedData.projectSaved || false,
-          anchorInitCompleted: updatedData.anchorInitCompleted || false,
-          filesAndCodesGenerated: updatedData.filesAndCodesGenerated || false,
-        };
-      }
-
-      // Create a new object, copying prevProject
-      const newProject = { ...prevProject };
-
-      // Update properties only if they are defined in updatedData
-      Object.keys(updatedData).forEach((key) => {
-        const value = updatedData[key as keyof SavedProject];
-        if (value !== undefined) {
-          (newProject as any)[key] = value;
-        }
-      });
-
-      // Handle details separately if provided
-      if (updatedData.details) {
-        newProject.details = {
-          nodes:
-            updatedData.details.nodes !== undefined
-              ? updatedData.details.nodes
-              : prevProject.details.nodes,
-          edges:
-            updatedData.details.edges !== undefined
-              ? updatedData.details.edges
-              : prevProject.details.edges,
-        };
-      }
-
+      // Merge existing savedProject state with new updatedData
+      const newProject = {
+        id: updatedData.id ?? prevProject.id,
+        rootPath: updatedData.rootPath ?? prevProject.rootPath,
+        name: updatedData.name ?? prevProject.name,
+        description: updatedData.description ?? prevProject.description,
+        details: {
+          nodes: updatedData.details?.nodes ?? prevProject.details.nodes,
+          edges: updatedData.details?.edges ?? prevProject.details.edges,
+        },
+        files: updatedData.files ?? prevProject.files,
+        codes: updatedData.codes ?? prevProject.codes,
+        docs: updatedData.docs ?? prevProject.docs,
+        projectSaved: updatedData.projectSaved ?? prevProject.projectSaved,
+        anchorInitCompleted: updatedData.anchorInitCompleted ?? prevProject.anchorInitCompleted,
+        filesAndCodesGenerated: updatedData.filesAndCodesGenerated ?? prevProject.filesAndCodesGenerated,
+      };
       return newProject;
     });
   };
