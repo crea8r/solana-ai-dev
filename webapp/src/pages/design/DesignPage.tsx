@@ -301,17 +301,11 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
+      console.log('fetchedProject', fetchedProject);
 
       // recreate the toolbox item
       const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
         const restoredItem = createItem(node.data.item.type);
-  
-        if (restoredItem) {
-          restoredItem.setName(node.data.item.name);
-          restoredItem.setDescription(node.data.item.description);
-          restoredItem.setPropertyValues(node.data.localValues);
-        }
-  
         return {
           ...node,
           data: {
@@ -321,7 +315,6 @@ const DesignPage: React.FC = () => {
         };
       });
 
-      
       updateSavedProject({
         id: fetchedProject.id,
         name: fetchedProject.name,
