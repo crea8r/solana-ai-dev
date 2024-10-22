@@ -17,25 +17,33 @@ dotenv.config();
 interface FileStructure {
   name: string;
   isDirectory: boolean;
+  path: string; // Added path property
   children?: FileStructure[];
 }
 
-const getFullDirectoryStructure = async (directoryPath: string): Promise<FileStructure[]> => {
+const getFullDirectoryStructure = async (
+  directoryPath: string,
+  relativePath: string = ''
+): Promise<FileStructure[]> => {
   const files = await fs.readdir(directoryPath, { withFileTypes: true });
 
   const fileStructure: FileStructure[] = await Promise.all(
     files.map(async (file) => {
       const fullPath = path.join(directoryPath, file.name);
+      const fileRelativePath = path.join(relativePath, file.name); // Get the relative path
+
       if (file.isDirectory()) {
         return {
           name: file.name,
           isDirectory: true,
-          children: await getFullDirectoryStructure(fullPath), // Recursive call
+          path: fileRelativePath,
+          children: await getFullDirectoryStructure(fullPath, fileRelativePath), // Pass the relative path
         };
       } else {
         return {
           name: file.name,
           isDirectory: false,
+          path: fileRelativePath,
         };
       }
     })

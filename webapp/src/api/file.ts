@@ -99,4 +99,14 @@ export const fileApi = {
       throw error;
     }
   },
+
+  checkTaskStatus: async (taskId: string) => {
+    try {
+      const response = await api.get(`/tasks/${taskId}/status`);
+      return response.data;
+    } catch (error) {
+      console.error('Error checking task status:', error);
+      throw error;
+    }
+  },
 };

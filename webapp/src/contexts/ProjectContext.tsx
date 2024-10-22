@@ -17,11 +17,12 @@ export interface SavedProject {
   name: string;
   description: string;
   details: ProjectDetails;
+  files: FileTreeItemType;
+  codes?: CodeFile[];
+  docs?: Docs[];
   projectSaved: boolean;
   anchorInitCompleted: boolean;
   filesAndCodesGenerated: boolean;
-  // Files[]
-  // Codes[]
 }
 
 export interface InMemoryProject {
@@ -63,7 +64,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   const updateSavedProject = (updatedData: Partial<SavedProject>) => {
     setSavedProject((prevProject) => {
       if (!prevProject) {
-        // Initialize savedProject with updatedData or defaults
         return {
           id: updatedData.id || '',
           rootPath: updatedData.rootPath || '',
@@ -73,6 +73,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
             nodes: updatedData.details?.nodes || [],
             edges: updatedData.details?.edges || [],
           },
+          files: updatedData.files || { name: '', children: [] },
+          codes: updatedData.codes || [],
+          docs: updatedData.docs || [],
           projectSaved: updatedData.projectSaved || false,
           anchorInitCompleted: updatedData.anchorInitCompleted || false,
           filesAndCodesGenerated: updatedData.filesAndCodesGenerated || false,
