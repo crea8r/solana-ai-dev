@@ -1,7 +1,9 @@
 // src/components/Toolbox.tsx
 
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import {
+  Flex,
+  Textarea,
   Box,
   SimpleGrid,
   Icon,
@@ -9,10 +11,13 @@ import {
   VStack,
   Divider,
   Text,
+  Input,
 } from '@chakra-ui/react';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { useProject } from '../contexts/ProjectContext';
+
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}', ''),
@@ -21,6 +26,13 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
+  const { savedProject, updateSavedProject } = useProject();
+  const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
+
+  const handleSubmitName = (value: string) => { updateSavedProject({ name: value });};
+  const handleSubmitDescription = (value: string) => { updateSavedProject({ description: value });};
+
   return (
     <Box
       width='30%'
@@ -33,6 +45,29 @@ const Toolbox: React.FC = () => {
       shadow='md'
     >
       <VStack spacing={2} align='stretch'>
+      <Flex
+          direction="column"
+          alignItems="stretch"
+          gap={4}
+          mb={6}
+          mt={4}
+          ml={2}
+          mr={2}
+        >
+          <Input
+            placeholder='Project Name'
+            value={projectName || savedProject?.name}
+            onChange={(e) => handleSubmitName(e.target.value)}
+            p={2}
+          />
+          <Textarea
+            placeholder='Project Description'
+            value={projectDescription || savedProject?.description}
+            onChange={(e) => handleSubmitDescription(e.target.value)}
+            p={2}
+          />
+
+        </Flex>
         <Text fontWeight='light' textAlign='left'>
           Drag items into canvas
         </Text>

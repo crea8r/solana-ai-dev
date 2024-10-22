@@ -2,6 +2,7 @@ import express from 'express';
 import {
   createFile,
   deleteFile,
+  getDirectoryStructure,
   getFileContent,
   getProjectFileTree,
   updateFile,
@@ -10,6 +11,7 @@ import { authMiddleware } from 'src/middleware/authMiddleware';
 
 const router = express.Router();
 
+router.get('/directory/:projectName/:rootPath', authMiddleware, getDirectoryStructure);
 router.get('/tree/:id', authMiddleware, getProjectFileTree);
 router.get('/:projectId/:filePath(*)', authMiddleware, getFileContent);
 router.post('/:projectId/:filePath(*)', authMiddleware, createFile);

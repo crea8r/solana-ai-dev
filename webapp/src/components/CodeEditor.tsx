@@ -3,7 +3,7 @@ import MonacoEditor from 'react-monaco-editor';
 import { FileTreeItemType } from './FileTree';
 
 type CodeEditorProps = {
-  content: any;
+  content: string; // Ensure content is a string
   language?: string;
   selectedFile?: FileTreeItemType;
 };
@@ -20,8 +20,10 @@ const CodeEditor = ({
     cursorStyle: 'line' as 'line',
     automaticLayout: true,
   };
-  // for content, only keep the content between the two line that start with '```'
+
   console.log('language: ', language);
+  console.log('content:', content);
+
   return (
     <Box h='100%'>
       {selectedFile ? (
@@ -30,6 +32,7 @@ const CodeEditor = ({
         </Box>
       ) : null}
       <MonacoEditor
+        key={selectedFile?.path} // Add key prop here to force re-mount
         width='100%'
         height='80%'
         language={language || 'md'}

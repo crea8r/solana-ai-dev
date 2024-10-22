@@ -1,3 +1,6 @@
+import { promises as fs } from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
 import pool from 'src/config/database';
 import { AppError } from 'src/middleware/errorHandler';
@@ -8,6 +11,81 @@ import {
   startGetFileContentTask,
   startUpdateFileTask,
 } from 'src/utils/fileUtils';
+
+dotenv.config();
+
+interface FileStructure {
+  name: string;
+  isDirectory: boolean;
+  path: string; // Added path property
+  children?: FileStructure[];
+}
+
+const getFullDirectoryStructure = async (
+  directoryPath: string,
+  relativePath: string = ''
+): Promise<FileStructure[]> => {
+  const files = await fs.readdir(directoryPath, { withFileTypes: true });
+
+  const fileStructure: FileStructure[] = await Promise.all(
+    files.map(async (file) => {
+      const fullPath = path.join(directoryPath, file.name);
+      const fileRelativePath = path.join(relativePath, file.name); // Get the relative path
+
+      if (file.isDirectory()) {
+        return {
+          name: file.name,
+          isDirectory: true,
+          path: fileRelativePath,
+          children: await getFullDirectoryStructure(fullPath, fileRelativePath), // Pass the relative path
+        };
+      } else {
+        return {
+          name: file.name,
+          isDirectory: false,
+          path: fileRelativePath,
+        };
+      }
+    })
+  );
+
+  return fileStructure;
+};
+
+export const getDirectoryStructure = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
+
+  const { projectName, rootPath } = req.params;
+  const directoryName = `${rootPath}`;
+  const rootFolder = process.env.ROOT_FOLDER;
+
+  if (!rootFolder) {
+    return next(new AppError('Root folder not configured', 500));
+  }
+
+  const directoryPath = path.join(rootFolder, directoryName);
+
+  try {
+    const fileStructure = await getFullDirectoryStructure(directoryPath);
+
+    res.status(200).json({
+      message: 'Directory structure retrieved successfully',
+      fileStructure,
+    });
+  } catch (error) {
+    console.error('Error in getDirectoryStructure:', error);
+    next(new AppError('Failed to retrieve directory structure', 500));
+  }
+};
 
 export const getProjectFileTree = async (
   req: Request,

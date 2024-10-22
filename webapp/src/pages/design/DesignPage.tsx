@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, Flex } from '@chakra-ui/react';
+import { Button, Flex, useDisclosure, useToast } from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -24,11 +24,17 @@ import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-import { useProject } from '../../contexts/ProjectContext';
 import { FileTreeItemType } from '../../components/FileTree';
 
 import { todoproject } from '../../data/mock';
 import { loadItem } from '../../utils/itemFactory';
+import ListProject from './ListProject';
+import { projectApi } from '../../api/project';
+import ProjectBanner from './ProjectBanner';
+import { ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
+import { useProject } from '../../contexts/ProjectContext';
+import { createItem } from '../../utils/itemFactory';
+import { TaskModal } from './TaskModal';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 // load env
@@ -50,7 +56,10 @@ function setFileTreePaths(
 }
 
 const DesignPage: React.FC = () => {
-  const { project, setProject } = useProject();
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
+  const isSaveDisabled = !savedProject || !savedProject.id || !savedProject.name || !savedProject.details;
+
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
   const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -80,6 +89,14 @@ const DesignPage: React.FC = () => {
     setNodes(tmpNodes);
     setEdges(todoproject.edges);
   }, [setProject]);
+  const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
+  const {
+    isOpen: isProjectBannerOpen,
+    onClose: closeProjectBanner,
+    onOpen: openProjectBanner,
+  } = useDisclosure();
+  const toast = useToast();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   useEffect(() => {
     if (isProduction) {
@@ -127,10 +144,9 @@ const DesignPage: React.FC = () => {
   const handleUpdateNode = (updatedNode: Node) => {
     // Check if ownerProgramId has changed
     const oldNode = nodes.find((node) => node.id === updatedNode.id);
-    const newOwnerProgramId = (updatedNode.data.localValues as any)
-      .ownerProgramId;
-    const oldOwnerProgramId =
-      oldNode && (oldNode.data.item as any).ownerProgramId;
+    const newOwnerProgramId = (updatedNode.data.localValues as any).ownerProgramId;
+    const oldOwnerProgramId = oldNode && (oldNode.data.item as any).ownerProgramId;
+    
     if (newOwnerProgramId !== oldOwnerProgramId) {
       // Remove old edge if it exists
       if (oldOwnerProgramId) {
@@ -160,16 +176,23 @@ const DesignPage: React.FC = () => {
             strokeWidth: 2,
           },
         };
-        console.log(newEdge);
+        //console.log(newEdge);
         setEdges((edges) => [...edges, newEdge]);
       }
     }
     const item = updatedNode.data.item as ToolboxItem;
     item.setPropertyValues(updatedNode.data.localValues);
-    setNodes(
-      nodes.map((node) => (node.id === updatedNode.id ? updatedNode : node))
+
+    const updatedNodes = nodes.map((node) =>
+      node.id === updatedNode.id ? updatedNode : node
     );
+    
+    setNodes(updatedNodes);
     setSelectedNode(updatedNode);
+
+    updateProject({
+      nodes: updatedNodes,
+    });
   };
 
   const handleUpdateEdge = (updatedEdge: Edge) => {
@@ -183,28 +206,8 @@ const DesignPage: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
   };
 
-  const handlePrompt = async (nodes: Node[], edges: Edge[]) => {
-    const ai_prompt = genStructure(nodes, edges);
-    setPromptString(ai_prompt);
-    setIsLoading(true);
-    const choices = await promptAI(ai_prompt);
-    try {
-      if (choices && choices.length > 0) {
-        const files = JSON.parse(
-          choices[0].message?.content
-        ) as FileTreeItemType;
-        setFileTreePaths(files);
-
-        setProject({
-          nodes,
-          edges,
-          files,
-        });
-      }
-    } catch (e) {
-    } finally {
-      setIsLoading(false);
-    }
+  const handlePrompt = () => {
+    setIsTaskModalOpen((prev) => !prev);
   };
 
   const handleCloseWalkthrough = () => {
@@ -223,6 +226,204 @@ const DesignPage: React.FC = () => {
     }
   }, []);
 
+  // Handle open project
+  const handleOpenClick = () => {
+    setIsListProjectModalShown(true);
+  };
+
+  // Handle save project
+  const handleSaveClick = async () => {
+    // if no project id, then create new project
+    if (savedProject && !savedProject.id && !savedProject.rootPath) {
+      if (!savedProject.name || !savedProject.description) {
+        toast({
+          title: 'Project name and description are required',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      const projectInfoToSave: ProjectInfoToSave = {
+        name: savedProject.name,
+        description: savedProject.description,
+        details: {
+          nodes: savedProject.details.nodes,
+          edges: savedProject.details.edges,
+        }
+      };
+      try {
+        const response: SaveProjectResponse = await projectApi.saveProject(projectInfoToSave);
+
+        if (response.projectId && response.rootPath) {
+          toast({
+            title: 'Project saved',
+            status: 'success',
+            duration: 4000,
+            isClosable: true,
+          });
+          updateSavedProject({id: response.projectId, rootPath: response.rootPath});
+          console.log("Saved new project on database", response.projectId, response.rootPath);
+        } else {
+          toast({
+            title: 'Something went wrong',
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error('Error saving project:', error);
+      }
+    }
+    // else update existing project
+    if (savedProject && savedProject.id) {
+      const projectInfoToUpdate: ProjectInfoToSave = {
+        id: savedProject.id,
+        name: savedProject.name,
+        description: savedProject.description,
+        details: {
+          nodes: savedProject.details.nodes,
+          edges: savedProject.details.edges,
+        }
+      };
+      try {
+        const response = await projectApi.updateProject(savedProject.id, projectInfoToUpdate);
+        if (response.message === 'Project updated successfully') {
+          toast({
+            title: 'Project updated successfully!',
+            status: 'success',
+            duration: 4000,
+            isClosable: true,
+          });
+          console.log("Updated project on database", response.projectId, response.rootPath);
+        } else {
+          toast({
+            title: 'Something went wrong',
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error('Error updating project:', error);
+      }
+    }
+  };
+
+  // Handle new project 
+  const handleNewClick = async () => {
+    setIsLoading(true);
+    try {
+      updateSavedProject({
+        id: '',
+        rootPath: '',
+        name: '',
+        description: '',
+        details: {
+          nodes: [],
+          edges: [],
+        },
+        projectSaved: false,
+        anchorInitCompleted: false,
+        filesAndCodesGenerated: false,
+      });
+
+      setNodes([]);
+      setEdges([]);
+
+    } catch (error) {
+      console.error('Error creating new project:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle load project
+  const handleLoadProject = async (projectId: string, projectName: string) => {
+    setIsLoading(true);
+    try {
+      const fetchedProject = await projectApi.getProjectDetails(projectId);
+      console.log('fetchedProject', fetchedProject);
+
+      // recreate the toolbox item
+      const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
+        const restoredItem = createItem(node.data.item.type);
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            item: restoredItem,
+          },
+        };
+      });
+
+      updateSavedProject({
+        id: fetchedProject.id,
+        rootPath: fetchedProject.root_path,
+        name: fetchedProject.name,
+        description: fetchedProject.description,
+        details: {
+          nodes: fetchedProject.details.nodes,
+          edges: fetchedProject.details.edges,
+        },
+      });
+
+      setNodes(nodesWithTypedItems || []);
+      setEdges(fetchedProject.details.edges || []);
+
+    } catch (e) {
+      toast({
+        title: 'Something went wrong!',
+        description: `Cannot load ${projectName} project`,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+      handleCloseWalkthrough();
+    }
+  };
+
+  useEffect(() => {
+    const _project_id = savedProject?.id;
+    const _name = savedProject?.name;
+    const _description = savedProject?.description;
+    const _nodes_count = savedProject?.details.nodes.length;
+    const _nodes_names = savedProject?.details.nodes.map((node: Node) => node.data.item.name);
+    const _edges_count = savedProject?.details.edges.length;
+    const _root_path = savedProject?.rootPath;
+    const log = `-- [DesignPage] - useEffect --
+    'savedProject' context updated: 
+    Project Id: ${_project_id}
+    Root Path: ${_root_path}
+    Name: ${_name}
+    Description: ${_description}  
+    nodes: ${_nodes_count} (${_nodes_names?.join(', ')});
+    edges: ${_edges_count}
+    anchorInitCompleted: ${savedProject?.anchorInitCompleted}
+    filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
+    
+    console.log(log);
+  }, [savedProject]);
+  
+  useEffect(() => {
+    updateSavedProject({
+      id: savedProject?.id,
+      name: savedProject?.name,
+      description: savedProject?.description,
+      details: {
+        nodes: nodes,
+        edges: edges,
+      }
+    });
+  }, [nodes, edges]);
+
+  const toggleTaskModal = () => {
+    setIsTaskModalOpen((prev) => !prev);
+  };
+
   return (
     <>
       <PromptModal
@@ -235,10 +436,17 @@ const DesignPage: React.FC = () => {
         onClose={handleCloseWalkthrough}
       />
       <Flex direction='column' height='100vh'>
+        <ProjectBanner
+          isOpen={isListProjectModalShown}
+          onClickSave={() => {}}
+          closeBanner={closeProjectBanner}
+          project={project}
+        />
         <TopPanel
-          generatePrompt={() => {
-            handlePrompt(nodes, edges);
-          }}
+          generatePrompt={handlePrompt}
+          onClickNew={handleNewClick}
+          onClickOpen={handleOpenClick}
+          onClickSave={handleSaveClick}
         />
         <Flex flex={1}>
           <Toolbox />
@@ -275,7 +483,13 @@ const DesignPage: React.FC = () => {
           Help
         </Button>
       </Flex>
+      <ListProject
+        isOpen={isListProjectModalShown}
+        onClose={() => setIsListProjectModalShown(false)}
+        onProjectClick={handleLoadProject}
+      />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} />
     </>
   );
 };
