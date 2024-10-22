@@ -12,21 +12,13 @@ export interface FileTreeItemType {
   children?: FileTreeItemType[];
   path?: string;
 }
-const mockFileTree = {
-  name: 'src',
-  type: 'directory',
-  path: 'src',
-  children: [
-    { name: 'main.rs', type: 'file', path: 'src/main.rs', ext: 'rs' },
-    { name: 'lib.rs', type: 'file', path: 'src/lib.rs', ext: 'rs' },
-  ],
-} as FileTreeItemType;
 
 export interface FileTreeItemProps {
   item: FileTreeItemType;
   onSelectFile: (item: FileTreeItemType) => void;
-  selectedItem?: FileTreeItemType | undefined;
+  selectedItem?: FileTreeItemType;
 }
+
 const FileTreeItem = ({
   item,
   onSelectFile,
@@ -35,10 +27,7 @@ const FileTreeItem = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleFolder = () => setIsOpen(!isOpen);
-  if (
-    item.type === 'directory' ||
-    (item.children && item.children.length > 0)
-  ) {
+  if (item.type === 'directory' || (item.children && item.children.length > 0)) {
     return (
       <VStack align='stretch' ml={2}>
         <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
@@ -48,7 +37,7 @@ const FileTreeItem = ({
         {isOpen &&
           item.children?.map((child, index) => (
             <FileTreeItem
-              key={index}
+              key={child.path || index}
               item={child}
               onSelectFile={onSelectFile}
               selectedItem={selectedItem}
@@ -67,7 +56,7 @@ const FileTreeItem = ({
         <CiFileOn />
         <Text
           ml={2}
-          background={item.path === selectedItem?.path ? 'yello.100' : ''}
+          background={item.path === selectedItem?.path ? 'yellow.100' : ''}
         >
           {item.name}
         </Text>
@@ -77,24 +66,26 @@ const FileTreeItem = ({
 };
 
 type FileTreeProps = {
-  onSelectFile: any; // (item: FileTreeItemType) => void;
+  onSelectFile: (item: FileTreeItemType) => void;
   files?: FileTreeItemType;
   selectedItem?: FileTreeItemType;
 };
 
 const FileTree = ({
   onSelectFile,
-  files = mockFileTree,
+  files,
   selectedItem,
 }: FileTreeProps) => {
   return (
     <VStack align='stretch' spacing={2} p={4}>
       <Text fontWeight='bold'>Project Files</Text>
-      <FileTreeItem
-        item={files}
-        onSelectFile={onSelectFile}
-        selectedItem={selectedItem}
-      />
+      {files && (
+        <FileTreeItem
+          item={files}
+          onSelectFile={onSelectFile}
+          selectedItem={selectedItem}
+        />
+      )}
     </VStack>
   );
 };

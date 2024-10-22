@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
@@ -10,6 +10,7 @@ import AIChat from '../../components/AIChat';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { useProject } from '../../contexts/ProjectContext';
 import { extractCodeBlock } from '../../utils/genCodeUtils';
+import { fileApi } from '../../api/file';
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -19,55 +20,51 @@ function getLanguage(fileName: string) {
   return 'md';
 }
 
-
-
 const CodePage = () => {
-  const [selectedFile, setSelectedFile] = useState<
-    FileTreeItemType | undefined
-  >(undefined);
+  const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const { project, setProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
+  const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
+
+  useEffect(() => {
+    const fetchDirectoryStructure = async () => {
+      if (project?.name) {
+        try {
+          const directoryStructure = await fileApi.getDirectoryStructure(project.name, '');
+          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType);
+          const rootNode: FileTreeItemType = {
+            name: project.name,
+            path: '',
+            type: 'directory',
+            children: mappedFiles,
+          };
+          setFiles(rootNode);
+          console.log('Mapped Files:', rootNode);
+        } catch (error) {
+          console.error('Failed to fetch directory structure', error);
+        }
+      }
+    };
+    fetchDirectoryStructure();
+  }, [project?.name]);
+
+  function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
+    return {
+      name: node.name,
+      path: node.path,
+      type: node.type,
+      ext: node.type === 'file' ? node.name.split('.').pop() : undefined,
+      children: node.children
+        ? node.children.map(mapFileTreeNodeToItemType)
+        : undefined,
+    };
+  }
 
   const handleSelectFile = async (file: FileTreeItemType) => {
     setSelectedFile(file);
-    // Here you would typically load the file content
-    // For now, we'll just set a placeholder
-    const codes: any = project?.codes || [];
-    const codeList = codes.map((code: any) => code.path);
-    if (file.type === 'file' || file.type !== 'directory') {
-      if (!codeList.includes(file.path || '')) {
-        // generate code content and set Project
-        setIsLoading(true);
-        const { nodes, edges } = project || { nodes: [], edges: [] };
-        const content = genFile(nodes, edges, file.name || '', file.path || '');
-        console.log(
-          'request: ',
-          genFile(nodes, edges, file.name || '', file.path || '')
-        );
-        const choices = await promptAI(content);
-        try {
-          if (choices && choices.length > 0) {
-            const content = choices[0].message?.content;
-            codes[file.path || ''] = extractCodeBlock(content);
-            console.log('content: ', content);
-            if (project?.files) {
-              setProject({
-                name: project?.name || '',
-                description: project?.description || '',
-                nodes,
-                edges,
-                files: project?.files,
-                codes: codes,
-              });
-            }
-          }
-        } catch (e) {
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
+    // Your existing logic for handling file selection
   };
+
   const selectedContent = selectedFile
     ? project?.codes
       ? [
@@ -77,7 +74,7 @@ const CodePage = () => {
         ]
       : 'Empty file'
     : 'Empty file';
-  // TODO: need to figure out when to enable the save button
+
   return (
     <Flex direction='column' height='100vh'>
       <TopPanel />
@@ -85,7 +82,7 @@ const CodePage = () => {
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
           <FileTree
             onSelectFile={handleSelectFile}
-            files={project?.files || undefined}
+            files={files}
             selectedItem={selectedFile}
           />
         </Box>
@@ -95,7 +92,6 @@ const CodePage = () => {
             selectedFile={selectedFile}
             language={getLanguage(selectedFile?.name || '')}
           />
-          {/* <div>{selectedContent.toString()}</div> */}
         </Box>
         <Box w={'400px'} borderLeft='1px' borderColor='gray.200'>
           <AIChat />

@@ -63,6 +63,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   const updateSavedProject = (updatedData: Partial<SavedProject>) => {
     setSavedProject((prevProject) => {
       if (!prevProject) {
+        // Initialize savedProject with updatedData or defaults
         return {
           id: updatedData.id || '',
           rootPath: updatedData.rootPath || '',
@@ -72,23 +73,38 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
             nodes: updatedData.details?.nodes || [],
             edges: updatedData.details?.edges || [],
           },
-          files: { name: '', children: [] },
-          codes: [],
-          docs: [],
           projectSaved: updatedData.projectSaved || false,
           anchorInitCompleted: updatedData.anchorInitCompleted || false,
           filesAndCodesGenerated: updatedData.filesAndCodesGenerated || false,
         };
       }
-      return {
-        ...prevProject,
-        ...updatedData,
-        id: updatedData.id !== undefined ? updatedData.id : prevProject.id, // Allow empty string
-        details: {
-          nodes: updatedData.details?.nodes || prevProject.details.nodes,
-          edges: updatedData.details?.edges || prevProject.details.edges,
-        },
-      };
+
+      // Create a new object, copying prevProject
+      const newProject = { ...prevProject };
+
+      // Update properties only if they are defined in updatedData
+      Object.keys(updatedData).forEach((key) => {
+        const value = updatedData[key as keyof SavedProject];
+        if (value !== undefined) {
+          (newProject as any)[key] = value;
+        }
+      });
+
+      // Handle details separately if provided
+      if (updatedData.details) {
+        newProject.details = {
+          nodes:
+            updatedData.details.nodes !== undefined
+              ? updatedData.details.nodes
+              : prevProject.details.nodes,
+          edges:
+            updatedData.details.edges !== undefined
+              ? updatedData.details.edges
+              : prevProject.details.edges,
+        };
+      }
+
+      return newProject;
     });
   };
 
