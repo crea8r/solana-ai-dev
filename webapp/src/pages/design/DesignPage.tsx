@@ -60,6 +60,7 @@ const DesignPage: React.FC = () => {
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // TODO: split this into a separate hook
   const loadMock = useCallback(() => {
     console.log('todoproject', todoproject);
     setProject(todoproject);

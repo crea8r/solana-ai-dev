@@ -1,6 +1,7 @@
 import { Box, Text } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import { FileTreeItemType } from './FileTree';
+import { useEffect } from 'react';
 
 type CodeEditorProps = {
   content: any;
@@ -21,7 +22,16 @@ const CodeEditor = ({
     automaticLayout: true,
   };
   // for content, only keep the content between the two line that start with '```'
-  console.log('language: ', language);
+  useEffect(() => {
+    // Dynamically import Monaco Editor languages
+    import('monaco-editor/esm/vs/basic-languages/rust/rust.contribution');
+    import(
+      'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution'
+    );
+    import(
+      'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
+    );
+  }, []);
   return (
     <Box h='100%'>
       {selectedFile ? (

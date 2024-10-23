@@ -2,7 +2,7 @@
 
 import { VStack, Text, Flex } from '@chakra-ui/react';
 import { useState } from 'react';
-import { CiFolderOn, CiFileOn } from "react-icons/ci";
+import { CiFolderOn, CiFileOn } from 'react-icons/ci';
 
 // name, ext, type, path, children
 export interface FileTreeItemType {
@@ -63,14 +63,10 @@ const FileTreeItem = ({
         ml={2}
         cursor='pointer'
         onClick={() => onSelectFile(item)}
+        background={item.path === selectedItem?.path ? 'yellow.100' : ''}
       >
         <CiFileOn />
-        <Text
-          ml={2}
-          background={item.path === selectedItem?.path ? 'yello.100' : ''}
-        >
-          {item.name}
-        </Text>
+        <Text ml={2}>{item.name}</Text>
       </Flex>
     );
   }
