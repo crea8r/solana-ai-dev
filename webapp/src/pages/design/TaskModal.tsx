@@ -113,6 +113,15 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             }
         }
 
+        await new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (projectContext.id && projectContext.rootPath) {
+                    clearInterval(interval);
+                    resolve(null);
+                }
+            }, 100);
+        });
+
         if (!projectContext?.details.isAnchorInit) {
             if (projectContext.id && projectContext.rootPath) {
                 await handleAnchorInitTask(projectContext.id, projectContext.rootPath, projectContext.name || '');

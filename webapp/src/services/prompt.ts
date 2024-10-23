@@ -16,4 +16,15 @@ const promptAI = async (text: string) => {
   return resp.data?.data?.choices;
 };
 
+export const testAI = async () => {
+  try {
+    const testMsg = "Respond with 'Hello, World!'"
+    const resp = await authApi.post('/ai/test', { messages: [testMsg] });
+    return resp.data;
+  } catch (error) {
+    console.error('Error calling /test route:', error);
+    throw error;
+  }
+};
+
 export default promptAI;

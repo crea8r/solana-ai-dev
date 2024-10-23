@@ -22,7 +22,7 @@ import WalkthroughDialog from '../../components/WalkthroughDialog';
 import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
-import promptAI from '../../services/prompt';
+import promptAI, { testAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../components/FileTree';
 
@@ -68,6 +68,18 @@ const DesignPage: React.FC = () => {
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+
+  useEffect(() => {
+    const test = async () => {
+      try {
+        const resp = await testAI();
+        console.log('testAI response:', resp);
+      } catch (error) {
+        console.error('Error calling testAI:', error);
+      }
+    };
+    test();
+  }, []);
 
   useEffect(() => {
     const log = `-- [DesignPage] - useEffect --
