@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { genDocs } from '../prompts/genDocs';
+//import { genDocs } from '../prompts/genDocs';
 import promptAI from '../services/prompt';
-import { useProject } from '../contexts/ProjectContext';
+import { useProjectContext } from '../contexts/ProjectContext';
 import {
   FileText,
   Database,
@@ -45,13 +45,14 @@ const DocPage: React.FC = () => {
   const [sections, setSections] = useState<Record<string, string>>({});
   const [selectedSection, setSelectedSection] = useState('Overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { project, updateProject } = useProject();
+  const { projectContext, setProjectContext } = useProjectContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const docsPrompt = genDocs(project);
+  //const docsPrompt = genDocs(projectContext);
   const { updateDocs } = useDocs();
 
   const fetchDocumentation = async () => {
+    /*
     if (docsPrompt) {
       setIsLoading(true);
       const choices = await promptAI(docsPrompt);
@@ -64,20 +65,23 @@ const DocPage: React.FC = () => {
           { title: 'Documentation', content, lastUpdated: new Date() },
         ];
         updateDocs(newDocs); 
-        updateProject({ docs: newDocs });
+        setProjectContext((prevProjectContext) => ({ 
+          ...prevProjectContext, 
+          details: { ...prevProjectContext.details, docs: newDocs } }));
       }
       setIsLoading(false);
     }
+    */
   };
 
   useEffect(() => {
-    if (project?.docs && project.docs.length > 0) {
+    if (projectContext?.details.docs && projectContext.details.docs.length > 0) {
       //console.log('Using cached documentation:', project.docs[0].content);
-      setSections(splitIntoSections(project.docs[0].content));
+      setSections(splitIntoSections(projectContext.details.docs[0].content));
     } else {
       fetchDocumentation();
     }
-  }, [docsPrompt, project]);
+  }, [/*docsPrompt,*/ projectContext]);
 
   const formatContent = (content: string) => {
     // Remove all '#' symbols

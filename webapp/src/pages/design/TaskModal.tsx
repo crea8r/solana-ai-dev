@@ -3,15 +3,15 @@ import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Box, Text, Flex, 
 import { CheckCircleIcon, ArrowForwardIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
-import { ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
+import { ProjectDetail, ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
 import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
 import promptAI from "../../services/prompt";
 import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
-import { useProject } from '../../contexts/ProjectContext';
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
+import { useProjectContext } from '../../contexts/ProjectContext';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -29,62 +29,53 @@ type Task = {
 };
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
-    const { project, updateProject, savedProject, updateSavedProject } = useProject();
-    const [isAnchorInit, setIsAnchorInit] = useState(false);
-    const [isFilesGenerated, setIsFilesGenerated] = useState(false);
+    const { projectContext: projectContext, setProjectContext: setProjectContext } = useProjectContext();
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [projectNameInput, setProjectNameInput] = useState<string>(savedProject?.name || '');
-    const [projectDescriptionInput, setProjectDescriptionInput] = useState<string>(savedProject?.description || '');
+    const [projectNameInput, setProjectNameInput] = useState<string>(projectContext?.name || '');
+    const [projectDescInput, setProjectDescInput] = useState<string>(projectContext?.description || '');
     const [contextReady, setContextReady] = useState(false);
 
     const tasksInitializedRef = useRef(false);
 
     useEffect(() => {
-        if (savedProject) {
+        if (projectContext) {
             setContextReady(true);
         }
-        const _project_id = savedProject?.id;
-        const _name = savedProject?.name;
-        const _description = savedProject?.description;
-        const _nodes_count = savedProject?.details.nodes.length;
-        const _edges_count = savedProject?.details.edges.length;
-        const _root_path = savedProject?.rootPath;
-        const log = `-- [TaskModal] - useEffect --
-        'savedProject' context updated: 
-        Project Id: ${_project_id}
-        Root Path: ${_root_path}
-        Name: ${_name}
-        Description: ${_description}  
-        nodes: ${_nodes_count}
-        edges: ${_edges_count}
-        prok
-        anchorInitCompleted: ${savedProject?.anchorInitCompleted}
-        filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
+        const log = `-- [TaskModal] useEffect --
+        project context updated:    
+        Project Id: ${projectContext?.id}
+        Root Path: ${projectContext?.rootPath}
+        Name: ${projectContext?.name}
+        Description: ${projectContext?.description}  
+        nodes: ${projectContext?.details.nodes.length}
+        edges: ${projectContext?.details.edges.length}
+        isAnchorInit: ${projectContext?.details.isAnchorInit}
+        isCode: ${projectContext?.details.isCode}`;
         
         console.log(log);
-    }, [savedProject]);
+    }, [projectContext]);
 
     useEffect(() => {
         if (isOpen && contextReady && !tasksInitializedRef.current) {
-            if (!savedProject) return;
+            if (!projectContext) return;
 
             const initialTasks: Task[] = [
                 {
                     id: 1,
                     name: 'Project saved',
-                    status: savedProject?.projectSaved ? 'completed' : 'loading',
+                    status: projectContext.id && projectContext.rootPath ? 'completed' : 'loading',
                     type: 'main',
                 },
                 {
                     id: 2,
                     name: 'Initializing Anchor project',
-                    status: savedProject?.anchorInitCompleted ? 'completed' : 'loading',
+                    status: projectContext?.details.isAnchorInit ? 'completed' : 'loading',
                     type: 'main',
                 },
                 {
                     id: 3,
                     name: 'Generating files:',
-                    status: savedProject?.filesAndCodesGenerated ? 'completed' : 'loading',
+                    status: projectContext?.details.isCode ? 'completed' : 'loading',
                     type: 'main',
                 }
             ];
@@ -92,7 +83,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setTasks(initialTasks);
             tasksInitializedRef.current = true;
 
-            if (!savedProject?.anchorInitCompleted || !savedProject?.filesAndCodesGenerated) {
+            if (!projectContext?.details.isAnchorInit || !projectContext?.details.isCode) {
                 runTasksSequentially();
             }
         }
@@ -101,20 +92,20 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setTasks([]);
             tasksInitializedRef.current = false;
         }
-    }, [isOpen, savedProject, contextReady]);
+    }, [isOpen, projectContext, contextReady]);
 
     const isTaskCompleted = (taskStatus: TaskStatus) => {
         return taskStatus === 'completed';
     };
 
     const runTasksSequentially = async () => {
-        if (!savedProject) {
-            console.error("Saved project not available.");
+        if (!projectContext) {
+            console.error("Project not available.");
             return;
         }
 
-        if (!savedProject?.projectSaved) {
-            if (savedProject?.name && savedProject?.description) {
+        if (!projectContext.id && !projectContext.rootPath) {
+            if (projectContext.name && projectContext.description) {
                 await handleCreateProject();
             } else {
                 console.log('Project name and description are required.');
@@ -122,9 +113,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             }
         }
 
-        if (!savedProject?.anchorInitCompleted) {
-            if (savedProject?.id && savedProject?.rootPath) {
-                await handleAnchorInitTask(savedProject.id, savedProject.rootPath, savedProject.name || '');
+        if (!projectContext?.details.isAnchorInit) {
+            if (projectContext.id && projectContext.rootPath) {
+                await handleAnchorInitTask(projectContext.id, projectContext.rootPath, projectContext.name || '');
             } else {
                 console.error('Project ID or root path is missing.');
                 return;
@@ -133,9 +124,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             console.log('Anchor project is already initialized.');
         }
 
-        if (!savedProject?.filesAndCodesGenerated) {
-            if (savedProject?.id && savedProject?.rootPath && savedProject?.name) {
-                await handleGenCodesTask(savedProject.id, savedProject.rootPath, savedProject.name);
+        if (!projectContext.details.isCode) {
+            if (projectContext.id && projectContext.rootPath && projectContext.name) {
+                await handleGenCodesTask(projectContext.id, projectContext.rootPath, projectContext.name);
             } else {
                 console.error('Project root path or name is missing.');
                 return;
@@ -147,20 +138,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
     const handleCreateProject = async () => {
         // If projectSaved is true, skip saving and return early
-        if (savedProject?.projectSaved) {
+        if (projectContext.id && projectContext.rootPath) {
             console.log('Project already saved to database. Skipping save...');
             return;
         }
 
-        const projectName = savedProject?.name || projectNameInput;
-        const projectDescription = savedProject?.description || projectDescriptionInput;
+        const projectName = projectContext?.name || projectNameInput;
+        const projectDescription = projectContext?.description || projectDescInput;
 
         if (!projectName || !projectDescription) {
             console.log('Project name and description are required.');
             return;
         }
 
-        // Update task status to 'loading' for project saving task
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
                 task.id === 1 ? { ...task, status: 'loading' } : task
@@ -168,24 +158,22 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         );
 
         try {
-            const projectInfo: ProjectInfoToSave = {
-                name: projectName,
-                description: projectDescription,
-                details: savedProject?.details,
-            };
-
-            const response: SaveProjectResponse = await projectApi.createProject(projectInfo);
+            const response: SaveProjectResponse = await projectApi.createProject(projectContext);
             if (response) {
                 console.log("Project saved:", response);
-                updateSavedProject({
+
+                setProjectContext((prevProject) => ({
+                    ...prevProject,
                     id: response.projectId,
                     rootPath: response.rootPath,
                     name: projectName,
                     description: projectDescription,
-                    projectSaved: true,
-                });
+                    details: {
+                        ...prevProject?.details,
+                        projectSaved: true,
+                    }
+                }));
 
-                // Mark the save task as completed
                 setTasks((prevTasks) =>
                     prevTasks.map((task) =>
                         task.id === 1 ? { ...task, status: 'completed' } : task
@@ -193,7 +181,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 );
                 console.log('Project saved');
 
-                // Proceed to the next task (Anchor initialization) after saving
                 await handleAnchorInitTask(response.projectId, response.rootPath, projectName);
             } else {
                 console.error('Error saving project:', response);
@@ -223,8 +210,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 return;
             }
 
-            if (!savedProject) {
-                console.error('Saved project is undefined');
+            if (!projectContext) {
+                console.error('Project is undefined');
                 return;
             }
             if (!projectId || !projectName || !rootPath) {
@@ -265,9 +252,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         );
                         clearInterval(interval);
 
-                        updateSavedProject({
-                            anchorInitCompleted: true,
-                        });
+                        setProjectContext((prevProjectContext) => ({
+                            ...prevProjectContext,
+                            details: {
+                                ...prevProjectContext.details,
+                                isSaved: true,
+                                isAnchorInit: true,
+                            },
+                        }));
 
                         // Proceed to the next task
                         await handleGenCodesTask(projectId, rootPath, projectName);
@@ -292,12 +284,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
     const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
-        if(savedProject?.filesAndCodesGenerated) {
+        if(projectContext.details.isCode) {
             console.log('Files and codes have already been generated.');
             return;
         } 
 
-        if(!savedProject?.details?.nodes || !savedProject?.details?.edges) {
+        if(!projectContext.details.nodes || !projectContext.details.edges) {
             
             console.error('Nodes or edges are missing in saved project details.');
             return;
@@ -314,8 +306,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        if ((savedProject?.details?.nodes && savedProject?.details?.nodes.length > 0) && (savedProject?.details?.edges && savedProject?.details?.edges.length > 0)) {
-            const structurePrompt = genStructure(savedProject.details.nodes, savedProject.details.edges);
+        if ((projectContext.details.nodes && projectContext.details.nodes.length > 0) && (projectContext.details.edges && projectContext.details.edges.length > 0)) {
+            const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
             const choices = await promptAI(structurePrompt);
 
             try {
@@ -376,7 +368,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         );
 
                         try {
-                            const { nodes, edges } = savedProject.details || { nodes: [], edges: [] };
+                            const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
                             const fileName = fileTask.name;
                             const filePath = fileTask.path;
 
@@ -405,13 +397,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                     console.log(`Created new file: ${filePath}`);
                                 }
 
-                                updateProject({
-                                    ...project,
-                                    codes: [
-                                        ...(project?.codes || []),
-                                        { name: fileName || '', path: filePath || '', content: codeContent },
-                                    ],
-                                });
+                                setProjectContext((prevProjectContext) => ({
+                                    ...prevProjectContext,
+                                    details: {
+                                        ...prevProjectContext.details,
+                                        codes: [
+                                            ...(prevProjectContext.details.codes || []),
+                                            { name: fileName || '', path: filePath || '', content: codeContent },
+                                        ],
+                                    },
+                                }));
 
                                 setTasks((prevTasks) =>
                                     prevTasks.map((task) =>
@@ -437,9 +432,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         )
                     );
 
-                    updateSavedProject({
-                        filesAndCodesGenerated: true,
-                    });
+                    setProjectContext((prevProjectContext) => ({
+                        ...prevProjectContext,
+                        details: {
+                            ...prevProjectContext.details,
+                            isCode: true,
+                        },
+                    }));
+
                 } else {
                     throw new Error('No AI response for structure generation');
                 }
@@ -455,7 +455,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
     // Determine whether to show the project input fields
-    const showProjectInput = !savedProject?.projectSaved && (!savedProject?.name || !savedProject?.description);
+    const showProjectInput = !projectContext.id && !projectContext.rootPath && (!projectContext.name || !projectContext.description);
 
     if (!contextReady) {
         return (
@@ -484,17 +484,18 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                 />
                                 <Input
                                     placeholder="Enter Project Description"
-                                    value={projectDescriptionInput}
-                                    onChange={(e) => setProjectDescriptionInput(e.target.value)}
+                                    value={projectDescInput}
+                                    onChange={(e) => setProjectDescInput(e.target.value)}
                                     required
                                     mb={2}
                                 />
                                 <Button
                                     onClick={() => {
-                                        updateSavedProject({
+                                        setProjectContext((prevProjectContext) => ({
+                                            ...prevProjectContext,
                                             name: projectNameInput,
-                                            description: projectDescriptionInput,
-                                        });
+                                            description: projectDescInput,
+                                        }));
                                         handleCreateProject();
                                     }}
                                     colorScheme="blue"

@@ -33,6 +33,8 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        {/* 
+        --- add back in later ---
         <Route
           path='/doc'
           element={
@@ -41,6 +43,7 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        */}
         <Route
           path='/account'
           element={
