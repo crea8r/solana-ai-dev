@@ -31,11 +31,11 @@ import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
-import { ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
-import { useProject } from '../../contexts/ProjectContext';
+import { SaveProjectResponse } from '../../interfaces/project';
 import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
-
+import { useProjectContext } from '../../contexts/ProjectContext';
+import InputModal from '../../components/InputModal';
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 // load env
 const isProduction =
@@ -56,24 +56,38 @@ function setFileTreePaths(
 }
 
 const DesignPage: React.FC = () => {
-  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
-  const isSaveDisabled = !savedProject || !savedProject.id || !savedProject.name || !savedProject.details;
+  const { projectContext: projectContext, setProjectContext: setProjectContext } = useProjectContext();
+  const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [nodes, setNodes] = useState<Node[]>(project?.nodes || []);
-  const [edges, setEdges] = useState<Edge[]>(project?.edges || []);
+  const [nodes, setNodes] = useState<Node[]>(projectContext.details.nodes || []);
+  const [edges, setEdges] = useState<Edge[]>(projectContext.details.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+
+  useEffect(() => {
+    const log = `-- [DesignPage] - useEffect --
+    'project' context updated: 
+    Project Id: ${projectContext.id}
+    Root Path: ${projectContext.rootPath}
+    Name: ${projectContext.name}
+    Description: ${projectContext.description}  
+    nodes: ${projectContext.details.nodes.length} (${projectContext.details.nodes.map((node) => node.data.item.name).join(', ')});
+    edges: ${projectContext.details.edges.length}
+    isAnchorInit: ${projectContext.details.isAnchorInit}
+    isCode: ${projectContext.details.isCode}`;
+    console.log(log);
+  }, [projectContext]);
 
   const loadMock = useCallback(() => {
     console.log('todoproject', todoproject);
-    setProject(todoproject);
+    setProjectContext(todoproject);
     const tmpNodes = [];
-    for (const node of todoproject.nodes) {
+    for (const node of todoproject.details.nodes) {
       const item = loadItem(node.data.item.type, node.data.item);
       if (item) {
         const newNode = loadItem(node.data.item.type, node.data.item)?.toNode({
@@ -87,8 +101,9 @@ const DesignPage: React.FC = () => {
       }
     }
     setNodes(tmpNodes);
-    setEdges(todoproject.edges);
-  }, [setProject]);
+    setEdges(todoproject.details.edges);
+  }, [setProjectContext]);
+
   const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
   const {
     isOpen: isProjectBannerOpen,
@@ -98,6 +113,7 @@ const DesignPage: React.FC = () => {
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
+  /*
   useEffect(() => {
     if (isProduction) {
       initGA(GA_MEASUREMENT_ID);
@@ -106,7 +122,8 @@ const DesignPage: React.FC = () => {
     if (!isProduction) {
       loadMock();
     }
-  }, [setProject, loadMock]);
+  }, [setProjectContext, loadMock]);
+  */
 
   const onNodesChange = useCallback((changes: any) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -190,9 +207,13 @@ const DesignPage: React.FC = () => {
     setNodes(updatedNodes);
     setSelectedNode(updatedNode);
 
-    updateProject({
-      nodes: updatedNodes,
-    });
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        nodes: updatedNodes,
+      }
+    }));
   };
 
   const handleUpdateEdge = (updatedEdge: Edge) => {
@@ -208,6 +229,10 @@ const DesignPage: React.FC = () => {
 
   const handlePrompt = () => {
     setIsTaskModalOpen((prev) => !prev);
+  };
+
+  const handleInputModal = () => {
+    setIsInputModalOpen(true);
   };
 
   const handleCloseWalkthrough = () => {
@@ -226,16 +251,15 @@ const DesignPage: React.FC = () => {
     }
   }, []);
 
-  // Handle open project
   const handleOpenClick = () => {
     setIsListProjectModalShown(true);
   };
 
-  // Handle save project
   const handleSaveClick = async () => {
     // if no project id, then create new project
-    if (savedProject && !savedProject.id && !savedProject.rootPath) {
-      if (!savedProject.name || !savedProject.description) {
+    if (projectContext && !projectContext.id && !projectContext.rootPath) {
+      if (!projectContext.name || !projectContext.description) {
+        setIsInputModalOpen(true);
         toast({
           title: 'Project name and description are required',
           status: 'error',
@@ -244,16 +268,8 @@ const DesignPage: React.FC = () => {
         });
         return;
       }
-      const projectInfoToSave: ProjectInfoToSave = {
-        name: savedProject.name,
-        description: savedProject.description,
-        details: {
-          nodes: savedProject.details.nodes,
-          edges: savedProject.details.edges,
-        }
-      };
       try {
-        const response: SaveProjectResponse = await projectApi.saveProject(projectInfoToSave);
+        const response: SaveProjectResponse = await projectApi.createProject(projectContext);
 
         if (response.projectId && response.rootPath) {
           toast({
@@ -262,8 +278,14 @@ const DesignPage: React.FC = () => {
             duration: 4000,
             isClosable: true,
           });
-          updateSavedProject({id: response.projectId, rootPath: response.rootPath});
-          console.log("Saved new project on database", response.projectId, response.rootPath);
+
+          setProjectContext((prev) => ({
+            ...prev,
+            id: response.projectId,
+            rootPath: response.rootPath,
+          }));
+
+          console.log("Created new project on database", response.projectId, response.rootPath);
         } else {
           toast({
             title: 'Something went wrong',
@@ -277,19 +299,17 @@ const DesignPage: React.FC = () => {
       }
     }
     // else update existing project
-    if (savedProject && savedProject.id) {
-      const projectInfoToUpdate: ProjectInfoToSave = {
-        id: savedProject.id,
-        name: savedProject.name,
-        description: savedProject.description,
-        details: {
-          nodes: savedProject.details.nodes,
-          edges: savedProject.details.edges,
-        }
-      };
+    if (projectContext && projectContext.id && projectContext.rootPath) {
       try {
-        const response = await projectApi.updateProject(savedProject.id, projectInfoToUpdate);
+        const response = await projectApi.updateProject(projectContext.id, projectContext);
         if (response.message === 'Project updated successfully') {
+          setProjectContext((prev) => ({
+            ...prev,
+            details: {
+              ...prev.details,
+              isSaved: true,
+            },
+          }));
           toast({
             title: 'Project updated successfully!',
             status: 'success',
@@ -311,23 +331,27 @@ const DesignPage: React.FC = () => {
     }
   };
 
-  // Handle new project 
   const handleNewClick = async () => {
     setIsLoading(true);
     try {
-      updateSavedProject({
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
         id: '',
         rootPath: '',
         name: '',
         description: '',
         details: {
+          ...prevProjectContext.details,
           nodes: [],
           edges: [],
+          files: { name: '', children: [] },
+          codes: [],
+          docs: [],
+          isSaved: false,
+          isAnchorInit: false,
+          isCode: false,
         },
-        projectSaved: false,
-        anchorInitCompleted: false,
-        filesAndCodesGenerated: false,
-      });
+      }));
 
       setNodes([]);
       setEdges([]);
@@ -339,12 +363,10 @@ const DesignPage: React.FC = () => {
     }
   };
 
-  // Handle load project
   const handleLoadProject = async (projectId: string, projectName: string) => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
-      console.log('fetchedProject', fetchedProject);
 
       // recreate the toolbox item
       const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
@@ -358,16 +380,21 @@ const DesignPage: React.FC = () => {
         };
       });
 
-      updateSavedProject({
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
         id: fetchedProject.id,
         rootPath: fetchedProject.root_path,
         name: fetchedProject.name,
         description: fetchedProject.description,
         details: {
+          ...prevProjectContext.details,
           nodes: fetchedProject.details.nodes,
           edges: fetchedProject.details.edges,
+          isSaved: fetchedProject.details.isSaved,
+          isAnchorInit: fetchedProject.details.isAnchorInit,
+          isCode: fetchedProject.details.isCode,
         },
-      });
+      }));
 
       setNodes(nodesWithTypedItems || []);
       setEdges(fetchedProject.details.edges || []);
@@ -385,44 +412,27 @@ const DesignPage: React.FC = () => {
       handleCloseWalkthrough();
     }
   };
-
-  useEffect(() => {
-    const _project_id = savedProject?.id;
-    const _name = savedProject?.name;
-    const _description = savedProject?.description;
-    const _nodes_count = savedProject?.details.nodes.length;
-    const _nodes_names = savedProject?.details.nodes.map((node: Node) => node.data.item.name);
-    const _edges_count = savedProject?.details.edges.length;
-    const _root_path = savedProject?.rootPath;
-    const log = `-- [DesignPage] - useEffect --
-    'savedProject' context updated: 
-    Project Id: ${_project_id}
-    Root Path: ${_root_path}
-    Name: ${_name}
-    Description: ${_description}  
-    nodes: ${_nodes_count} (${_nodes_names?.join(', ')});
-    edges: ${_edges_count}
-    anchorInitCompleted: ${savedProject?.anchorInitCompleted}
-    filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
-    
-    console.log(log);
-  }, [savedProject]);
   
   useEffect(() => {
-    updateSavedProject({
-      id: savedProject?.id,
-      name: savedProject?.name,
-      description: savedProject?.description,
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
       details: {
+        ...prevProjectContext.details,
         nodes: nodes,
         edges: edges,
       }
-    });
+    }));
   }, [nodes, edges]);
 
   const toggleTaskModal = () => {
     setIsTaskModalOpen((prev) => !prev);
   };
+
+  const toggleInputModal = () => {
+    setIsInputModalOpen((prev) => !prev);
+  };
+
+
 
   return (
     <>
@@ -440,10 +450,11 @@ const DesignPage: React.FC = () => {
           isOpen={isListProjectModalShown}
           onClickSave={() => {}}
           closeBanner={closeProjectBanner}
-          project={project}
+          project={projectContext}
         />
         <TopPanel
           generatePrompt={handlePrompt}
+          onClickInput={handleInputModal} 
           onClickNew={handleNewClick}
           onClickOpen={handleOpenClick}
           onClickSave={handleSaveClick}
@@ -490,6 +501,7 @@ const DesignPage: React.FC = () => {
       />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
       <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} />
+      <InputModal isOpen={isInputModalOpen} onClose={toggleInputModal} />
     </>
   );
 };

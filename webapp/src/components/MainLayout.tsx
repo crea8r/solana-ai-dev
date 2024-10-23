@@ -6,7 +6,7 @@ import { IoBookOutline } from "react-icons/io5";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useProject } from '../contexts/ProjectContext';
+import { useProjectContext } from '../contexts/ProjectContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,12 +16,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
-  const { project } = useProject();
+  const { projectContext } = useProjectContext();
 
   const menuItems = [
     { icon: PiGraphLight, label: 'System Design', path: '/design' },
-    { icon: CiFileOn, label: 'Coding', path: '/code', disabled: !project?.files },
-    { icon: IoBookOutline, label: 'Documentation', path: '/doc' },
+    { icon: CiFileOn, label: 'Coding', path: '/code', disabled: !projectContext.details.isCode },
+    { icon: IoBookOutline, label: 'Documentation', path: '/doc', disabled: true },
     { icon: HiOutlineUserCircle, label: 'User Account', path: '/account' },
   ];
 

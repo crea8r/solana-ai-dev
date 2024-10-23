@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Input, VStack } from '@chakra-ui/react';
 import { useState } from 'react';
-import { useProject } from '../contexts/ProjectContext';
+import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
 
 export interface AIMessageType {
@@ -11,9 +11,9 @@ export interface AIMessageType {
 const AIChat = () => {
   const [messages, setMessages] = useState<AIMessageType[]>([]);
   const [input, setInput] = useState('');
-  const { project } = useProject();
+  const { projectContext } = useProjectContext();
   const { codeFiles } = useCodeFiles();
-  console.log('project: ', project);
+  console.log('project: ', projectContext);
   console.log('codeFiles: ', codeFiles);
 
   const sendMessage = () => {

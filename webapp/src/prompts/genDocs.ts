@@ -1,6 +1,10 @@
-import { InMemoryProject } from '../contexts/ProjectContext'; 
+// To be refactored later to save docs on server like code files
+// pull file structure, code files, from server to generate docs
 
-export const genDocs = (project: InMemoryProject | null) => {
+/*
+import { Project } from '../interfaces/project'; 
+
+export const genDocs = (project: Project | null) => {
   if (!project) {
     return null;
   }
@@ -64,3 +68,5 @@ Include a step-by-step description of the most important workflows, mapping each
 
   return docs_prompt;
 };
+*/
+export {};

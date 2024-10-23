@@ -40,7 +40,11 @@ export const createProject = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { name, description, details } = req.body;
+  const { 
+    name, 
+    description, 
+    details 
+  } = req.body;
   const org_id = req.user?.org_id;
   const userId = req.user?.id;
 

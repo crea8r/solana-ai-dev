@@ -7,8 +7,7 @@ import genFile from '../../prompts/genFile';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
-import { CodeFile } from '../../contexts/CodeFileContext';
-import { useProject } from '../../contexts/ProjectContext';
+import { useProjectContext } from '../../contexts/ProjectContext';
 import { extractCodeBlock } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { taskApi } from '../../api/task';
@@ -22,41 +21,35 @@ function getLanguage(fileName: string) {
 }
 
 const CodePage = () => {
-  const { savedProject } = useProject();
+  const { projectContext, setProjectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); // Ensure this is a string
 
   useEffect(() => {
-    const _project_id = savedProject?.id;
-    const _name = savedProject?.name;
-    const _description = savedProject?.description;
-    const _nodes_count = savedProject?.details.nodes.length;
-    const _edges_count = savedProject?.details.edges.length;
-    const _root_path = savedProject?.rootPath;
     const log = `-- [CodePage] - useEffect --
-    'savedProject' context updated: 
-    Project Id: ${_project_id}
-    Root Path: ${_root_path}
-    Name: ${_name}
-    Description: ${_description}  
-    nodes: ${_nodes_count}
-    edges: ${_edges_count}
-    anchorInitCompleted: ${savedProject?.anchorInitCompleted}
-    filesAndCodesGenerated: ${savedProject?.filesAndCodesGenerated}`;
+    projectContext updated: 
+    Project Id: ${projectContext.id}
+    Root Path: ${projectContext.rootPath}
+    Name: ${projectContext.name}
+    Description: ${projectContext.description}  
+    nodes: ${projectContext.details.nodes.length}
+    edges: ${projectContext.details.edges.length}
+    anchorInitCompleted: ${projectContext.details.isAnchorInit}
+    filesAndCodesGenerated: ${projectContext.details.isCode}`;
     
     console.log(log);
-  }, [savedProject]);
+  }, [projectContext]);
 
   useEffect(() => {
     const fetchDirectoryStructure = async () => {
-      if (savedProject?.name) {
+      if (projectContext.name) {
         try {
-          const directoryStructure = await fileApi.getDirectoryStructure(savedProject?.name || '', savedProject?.rootPath || '');
+          const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
           const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType);
           const rootNode: FileTreeItemType = {
-            name: savedProject?.name || '',
+            name: projectContext.name || '',
             path: '',
             type: 'directory',
             children: mappedFiles,
@@ -69,7 +62,7 @@ const CodePage = () => {
       }
     };
     fetchDirectoryStructure();
-  }, [savedProject?.name]);
+  }, [projectContext.name]);
 
   function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
     return {
@@ -89,7 +82,7 @@ const CodePage = () => {
     setIsLoading(true);
     
     try {
-      const projectId = savedProject?.id || '';
+      const projectId = projectContext.id || '';
       const filePath = file.path || '';
 
       console.log(`Fetching content for file path: ${filePath}`);

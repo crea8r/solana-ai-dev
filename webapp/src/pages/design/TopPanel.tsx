@@ -1,5 +1,3 @@
-// src/components/TopPanel.tsx
-
 import React, { useEffect } from 'react';
 import {
   Flex,
@@ -12,9 +10,11 @@ import {
 } from '@chakra-ui/react';
 import { FaCog } from 'react-icons/fa';
 import { logEvent } from '../../utils/analytics';
+import InputModal from '../../components/InputModal';
 
 interface TopPanelProps {
   generatePrompt: () => void;
+  onClickInput: () => void;
   onClickOpen: () => void;
   onClickSave: () => void;
   onClickNew: () => void;
@@ -22,6 +22,7 @@ interface TopPanelProps {
 
 const TopPanel: React.FC<TopPanelProps> = ({
   generatePrompt,
+  onClickInput,
   onClickOpen,
   onClickSave,
   onClickNew,
@@ -51,6 +52,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
         </Flex>
       </Flex>
       <Flex>
+        <Button onClick={onClickInput}>Input</Button>
         <Menu>
           <MenuButton as={Button} variant="ghost" size="sm">
             Project
