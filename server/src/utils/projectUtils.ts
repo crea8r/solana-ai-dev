@@ -5,6 +5,8 @@ import { exec } from 'child_process';
 import path from 'path';
 import { AppError } from 'src/middleware/errorHandler';
 import { getProjectRootPath } from './fileUtils';
+import { v4 as uuidv4 } from 'uuid';
+import { normalizeProjectName } from './stringUtils';
 
 const runCommand = async (
   command: string,
@@ -12,15 +14,35 @@ const runCommand = async (
   taskId: string
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
+    console.log(`Running command: ${command} in directory: ${cwd}`);
+    
     exec(command, { cwd }, async (error, stdout, stderr) => {
       let result = '';
+
+      console.log(`Command completed. Checking result for taskId: ${taskId}`);
+
       if (error) {
+        // Critical failure - mark as failed
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
+        console.log(`Error occurred for taskId: ${taskId}: ${result}`);
+        await updateTaskStatus(taskId, 'failed', result);
+        reject(new Error(result)); // Explicit rejection to handle stuck tasks
       } else {
-        result = `Stdout: ${stdout}\n\nStderr: ${stderr}`;
+        if (stderr) {
+          // Non-fatal warnings
+          result = `Warning: ${stderr}\n\nStdout: ${stdout}`;
+          console.log(`Warnings occurred for taskId: ${taskId}: ${stderr}`);
+          await updateTaskStatus(taskId, 'warning', result);
+        } else {
+          // Success
+          result = `Stdout: ${stdout}`;
+          console.log(`Success for taskId: ${taskId}: ${stdout}`);
+          await updateTaskStatus(taskId, 'succeed', result);
+        }
       }
-      await updateTaskStatus(taskId, 'failed', result);
-      resolve();
+
+      resolve(); // Mark task as done, whether it succeeded or failed
+      console.log(`Task ${taskId} resolved`);
     });
   });
 };
@@ -48,11 +70,9 @@ export const startAnchorInitTask = async (
   creatorId: string
 ): Promise<string> => {
   const taskId = await createTask('Anchor Init', creatorId, projectId);
-
   setImmediate(async () => {
     await runCommand(`anchor init ${rootPath}`, APP_CONFIG.ROOT_FOLDER, taskId);
   });
-
   return taskId;
 };
 

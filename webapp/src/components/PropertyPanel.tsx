@@ -1,10 +1,9 @@
-// src/components/PropertyPanel.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
+import { useProject } from '../contexts/ProjectContext';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -29,6 +28,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 }) => {
   const [localValues, setLocalValues] = useState<any>({});
   const [edgeLabel, setEdgeLabel] = useState('');
+  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
+
 
   useEffect(() => {
     if (selectedNode) {
@@ -37,7 +38,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
     } else {
-      // Reset states when nothing is selected
       setLocalValues({});
       setEdgeLabel('');
     }
@@ -61,6 +61,23 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       };
 
       onUpdateNode(updatedNode);
+
+      updateProject({
+        nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node)
+      });
+
+      const isProgramNode = programs.some(p => p.id === selectedNode.id);
+
+      if (isProgramNode) {
+        const programNode = programs.find(p => p.id === selectedNode.id);
+        const programItem = programNode?.data.item as ToolboxItem;
+
+        updateSavedProject({
+          name: programItem?.name || '[Default Project Name]',
+          description: programItem?.description || '[Default Project Description]'
+        });
+      }
+
     } else if (selectedEdge) {
       const updatedEdge = {
         ...selectedEdge,

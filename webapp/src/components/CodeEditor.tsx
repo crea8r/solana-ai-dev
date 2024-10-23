@@ -4,7 +4,7 @@ import { FileTreeItemType } from './FileTree';
 import { useEffect } from 'react';
 
 type CodeEditorProps = {
-  content: any;
+  content: string; // Ensure content is a string
   language?: string;
   selectedFile?: FileTreeItemType;
 };
@@ -32,6 +32,10 @@ const CodeEditor = ({
       'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
     );
   }, []);
+
+  console.log('language: ', language);
+  console.log('content:', content);
+
   return (
     <Box h='100%'>
       {selectedFile ? (
@@ -40,6 +44,7 @@ const CodeEditor = ({
         </Box>
       ) : null}
       <MonacoEditor
+        key={selectedFile?.path} // Add key prop here to force re-mount
         width='100%'
         height='80%'
         language={language || 'md'}

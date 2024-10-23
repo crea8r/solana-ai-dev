@@ -10,12 +10,37 @@ import {
   startAnchorTestTask,
 } from 'src/utils/projectUtils';
 
+// Initialize default Anchor project
+export const anchorInitProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const org_id = req.user?.org_id;
+  const userId = req.user?.id;
+  if (!org_id || !userId) return next(new AppError('User organization not found', 400));
+
+  const { projectId, rootPath, projectName} = req.body;
+
+  try {
+    const taskId = await startAnchorInitTask(projectId, rootPath, projectName, userId);
+
+    res.status(200).json({
+      message: 'Anchor project initialization started successfully',
+      taskId: taskId,
+    });
+  } catch (error) {
+    console.error('Error initializing Anchor project:', error);
+    res.status(500).json({ error: 'Internal server error during Anchor project initialization' });
+  }
+};
+
 export const createProject = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { name, description } = req.body;
+  const { name, description, details } = req.body;
   const org_id = req.user?.org_id;
   const userId = req.user?.id;
 
@@ -34,25 +59,19 @@ export const createProject = async (
 
     const result = await client.query(
       'INSERT INTO SolanaProject (id, name, description, org_id, root_path, details, last_updated, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING *',
-      [uuidv4(), name, description, org_id, root_path, '{}', new Date()]
+      [uuidv4(), name, description, org_id, root_path, JSON.stringify(details), new Date()]
     );
 
     const newProject = result.rows[0];
 
     await client.query('COMMIT');
-    // Start the Anchor init task
-    const taskId = await startAnchorInitTask(
-      newProject.id,
-      root_path,
-      name,
-      userId
-    );
 
     res.status(201).json({
-      message: 'Project creation process started',
-      project: newProject,
-      taskId: taskId,
+      message: 'Project created successfully',
+      projectId: newProject.id.toString(),
+      rootPath: newProject.root_path.toString(),
     });
+
   } catch (error) {
     await client.query('ROLLBACK');
     next(error);

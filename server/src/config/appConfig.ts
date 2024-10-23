@@ -30,7 +30,7 @@ if (!rootFolder) {
 checkRootFolder(rootFolder);
 
 export const APP_CONFIG = {
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 9999,
   JWT_SECRET: process.env.JWT_SECRET as string,
   ROOT_FOLDER: process.env.ROOT_FOLDER as string,
 
