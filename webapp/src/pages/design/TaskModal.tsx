@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalBody, Button, Box, Text, Flex, Input, Spinner } from '@chakra-ui/react';
-import { CheckCircleIcon, ArrowForwardIcon } from '@chakra-ui/icons';
+import { Modal, ModalOverlay, ModalContent, ModalBody, Box, Text, Flex, Spinner } from '@chakra-ui/react';
+import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
-import { ProjectDetail, ProjectInfoToSave, SaveProjectResponse } from '../../interfaces/project';
 import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
@@ -12,7 +11,6 @@ import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/gen
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
-import { saveProject } from '../../utils/projectUtils'; // Import the utility function
 import { useToast } from '@chakra-ui/react'; // Import toast for notifications
 
 interface genTaskProps {
@@ -33,8 +31,6 @@ type Task = {
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const { projectContext, setProjectContext } = useProjectContext();
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [projectNameInput, setProjectNameInput] = useState<string>(projectContext?.name || '');
-    const [projectDescInput, setProjectDescInput] = useState<string>(projectContext?.description || '');
     const [contextReady, setContextReady] = useState(false);
     const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
     const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
@@ -63,21 +59,28 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         if (isOpen && contextReady && !tasksInitializedRef.current) {
             if (!projectContext) return;
 
+            if (!projectContext.id || !projectContext.rootPath) {
+                // Display a toast notification
+                toast({
+                    title: 'Project not saved',
+                    description: 'Please save the project first.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+                onClose(); // Close the modal
+                return;
+            }
+
             const initialTasks: Task[] = [
                 {
                     id: 1,
-                    name: 'Project saved',
-                    status: projectContext.id && projectContext.rootPath ? 'completed' : 'loading',
-                    type: 'main' as 'main',  
-                },
-                {
-                    id: 2,
                     name: 'Initializing Anchor project',
                     status: projectContext?.details.isAnchorInit ? 'completed' : 'loading',
                     type: 'main' as 'main',
                 },
                 {
-                    id: 3,
+                    id: 2,
                     name: 'Generating files:',
                     status: projectContext?.details.isCode ? 'completed' : 'loading',
                     type: 'main' as 'main',
@@ -111,20 +114,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         let projectId = projectContext.id;
         let rootPath = projectContext.rootPath;
 
-        if (!projectId && !rootPath && contextReady) {
-            if (projectContext.name && projectContext.description) {
-                const response = await handleProjectSaveTask();
-                if (response) {
-                    projectId = response.projectId;
-                    rootPath = response.rootPath;
-                } else {
-                    console.error('Failed to save project.');
-                    return;
-                }
-            } else {
-                console.log('Project name and description are required.');
-                return;
-            }
+        if (!projectId || !rootPath) {
+            // Display a toast notification
+            toast({
+                title: 'Project not saved',
+                description: 'Project name and description are required. Please save the project first.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
         }
 
         if (!projectContext?.details.isAnchorInit) {
@@ -152,37 +151,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleProjectSaveTask = async (): Promise<SaveProjectResponse | null> => {
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task.id === 1 ? { ...task, status: 'loading' } : task
-            )
-        );
-
-        const response = await saveProject(projectContext, setProjectContext);
-
-        if (response) {
-            setTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === 1 ? { ...task, status: 'completed' } : task
-                )
-            );
-            return response;
-        } else {
-            setTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === 1 ? { ...task, status: 'failed' } : task
-                )
-            );
-            return null;
-        }
-    };
-
     const handleAnchorInitTask = async (projectId: string, rootPath: string, projectName: string) => {
         try {
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
-                    task.id === 2 ? { ...task, status: 'loading' } : task
+                    task.id === 1 ? { ...task, status: 'loading' } : task
                 )
             );
 
@@ -210,7 +183,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
-                    task.id === 2 ? { ...task, status: 'failed' } : task
+                    task.id === 1 ? { ...task, status: 'failed' } : task
                 )
             );
         }
@@ -226,7 +199,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     if (task.status === 'succeed' || task.status === 'warning') {
                         setTasks((prevTasks) =>
                             prevTasks.map((prevTask) =>
-                                prevTask.type === 'main' && prevTask.id === 2
+                                prevTask.type === 'main' && prevTask.id === 1
                                     ? { ...prevTask, status: 'completed' }
                                     : prevTask
                             )
@@ -247,7 +220,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     } else if (task.status === 'failed') {
                         setTasks((prevTasks) =>
                             prevTasks.map((prevTask) =>
-                                prevTask.id === 2 ? { ...prevTask, status: 'failed' } : prevTask
+                                prevTask.id === 1 ? { ...prevTask, status: 'failed' } : prevTask
                             )
                         );
                         clearInterval(interval);
@@ -275,7 +248,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
-                task.id === 3 ? { ...task, status: 'loading' } : task
+                task.id === 2 ? { ...task, status: 'loading' } : task
             )
         );
 
@@ -297,7 +270,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     return { ...file, path: updatedPath, name: file.name };
                 });
 
-                let nextId = 4;
+                let nextId = 3;
 
                 const processedFiles = new Set(projectContext.details.codes?.map((code) => code.path) || []);
 
@@ -418,7 +391,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
                 setTasks((prevTasks) =>
                     prevTasks.map((task) =>
-                        task.id === 3 ? { ...task, status: 'completed' } : task
+                        task.id === 2 ? { ...task, status: 'completed' } : task
                     )
                 );
 
@@ -436,13 +409,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             console.error('Error generating files:', error);
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
-                    task.id === 3 ? { ...task, status: 'failed' } : task
+                    task.id === 2 ? { ...task, status: 'failed' } : task
                 )
             );
         }
     };
-
-    const showProjectInput = !projectContext.id && !projectContext.rootPath && (!projectContext.name || !projectContext.description);
 
     if (!contextReady) {
         return (
@@ -460,62 +431,26 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             <ModalContent>
                 <ModalBody>
                     <Box mt={4}>
-                        {showProjectInput && (
-                            <Box mb={4}>
-                                <Input
-                                    placeholder="Enter Project Name"
-                                    value={projectNameInput}
-                                    onChange={(e) => setProjectNameInput(e.target.value)}
-                                    required
-                                    mb={2}
-                                />
-                                <Input
-                                    placeholder="Enter Project Description"
-                                    value={projectDescInput}
-                                    onChange={(e) => setProjectDescInput(e.target.value)}
-                                    required
-                                    mb={2}
-                                />
-                                <Button
-                                    onClick={() => {
-                                        setProjectContext((prevProjectContext) => ({
-                                            ...prevProjectContext,
-                                            name: projectNameInput,
-                                            description: projectDescInput,
-                                        }));
-                                        handleProjectSaveTask();
-                                    }}
-                                    colorScheme="blue"
-                                    mt={2}
-                                    rightIcon={<ArrowForwardIcon />}
-                                >
-                                    Save Project
-                                </Button>
-                            </Box>
-                        )}
-
-                        {!showProjectInput && (
-                            <Box>
+                        <Box>
+                            {tasks
+                                .filter((task) => task.type === 'main')
+                                .map((task) => (
+                                    <Flex key={task.id} justify="space-between" align="center" mb={2}>
+                                        <Text fontSize="sm" fontWeight="medium">{task.name}</Text>
+                                        <StatusSymbol status={task.status} />
+                                    </Flex>
+                                ))}
+                            <Box mt={4}>
                                 {tasks
-                                    .filter((task) => task.type === 'main')
+                                    .filter((task) => task.type === 'file')
                                     .map((task) => (
-                                        <Flex key={task.id} justify="space-between" align="center" mb={2}>
-                                            <Text fontSize="sm" fontWeight="medium">{task.name}</Text>
+                                        <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
+                                            <Text fontSize="sm">{task.name}</Text>
                                             <StatusSymbol status={task.status} />
                                         </Flex>
                                     ))}
-                                <Box mt={4}>
-                                    {tasks
-                                        .filter((task) => task.type === 'file')
-                                        .map((task) => (
-                                            <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
-                                                <Text fontSize="sm">{task.name}</Text>
-                                                <StatusSymbol status={task.status} />
-                                            </Flex>
-                                        ))}
-                                </Box>
                             </Box>
-                        )}
+                        </Box>
                     </Box>
                 </ModalBody>
             </ModalContent>
