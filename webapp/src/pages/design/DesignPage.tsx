@@ -25,6 +25,7 @@ import genStructure from '../../prompts/genStructure';
 import promptAI from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../components/FileTree';
+import { saveProject } from '../../utils/projectUtils';
 
 import { todoproject } from '../../data/mock';
 import { loadItem } from '../../utils/itemFactory';
@@ -256,78 +257,21 @@ const DesignPage: React.FC = () => {
   };
 
   const handleSaveClick = async () => {
-    // if no project id, then create new project
-    if (projectContext && !projectContext.id && !projectContext.rootPath) {
-      if (!projectContext.name || !projectContext.description) {
-        setIsInputModalOpen(true);
-        toast({
-          title: 'Project name and description are required',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-      try {
-        const response: SaveProjectResponse = await projectApi.createProject(projectContext);
-
-        if (response.projectId && response.rootPath) {
-          toast({
-            title: 'Project saved',
-            status: 'success',
-            duration: 4000,
-            isClosable: true,
-          });
-
-          setProjectContext((prev) => ({
-            ...prev,
-            id: response.projectId,
-            rootPath: response.rootPath,
-          }));
-
-          console.log("Created new project on database", response.projectId, response.rootPath);
-        } else {
-          toast({
-            title: 'Something went wrong',
-            status: 'error',
-            duration: 4000,
-            isClosable: true,
-          });
-        }
-      } catch (error) {
-        console.error('Error saving project:', error);
-      }
-    }
-    // else update existing project
-    if (projectContext && projectContext.id && projectContext.rootPath) {
-      try {
-        const response = await projectApi.updateProject(projectContext.id, projectContext);
-        if (response.message === 'Project updated successfully') {
-          setProjectContext((prev) => ({
-            ...prev,
-            details: {
-              ...prev.details,
-              isSaved: true,
-            },
-          }));
-          toast({
-            title: 'Project updated successfully!',
-            status: 'success',
-            duration: 4000,
-            isClosable: true,
-          });
-          console.log("Updated project on database", response.projectId, response.rootPath);
-        } else {
-          toast({
-            title: 'Something went wrong',
-            status: 'error',
-            duration: 4000,
-            isClosable: true,
-          });
-        }
-      } catch (error) {
-        console.error('Error updating project:', error);
-      }
+    const response = await saveProject(projectContext, setProjectContext);
+    if (response) {
+      toast({
+        title: 'Project saved',
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Something went wrong',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
     }
   };
 

@@ -12,6 +12,8 @@ import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/gen
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
+import { saveProject } from '../../utils/projectUtils'; // Import the utility function
+import { useToast } from '@chakra-ui/react'; // Import toast for notifications
 
 interface genTaskProps {
     isOpen: boolean;
@@ -37,6 +39,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
     const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
     const tasksInitializedRef = useRef(false);
+    const toast = useToast(); // Initialize toast
 
     useEffect(() => {
         if (projectContext) {
@@ -105,9 +108,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        if (!projectContext.id && !projectContext.rootPath && contextReady) {
+        let projectId = projectContext.id;
+        let rootPath = projectContext.rootPath;
+
+        if (!projectId && !rootPath && contextReady) {
             if (projectContext.name && projectContext.description) {
-                await handleCreateProject();
+                const response = await handleProjectSaveTask();
+                if (response) {
+                    projectId = response.projectId;
+                    rootPath = response.rootPath;
+                } else {
+                    console.error('Failed to save project.');
+                    return;
+                }
             } else {
                 console.log('Project name and description are required.');
                 return;
@@ -115,8 +128,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
 
         if (!projectContext?.details.isAnchorInit) {
-            if (projectContext.id && projectContext.rootPath && contextReady) {
-                await handleAnchorInitTask(projectContext.id, projectContext.rootPath, projectContext.name || '');
+            if (projectId && rootPath && contextReady) {
+                await handleAnchorInitTask(projectId, rootPath, projectContext.name || '');
             } else {
                 console.error('Project ID or root path is missing.');
                 return;
@@ -126,8 +139,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
 
         if (!genCodeTaskRun && !projectContext.details.isCode) {
-            if (projectContext.id && projectContext.rootPath && projectContext.name && contextReady) {
-                await handleGenCodesTask(projectContext.id, projectContext.rootPath, projectContext.name);
+            if (projectId && rootPath && projectContext.name && contextReady) {
+                await handleGenCodesTask(projectId, rootPath, projectContext.name);
                 setGenCodeTaskRun(true); 
                 console.log('Files and codes generated (runTasksSequentially).');
             } else {
@@ -139,62 +152,29 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleCreateProject = async () => {
-        if (projectContext.id && projectContext.rootPath) {
-            console.log('Project already saved to database. Skipping save...');
-            return;
-        }
-
-        const projectName = projectContext?.name || projectNameInput;
-        const projectDescription = projectContext?.description || projectDescInput;
-
-        if (!projectName || !projectDescription) {
-            console.log('Project name and description are required.');
-            return;
-        }
-
+    const handleProjectSaveTask = async (): Promise<SaveProjectResponse | null> => {
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
                 task.id === 1 ? { ...task, status: 'loading' } : task
             )
         );
 
-        try {
-            const response: SaveProjectResponse = await projectApi.createProject(projectContext);
-            if (response) {
-                console.log("Project saved:", response);
+        const response = await saveProject(projectContext, setProjectContext);
 
-                setProjectContext((prevProject) => ({
-                    ...prevProject,
-                    id: response.projectId,
-                    rootPath: response.rootPath,
-                    name: projectName,
-                    description: projectDescription,
-                    details: {
-                        ...prevProject?.details,
-                        projectSaved: true,
-                    }
-                }));
-
-                setTasks((prevTasks) =>
-                    prevTasks.map((task) =>
-                        task.id === 1 ? { ...task, status: 'completed' } : task
-                    )
-                );
-                console.log('Project saved');
-
-                await handleAnchorInitTask(response.projectId, response.rootPath, projectName);
-            } else {
-                console.error('Error saving project:', response);
-            }
-        } catch (error) {
-            console.error('Error saving project:', error);
-
+        if (response) {
+            setTasks((prevTasks) =>
+                prevTasks.map((task) =>
+                    task.id === 1 ? { ...task, status: 'completed' } : task
+                )
+            );
+            return response;
+        } else {
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === 1 ? { ...task, status: 'failed' } : task
                 )
             );
+            return null;
         }
     };
 
@@ -503,7 +483,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                             name: projectNameInput,
                                             description: projectDescInput,
                                         }));
-                                        handleCreateProject();
+                                        handleProjectSaveTask();
                                     }}
                                     colorScheme="blue"
                                     mt={2}
