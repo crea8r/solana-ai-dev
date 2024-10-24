@@ -25,7 +25,9 @@ const CodePage = () => {
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
-  const [fileContent, setFileContent] = useState<string>(''); // Ensure this is a string
+  const [fileContent, setFileContent] = useState<string>(''); 
+
+  const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
   useEffect(() => {
     const log = `-- [CodePage] - useEffect --
@@ -47,7 +49,7 @@ const CodePage = () => {
       if (projectContext.name) {
         try {
           const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
-          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType);
+          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles); // Filter the root level as well
           const rootNode: FileTreeItemType = {
             name: projectContext.name || '',
             path: '',
@@ -65,20 +67,30 @@ const CodePage = () => {
   }, [projectContext.name]);
 
   function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
+    const mappedChildren = node.children
+      ? node.children.map(mapFileTreeNodeToItemType).filter(filterFiles) 
+      : undefined;
+
     return {
       name: node.name,
-      path: node.path, // Now node.path will have the correct value
-      type: node.isDirectory ? 'directory' : 'file', // Adjusted based on your backend
+      path: node.path,
+      type: node.isDirectory ? 'directory' : 'file',
       ext: node.isDirectory ? undefined : node.name.split('.').pop(),
-      children: node.children
-        ? node.children.map(mapFileTreeNodeToItemType)
-        : undefined,
+      children: mappedChildren,
     };
+  }
+
+  function filterFiles(item: FileTreeItemType): boolean {
+    // Check if the item name is included in ignoreFiles or if the item's path matches projectContext.rootPath
+    return (
+      !ignoreFiles.includes(item.name) &&
+      !(item.path && item.path.includes(`${projectContext.rootPath}`)) // Filter out directories that match rootPath
+    );
   }
 
   const handleSelectFile = async (file: FileTreeItemType) => {
     setSelectedFile(file);
-    setFileContent(''); // Clear content when a new file is selected
+    setFileContent(''); 
     setIsLoading(true);
     
     try {

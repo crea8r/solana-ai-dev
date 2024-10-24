@@ -35,24 +35,15 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
     const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
     const tasksInitializedRef = useRef(false);
-    const toast = useToast(); // Initialize toast
+    const toast = useToast(); 
+    
 
     useEffect(() => {
         if (projectContext) {
             setContextReady(true);
         }
-        const log = `-- [TaskModal] useEffect --
-        project context updated:    
-        Project Id: ${projectContext?.id}
-        Root Path: ${projectContext?.rootPath}
-        Name: ${projectContext?.name}
-        Description: ${projectContext?.description}  
-        nodes: ${projectContext?.details.nodes.length}
-        edges: ${projectContext?.details.edges.length}
-        isAnchorInit: ${projectContext?.details.isAnchorInit}
-        isCode: ${projectContext?.details.isCode}`;
-        
-        console.log(log);
+        console.log('contextReady', contextReady);
+        console.log('projectContext', projectContext);
     }, [projectContext]);
 
     useEffect(() => {
@@ -60,7 +51,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             if (!projectContext) return;
 
             if (!projectContext.id || !projectContext.rootPath) {
-                // Display a toast notification
                 toast({
                     title: 'Project not saved',
                     description: 'Please save the project first.',
@@ -68,7 +58,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     duration: 5000,
                     isClosable: true,
                 });
-                onClose(); // Close the modal
+                onClose(); 
                 return;
             }
 
@@ -100,6 +90,60 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             tasksInitializedRef.current = false;
         }
     }, [isOpen, projectContext, contextReady]);
+
+    useEffect(() => {
+        if (genCodeTaskRun) {
+            const fetchAndSetDirectoryStructure = async () => {
+                if (!projectContext || !projectContext.name || !projectContext.rootPath) {
+                    console.error('Project context, name, or rootPath is missing.');
+                    return;
+                }
+
+                try {
+                    const fileTreeNodes = await fileApi.getDirectoryStructure(
+                        projectContext.name,
+                        projectContext.rootPath
+                    );
+
+                    // Convert FileTreeNode[] to FileTreeItemType
+                    const root: FileTreeItemType = {
+                        name: projectContext.name,
+                        type: 'directory',
+                        path: projectContext.rootPath,
+                        children: fileTreeNodes.map(convertFileTreeNodeToItem),
+                    };
+
+                    // Update project context
+                    setProjectContext((prevProjectContext) => ({
+                        ...prevProjectContext,
+                        details: {
+                            ...prevProjectContext.details,
+                            files: root,
+                        },
+                    }));
+                } catch (error) {
+                    console.error('Error fetching directory structure:', error);
+                }
+            };
+
+            fetchAndSetDirectoryStructure();
+        }
+    }, [genCodeTaskRun]);
+
+    function convertFileTreeNodeToItem(node: FileTreeNode): FileTreeItemType {
+        const item: FileTreeItemType = {
+            name: node.name,
+            type: node.type,
+            path: node.path,
+            children: node.children ? node.children.map(convertFileTreeNodeToItem) : undefined,
+        };
+
+        if (node.type === 'file' && node.name.includes('.')) {
+            item.ext = node.name.split('.').pop();
+        }
+
+        return item;
+    }
 
     const isTaskCompleted = (taskStatus: TaskStatus) => {
         return taskStatus === 'completed';
@@ -347,12 +391,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             const aiContent = fileChoices[0].message?.content;
                             const codeContent = extractCodeBlock(aiContent);
 
-                            if (existingFilePaths.has(filePath || '')) {
-                                await fileApi.updateFile(projectId, filePath || '', codeContent);
-                                console.log(`Updated existing file: ${filePath}`);
+                            // Check and replace 'Anchor Program' with 'programs' in the file path
+                            const updatedFilePath = filePath?.startsWith('Anchor Program/')
+                                ? filePath.replace('Anchor Program/', 'programs/')
+                                : filePath;
+
+                            if (existingFilePaths.has(updatedFilePath || '')) {
+                                await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
+                                console.log(`Updated existing file: ${updatedFilePath}`);
                             } else {
-                                await fileApi.createFile(projectId, filePath || '', codeContent);
-                                console.log(`Created new file: ${filePath}`);
+                                await fileApi.createFile(projectId, updatedFilePath || '', codeContent);
+                                console.log(`Created new file: ${updatedFilePath}`);
                             }
 
                             setProjectContext((prevProjectContext) => ({
@@ -361,7 +410,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                     ...prevProjectContext.details,
                                     codes: [
                                         ...(prevProjectContext.details.codes || []),
-                                        { name: fileName || '', path: filePath || '', content: codeContent },
+                                        { name: fileName || '', path: updatedFilePath || '', content: '' },
                                     ],
                                 },
                             }));

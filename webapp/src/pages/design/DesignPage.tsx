@@ -80,6 +80,8 @@ const DesignPage: React.FC = () => {
     nodes: ${projectContext.details.nodes.length} (${projectContext.details.nodes.map((node) => node.data.item.name).join(', ')});
     edges: ${projectContext.details.edges.length}
     isAnchorInit: ${projectContext.details.isAnchorInit}
+    codes: ${projectContext.details.codes.length}
+    files: ${projectContext.details.files.children?.length || 0}
     isCode: ${projectContext.details.isCode}`;
     console.log(log);
   }, [projectContext]);
