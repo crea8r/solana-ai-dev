@@ -29,12 +29,13 @@ type Task = {
 };
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
-    const { projectContext: projectContext, setProjectContext: setProjectContext } = useProjectContext();
+    const { projectContext, setProjectContext } = useProjectContext();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [projectNameInput, setProjectNameInput] = useState<string>(projectContext?.name || '');
     const [projectDescInput, setProjectDescInput] = useState<string>(projectContext?.description || '');
     const [contextReady, setContextReady] = useState(false);
-
+    const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
+    const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
     const tasksInitializedRef = useRef(false);
 
     useEffect(() => {
@@ -64,26 +65,26 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     id: 1,
                     name: 'Project saved',
                     status: projectContext.id && projectContext.rootPath ? 'completed' : 'loading',
-                    type: 'main',
+                    type: 'main' as 'main',  
                 },
                 {
                     id: 2,
                     name: 'Initializing Anchor project',
                     status: projectContext?.details.isAnchorInit ? 'completed' : 'loading',
-                    type: 'main',
+                    type: 'main' as 'main',
                 },
                 {
                     id: 3,
                     name: 'Generating files:',
                     status: projectContext?.details.isCode ? 'completed' : 'loading',
-                    type: 'main',
+                    type: 'main' as 'main',
                 }
             ];
 
             setTasks(initialTasks);
             tasksInitializedRef.current = true;
 
-            if (!projectContext?.details.isAnchorInit || !projectContext?.details.isCode) {
+            if ((!projectContext?.details.isAnchorInit || !projectContext?.details.isCode) && contextReady) {
                 runTasksSequentially();
             }
         }
@@ -104,7 +105,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        if (!projectContext.id && !projectContext.rootPath) {
+        if (!projectContext.id && !projectContext.rootPath && contextReady) {
             if (projectContext.name && projectContext.description) {
                 await handleCreateProject();
             } else {
@@ -114,7 +115,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
 
         if (!projectContext?.details.isAnchorInit) {
-            if (projectContext.id && projectContext.rootPath) {
+            if (projectContext.id && projectContext.rootPath && contextReady) {
                 await handleAnchorInitTask(projectContext.id, projectContext.rootPath, projectContext.name || '');
             } else {
                 console.error('Project ID or root path is missing.');
@@ -124,20 +125,21 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             console.log('Anchor project is already initialized.');
         }
 
-        if (!projectContext.details.isCode) {
-            if (projectContext.id && projectContext.rootPath && projectContext.name) {
+        if (!genCodeTaskRun && !projectContext.details.isCode) {
+            if (projectContext.id && projectContext.rootPath && projectContext.name && contextReady) {
                 await handleGenCodesTask(projectContext.id, projectContext.rootPath, projectContext.name);
+                setGenCodeTaskRun(true); 
+                console.log('Files and codes generated (runTasksSequentially).');
             } else {
                 console.error('Project root path or name is missing.');
                 return;
             }
         } else {
-            console.log('Files and codes have already been generated.');
+            console.log('Files and codes have already been generated or the task has already run.');
         }
     };
 
     const handleCreateProject = async () => {
-        // If projectSaved is true, skip saving and return early
         if (projectContext.id && projectContext.rootPath) {
             console.log('Project already saved to database. Skipping save...');
             return;
@@ -188,7 +190,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         } catch (error) {
             console.error('Error saving project:', error);
 
-            // Update task status to 'failed' if saving the project fails
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === 1 ? { ...task, status: 'failed' } : task
@@ -261,9 +262,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             },
                         }));
 
-                        // Proceed to the next task
-                        await handleGenCodesTask(projectId, rootPath, projectName);
-                        resolve(); // Resolve the promise here
+                        resolve();
 
                     } else if (task.status === 'failed') {
                         setTasks((prevTasks) =>
@@ -284,13 +283,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
     const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
-        if(projectContext.details.isCode) {
+        if (projectContext.details.isCode) {
             console.log('Files and codes have already been generated.');
             return;
-        } 
+        }
 
-        if(!projectContext.details.nodes || !projectContext.details.edges) {
-            
+        if (projectContext.details.nodes.length === 0 || projectContext.details.edges.length === 0) {
             console.error('Nodes or edges are missing in saved project details.');
             return;
         }
@@ -306,23 +304,26 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        if ((projectContext.details.nodes && projectContext.details.nodes.length > 0) && (projectContext.details.edges && projectContext.details.edges.length > 0)) {
-            const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
-            const choices = await promptAI(structurePrompt);
+        const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
+        const choices = await promptAI(structurePrompt);
 
-            try {
-                if (choices && choices.length > 0) {
-                    const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
-                    setFileTreePaths(files);
+        try {
+            if (choices && choices.length > 0) {
+                const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
+                setFileTreePaths(files);
 
-                    const updatedFileList = getFileList(files).map(file => {
-                        const updatedPath = file.path.split('/').slice(1).join('/');
+                const updatedFileList = getFileList(files).map(file => {
+                    const updatedPath = file.path.split('/').slice(1).join('/');
+                    return { ...file, path: updatedPath, name: file.name };
+                });
 
-                        return { ...file, path: updatedPath, name: file.name };
-                    });
+                let nextId = 4;
 
-                    let nextId = 4;
-                    const fileTasks = updatedFileList.map(({ name, path }) => ({
+                const processedFiles = new Set(projectContext.details.codes?.map((code) => code.path) || []);
+
+                const fileTasks = updatedFileList
+                    .filter(({ path }) => !processedFiles.has(path)) 
+                    .map(({ name, path }) => ({
                         id: nextId++,
                         name,
                         path,
@@ -330,131 +331,137 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         type: 'file',
                     } as Task));
 
-                    setTasks((prevTasks) => {
-                        const mainTasks = prevTasks.filter((task) => task.type !== 'file');
-                        return [...mainTasks, ...fileTasks];
-                    });
+                setTasks((prevTasks) => {
+                    const mainTasks = prevTasks.filter((task) => task.type !== 'file');
+                    return [...mainTasks, ...fileTasks];
+                });
 
-                    if (!projectName || !rootPath) {
-                        console.error('(handleGenCodesTask) Project name or root path is missing.');
-                        return;
-                    }
+                if (!projectName || !rootPath) {
+                    console.error('(handleGenCodesTask) Project name or root path is missing.');
+                    return;
+                }
 
-                    const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
-                    if (!existingFilesResponse) {
-                        console.error('Existing files not found');
-                        return;
-                    }
+                const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
+                if (!existingFilesResponse) {
+                    console.error('Existing files not found');
+                    return;
+                }
 
-                    const existingFilePaths = new Set<string>();
-                    const traverseFileTree = (nodes: FileTreeNode[]) => {
-                        for (const node of nodes) {
-                            if (node.type === 'file' && node.path) {
-                                existingFilePaths.add(node.path);
-                            } else if (node.type === 'directory' && node.children) {
-                                traverseFileTree(node.children);
-                            }
+                const existingFilePaths = new Set<string>();
+                const traverseFileTree = (nodes: FileTreeNode[]) => {
+                    for (const node of nodes) {
+                        if (node.type === 'file' && node.path) {
+                            existingFilePaths.add(node.path);
+                        } else if (node.type === 'directory' && node.children) {
+                            traverseFileTree(node.children);
                         }
-                    };
-                    traverseFileTree(existingFilesResponse);
+                    }
+                };
+                traverseFileTree(existingFilesResponse);
 
-                    const configFiles = ['Cargo.toml', 'Anchor.toml', '.gitignore'];
+                const configFiles = ['Cargo.toml', 'Anchor.toml', '.gitignore'];
 
-                    for (const fileTask of fileTasks) {
-                        setTasks((prevTasks) =>
-                            prevTasks.map((task) =>
-                                task.id === fileTask.id ? { ...task, status: 'loading' } : task
-                            )
-                        );
-
-                        try {
-                            const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
-                            const fileName = fileTask.name;
-                            const filePath = fileTask.path;
-
-                            if (configFiles.includes(fileName)) {
-                                console.log(`Skipping config file: ${fileName}`);
-                                setTasks((prevTasks) =>
-                                    prevTasks.map((task) =>
-                                        task.id === fileTask.id ? { ...task, status: 'completed' } : task
-                                    )
-                                );
-                                continue;
-                            }
-
-                            const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
-                            const fileChoices = await promptAI(promptContent);
-
-                            if (fileChoices && fileChoices.length > 0) {
-                                const aiContent = fileChoices[0].message?.content;
-                                const codeContent = extractCodeBlock(aiContent);
-
-                                if (existingFilePaths.has(filePath || '')) {
-                                    await fileApi.updateFile(projectId, filePath || '', codeContent);
-                                    console.log(`Updated existing file: ${filePath}`);
-                                } else {
-                                    await fileApi.createFile(projectId, filePath || '', codeContent);
-                                    console.log(`Created new file: ${filePath}`);
-                                }
-
-                                setProjectContext((prevProjectContext) => ({
-                                    ...prevProjectContext,
-                                    details: {
-                                        ...prevProjectContext.details,
-                                        codes: [
-                                            ...(prevProjectContext.details.codes || []),
-                                            { name: fileName || '', path: filePath || '', content: codeContent },
-                                        ],
-                                    },
-                                }));
-
-                                setTasks((prevTasks) =>
-                                    prevTasks.map((task) =>
-                                        task.id === fileTask.id ? { ...task, status: 'completed' } : task
-                                    )
-                                );
-                            } else {
-                                throw new Error('No AI response for file generation');
-                            }
-                        } catch (error) {
-                            console.error('Error generating file content for', fileTask.name, error);
-                            setTasks((prevTasks) =>
-                                prevTasks.map((task) =>
-                                    task.id === fileTask.id ? { ...task, status: 'failed' } : task
-                                )
-                            );
-                        }
+                for (const fileTask of fileTasks) {
+                    if (processedFiles.has(fileTask.path || '')) {
+                        continue;
                     }
 
                     setTasks((prevTasks) =>
                         prevTasks.map((task) =>
-                            task.id === 3 ? { ...task, status: 'completed' } : task
+                            task.id === fileTask.id ? { ...task, status: 'loading' } : task
                         )
                     );
 
-                    setProjectContext((prevProjectContext) => ({
-                        ...prevProjectContext,
-                        details: {
-                            ...prevProjectContext.details,
-                            isCode: true,
-                        },
-                    }));
+                    try {
+                        const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
+                        const fileName = fileTask.name;
+                        const filePath = fileTask.path;
 
-                } else {
-                    throw new Error('No AI response for structure generation');
+                        if (configFiles.includes(fileName)) {
+                            console.log(`Skipping config file: ${fileName}`);
+                            setTasks((prevTasks) =>
+                                prevTasks.map((task) =>
+                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                )
+                            );
+                            continue;
+                        }
+
+                        const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
+                        const fileChoices = await promptAI(promptContent);
+
+                        if (fileChoices && fileChoices.length > 0) {
+                            const aiContent = fileChoices[0].message?.content;
+                            const codeContent = extractCodeBlock(aiContent);
+
+                            if (existingFilePaths.has(filePath || '')) {
+                                await fileApi.updateFile(projectId, filePath || '', codeContent);
+                                console.log(`Updated existing file: ${filePath}`);
+                            } else {
+                                await fileApi.createFile(projectId, filePath || '', codeContent);
+                                console.log(`Created new file: ${filePath}`);
+                            }
+
+                            setProjectContext((prevProjectContext) => ({
+                                ...prevProjectContext,
+                                details: {
+                                    ...prevProjectContext.details,
+                                    codes: [
+                                        ...(prevProjectContext.details.codes || []),
+                                        { name: fileName || '', path: filePath || '', content: codeContent },
+                                    ],
+                                },
+                            }));
+
+                            setTasks((prevTasks) =>
+                                prevTasks.map((task) =>
+                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                )
+                            );
+                            if (fileTask.path) {
+                                processedFiles.add(fileTask.path);
+                            } else {
+                                throw new Error('File path is undefined');
+                            }
+                        } else {
+                            throw new Error('No AI response for file generation');
+                        }
+                    } catch (error) {
+                        console.error('Error generating file content for', fileTask.name, error);
+                        setTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task.id === fileTask.id ? { ...task, status: 'failed' } : task
+                            )
+                        );
+                    }
                 }
-            } catch (error) {
-                console.error('Error generating files:', error);
+
                 setTasks((prevTasks) =>
                     prevTasks.map((task) =>
-                        task.id === 3 ? { ...task, status: 'failed' } : task
+                        task.id === 3 ? { ...task, status: 'completed' } : task
                     )
                 );
+
+                setProjectContext((prevProjectContext) => ({
+                    ...prevProjectContext,
+                    details: {
+                        ...prevProjectContext.details,
+                        isCode: true,
+                    },
+                }));
+            } else {
+                throw new Error('No AI response for structure generation');
             }
+        } catch (error) {
+            console.error('Error generating files:', error);
+            setTasks((prevTasks) =>
+                prevTasks.map((task) =>
+                    task.id === 3 ? { ...task, status: 'failed' } : task
+                )
+            );
         }
     };
 
-    // Determine whether to show the project input fields
     const showProjectInput = !projectContext.id && !projectContext.rootPath && (!projectContext.name || !projectContext.description);
 
     if (!contextReady) {
