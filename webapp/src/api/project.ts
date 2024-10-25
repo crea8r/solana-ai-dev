@@ -37,7 +37,7 @@ export const projectApi = {
   },
 
   createProject: async (
-    projectInfo: Project
+    projectInfo: ProjectInfoToSave
   ): Promise<SaveProjectResponse> => {
     try {
       const response = await api.post('/projects/create', projectInfo);
@@ -50,7 +50,7 @@ export const projectApi = {
 
   updateProject: async (
     projectId: string,
-    projectInfo: Project
+    projectInfo: ProjectInfoToSave
   ): Promise<SaveProjectResponse> => {
     try {
       const response = await api.put(`/projects/update/${projectId}`, projectInfo);

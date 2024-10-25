@@ -37,6 +37,7 @@ import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import InputModal from '../../components/InputModal';
+
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 // load env
 const isProduction =
@@ -71,19 +72,7 @@ const DesignPage: React.FC = () => {
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
 
   useEffect(() => {
-    const log = `-- [DesignPage] - useEffect --
-    'project' context updated: 
-    Project Id: ${projectContext.id}
-    Root Path: ${projectContext.rootPath}
-    Name: ${projectContext.name}
-    Description: ${projectContext.description}  
-    nodes: ${projectContext.details.nodes.length} (${projectContext.details.nodes.map((node) => node.data.item.name).join(', ')});
-    edges: ${projectContext.details.edges.length}
-    isAnchorInit: ${projectContext.details.isAnchorInit}
-    codes: ${projectContext.details.codes.length}
-    files: ${projectContext.details.files.children?.length || 0}
-    isCode: ${projectContext.details.isCode}`;
-    console.log(log);
+    console.log('[DesignPage] projectContext', projectContext);
   }, [projectContext]);
 
   const loadMock = useCallback(() => {

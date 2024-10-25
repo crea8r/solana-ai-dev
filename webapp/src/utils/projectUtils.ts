@@ -1,32 +1,30 @@
 import { projectApi } from '../api/project';
-import { SaveProjectResponse } from '../interfaces/project';
+import { SaveProjectResponse, Project } from '../interfaces/project';
+import { transformToProjectInfoToSave } from '../contexts/ProjectContext'; // Import the transformation function
 
 export const saveProject = async (
-  projectContext: any,
-  setProjectContext: any
+  projectContext: Project,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ): Promise<SaveProjectResponse | null> => {
-  if (projectContext && !projectContext.id && !projectContext.rootPath) {
+  const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+
+  // Create new project if ID and rootPath are not set
+  if (!projectContext.id && !projectContext.rootPath) {
     if (!projectContext.name || !projectContext.description) {
       console.log('Project name and description are required.');
       return null;
     }
     try {
-      const response: SaveProjectResponse = await projectApi.createProject(
-        projectContext
-      );
+      const response: SaveProjectResponse = await projectApi.createProject(projectInfoToSave);
 
       if (response.projectId && response.rootPath) {
-        setProjectContext((prev: any) => ({
+        setProjectContext((prev) => ({
           ...prev,
           id: response.projectId,
           rootPath: response.rootPath,
         }));
 
-        console.log(
-          'Created new project on database',
-          response.projectId,
-          response.rootPath
-        );
+        console.log('Created new project on database', response.projectId, response.rootPath);
         return response;
       } else {
         console.error('Something went wrong');
@@ -37,26 +35,21 @@ export const saveProject = async (
       return null;
     }
   }
-  // else update existing project
-  if (projectContext && projectContext.id && projectContext.rootPath) {
+
+  // Update existing project
+  if (projectContext.id && projectContext.rootPath) {
     try {
-      const response = await projectApi.updateProject(
-        projectContext.id,
-        projectContext
-      );
+      const response = await projectApi.updateProject(projectContext.id, projectInfoToSave);
+
       if (response.message === 'Project updated successfully') {
-        setProjectContext((prev: any) => ({
+        setProjectContext((prev) => ({
           ...prev,
           details: {
             ...prev.details,
             isSaved: true,
           },
         }));
-        console.log(
-          'Updated project on database',
-          response.projectId,
-          response.rootPath
-        );
+        console.log('Updated project on database', response.projectId, response.rootPath);
         return response;
       } else {
         console.error('Something went wrong');
@@ -67,5 +60,6 @@ export const saveProject = async (
       return null;
     }
   }
+
   return null;
 };

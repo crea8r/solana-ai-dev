@@ -3,6 +3,19 @@ import { FileTreeItemType } from '../components/FileTree';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
 
+export type ProjectInfoToSave = {
+  id?: string;
+  name: string;
+  description: string;
+  details: ProjectDetailsToSave;
+}
+
+export interface ProjectDetailsToSave {
+  nodes: Node[];
+  edges: Edge[];
+  isCode: boolean;
+}
+
 export interface ProjectDetails {
   nodes: Node[];
   edges: Edge[];
@@ -21,17 +34,6 @@ export interface Project {
   details: ProjectDetails;
 }
 
-
-export interface ProjectListItem {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  last_updated: string;
-  root_path: string;
-}
-
-
 export type ProjectDetail = {
   id: string;
   name: string;
@@ -45,11 +47,14 @@ export type ProjectDetail = {
   fileTree?: any;
 }
 
-export type ProjectInfoToSave = {
-  id?: string;
+
+export interface ProjectListItem {
+  id: string;
   name: string;
   description: string;
-  details: ProjectDetail;
+  created_at: string;
+  last_updated: string;
+  root_path: string;
 }
 
 

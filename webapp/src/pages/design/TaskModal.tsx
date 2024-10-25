@@ -11,7 +11,8 @@ import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/gen
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
-import { useToast } from '@chakra-ui/react'; // Import toast for notifications
+import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
+import { useToast } from '@chakra-ui/react'; 
 
 interface genTaskProps {
     isOpen: boolean;
@@ -43,7 +44,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setContextReady(true);
         }
         console.log('contextReady', contextReady);
-        console.log('projectContext', projectContext);
+        console.log(`[TaskModal] context ready: ${contextReady} projectContext:`, projectContext);
     }, [projectContext]);
 
     useEffect(() => {
@@ -93,54 +94,22 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         if (genCodeTaskRun) {
-            const fetchAndSetDirectoryStructure = async () => {
-                if (!projectContext || !projectContext.name || !projectContext.rootPath) {
-                    console.error('Project context, name, or rootPath is missing.');
-                    return;
-                }
-
+            const updateProjectInDatabase = async () => {
                 try {
-                    const fileTreeNodes = await fileApi.getDirectoryStructure(
-                        projectContext.name,
-                        projectContext.rootPath
-                    );
-
-                    // Convert FileTreeNode[] to FileTreeItemType
-                    const root: FileTreeItemType = {
-                        name: projectContext.name,
-                        type: 'directory',
-                        path: projectContext.rootPath,
-                        children: fileTreeNodes.map(convertFileTreeNodeToItem),
-                    };
-
-                    setProjectContext((prevProjectContext) => ({
-                        ...prevProjectContext,
-                        details: {
-                            ...prevProjectContext.details,
-                            files: root,
-                        },
-                    }));
-
-                    if (projectContext?.id) {
-                        await projectApi.updateProject(projectContext.id, {
-                            ...projectContext,
-                            details: {
-                                ...projectContext.details,
-                                files: root,
-                            }
-                        });
-                        console.log('Project updated successfully.');
-                    } else {
-                        console.error('Project ID is missing.');
-                    }
-
+                    const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+                    await projectApi.updateProject(projectContext.id, projectInfoToSave);
+                    console.log('Project updated successfully in the database.');
                 } catch (error) {
-                    console.error('Error fetching directory structure or updating project:', error);
+                    console.error('Error updating project in the database:', error);
                 }
             };
 
-            fetchAndSetDirectoryStructure();
+            updateProjectInDatabase();
         }
+    }, [genCodeTaskRun, projectContext]);
+
+    useEffect(() => {
+
     }, [genCodeTaskRun]);
 
     function convertFileTreeNodeToItem(node: FileTreeNode): FileTreeItemType {
@@ -168,14 +137,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        let projectId = projectContext.id;
-        let rootPath = projectContext.rootPath;
+        const { id: projectId, rootPath, name: projectName } = projectContext;
 
-        if (!projectId || !rootPath) {
-            // Display a toast notification
+        if (!projectId || !rootPath || !projectName) {
             toast({
                 title: 'Project not saved',
-                description: 'Project name and description are required. Please save the project first.',
+                description: 'Project name, root path, and description are required. Please save the project first.',
                 status: 'error',
                 duration: 5000,
                 isClosable: true,
@@ -183,26 +150,33 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
-        if (!projectContext?.details.isAnchorInit) {
-            if (projectId && rootPath && contextReady) {
-                await handleAnchorInitTask(projectId, rootPath, projectContext.name || '');
-            } else {
-                console.error('Project ID or root path is missing.');
-                return;
+        try {
+            const existingDirectory = await fileApi.getDirectoryStructure(projectName, rootPath);
+            
+            if (existingDirectory && existingDirectory.length > 0) {
+                console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
+                toast({
+                    title: 'Directory already exists',
+                    description: `The project directory ${rootPath} already exists on the server.`,
+                    status: 'info',
+                    duration: 5000,
+                    isClosable: true,
+                });
+                return; 
             }
+        } catch (error) {
+            console.error('Error checking directory existence:', error);
+        }
+
+        if (!projectContext.details.isAnchorInit) {
+            await handleAnchorInitTask(projectId, rootPath, projectName);
         } else {
             console.log('Anchor project is already initialized.');
         }
 
         if (!genCodeTaskRun && !projectContext.details.isCode) {
-            if (projectId && rootPath && projectContext.name && contextReady) {
-                await handleGenCodesTask(projectId, rootPath, projectContext.name);
-                setGenCodeTaskRun(true); 
-                console.log('Files and codes generated (runTasksSequentially).');
-            } else {
-                console.error('Project root path or name is missing.');
-                return;
-            }
+            await handleGenCodesTask(projectId, rootPath, projectName);
+            setGenCodeTaskRun(true);
         } else {
             console.log('Files and codes have already been generated or the task has already run.');
         }
@@ -533,3 +507,4 @@ function StatusSymbol({ status }: { status: TaskStatus }) {
         />
     );
 }
+
