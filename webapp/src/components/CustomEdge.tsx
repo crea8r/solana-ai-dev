@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { EdgeProps, getBezierPath } from 'react-flow-renderer';
+import '../styles/CustomEdge.css';
 
 const CustomEdge: React.FC<EdgeProps> = ({
   id,
@@ -13,7 +14,6 @@ const CustomEdge: React.FC<EdgeProps> = ({
   targetPosition,
   style = {},
   data,
-  markerEnd,
 }) => {
   const edgePath = getBezierPath({
     sourceX,
@@ -23,22 +23,39 @@ const CustomEdge: React.FC<EdgeProps> = ({
     targetY,
     targetPosition,
   });
+
   return (
     <>
+      <defs>
+        <marker
+          id="solana-arrowhead"
+          markerWidth="8"
+          markerHeight="8"
+          refX="8"
+          refY="3"
+          orient="auto"
+          markerUnits="strokeWidth"
+          className="solana-arrowhead"
+        >
+          <path d="M0,0 L0,6 L9,3 z" fill="#808080" />
+        </marker>
+      </defs>
+
       <path
         id={id}
-        style={style}
-        className='react-flow__edge-path solana'
         d={edgePath}
-        markerEnd={markerEnd}
+        markerEnd="url(#solana-arrowhead)"
+        className="react-flow__edge-path solana"
+        style={style}
       />
       {data?.label && (
         <text>
           <textPath
             href={`#${id}`}
-            style={{ fontSize: '12px' }}
-            startOffset='50%'
-            textAnchor='middle'
+            style={{ fontSize: '12px', fill: '#808080' }}
+            startOffset="52%"
+            textAnchor="middle"
+            dy="5"
           >
             {data.label}
           </textPath>

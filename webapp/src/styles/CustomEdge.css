@@ -1,0 +1,10 @@
+.react-flow__edge-path.solana {
+  stroke: #808080 !important;
+  stroke-width: 1px !important;
+  stroke-dasharray: none !important;
+}
+
+.solana-arrowhead {
+  fill: #808080 !important;
+  
+}

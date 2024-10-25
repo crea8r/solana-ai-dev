@@ -73,27 +73,27 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 
 export const getNodeTypes = (): NodeTypes => ({
   account: createNodeComponent({
-    background: '#c7a6e2', // purple
-    color: 'white',
+    background: 'white',
+    color: '#51545c',
     padding: 10,
     borderRadius: 5,
-    border: 'none',
+    border: 'solid 2.5px #decae2', // purple
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   instruction: createNodeComponent({
-    background: '#72cf8e', // green
-    color: 'white',
+    background: 'white',
+    color: '#51545c',
     padding: 10,
     borderRadius: 5,
-    border: 'none',
+    border: 'solid 2.5px #9de19f', // green
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   program: createNodeComponent({
-    background: '#f05247', //red
-    color: 'white',
+    background: 'white',
+    color: '#51545c',
     padding: 10,
     borderRadius: 5,
-    border: 'none',
+    border: 'solid 2.5px #ff9494', // red
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
 });
