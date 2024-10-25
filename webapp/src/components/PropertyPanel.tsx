@@ -26,63 +26,99 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   programs,
   nodes,
 }) => {
-  const [localValues, setLocalValues] = useState<any>({});
+  const [localValues, setLocalValues] = useState<Record<string, any>>({});
   const [edgeLabel, setEdgeLabel] = useState('');
   const { projectContext, setProjectContext } = useProjectContext();
-
 
   useEffect(() => {
     if (selectedNode) {
       const item = selectedNode.data.item as ToolboxItem;
-      setLocalValues(item.getPropertyValues());
+
+      // Find the existing node in the project context
+      const existingNode = projectContext?.details?.nodes?.find(n => n.id === selectedNode.id);
+
+      if (existingNode && existingNode.data?.localValues) {
+        // Initialize localValues from projectContext
+        setLocalValues({
+          ...item.getPropertyValues(),
+          ...existingNode.data.localValues,
+        });
+      } else {
+        // Initialize localValues from item or default
+        setLocalValues({
+          ...item.getPropertyValues(),
+        });
+      }
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
     } else {
       setLocalValues({});
       setEdgeLabel('');
     }
-  }, [selectedNode, selectedEdge]);
+  }, [selectedNode, selectedEdge, projectContext]);
 
   if (!selectedNode && !selectedEdge) return null;
 
   const handleChange = (field: string, value: any) => {
-    setLocalValues((prev: any) => ({ ...prev, [field]: value }));
+    setLocalValues((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
     if (selectedNode) {
-      const updatedNode = {
+      const updatedNode: Node = {
         ...selectedNode,
         data: {
           ...selectedNode.data,
           label: localValues.name || selectedNode.data.label,
-          localValues,
+          localValues: {
+            ...selectedNode.data.localValues,
+            ...localValues,
+          },
         },
       };
 
       onUpdateNode(updatedNode);
 
-      setProjectContext((prevProjectContext) => ({ 
-        ...prevProjectContext, 
-        details: { ...prevProjectContext.details, nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node) } }));
+      // Update project context with the updated node
+      setProjectContext((prev) => ({
+        ...prev,
+        details: { 
+          ...prev.details, 
+          nodes: prev.details.nodes.map(node => node.id === updatedNode.id ? updatedNode : node) 
+        },
+      }));
 
+      // If the node is a program, update project name and description
       const isProgramNode = programs.some(p => p.id === selectedNode.id);
-
       if (isProgramNode) {
         const programNode = programs.find(p => p.id === selectedNode.id);
         const programItem = programNode?.data.item as ToolboxItem;
 
-        setProjectContext((prevProjectContext) => ({ 
-          ...prevProjectContext, 
-          details: { ...prevProjectContext.details, name: programItem?.name || '[Default Project Name]', description: programItem?.description || '[Default Project Description]' } }));
+        setProjectContext((prev) => ({
+          ...prev,
+          details: { 
+            ...prev.details, 
+            name: localValues.name || programItem?.name || '[Default Project Name]', 
+            description: localValues.description || programItem?.description || '[Default Project Description]' 
+          },
+        }));
       }
 
     } else if (selectedEdge) {
-      const updatedEdge = {
+      const updatedEdge: Edge = {
         ...selectedEdge,
         data: { ...selectedEdge.data, label: edgeLabel },
       };
       onUpdateEdge(updatedEdge);
+
+      // Update project context with the updated edge
+      setProjectContext((prev) => ({
+        ...prev,
+        details: { 
+          ...prev.details, 
+          edges: prev.details.edges.map(edge => edge.id === updatedEdge.id ? updatedEdge : edge) 
+        },
+      }));
     }
   };
 
@@ -93,16 +129,18 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       onDeleteEdge(selectedEdge.id);
     }
   };
+
   const fromNode = nodes.find((n) => n.id === selectedEdge?.source);
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
+
   return (
     <Box 
-    width='300px' 
-    bg='white' 
-    p={4} 
-    borderLeft="1px solid" 
-    borderColor="gray.200" 
-    shadow="md"
+      width='300px' 
+      bg='white' 
+      p={4} 
+      borderLeft="1px solid" 
+      borderColor="gray.200" 
+      shadow="md"
     >
       <VStack spacing={4} align='stretch'>
         {selectedNode && (

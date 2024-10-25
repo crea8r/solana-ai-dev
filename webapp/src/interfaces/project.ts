@@ -8,7 +8,7 @@ export interface ProjectDetails {
   edges: Edge[];
   files: FileTreeItemType;
   codes: CodeFile[];
-  docs: Docs[]; // remove this later to save docs on server like code files
+  docs: Docs[];
   isAnchorInit: boolean;
   isCode: boolean;
 }

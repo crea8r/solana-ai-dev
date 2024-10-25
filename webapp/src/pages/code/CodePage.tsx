@@ -49,7 +49,7 @@ const CodePage = () => {
       if (projectContext.name) {
         try {
           const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
-          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles); // Filter the root level as well
+          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
           const rootNode: FileTreeItemType = {
             name: projectContext.name || '',
             path: '',
@@ -81,10 +81,9 @@ const CodePage = () => {
   }
 
   function filterFiles(item: FileTreeItemType): boolean {
-    // Check if the item name is included in ignoreFiles or if the item's path matches projectContext.rootPath
     return (
       !ignoreFiles.includes(item.name) &&
-      !(item.path && item.path.includes(`${projectContext.rootPath}`)) // Filter out directories that match rootPath
+      !(item.path && item.path.includes(`${projectContext.rootPath}`))
     );
   }
 

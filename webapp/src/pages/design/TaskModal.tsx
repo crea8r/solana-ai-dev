@@ -113,7 +113,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         children: fileTreeNodes.map(convertFileTreeNodeToItem),
                     };
 
-                    // Update project context
                     setProjectContext((prevProjectContext) => ({
                         ...prevProjectContext,
                         details: {
@@ -121,8 +120,22 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             files: root,
                         },
                     }));
+
+                    if (projectContext?.id) {
+                        await projectApi.updateProject(projectContext.id, {
+                            ...projectContext,
+                            details: {
+                                ...projectContext.details,
+                                files: root,
+                            }
+                        });
+                        console.log('Project updated successfully.');
+                    } else {
+                        console.error('Project ID is missing.');
+                    }
+
                 } catch (error) {
-                    console.error('Error fetching directory structure:', error);
+                    console.error('Error fetching directory structure or updating project:', error);
                 }
             };
 

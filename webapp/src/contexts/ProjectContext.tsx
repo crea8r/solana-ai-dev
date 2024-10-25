@@ -21,7 +21,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       edges: [],
       files: { name: '', type: 'directory', children: [] },
       codes: [],
-      docs: [], // remove this later to save docs on server like code files
+      docs: [], 
       isAnchorInit: false,
       isCode: false,
     },
