@@ -208,6 +208,9 @@ export const deleteProject = async (
 
     const project = projectCheck.rows[0];
 
+    // Delete all tasks related to the project to avoid foreign key constraint errors
+    await client.query('DELETE FROM Task WHERE project_id = $1', [id]);
+
     // Delete the project from the database
     await client.query('DELETE FROM SolanaProject WHERE id = $1', [id]);
 

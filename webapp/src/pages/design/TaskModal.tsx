@@ -546,7 +546,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
             <ModalContent>
-                <ModalHeader p={1}>
+                <ModalHeader p={1} height={30}>
                     {projectContext.details.isCode && (
                         <Button 
                             onClick={handleRegenerate} 

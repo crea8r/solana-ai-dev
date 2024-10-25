@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button, Flex, useDisclosure, useToast } from '@chakra-ui/react';
