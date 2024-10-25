@@ -30,7 +30,7 @@ type Task = {
 };
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
-    const { projectContext, setProjectContext } = useProjectContext();
+    const { projectContext, setProjectContext, projectInfoToSave, setProjectInfoToSave } = useProjectContext();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [contextReady, setContextReady] = useState(false);
     const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
@@ -438,6 +438,15 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         isCode: true,
                     },
                 }));
+
+                setProjectInfoToSave((prevInfo) => ({
+                    ...prevInfo,
+                    details: {
+                      ...prevInfo.details,
+                      isAnchorInit: true,
+                      isCode: true,
+                    },
+                  }));
             } else {
                 throw new Error('No AI response for structure generation');
             }

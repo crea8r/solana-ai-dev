@@ -13,6 +13,7 @@ export type ProjectInfoToSave = {
 export interface ProjectDetailsToSave {
   nodes: Node[];
   edges: Edge[];
+  isAnchorInit: boolean;
   isCode: boolean;
 }
 

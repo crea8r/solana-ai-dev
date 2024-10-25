@@ -9,6 +9,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
   details: {
     nodes: project.details.nodes,
     edges: project.details.edges,
+    isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
   },
 });
@@ -16,7 +17,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
 interface ProjectContextType {
   projectContext: Project;
   setProjectContext: Dispatch<SetStateAction<Project>>;
-  projectInfoToSave: ProjectInfoToSave; 
+  projectInfoToSave: ProjectInfoToSave;
+  setProjectInfoToSave: Dispatch<SetStateAction<ProjectInfoToSave>>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -40,20 +42,23 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     },
   });
 
-  // Create a useRef to store the latest ProjectInfoToSave
-  const projectInfoToSaveRef = useRef<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
+  // State for projectInfoToSave, initially synchronized with projectContext
+  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(
+    transformToProjectInfoToSave(projectContext)
+  );
 
-  // useEffect to update ref when projectContext changes
+  // Synchronize projectInfoToSave whenever projectContext changes
   useEffect(() => {
-    projectInfoToSaveRef.current = transformToProjectInfoToSave(projectContext);
+    setProjectInfoToSave(transformToProjectInfoToSave(projectContext));
   }, [projectContext]);
 
   return (
     <ProjectContext.Provider
-      value={{ 
-        projectContext, 
-        setProjectContext, 
-        projectInfoToSave: projectInfoToSaveRef.current
+      value={{
+        projectContext,
+        setProjectContext,
+        projectInfoToSave,
+        setProjectInfoToSave,
       }}
     >
       {children}
