@@ -49,7 +49,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             borderRadius="md"
             position="relative"
           >
-            {projectContext.name}
+            {projectContext.name || 'Untitled Project'}
             {hover && (
               <Box
                 bg="gray.100"
@@ -63,7 +63,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
                 zIndex="tooltip"
                 boxShadow="md"
               >
-                <Text fontSize="sm">{projectContext.description}</Text>
+                {projectContext.description && <Text fontSize="sm">{projectContext.description}</Text>}
               </Box>
             )}
           </Box>

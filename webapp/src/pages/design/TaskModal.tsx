@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalBody, Box, Text, Flex, Spinner } from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalBody, Box, Text, Flex, Spinner, Button, ModalHeader } from '@chakra-ui/react';
+import { RefreshCw, X, CornerDownRight } from 'lucide-react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
@@ -13,6 +14,7 @@ import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useToast } from '@chakra-ui/react'; 
+import { Link as RouterLink } from 'react-router-dom';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -66,13 +68,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             const initialTasks: Task[] = [
                 {
                     id: 1,
-                    name: 'Initializing Anchor project',
+                    name: 'Initialize Project',
                     status: projectContext?.details.isAnchorInit ? 'completed' : 'loading',
                     type: 'main' as 'main',
                 },
                 {
                     id: 2,
-                    name: 'Generating files:',
+                    name: 'Generate Files',
                     status: projectContext?.details.isCode ? 'completed' : 'loading',
                     type: 'main' as 'main',
                 }
@@ -106,7 +108,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
 
             updateProjectInDatabase();
         }
-    }, [genCodeTaskRun, projectContext]);
+    }, [genCodeTaskRun]);
 
     useEffect(() => {
 
@@ -474,6 +476,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
             <ModalContent>
+                <ModalHeader p={1}>
+                    {projectContext.details.isCode && (
+                        <Button onClick={onClose} variant="ghost" size="sm" colorScheme="gray">
+                            <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
+                            <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
+                        </Button>
+                    )}
+                    <Button onClick={onClose} variant="ghost" size="sm" colorScheme="gray" position="absolute" top={2} right={2}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </ModalHeader>
                 <ModalBody>
                     <Box mt={4}>
                         <Box>
@@ -497,6 +510,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             </Box>
                         </Box>
                     </Box>
+                    <Flex justify="flex-end" pt={3}>
+                        <Box>
+                            {projectContext.details.isCode && (
+                                <Button as={RouterLink} to="/code" variant="ghost" size="sm" colorScheme="gray">
+                                    <Text fontSize="xs" color="blue.500">View Files</Text>
+                                    <CornerDownRight className="h-3 w-3 ml-1 text-blue-500" />
+                                </Button>
+                            )}
+                        </Box>
+                    </Flex>
                 </ModalBody>
             </ModalContent>
         </Modal>
