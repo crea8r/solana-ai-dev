@@ -30,14 +30,14 @@ const getFullDirectoryStructure = async (
   const fileStructure: FileStructure[] = await Promise.all(
     files.map(async (file) => {
       const fullPath = path.join(directoryPath, file.name);
-      const fileRelativePath = path.join(relativePath, file.name); // Get the relative path
+      const fileRelativePath = path.join(relativePath, file.name); 
 
       if (file.isDirectory()) {
         return {
           name: file.name,
           isDirectory: true,
           path: fileRelativePath,
-          children: await getFullDirectoryStructure(fullPath, fileRelativePath), // Pass the relative path
+          children: await getFullDirectoryStructure(fullPath, fileRelativePath),
         };
       } else {
         return {
@@ -309,5 +309,36 @@ export const deleteFile = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const deleteDirectory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { projectId, rootPath } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
+
+  const rootFolder = process.env.ROOT_FOLDER;
+  if (!rootFolder) { return next(new AppError('Root folder not configured', 500)); }
+
+  const directoryPath = path.join(rootFolder, rootPath);
+  console.log("[controller] directoryPath", directoryPath);
+
+  try {
+    await fs.access(directoryPath);
+    await fs.rmdir(directoryPath, { recursive: true });
+
+    res.status(200).json({ message: 'Directory deleted successfully' });
+  } catch (error) {
+    console.error('Error in deleteDirectory:', error);
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      next(new AppError('Directory not found', 404));
+    } else {
+      next(new AppError('Failed to delete directory', 500));
+    }
   }
 };

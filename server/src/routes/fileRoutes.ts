@@ -6,6 +6,7 @@ import {
   getFileContent,
   getProjectFileTree,
   updateFile,
+  deleteDirectory,
 } from 'src/controllers/fileController';
 import { authMiddleware } from 'src/middleware/authMiddleware';
 
@@ -17,5 +18,6 @@ router.get('/:projectId/:filePath(*)', authMiddleware, getFileContent);
 router.post('/:projectId/:filePath(*)', authMiddleware, createFile);
 router.put('/:projectId/:filePath(*)', authMiddleware, updateFile);
 router.delete('/:projectId/:filePath(*)', authMiddleware, deleteFile);
+router.delete('/:rootPath', authMiddleware, deleteDirectory);
 
 export default router;

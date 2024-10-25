@@ -100,6 +100,20 @@ export const fileApi = {
     }
   },
 
+  deleteDirectory: async (
+    rootPath: string
+  ): Promise<TaskResponse> => {
+    try {
+      const response = await api.delete(
+       `/files/${encodeURIComponent(rootPath)}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting directory:', error);
+      throw error;
+    }
+  },
+
   checkTaskStatus: async (taskId: string) => {
     try {
       const response = await api.get(`/tasks/${taskId}/status`);

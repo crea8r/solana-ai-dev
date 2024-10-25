@@ -39,6 +39,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
     const tasksInitializedRef = useRef(false);
     const toast = useToast(); 
+    const [isRegenerating, setIsRegenerating] = useState(false); // New state for regeneration
     
 
     useEffect(() => {
@@ -462,6 +463,75 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     };
 
+    const handleRegenerate = async () => {
+        if (!projectContext) return;
+
+        const { name: projectName, rootPath, id: projectId } = projectContext;
+
+        if (!projectName || !rootPath || !projectId) {
+            toast({
+                title: 'Invalid Project',
+                description: 'Project name, root path, or ID is missing.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        setIsRegenerating(true);
+
+        try {
+            await fileApi.deleteDirectory(rootPath);
+
+            toast({
+                title: 'Directory deleted',
+                description: 'Root directory deleted. Restarting tasks...',
+                status: 'info',
+                duration: 3000,
+                isClosable: true,
+            });
+
+            setProjectContext((prev) => ({
+                ...prev,
+                details: {
+                    ...prev.details,
+                    isAnchorInit: false,
+                    isCode: false,
+                },
+            }));
+
+            // Reset tasks
+            setTasks([]);
+
+            // Reset tasksInitializedRef
+            tasksInitializedRef.current = false;
+
+            // Re-run tasks
+            await runTasksSequentially();
+
+            toast({
+                title: 'Tasks restarted',
+                description: 'Project initialization and file generation restarted.',
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+
+        } catch (error) {
+            console.error('Error regenerating files:', error);
+            toast({
+                title: 'Error regenerating files',
+                description: 'There was an error regenerating the files. Please try again.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsRegenerating(false);
+        }
+    };
+
     if (!contextReady) {
         return (
             <Spinner
@@ -478,7 +548,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             <ModalContent>
                 <ModalHeader p={1}>
                     {projectContext.details.isCode && (
-                        <Button onClick={onClose} variant="ghost" size="sm" colorScheme="gray">
+                        <Button 
+                            onClick={handleRegenerate} 
+                            variant="ghost" 
+                            size="sm" 
+                            colorScheme="gray" 
+                            isLoading={isRegenerating}
+                        >
                             <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
                             <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
                         </Button>
