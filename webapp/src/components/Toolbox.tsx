@@ -46,8 +46,8 @@ const Toolbox: React.FC = () => {
           mr={2}
         >
         </Flex>
-        <Text fontWeight='light' textAlign='left'>
-          Drag items into canvas
+        <Text fontWeight='400' textAlign='left' fontSize='xs'>
+          Drag items onto canvas
         </Text>
         <Divider />
         <SimpleGrid columns={2} spacing={4}>
@@ -70,8 +70,8 @@ const Toolbox: React.FC = () => {
                 justifyContent='center'
                 height='80px'
               >
-                <Icon as={item.getIcon()} boxSize={6} mb={2} />
-                <Text fontSize='sm'>{item.getName()}</Text>
+                <Icon as={item.getIcon()} boxSize={4} mb={2} />
+                <Text fontSize='xs'>{item.getName()}</Text>
               </Box>
             </Tooltip>
           ))}

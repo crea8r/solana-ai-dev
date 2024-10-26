@@ -1,8 +1,11 @@
 // Mock data for file tree
 
 import { VStack, Text, Flex } from '@chakra-ui/react';
+import { Bluetooth } from 'lucide-react';
 import { useState } from 'react';
 import { CiFolderOn, CiFileOn } from "react-icons/ci";
+import { FaFolder } from "react-icons/fa6";
+import { FaRegFile } from "react-icons/fa";
 
 // name, ext, type, path, children
 export interface FileTreeItemType {
@@ -17,21 +20,24 @@ export interface FileTreeItemProps {
   item: FileTreeItemType;
   onSelectFile: (item: FileTreeItemType) => void;
   selectedItem?: FileTreeItemType;
+  level: number;
 }
 
 const FileTreeItem = ({
   item,
   onSelectFile,
   selectedItem,
+  level,
 }: FileTreeItemProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(level === 0); // Always open if root
 
   const toggleFolder = () => setIsOpen(!isOpen);
+
   if (item.type === 'directory' || (item.children && item.children.length > 0)) {
     return (
       <VStack align='stretch' ml={2}>
         <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
-          <CiFolderOn />
+          <FaFolder style={{ color: '#ffd57a' }} />
           <Text ml={2}>{item.name}</Text>
         </Flex>
         {isOpen &&
@@ -41,6 +47,7 @@ const FileTreeItem = ({
               item={child}
               onSelectFile={onSelectFile}
               selectedItem={selectedItem}
+              level={level + 1}
             />
           ))}
       </VStack>
@@ -53,10 +60,10 @@ const FileTreeItem = ({
         cursor='pointer'
         onClick={() => onSelectFile(item)}
       >
-        <CiFileOn />
+        <FaRegFile style={{ color: '#5688e8' }} />
         <Text
           ml={2}
-          background={item.path === selectedItem?.path ? 'yellow.100' : ''}
+          color={item.path === selectedItem?.path ? 'blue.400' : ''}
         >
           {item.name}
         </Text>
@@ -84,6 +91,7 @@ const FileTree = ({
           item={files}
           onSelectFile={onSelectFile}
           selectedItem={selectedItem}
+          level={0}
         />
       )}
     </VStack>

@@ -256,7 +256,7 @@ const DesignPage: React.FC = () => {
       });
     } else {
       toast({
-        title: 'Something went wrong',
+        title: 'Please enter a project name and description',
         status: 'error',
         duration: 4000,
         isClosable: true,

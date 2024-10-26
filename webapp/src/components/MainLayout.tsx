@@ -38,7 +38,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <Box w='60px' bg='white' p={4} pr={6} pl={6} borderRight="1px solid" borderColor="gray.300">
         <VStack spacing={4} align='center' h='full'>
           {menuItems.map((item) => (
-            <Tooltip key={item.path} label={item.label} placement='right'>
+            <Tooltip 
+              key={item.path} 
+              label={item.label} 
+              placement='right'
+              hasArrow
+              bg='blue.300'
+              color='white'
+              fontSize='xs' 
+              borderRadius='md'
+              p={2}
+            >
               <Box
                 as={!item.disabled ? 'button' : 'text'}
                 onClick={
@@ -47,9 +57,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 p={2}
                 borderRadius='md'
                 bg={
-                  location.pathname === item.path ? 'blue.100' : 'transparent'
+                  location.pathname === item.path ? 'blue.50' : 'transparent'
                 }
-                _hover={{ bg: !item.disabled ? 'blue.100' : 'tranperant' }}
+                _hover={{ bg: !item.disabled ? 'blue.50' : 'transparent' }}
               >
                 <Icon as={item.icon} w={6} h={6} color='black' />
               </Box>
