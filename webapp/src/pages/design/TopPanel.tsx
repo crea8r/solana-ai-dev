@@ -11,7 +11,7 @@ import {
   Text,
   IconButton,
 } from '@chakra-ui/react';
-import { FileText, Users, Settings, Sparkles, Pencil, PanelsTopLeft } from 'lucide-react';
+import { Settings, Sparkles, Pencil } from 'lucide-react';
 import { logEvent } from '../../utils/analytics';
 import InputModal from '../../components/InputModal';
 import logo from '../../assets/logo/solai_logo_png.png';
@@ -39,11 +39,11 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const handleMouseLeave = () => setHover(false);
 
   return (
-    <Box as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" px={4} py={3}>
-      <Flex alignItems="center" justifyContent="space-between" width="100%" px={4}>
+    <Box as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" px={1} py={1}>
+      <Flex alignItems="center" justifyContent="space-evenly" width="100%" px={8} gap={10}>
         <Flex alignItems="center" gap={2}>
           <Menu>
-              <MenuButton as={Button} variant="ghost" colorScheme="gray" fontSize="sm">
+              <MenuButton as={Button} variant="ghost" colorScheme="blue" fontSize="xs" opacity={0.8}>
                 <Text fontSize="sm" fontWeight="medium">File</Text>
               </MenuButton>
               <MenuList fontSize="xs">
@@ -52,10 +52,10 @@ const TopPanel: React.FC<TopPanelProps> = ({
                 <MenuItem onClick={onClickNew}>New</MenuItem>
               </MenuList>
             </Menu>
-          <Button variant="ghost" colorScheme="gray"><Text fontSize="sm" fontWeight="medium">Team</Text></Button>
+          <Button variant="ghost"colorScheme="blue" fontSize="xs" opacity={0.8}><Text fontSize="sm" fontWeight="medium">Team</Text></Button>
         </Flex>
-        <Flex justifyContent="space-evenly" alignItems="center" width="100%" pl="20" pr="20">
-          <Flex width="100%" alignItems="center" justifyContent="flex-start">
+        <Flex justifyContent="space-between" alignItems="center" gap={2} flexGrow={1}>
+          <Flex width="100%" alignItems="center" justifyContent="center">
             <Box
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
@@ -86,22 +86,17 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </Box>
           <Button variant="ghost" size="xs" colorScheme="blue" onClick={onClickInput}><Pencil className="h-3 w-3" /></Button>
           </Flex>
-          <Box></Box>
-        </Flex>
-        <Flex alignItems="center" gap={1}>
-          <Button variant="ghost" size="sm" colorScheme="blue" onClick={generatePrompt}>
+          <Flex justifyContent="center" alignItems="center" flexGrow={1}>
+          <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}>
             <Sparkles className="h-3 w-3 mr-1 text-blue-600"/>
-            <Text fontSize="sm" color="blue.600">Generate Code</Text>
-          </Button>
+            <Text fontSize="xs" color="blue.600">Generate Code</Text>
+            </Button>
+          </Flex>
+        </Flex>
+        <Flex alignItems="center" gap={1} padding={1}>
           <Flex alignItems="center" gap={4}>
-           <Button variant="ghost" size="sm" colorScheme="gray">
-              <IconButton
-                aria-label="Settings"
-                icon={<Settings className="h-3 w-3" />}
-                variant="ghost"
-                size="xs"
-                colorScheme="gray"
-              />
+           <Button variant="ghost" size="sm" colorScheme="blue" fontSize="xs" opacity={0.8}>
+              <Settings className="h-3 w-3 mr-1" />
               <Text fontSize="sm" fontWeight="medium">Settings</Text>
            </Button>
             <Avatar size="xs" src="/placeholder.svg" />

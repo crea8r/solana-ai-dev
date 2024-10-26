@@ -19,10 +19,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { projectContext } = useProjectContext();
 
   const menuItems = [
-    { icon: PiGraphLight, label: 'System Design', path: '/design' },
-    { icon: CiFileOn, label: 'Coding', path: '/code', disabled: !projectContext.details.isCode },
-    { icon: IoBookOutline, label: 'Documentation', path: '/doc', disabled: true },
-    { icon: HiOutlineUserCircle, label: 'User Account', path: '/account' },
+    { icon: PiGraphLight, label: 'Design', path: '/design' },
+    { icon: CiFileOn, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
+    { icon: IoBookOutline, label: 'Docs', path: '/doc', disabled: true },
+    { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
   ];
 
   const handleNavigation = (path: string) => {
@@ -61,7 +61,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 }
                 _hover={{ bg: !item.disabled ? 'blue.50' : 'transparent' }}
               >
-                <Icon as={item.icon} w={6} h={6} color='black' />
+                <Icon as={item.icon} w={5} h={5} color='black' />
               </Box>
             </Tooltip>
           ))}

@@ -9,8 +9,11 @@ import {
   Avatar,
 } from '@chakra-ui/react';
 
-interface TopPanelProps {}
-const TopPanel: React.FC<TopPanelProps> = () => {
+interface TopPanelProps {
+  onBuild: () => void;
+}
+
+const TopPanel: React.FC<TopPanelProps> = ({ onBuild }) => {
   return (
     <Flex
       as="header"
@@ -22,7 +25,7 @@ const TopPanel: React.FC<TopPanelProps> = () => {
       px={4}
       shadow="md"
     >
-      <Flex flexDirection="row" justifyContent="space-between" alignItems="center" gap={4}>
+      <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center">
         <Menu>
           <MenuButton as={Button} variant="ghost" size="sm" mr={2}>File</MenuButton>
           <MenuList>
@@ -32,22 +35,16 @@ const TopPanel: React.FC<TopPanelProps> = () => {
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>
-            Team
-          </MenuButton>
+          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>Team</MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>
-              Manage
-            </MenuItem>
-            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>
-              Invite
-            </MenuItem>
+            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>Manage</MenuItem>
+            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>Invite</MenuItem>
           </MenuList>
         </Menu>
-        <Button variant="ghost" size="sm" mr={2}>Build</Button>
+        <Button variant="ghost" size="sm" mr={2} onClick={onBuild}>Build</Button>
         <Button variant="ghost" size="sm">Test</Button>
       </Flex>
-      <Avatar size='xs' src="/placeholder.svg" />
+      <Avatar size="xs" src="/placeholder.svg" />
     </Flex>
   );
 };

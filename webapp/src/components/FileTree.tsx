@@ -1,11 +1,8 @@
 // Mock data for file tree
 
 import { VStack, Text, Flex } from '@chakra-ui/react';
-import { Bluetooth } from 'lucide-react';
 import { useState } from 'react';
-import { CiFolderOn, CiFileOn } from "react-icons/ci";
-import { FaFolder } from "react-icons/fa6";
-import { FaRegFile } from "react-icons/fa";
+import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 
 // name, ext, type, path, children
 export interface FileTreeItemType {
@@ -37,8 +34,9 @@ const FileTreeItem = ({
     return (
       <VStack align='stretch' ml={2}>
         <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
-          <FaFolder style={{ color: '#ffd57a' }} />
-          <Text ml={2}>{item.name}</Text>
+          {isOpen ? <FaChevronDown size={10} style={{ color: '#51545c' }}/> : <FaChevronRight size={10} style={{ color: '#51545c', marginRight: 5 }} />}
+          <FaFolder style={{ color: '#ffd57a', marginLeft: 5 }} />
+          <Text ml={2} fontSize='sm'>{item.name}</Text>
         </Flex>
         {isOpen &&
           item.children?.map((child, index) => (
@@ -58,12 +56,14 @@ const FileTreeItem = ({
         alignItems='center'
         ml={2}
         cursor='pointer'
+        bg={item.path === selectedItem?.path ? 'gray.100' : ''}
+        p={1}
         onClick={() => onSelectFile(item)}
       >
-        <FaRegFile style={{ color: '#5688e8' }} />
+        <FaRegFile size={12} style={{ color: '#5688e8' }} />
         <Text
           ml={2}
-          color={item.path === selectedItem?.path ? 'blue.400' : ''}
+          fontSize='sm'
         >
           {item.name}
         </Text>

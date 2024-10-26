@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Flex, useToast } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
@@ -11,6 +11,7 @@ import { useProjectContext } from '../../contexts/ProjectContext';
 import { extractCodeBlock } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { taskApi } from '../../api/task';
+import { projectApi } from '../../api/project'; 
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -26,6 +27,7 @@ const CodePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
+  const toast = useToast();
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
@@ -135,9 +137,54 @@ const CodePage = () => {
 
   console.log('Selected content:', selectedContent);
 
+  const handleBuildProject = async () => {
+    setIsLoading(true);
+    try {
+      const projectId = projectContext.id || '';
+      console.log(`Starting build for project ID: ${projectId}`);
+
+      // Call the API helper function to start the build process
+      const response = await projectApi.buildProject(projectId);
+
+      if (response.taskId) {
+        console.log('Build process initiated. Task ID:', response.taskId);
+        toast({
+          title: 'Build started',
+          description: 'The Anchor build process has started.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+
+        // Optionally, you could start polling the task status here using response.taskId
+        // e.g., startPollingTaskStatus(response.taskId);
+      } else {
+        console.error('Build initiation failed.');
+        toast({
+          title: 'Build failed',
+          description: 'Failed to start the Anchor build process.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error during project build:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while starting the build process.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Flex direction='column' height='100vh'>
-      <TopPanel />
+      <TopPanel onBuild={handleBuildProject} />
       <Flex h='100vh'>
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
           <FileTree

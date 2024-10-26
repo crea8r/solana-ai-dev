@@ -39,7 +39,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [genCodeTaskRun, setGenCodeTaskRun] = useState(false); 
     const tasksInitializedRef = useRef(false);
     const toast = useToast(); 
-    const [isRegenerating, setIsRegenerating] = useState(false); // New state for regeneration
+    const [isRegenerating, setIsRegenerating] = useState(false); 
+    const [existingDirectory, setExistingDirectory] = useState(false);
+
+    useEffect(() => {
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task.id === 2 ? { ...task, status: 'completed' } : task
+            )
+        );
+    }, [projectContext.details.isCode == true]);
     
 
     useEffect(() => {
@@ -154,10 +163,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
 
         try {
-            const existingDirectory = await fileApi.getDirectoryStructure(projectName, rootPath);
+            const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
             
-            if (existingDirectory && existingDirectory.length > 0) {
+            if (directory && directory.length > 0) {
                 console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
+                setProjectContext((prevProjectContext) => ({
+                    ...prevProjectContext,
+                    details: {
+                        ...prevProjectContext.details,
+                        isAnchorInit: true,
+                        isCode: true,
+                    },
+                }));
+                setExistingDirectory(true);
                 toast({
                     title: 'Directory already exists',
                     description: `The project directory ${rootPath} already exists on the server.`,
@@ -166,6 +184,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     isClosable: true,
                 });
                 return; 
+            } else {
+                setExistingDirectory(false);
             }
         } catch (error) {
             console.error('Error checking directory existence:', error);
@@ -501,13 +521,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 },
             }));
 
-            // Reset tasks
             setTasks([]);
-
-            // Reset tasksInitializedRef
             tasksInitializedRef.current = false;
-
-            // Re-run tasks
             await runTasksSequentially();
 
             toast({
@@ -547,18 +562,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader p={1} height={30}>
-                    {projectContext.details.isCode && (
+                    {projectContext.details.isCode || existingDirectory ? (
                         <Button 
                             onClick={handleRegenerate} 
                             variant="ghost" 
                             size="sm" 
                             colorScheme="gray" 
                             isLoading={isRegenerating}
+                            height={30}
                         >
-                            <RefreshCw className="h-3 w-3 mr-1 text-blue-500" />
+                            <RefreshCw className="h-3 w-3 mr-1" style={{ color: '#5688e8' }} />
                             <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
                         </Button>
-                    )}
+                    ) : ( <Box height={30} /> )}
                     <Button onClick={onClose} variant="ghost" size="sm" colorScheme="gray" position="absolute" top={2} right={2}>
                         <X className="h-4 w-4" />
                     </Button>
@@ -588,7 +604,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                     </Box>
                     <Flex justify="flex-end" pt={3}>
                         <Box>
-                            {projectContext.details.isCode && (
+                            {(projectContext.details.isCode || existingDirectory) && (
                                 <Button as={RouterLink} to="/code" variant="ghost" size="sm" colorScheme="gray">
                                     <Text fontSize="xs" color="blue.500">View Files</Text>
                                     <CornerDownRight className="h-3 w-3 ml-1 text-blue-500" />
@@ -615,4 +631,3 @@ function StatusSymbol({ status }: { status: TaskStatus }) {
         />
     );
 }
-
