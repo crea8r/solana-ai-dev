@@ -28,48 +28,51 @@ const FileTreeItem = ({
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Always open if root
 
-  const toggleFolder = () => setIsOpen(!isOpen);
+  const toggleFolder = () => {
+    if (item.type === 'directory') {
+      setIsOpen(!isOpen);
+    } else {
+      onSelectFile(item);
+    }
+  };
 
-  if (item.type === 'directory' || (item.children && item.children.length > 0)) {
-    return (
-      <VStack align='stretch' ml={2}>
-        <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
-          {isOpen ? <FaChevronDown size={10} style={{ color: '#51545c' }}/> : <FaChevronRight size={10} style={{ color: '#51545c', marginRight: 5 }} />}
-          <FaFolder style={{ color: '#ffd57a', marginLeft: 5 }} />
-          <Text ml={2} fontSize='sm'>{item.name}</Text>
-        </Flex>
-        {isOpen &&
-          item.children?.map((child, index) => (
-            <FileTreeItem
-              key={child.path || index}
-              item={child}
-              onSelectFile={onSelectFile}
-              selectedItem={selectedItem}
-              level={level + 1}
-            />
-          ))}
-      </VStack>
-    );
-  } else {
-    return (
+  const hasChildren = item.type === 'directory' || (item.children && item.children.length > 0);
+
+  return (
+    <VStack
+      align='stretch'
+      ml={2}
+      pl={2}
+      borderLeft={isOpen && hasChildren ? "1px solid #ccc" : "none"}
+    >
       <Flex
         alignItems='center'
-        ml={2}
         cursor='pointer'
+        onClick={toggleFolder}
         bg={item.path === selectedItem?.path ? 'gray.100' : ''}
-        p={1}
-        onClick={() => onSelectFile(item)}
       >
-        <FaRegFile size={12} style={{ color: '#5688e8' }} />
-        <Text
-          ml={2}
-          fontSize='sm'
-        >
-          {item.name}
-        </Text>
+        {hasChildren ? (
+          isOpen ? <FaChevronDown size={10} style={{ color: '#51545c' }}/> : <FaChevronRight size={10} style={{ color: '#51545c', marginRight: 5 }} />
+        ) : (
+          <FaRegFile size={12} style={{ color: '#5688e8', marginRight: 5 }} />
+        )}
+        {item.type === 'directory' ? (
+          <FaFolder style={{ color: '#ffd57a', marginLeft: 5 }} />
+        ) : null}
+        <Text ml={2} fontSize='sm'>{item.name}</Text>
       </Flex>
-    );
-  }
+      {isOpen && hasChildren &&
+        item.children?.map((child, index) => (
+          <FileTreeItem
+            key={child.path || index}
+            item={child}
+            onSelectFile={onSelectFile}
+            selectedItem={selectedItem}
+            level={level + 1}
+          />
+        ))}
+    </VStack>
+  );
 };
 
 type FileTreeProps = {
