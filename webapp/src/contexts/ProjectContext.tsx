@@ -11,6 +11,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     edges: project.details.edges,
     isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
+    aiFilePaths: project.details.aiFilePaths,
+    aiStructure: project.details.aiStructure,
   },
 });
 
@@ -39,6 +41,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       docs: [],
       isAnchorInit: false,
       isCode: false,
+      aiFilePaths: [],
+      aiStructure: '',
     },
   });
 

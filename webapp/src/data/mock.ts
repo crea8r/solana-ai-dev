@@ -223,6 +223,8 @@ const todoproject: Project = {
     isSaved: false,
     isAnchorInit: false,
     isCode: true,
+    aiFilePaths: [],
+    aiStructure: '',
   } as ProjectDetails,
 } as Project;
 export { todoproject };

@@ -56,7 +56,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setContextReady(true);
         }
         console.log('contextReady', contextReady);
-        console.log(`[TaskModal] context ready: ${contextReady} projectContext:`, projectContext);
+      //  console.log(`[TaskModal] context ready: ${contextReady} projectContext:`, projectContext);
     }, [projectContext]);
 
     useEffect(() => {
@@ -144,10 +144,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
     const runTasksSequentially = async () => {
-        if (!projectContext) {
-            console.error("Project not available.");
-            return;
-        }
+        if (!projectContext) { console.error("Project contextnot available."); return;}
 
         const { id: projectId, rootPath, name: projectName } = projectContext;
 
@@ -162,9 +159,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             return;
         }
 
+        // Checking if the project directory already exists
         try {
             const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
-            
             if (directory && directory.length > 0) {
                 console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
                 setProjectContext((prevProjectContext) => ({
@@ -191,12 +188,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             console.error('Error checking directory existence:', error);
         }
 
+        // if anchor project is not initialized, initialize it
         if (!projectContext.details.isAnchorInit) {
             await handleAnchorInitTask(projectId, rootPath, projectName);
         } else {
             console.log('Anchor project is already initialized.');
         }
 
+        // if files and codes are not generated, generate them
         if (!genCodeTaskRun && !projectContext.details.isCode) {
             await handleGenCodesTask(projectId, rootPath, projectName);
             setGenCodeTaskRun(true);
@@ -290,45 +289,64 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     };
 
     const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
-        if (projectContext.details.isCode) {
-            console.log('Files and codes have already been generated.');
-            return;
-        }
-
+        // if files and codes are already generated, skip this task
+        if (projectContext.details.isCode) {console.log('Files and codes have already been generated.'); return;}
+        // if project ID is missing, throw an error
+        if (!projectId) {console.error('Project ID is undefined'); return;}
+        // if nodes or edges are missing, throw an error
         if (projectContext.details.nodes.length === 0 || projectContext.details.edges.length === 0) {
             console.error('Nodes or edges are missing in saved project details.');
             return;
         }
 
+        // set the task status to loading
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
                 task.id === 2 ? { ...task, status: 'loading' } : task
             )
         );
 
-        if (!projectId) {
-            console.error('Project ID is undefined');
-            return;
-        }
-
+        // generate the structure prompt - to generate the file structure
         const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
         const choices = await promptAI(structurePrompt);
 
         try {
             if (choices && choices.length > 0) {
                 const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
+
+                // set the file tree paths
                 setFileTreePaths(files);
 
+                // Store ai-generated file paths in `aiFilePaths`
+                const aiFilePaths = getFileList(files).map(file => file.path);
+                setProjectContext((prevContext) => ({
+                    ...prevContext,
+                    details: {
+                        ...prevContext.details,
+                        aiFilePaths,
+                    }
+                }));
+
+                // Update file paths to correct the root directory
                 const updatedFileList = getFileList(files).map(file => {
                     const updatedPath = file.path.split('/').slice(1).join('/');
                     return { ...file, path: updatedPath, name: file.name };
                 });
+                console.log('updatedFileList', updatedFileList);
 
+                // Deduplicate `updatedFileList` by path to ensure unique entries
+                const uniqueFileMap = new Map(updatedFileList.map(file => [file.path, file]));
+                const uniqueFileList = Array.from(uniqueFileMap.values());
+
+                console.log("Deduplicated updatedFileList:", uniqueFileList);
+
+                // Initialize the next ID for file tasks
                 let nextId = 3;
 
+                // Create a set of processed file paths
                 const processedFiles = new Set(projectContext.details.codes?.map((code) => code.path) || []);
 
-                const fileTasks = updatedFileList
+                const fileTasks = uniqueFileList
                     .filter(({ path }) => !processedFiles.has(path)) 
                     .map(({ name, path }) => ({
                         id: nextId++,
@@ -337,6 +355,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                         status: 'loading',
                         type: 'file',
                     } as Task));
+
+                console.log("Final file tasks to be set:", fileTasks);
 
                 setTasks((prevTasks) => {
                     const mainTasks = prevTasks.filter((task) => task.type !== 'file');
@@ -595,7 +615,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                                     .filter((task) => task.type === 'file')
                                     .map((task) => (
                                         <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
-                                            <Text fontSize="sm">{task.name}</Text>
+                                            <Text fontSize="sm">{task.path}</Text> {/* Updated to show full path */}
                                             <StatusSymbol status={task.status} />
                                         </Flex>
                                     ))}
@@ -631,3 +651,4 @@ function StatusSymbol({ status }: { status: TaskStatus }) {
         />
     );
 }
+

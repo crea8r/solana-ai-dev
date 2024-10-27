@@ -14,6 +14,8 @@ export interface ProjectDetailsToSave {
   nodes: Node[];
   edges: Edge[];
   isAnchorInit: boolean;
+  aiFilePaths: string[];
+  aiStructure: string;
   isCode: boolean;
 }
 
@@ -25,6 +27,8 @@ export interface ProjectDetails {
   docs: Docs[];
   isAnchorInit: boolean;
   isCode: boolean;
+  aiFilePaths: string[];
+  aiStructure: string;
 }
 
 export interface Project {

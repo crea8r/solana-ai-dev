@@ -69,9 +69,11 @@ const DesignPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
 
+  /*
   useEffect(() => {
     console.log('[DesignPage] projectContext', projectContext);
   }, [projectContext]);
+  */
 
   const loadMock = useCallback(() => {
     console.log('todoproject', todoproject);

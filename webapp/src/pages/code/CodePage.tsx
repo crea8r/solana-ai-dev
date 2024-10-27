@@ -43,7 +43,7 @@ const CodePage = () => {
     anchorInitCompleted: ${projectContext.details.isAnchorInit}
     filesAndCodesGenerated: ${projectContext.details.isCode}`;
     
-    console.log(log);
+    //console.log(log);
   }, [projectContext]);
 
   useEffect(() => {
@@ -103,22 +103,35 @@ const CodePage = () => {
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
 
-      const pollTaskCompletion = async () => {
+      const pollTaskCompletion = async (taskId: string) => {
         try {
           const taskResponse = await taskApi.getTask(taskId);
           const task = taskResponse.task;
           console.log('Task status:', task.status);
 
           if (task.status === 'finished' || task.status === 'succeed') {
-            console.log('Task finished, setting fileContent');
-            console.log('Task result:', task.result);
-            setFileContent(task.result || '');
+            console.log('Task finished successfully');
+            toast({
+              title: 'Task completed',
+              description: `The task has completed successfully. - ${task.result}`,
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
             setIsLoading(false);
           } else if (task.status === 'failed') {
-            console.error('Task failed');
+            console.error('Task failed:', task.result);
+            toast({
+              title: 'Task failed',
+              description: task.result || 'An error occurred during the task.', 
+              status: 'error',
+              duration: 5000,
+              isClosable: true,
+            });
             setIsLoading(false);
           } else {
-            setTimeout(pollTaskCompletion, 2000);
+
+            setTimeout(() => pollTaskCompletion(taskId), 2000);
           }
         } catch (error) {
           console.error('Error polling task status:', error);
@@ -126,7 +139,7 @@ const CodePage = () => {
         }
       };
 
-      pollTaskCompletion();
+      pollTaskCompletion(taskId);
     } catch (error) {
       console.error('Error starting file content retrieval task:', error);
       setIsLoading(false);
@@ -137,13 +150,54 @@ const CodePage = () => {
 
   console.log('Selected content:', selectedContent);
 
+  const startPollingTaskStatus = (taskId: string) => {
+    const intervalId = setInterval(async () => {
+      try {
+        const taskResponse = await taskApi.getTask(taskId);
+        const status = taskResponse.task.status;
+
+        if (status === 'finished' || status === 'succeed') {
+          clearInterval(intervalId);
+          toast({
+            title: 'Build complete',
+            description: `The Anchor build process has finished successfully. - ${taskResponse.task.result}`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+          console.log('Build complete:', taskResponse.task.result);
+        } else if (status === 'failed') {
+          clearInterval(intervalId);
+          toast({
+            title: 'Build failed',
+            description: `The Anchor build process encountered an error. - ${taskResponse.task.result}`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error('Build failed:', taskResponse.task.result);
+        }
+      } catch (error) {
+        clearInterval(intervalId);
+        console.error('Error polling task status:', error);
+        toast({
+          title: 'Polling error',
+          description: `An error occurred while checking the build status. - ${error}`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        console.error('Polling error:', error);
+      }
+    }, 5000); // Poll every 5 seconds
+  };
+
   const handleBuildProject = async () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
       console.log(`Starting build for project ID: ${projectId}`);
 
-      // Call the API helper function to start the build process
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
@@ -156,8 +210,7 @@ const CodePage = () => {
           isClosable: true,
         });
 
-        // Optionally, you could start polling the task status here using response.taskId
-        // e.g., startPollingTaskStatus(response.taskId);
+        startPollingTaskStatus(response.taskId);
       } else {
         console.error('Build initiation failed.');
         toast({

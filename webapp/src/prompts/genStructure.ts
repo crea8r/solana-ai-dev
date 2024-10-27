@@ -13,8 +13,9 @@ interface TextGeneratorOptions {
 
 const generateGeneralInstructions = (libraryVersion: string) => {
   return `
-    I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
+    I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
     --- File structure for the Anchor program ---
+    The root folder should include lib.rs for program initialization and module imports.
     Please structure the project into multiple files for ease of management.
     Account-related code should be in state.rs.
     Each instruction should be in its own file, grouped by groups of users.
@@ -22,12 +23,12 @@ const generateGeneralInstructions = (libraryVersion: string) => {
     Remember to add mod.rs in the folder and sub-folders in the instructions.
     The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
     --- Library ---
-    Use @coral-xyz/anchor for typescript test code.
+    Use @coral-xyz/anchor for TypeScript test code.
     Use Anchor version >= ${libraryVersion}
     --- The test ---
-    Write test cases using typescript for each of the functions. The test-case should use the SDK.
-    --- The ts SDK ---
-    The SDK should cover all instructions and function to get all accounts with filters.\n
+    Write test cases using TypeScript for each of the functions. The test case should use the SDK.
+    --- The TypeScript SDK ---
+    The SDK should cover all instructions and functions to get all accounts with filters.\n
     `;
 };
 
