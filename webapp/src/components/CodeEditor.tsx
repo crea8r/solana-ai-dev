@@ -4,7 +4,6 @@ import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from './FileTree';
 
-// Configure Monaco's environment for worker paths
 (window as any).MonacoEnvironment = {
   getWorkerUrl: function (moduleId: string, label: string) {
     const cdnBaseUrl = 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs';
@@ -17,15 +16,17 @@ import { FileTreeItemType } from './FileTree';
 };
 
 type CodeEditorProps = {
-  content: string; // Ensure content is a string
+  content: string; 
   language?: string;
   selectedFile?: FileTreeItemType;
+  terminalLogs: string[]; 
 };
 
 const CodeEditor = ({
   content,
   language = 'md',
   selectedFile,
+  terminalLogs,
 }: CodeEditorProps) => {
   const options = {
     selectOnLineNumbers: true,
@@ -37,7 +38,7 @@ const CodeEditor = ({
 
   useEffect(() => {
     monaco.editor.defineTheme('myCustomLightTheme', {
-      base: 'vs', // Use 'vs' for a light theme
+      base: 'vs',
       inherit: true,
       rules: [
         { token: 'comment', foreground: '008000', fontStyle: 'italic' },
@@ -49,7 +50,7 @@ const CodeEditor = ({
       ],
       colors: {
         'editor.foreground': '#000000',
-        'editor.background': '#FFFFFF', // Editor background color
+        'editor.background': '#FFFFFF',
         'editorCursor.foreground': '#000000',
         'editor.lineHighlightBackground': '#F0F0F0',
         'editorLineNumber.foreground': '#B0B0B0',
@@ -59,10 +60,10 @@ const CodeEditor = ({
   }, []);
 
   const determineLanguage = (path: string): string => {
-    if (path.endsWith('.ts')) return 'plaintext'; // Temporarily use 'plaintext' for testing
+    if (path.endsWith('.ts')) return 'plaintext'; 
     if (path.endsWith('.rs')) return 'rust';
     if (path.endsWith('.toml')) return 'toml';
-    return 'plaintext'; // Default fallback language
+    return 'plaintext';
   };
 
   useEffect(() => {
@@ -71,14 +72,13 @@ const CodeEditor = ({
       let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
       
       if (!model) {
-        // Use a language-based model without URI for .ts files to avoid issues with TypeScript workers
         model = monaco.editor.createModel(
           content,
           language === 'typescript' ? 'plaintext' : language
         );
         console.log(`Created new model with language: ${language}`);
       } else {
-        model.setValue(content); // Update existing model
+        model.setValue(content);
         console.log('Updated model for URI:', selectedFile.path);
       }
     }
@@ -94,23 +94,31 @@ const CodeEditor = ({
       <MonacoEditor
         key={selectedFile?.path || 'default'}
         width="100%"
-        height="80%"
-        language={determineLanguage(selectedFile?.path || '')}
+        height="500px" 
+        language={language}
         theme="myCustomLightTheme"
         value={content}
         options={options}
       />
       <Box
-        h='20%'
+        h='20%' 
+        maxH='20%' 
         bg='white'
-        color='black'
+        color='gray.900'
         p={2}
-        overflowY='auto'
+        overflowY='auto' 
         borderTop='1px solid'
         borderColor='gray.200'
         shadow='md'
       >
-        <Text>Terminal Output</Text>
+        <Text fontSize="md" fontWeight="bold" mb={2}>
+          Terminal Output
+        </Text>
+        {terminalLogs.map((log, index) => (
+          <Text key={index} fontSize="sm" whiteSpace="pre-wrap">
+            {log}
+          </Text>
+        ))}
       </Box>
     </Box>
   );

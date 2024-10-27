@@ -22,14 +22,18 @@ function getLanguage(fileName: string) {
 }
 
 const CodePage = () => {
-  const { projectContext, setProjectContext } = useProjectContext();
+  const { projectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
-  const toast = useToast();
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
+
+  const addLog = (message: string) => {
+    setTerminalLogs(prevLogs => [...prevLogs, message]);
+  };
 
   useEffect(() => {
     const log = `-- [CodePage] - useEffect --
@@ -97,8 +101,7 @@ const CodePage = () => {
     try {
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-
-      console.log(`Fetching content for file path: ${filePath}`);
+      addLog(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
@@ -107,48 +110,29 @@ const CodePage = () => {
         try {
           const taskResponse = await taskApi.getTask(taskId);
           const task = taskResponse.task;
-          console.log('Task status:', task.status);
+          addLog(`Task status: ${task.status}`);
 
           if (task.status === 'finished' || task.status === 'succeed') {
-            console.log('Task finished successfully');
-            toast({
-              title: 'Task completed',
-              description: `The task has completed successfully. - ${task.result}`,
-              status: 'success',
-              duration: 3000,
-              isClosable: true,
-            });
+            addLog(`Task completed successfully: ${task.result}`);
             setIsLoading(false);
           } else if (task.status === 'failed') {
-            console.error('Task failed:', task.result);
-            toast({
-              title: 'Task failed',
-              description: task.result || 'An error occurred during the task.', 
-              status: 'error',
-              duration: 5000,
-              isClosable: true,
-            });
+            addLog(`Task failed: ${task.result}`);
             setIsLoading(false);
           } else {
-
             setTimeout(() => pollTaskCompletion(taskId), 2000);
           }
         } catch (error) {
-          console.error('Error polling task status:', error);
+          addLog(`Error polling task status: ${error}`);
           setIsLoading(false);
         }
       };
 
       pollTaskCompletion(taskId);
     } catch (error) {
-      console.error('Error starting file content retrieval task:', error);
+      addLog(`Error starting file content retrieval task: ${error}`);
       setIsLoading(false);
     }
   };
-
-  const selectedContent = selectedFile ? fileContent : 'Empty file';
-
-  console.log('Selected content:', selectedContent);
 
   const startPollingTaskStatus = (taskId: string) => {
     const intervalId = setInterval(async () => {
@@ -158,78 +142,34 @@ const CodePage = () => {
 
         if (status === 'finished' || status === 'succeed') {
           clearInterval(intervalId);
-          toast({
-            title: 'Build complete',
-            description: `The Anchor build process has finished successfully. - ${taskResponse.task.result}`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
-          console.log('Build complete:', taskResponse.task.result);
+          addLog(`Build complete: ${taskResponse.task.result}`);
         } else if (status === 'failed') {
           clearInterval(intervalId);
-          toast({
-            title: 'Build failed',
-            description: `The Anchor build process encountered an error. - ${taskResponse.task.result}`,
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
-          console.error('Build failed:', taskResponse.task.result);
+          addLog(`Build failed: ${taskResponse.task.result}`);
         }
       } catch (error) {
         clearInterval(intervalId);
-        console.error('Error polling task status:', error);
-        toast({
-          title: 'Polling error',
-          description: `An error occurred while checking the build status. - ${error}`,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        console.error('Polling error:', error);
+        addLog(`Polling error: ${error}`);
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000);
   };
 
   const handleBuildProject = async () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      console.log(`Starting build for project ID: ${projectId}`);
+      addLog(`Starting build for project ID: ${projectId}`);
 
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
-        console.log('Build process initiated. Task ID:', response.taskId);
-        toast({
-          title: 'Build started',
-          description: 'The Anchor build process has started.',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-
+        addLog(`Build process initiated. Task ID: ${response.taskId}`);
         startPollingTaskStatus(response.taskId);
       } else {
-        console.error('Build initiation failed.');
-        toast({
-          title: 'Build failed',
-          description: 'Failed to start the Anchor build process.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        addLog('Build initiation failed.');
       }
     } catch (error) {
-      console.error('Error during project build:', error);
-      toast({
-        title: 'Error',
-        description: 'An error occurred while starting the build process.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      addLog(`Error during project build: ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -240,17 +180,14 @@ const CodePage = () => {
       <TopPanel onBuild={handleBuildProject} />
       <Flex h='100vh'>
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
-          <FileTree
-            onSelectFile={handleSelectFile}
-            files={files}
-            selectedItem={selectedFile}
-          />
+          <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
         <Box flex={1}>
           <CodeEditor
-            content={selectedContent}
+            content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
             language={getLanguage(selectedFile?.name || '')}
+            terminalLogs={terminalLogs}
           />
         </Box>
         <Box w={'400px'} borderLeft='1px' borderColor='gray.200'>
