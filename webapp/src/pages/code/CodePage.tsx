@@ -40,7 +40,7 @@ const CodePage = () => {
     projectContext updated: 
     Project Id: ${projectContext.id}
     Root Path: ${projectContext.rootPath}
-    Name: ${projectContext.name}
+    Name: ${projectContext.name}git
     Description: ${projectContext.description}  
     nodes: ${projectContext.details.nodes.length}
     edges: ${projectContext.details.edges.length}
@@ -114,6 +114,7 @@ const CodePage = () => {
 
           if (task.status === 'finished' || task.status === 'succeed') {
             addLog(`Task completed successfully: ${task.result}`);
+            setFileContent(task.result || '');
             setIsLoading(false);
           } else if (task.status === 'failed') {
             addLog(`Task failed: ${task.result}`);

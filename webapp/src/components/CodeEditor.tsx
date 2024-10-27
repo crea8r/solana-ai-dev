@@ -4,17 +4,6 @@ import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from './FileTree';
 
-(window as any).MonacoEnvironment = {
-  getWorkerUrl: function (moduleId: string, label: string) {
-    const cdnBaseUrl = 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs';
-    if (label === 'json') return `${cdnBaseUrl}/language/json/json.worker.js`;
-    if (label === 'css') return `${cdnBaseUrl}/language/css/css.worker.js`;
-    if (label === 'html') return `${cdnBaseUrl}/language/html/html.worker.js`;
-    if (label === 'typescript' || label === 'javascript') return `${cdnBaseUrl}/language/typescript/ts.worker.js`;
-    return `${cdnBaseUrl}/editor/editor.worker.js`;
-  },
-};
-
 type CodeEditorProps = {
   content: string; 
   language?: string;
@@ -24,7 +13,7 @@ type CodeEditorProps = {
 
 const CodeEditor = ({
   content,
-  language = 'md',
+  language = 'javascript',  // Default to a supported language
   selectedFile,
   terminalLogs,
 }: CodeEditorProps) => {
@@ -32,11 +21,11 @@ const CodeEditor = ({
     selectOnLineNumbers: true,
     roundedSelection: false,
     readOnly: false,
-    cursorStyle: 'line' as 'line',
+    cursorStyle: 'line' as const,
     automaticLayout: true,
   };
 
-  useEffect(() => {
+  const editorDidMount = (editor: any, monaco: any) => {
     monaco.editor.defineTheme('myCustomLightTheme', {
       base: 'vs',
       inherit: true,
@@ -57,10 +46,10 @@ const CodeEditor = ({
       },
     });
     monaco.editor.setTheme('myCustomLightTheme');
-  }, []);
+  };
 
   const determineLanguage = (path: string): string => {
-    if (path.endsWith('.ts')) return 'plaintext'; 
+    if (path.endsWith('.ts')) return 'typescript';
     if (path.endsWith('.rs')) return 'rust';
     if (path.endsWith('.toml')) return 'toml';
     return 'plaintext';
@@ -72,10 +61,7 @@ const CodeEditor = ({
       let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
       
       if (!model) {
-        model = monaco.editor.createModel(
-          content,
-          language === 'typescript' ? 'plaintext' : language
-        );
+        model = monaco.editor.createModel(content, language);
         console.log(`Created new model with language: ${language}`);
       } else {
         model.setValue(content);
@@ -99,6 +85,7 @@ const CodeEditor = ({
         theme="myCustomLightTheme"
         value={content}
         options={options}
+        editorDidMount={editorDidMount}
       />
       <Box
         h='20%' 
