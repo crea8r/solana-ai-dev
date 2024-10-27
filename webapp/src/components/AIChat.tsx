@@ -35,7 +35,7 @@ const AIChat = () => {
   };
 
   return (
-    <VStack h='100%' spacing={4}>
+    <VStack h='100vh' spacing={4}>
       <Box
         flex={1}
         w='100%'

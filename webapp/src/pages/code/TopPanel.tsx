@@ -16,14 +16,15 @@ interface TopPanelProps {
 const TopPanel: React.FC<TopPanelProps> = ({ onBuild }) => {
   return (
     <Flex
+      height='10vh'
       as="header"
       borderBottom="1px solid"
       borderColor="gray.200"
       justifyContent="space-between"
       alignItems="center"
-      height="14"
       px={4}
-      shadow="md"
+      py={2}
+      shadow="sm"
     >
       <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center">
         <Menu>

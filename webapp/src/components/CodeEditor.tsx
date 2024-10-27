@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { useRef, useEffect } from 'react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from './FileTree';
+import Terminal from './Terminal';
 
 type CodeEditorProps = {
   content: string; 
@@ -13,10 +14,12 @@ type CodeEditorProps = {
 
 const CodeEditor = ({
   content,
-  language = 'javascript',  // Default to a supported language
+  language = 'javascript',
   selectedFile,
   terminalLogs,
 }: CodeEditorProps) => {
+  const editorRef = useRef<any>(null);
+
   const options = {
     selectOnLineNumbers: true,
     roundedSelection: false,
@@ -26,6 +29,8 @@ const CodeEditor = ({
   };
 
   const editorDidMount = (editor: any, monaco: any) => {
+    editorRef.current = editor;
+
     monaco.editor.defineTheme('myCustomLightTheme', {
       base: 'vs',
       inherit: true,
@@ -56,6 +61,31 @@ const CodeEditor = ({
   };
 
   useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (editorRef.current && typeof editorRef.current.layout === 'function') {
+          editorRef.current.layout();
+        }
+      }, 100); // Adjust the timeout as necessary
+    };
+
+    const observer = new ResizeObserver(handleResize);
+
+    const editorContainer = editorRef.current?.domNode?.parentNode;
+    if (editorContainer) {
+      observer.observe(editorContainer);
+    }
+
+    return () => {
+      clearTimeout(resizeTimeout);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     if (selectedFile?.path && content) {
       const language = determineLanguage(selectedFile.path);
       let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
@@ -71,43 +101,27 @@ const CodeEditor = ({
   }, [selectedFile, content]);
 
   return (
-    <Box h='100%'>
+    <Flex direction='column' height='100%' overflowY='hidden'>
       {selectedFile ? (
         <Box py={1} px={2} borderBottom={'1px solid #ccc'}>
           {selectedFile.path}
         </Box>
       ) : null}
-      <MonacoEditor
-        key={selectedFile?.path || 'default'}
-        width="100%"
-        height="500px" 
-        language={language}
-        theme="myCustomLightTheme"
-        value={content}
-        options={options}
-        editorDidMount={editorDidMount}
-      />
-      <Box
-        h='20%' 
-        maxH='20%' 
-        bg='white'
-        color='gray.900'
-        p={2}
-        overflowY='auto' 
-        borderTop='1px solid'
-        borderColor='gray.200'
-        shadow='md'
-      >
-        <Text fontSize="md" fontWeight="bold" mb={2}>
-          Terminal Output
-        </Text>
-        {terminalLogs.map((log, index) => (
-          <Text key={index} fontSize="sm" whiteSpace="pre-wrap">
-            {log}
-          </Text>
-        ))}
+      
+      <Box maxHeight='100vh'>
+        <MonacoEditor
+          height='60vh'
+          width='100%'
+          key={selectedFile?.path || 'default'}
+          language={language}
+          theme="myCustomLightTheme"
+          value={content}
+          options={options}
+          editorDidMount={editorDidMount}
+        />
+        <Terminal logs={terminalLogs} />
       </Box>
-    </Box>
+    </Flex>
   );
 };
 

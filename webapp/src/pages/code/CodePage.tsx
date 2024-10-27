@@ -31,8 +31,11 @@ const CodePage = () => {
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
-  const addLog = (message: string) => {
-    setTerminalLogs(prevLogs => [...prevLogs, message]);
+  const addLog = (message: string, isBuildLog = false) => {
+    if (isBuildLog) {
+      setTerminalLogs(prevLogs => [...prevLogs, message]);
+    }
+    console.log(message); // Keep general logging for debugging if needed
   };
 
   useEffect(() => {
@@ -101,7 +104,7 @@ const CodePage = () => {
     try {
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-      addLog(`Fetching content for file: ${filePath}`);
+      console.log(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
@@ -110,27 +113,22 @@ const CodePage = () => {
         try {
           const taskResponse = await taskApi.getTask(taskId);
           const task = taskResponse.task;
-          addLog(`Task status: ${task.status}`);
 
           if (task.status === 'finished' || task.status === 'succeed') {
-            addLog(`Task completed successfully: ${task.result}`);
             setFileContent(task.result || '');
             setIsLoading(false);
           } else if (task.status === 'failed') {
-            addLog(`Task failed: ${task.result}`);
             setIsLoading(false);
           } else {
             setTimeout(() => pollTaskCompletion(taskId), 2000);
           }
         } catch (error) {
-          addLog(`Error polling task status: ${error}`);
           setIsLoading(false);
         }
       };
 
       pollTaskCompletion(taskId);
     } catch (error) {
-      addLog(`Error starting file content retrieval task: ${error}`);
       setIsLoading(false);
     }
   };
@@ -143,14 +141,14 @@ const CodePage = () => {
 
         if (status === 'finished' || status === 'succeed') {
           clearInterval(intervalId);
-          addLog(`Build complete: ${taskResponse.task.result}`);
+          addLog(`Build complete: ${taskResponse.task.result}`, true);
         } else if (status === 'failed') {
           clearInterval(intervalId);
-          addLog(`Build failed: ${taskResponse.task.result}`);
+          addLog(`Build failed: ${taskResponse.task.result}`, true);
         }
       } catch (error) {
         clearInterval(intervalId);
-        addLog(`Polling error: ${error}`);
+        addLog(`Polling error: ${error}`, true);
       }
     }, 5000);
   };
@@ -159,18 +157,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting build for project ID: ${projectId}`);
+      addLog(`Starting build for project ID: ${projectId}`, true);
 
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
-        addLog(`Build process initiated. Task ID: ${response.taskId}`);
+        addLog(`Build process initiated. Task ID: ${response.taskId}`, true);
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Build initiation failed.');
+        addLog('Build initiation failed.', true);
       }
     } catch (error) {
-      addLog(`Error during project build: ${error}`);
+      addLog(`Error during project build: ${error}`, true);
     } finally {
       setIsLoading(false);
     }
@@ -179,11 +177,11 @@ const CodePage = () => {
   return (
     <Flex direction='column' height='100vh'>
       <TopPanel onBuild={handleBuildProject} />
-      <Flex h='100vh'>
+      <Flex height='100%'>
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
-        <Box flex={1}>
+        <Box flex={1} maxHeight='100vh' boxSizing='border-box' overflow='auto'>
           <CodeEditor
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
@@ -191,7 +189,7 @@ const CodePage = () => {
             terminalLogs={terminalLogs}
           />
         </Box>
-        <Box w={'400px'} borderLeft='1px' borderColor='gray.200'>
+        <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
           <AIChat />
         </Box>
       </Flex>
