@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Flex, useToast } from '@chakra-ui/react';
+import { Box, Flex, useToast, Button, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
@@ -210,8 +210,14 @@ const CodePage = () => {
     }
   };
 
+  // Function to clear the file context
+  const closeFileContext = () => {
+    setSelectedFile(undefined);
+    setFileContent('');
+  };
+
   return (
-    <Flex direction='column' height='100vh'>
+    <Flex direction='column' height='100%' margin='0' overflow='hidden'>
       <TopPanel 
         onBuild={handleBuildProject}
         onSave={handleSave}
@@ -230,9 +236,12 @@ const CodePage = () => {
             onChange={handleContentChange}
           />
         </Box>
-        {/* <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
-          <AIChat />
-        </Box> */}
+        <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
+          <AIChat selectedFile={selectedFile} fileContent={fileContent} onClearSelectedFile={closeFileContext} onSelectFile={() => {
+            // Open file selection menu on button click in AIChat
+            // This would trigger the list menu logic in CodePage, connecting it to AIChat
+          }} />
+        </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
     </Flex>

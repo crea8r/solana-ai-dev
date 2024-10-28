@@ -62,3 +62,49 @@ export const generateAIResponse = async (
     }
   }
 };
+
+export const handleAIChat = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { message, fileContext } = req.body;
+
+  const chatMessages = [
+    {
+      role: 'user',
+      content: `User is asking about file ${fileContext?.path || 'an unspecified file'}.\n\nFile Content:\n${fileContext?.content || 'No content available'}\n\nQuestion:\n${message}`,
+    },
+  ];
+
+  try {
+    const response = await fetch(MISTRAL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${MISTRAL_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'codestral-latest',
+        temperature: 0.2,
+        messages: chatMessages,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new AppError(
+        `AI API error: ${errorData.error || response.statusText}`,
+        response.status
+      );
+    }
+
+    const data = await response.json();
+    res.status(200).json({
+      response: data.choices[0].message.content,
+    });
+  } catch (error) {
+    next(new AppError('Failed to generate AI chat response', 500));
+  }
+};
