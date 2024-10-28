@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
 import { FileTreeItemType } from '../components/FileTree';
+import { chatAI } from '../services/prompt'; 
 
 export interface AIMessageType {
   text: string;
@@ -29,25 +30,27 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onClearSelec
       setInput('');
 
       try {
-        const response = await fetch('/api/aiChat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: input,
-            fileContext: selectedFile ? { path: selectedFile.path, content: fileContent } : null,
-          }),
-        });
+        const messageWithContext = `User's Question: ${input}`;
         
-        const data = await response.json();
+        const fileContext = selectedFile && selectedFile.path !== undefined
+          ? { path: selectedFile.path, content: fileContent }
+          : undefined;
+
+        const response = await chatAI(messageWithContext, fileContext);
+
         setMessages((messages) => [
           ...messages,
           {
-            text: data.response, 
+            text: response,
             sender: 'ai',
           },
         ]);
       } catch (error) {
         console.error('Failed to send message to AI:', error);
+        setMessages((messages) => [
+          ...messages,
+          { text: 'Failed to get a response from AI.', sender: 'ai' },
+        ]);
       }
     }
   };
@@ -66,7 +69,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onClearSelec
         <Button
           size="sm"
           variant="ghost"
-          onClick={onSelectFile}  // Trigger file selection
+          onClick={onSelectFile}
           m={0}
           p={1}
           borderRadius="sm"

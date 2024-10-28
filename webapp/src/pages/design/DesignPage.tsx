@@ -20,7 +20,7 @@ import WalkthroughDialog from '../../components/WalkthroughDialog';
 import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
-import promptAI from '../../services/prompt';
+import { promptAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../components/FileTree';
 import { saveProject } from '../../utils/projectUtils';

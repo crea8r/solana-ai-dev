@@ -4,7 +4,7 @@ import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree, { FileTreeItemType } from '../../components/FileTree';
 import genFile from '../../prompts/genFile';
-import promptAI from '../../services/prompt';
+import { promptAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { useProjectContext } from '../../contexts/ProjectContext';
@@ -210,7 +210,6 @@ const CodePage = () => {
     }
   };
 
-  // Function to clear the file context
   const closeFileContext = () => {
     setSelectedFile(undefined);
     setFileContent('');

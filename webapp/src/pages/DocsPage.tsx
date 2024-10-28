@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 //import { genDocs } from '../prompts/genDocs';
-import promptAI from '../services/prompt';
+import { promptAI } from '../services/prompt';
 import { useProjectContext } from '../contexts/ProjectContext';
 import {
   FileText,

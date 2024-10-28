@@ -77,6 +77,8 @@ export const handleAIChat = async (
     },
   ];
 
+  console.log('chatMessages: ', chatMessages);
+
   try {
     const response = await fetch(MISTRAL_API_URL, {
       method: 'POST',

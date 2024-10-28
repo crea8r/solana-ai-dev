@@ -7,7 +7,7 @@ import { taskApi } from '../../api/task';
 import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
-import promptAI from "../../services/prompt";
+import { promptAI } from "../../services/prompt";
 import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
