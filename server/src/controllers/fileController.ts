@@ -342,3 +342,40 @@ export const deleteDirectory = async (
     }
   }
 };
+
+export const renameDirectory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
+
+  const { rootPath, newDirName } = req.body;
+  if (!rootPath || !newDirName) return next(new AppError('Missing required parameters', 400));
+
+  const rootFolder = process.env.ROOT_FOLDER;
+  if (!rootFolder) return next(new AppError('Root folder not configured', 500));
+
+  const oldPath = path.join(rootFolder, rootPath, 'programs', rootPath);
+  const newPath = path.join(rootFolder, rootPath, 'programs', newDirName);
+
+  try {
+    await fs.access(newPath).catch((err) => { if (err.code !== 'ENOENT') throw err; });
+
+    await fs.rename(oldPath, newPath);
+
+    res.status(200).json({
+      message: 'Directory renamed successfully',
+      newDirName,
+    });
+  } catch (error) {
+    console.error('Error renaming directory:', error);
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      next(new AppError('Directory not found', 404));
+    } else {
+      next(new AppError('Failed to rename directory', 500));
+    }
+  }
+};

@@ -15,8 +15,11 @@ const generateGeneralInstructions = (libraryVersion: string) => {
   return `
     I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
     --- File structure for the Anchor program ---
-    The root folder should include lib.rs for program initialization and module imports.
-    Please structure the project into multiple files for ease of management.
+    The root folder should include:
+    - Cargo.toml: This file should define the workspace and include all program members.
+    Each program should have its own directory (e.g., programs/subscription_service) that includes:
+    - Cargo.toml: specific to that program to manage dependencies.
+    - src/lib.rs: with the main logic for the program.
     Account-related code should be in state.rs.
     Each instruction should be in its own file, grouped by groups of users.
     The function inside the file should be run_[the name of the file].

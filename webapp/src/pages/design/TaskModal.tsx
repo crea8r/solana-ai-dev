@@ -43,20 +43,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const [existingDirectory, setExistingDirectory] = useState(false);
 
     useEffect(() => {
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task.id === 2 ? { ...task, status: 'completed' } : task
-            )
-        );
-    }, [projectContext.details.isCode == true]);
-    
-
-    useEffect(() => {
         if (projectContext) {
             setContextReady(true);
         }
         console.log('contextReady', contextReady);
-      //  console.log(`[TaskModal] context ready: ${contextReady} projectContext:`, projectContext);
+        console.log('projectContext', projectContext);
     }, [projectContext]);
 
     useEffect(() => {
@@ -120,31 +111,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
         }
     }, [genCodeTaskRun]);
 
-    useEffect(() => {
-
-    }, [genCodeTaskRun]);
-
-    function convertFileTreeNodeToItem(node: FileTreeNode): FileTreeItemType {
-        const item: FileTreeItemType = {
-            name: node.name,
-            type: node.type,
-            path: node.path,
-            children: node.children ? node.children.map(convertFileTreeNodeToItem) : undefined,
-        };
-
-        if (node.type === 'file' && node.name.includes('.')) {
-            item.ext = node.name.split('.').pop();
-        }
-
-        return item;
-    }
-
-    const isTaskCompleted = (taskStatus: TaskStatus) => {
-        return taskStatus === 'completed';
-    };
-
     const runTasksSequentially = async () => {
-        if (!projectContext) { console.error("Project contextnot available."); return;}
+        if (!projectContext) { 
+            console.error("Project context not available."); 
+            return;
+        }
 
         const { id: projectId, rootPath, name: projectName } = projectContext;
 
@@ -201,6 +172,243 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             setGenCodeTaskRun(true);
         } else {
             console.log('Files and codes have already been generated or the task has already run.');
+        }
+    };
+
+    const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
+        // If files and codes are already generated, skip this task
+        if (projectContext.details.isCode) {
+            console.log('Files and codes have already been generated.');
+            return;
+        }
+
+        // If project ID is missing, log an error and exit
+        if (!projectId) {
+            console.error('Project ID is undefined');
+            return;
+        }
+
+        // If nodes or edges are missing, log an error and exit
+        if (projectContext.details.nodes.length === 0 || projectContext.details.edges.length === 0) {
+            console.error('Nodes or edges are missing in saved project details.');
+            return;
+        }
+
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task.id === 2 ? { ...task, status: 'loading' } : task
+            )
+        );
+
+        const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
+        const choices = await promptAI(structurePrompt);
+
+        try {
+            if (choices && choices.length > 0) {
+                const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
+
+                setFileTreePaths(files);
+                const aiFilePaths = getFileList(files).map(file => file.path).filter(Boolean) as string[];
+
+                const aiGeneratedProgramDirs = aiFilePaths
+                    .filter(path => path.includes('/programs/'))
+                    .map(path => path.split('/').find((segment, index, array) => array[index - 1] === 'programs'));
+                const aiProgramDirectoryName = aiGeneratedProgramDirs[0];
+                console.log('aiFilePaths', aiFilePaths);
+                console.log('aiGeneratedProgramDirs', aiGeneratedProgramDirs);
+                console.log('aiProgramDirectoryName', aiProgramDirectoryName);
+
+                if (!rootPath || !aiProgramDirectoryName) {
+                    console.log('aiProgramDirectoryName', aiProgramDirectoryName);
+                    console.error('rootPath or aiProgramDirectoryName is undefined');
+                    return;
+                }
+                const response = await fileApi.renameDirectory(rootPath, aiProgramDirectoryName);
+                console.log('response', response);
+
+                setProjectContext((prevContext) => ({
+                    ...prevContext,
+                    details: {
+                        ...prevContext.details,
+                        aiFilePaths,
+                    }
+                }));
+
+                const updatedFileList = getFileList(files).map(file => {
+                    const updatedPath = file.path.split('/').slice(1).join('/');
+                    return { ...file, path: updatedPath, name: file.name };
+                }).filter(file => file.path);
+
+                const uniqueFileMap = new Map(updatedFileList.map(file => [file.path, file]));
+                const uniqueFileList = Array.from(uniqueFileMap.values());
+                let nextId = 3;
+                const processedFilesSet = new Set(projectContext.details.codes?.map((code) => code.path) || []);
+
+                const fileTasks = uniqueFileList
+                    .filter(({ path }) => !processedFilesSet.has(path || ''))
+                    .map(({ name, path }) => ({
+                        id: nextId++,
+                        name,
+                        path,
+                        status: 'loading',
+                        type: 'file',
+                    } as Task));
+
+                console.log("Final file tasks to be set:", fileTasks);
+
+                setTasks((prevTasks) => {
+                    const mainTasks = prevTasks.filter((task) => task.type !== 'file');
+                    return [...mainTasks, ...fileTasks];
+                });
+
+                if (!projectName || !rootPath) {
+                    console.error('(handleGenCodesTask) Project name or root path is missing.');
+                    return;
+                }
+
+                // Check existing files on the server
+                const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
+                if (!existingFilesResponse) {
+                    console.error('Existing files not found');
+                    return;
+                }
+
+                const existingFilePaths = new Set<string>();
+                const traverseFileTree = (nodes: FileTreeNode[]) => {
+                    for (const node of nodes) {
+                        if (node.type === 'file' && node.path) {
+                            existingFilePaths.add(node.path);
+                        } else if (node.type === 'directory' && node.children) {
+                            traverseFileTree(node.children);
+                        }
+                    }
+                };
+                traverseFileTree(existingFilesResponse);
+
+                //const configFiles = ['Cargo.toml', 'Anchor.toml', '.gitignore'];
+
+                // Process each file task
+                for (const fileTask of fileTasks) {
+                    if (processedFilesSet.has(fileTask.path || '')) {
+                        continue;
+                    }
+
+                    setTasks((prevTasks) =>
+                        prevTasks.map((task) =>
+                            task.id === fileTask.id ? { ...task, status: 'loading' } : task
+                        )
+                    );
+
+                    try {
+                        const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
+                        const fileName = fileTask.name;
+                        const filePath = fileTask.path;
+
+                        /*
+                        if (configFiles.includes(fileName)) {
+                            console.log(`Skipping config file: ${fileName}`);
+                            setTasks((prevTasks) =>
+                                prevTasks.map((task) =>
+                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                )
+                            );
+                            continue;
+                        }
+                            */
+
+                        const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
+                        const fileChoices = await promptAI(promptContent);
+
+                        if (fileChoices && fileChoices.length > 0) {
+                            const aiContent = fileChoices[0].message?.content;
+                            const codeContent = extractCodeBlock(aiContent);
+
+                            // Check and replace 'Anchor Program' with 'programs' in the file path
+                            const updatedFilePath = filePath?.startsWith('Anchor Program/')
+                                ? filePath.replace('Anchor Program/', 'programs/')
+                                : filePath;
+
+                            if (existingFilePaths.has(updatedFilePath || '')) {
+                                await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
+                                console.log(`Updated existing file: ${updatedFilePath}`);
+                            } else {
+                                await fileApi.createFile(projectId, updatedFilePath || '', codeContent);
+                                console.log(`Created new file: ${updatedFilePath}`);
+                            }
+
+                            // Update project context with the new code
+                            setProjectContext((prevProjectContext) => ({
+                                ...prevProjectContext,
+                                details: {
+                                    ...prevProjectContext.details,
+                                    codes: [
+                                        ...(prevProjectContext.details.codes || []),
+                                        { name: fileName || '', path: updatedFilePath || '', content: codeContent },
+                                    ],
+                                },
+                            }));
+
+                            // Update task status to completed
+                            setTasks((prevTasks) =>
+                                prevTasks.map((task) =>
+                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
+                                )
+                            );
+
+                            // Mark the file as processed
+                            if (fileTask.path) {
+                                processedFilesSet.add(fileTask.path);
+                            } else {
+                                throw new Error('File path is undefined');
+                            }
+                        } else {
+                            throw new Error('No AI response for file generation');
+                        }
+                    } catch (error) {
+                        console.error('Error generating file content for', fileTask.name, error);
+                        setTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task.id === fileTask.id ? { ...task, status: 'failed' } : task
+                            )
+                        );
+                    }
+                }
+
+                // Update the Generate Files task to completed
+                setTasks((prevTasks) =>
+                    prevTasks.map((task) =>
+                        task.id === 2 ? { ...task, status: 'completed' } : task
+                    )
+                );
+
+                // Update project context to indicate that code generation is complete
+                setProjectContext((prevProjectContext) => ({
+                    ...prevProjectContext,
+                    details: {
+                        ...prevProjectContext.details,
+                        isCode: true,
+                    },
+                }));
+
+                // Update project info to save
+                setProjectInfoToSave((prevInfo) => ({
+                    ...prevInfo,
+                    details: {
+                      ...prevInfo.details,
+                      isAnchorInit: true,
+                      isCode: true,
+                    },
+                  }));
+            } else {
+                throw new Error('No AI response for structure generation');
+            }
+        } catch (error) {
+            console.error('Error generating files:', error);
+            setTasks((prevTasks) =>
+                prevTasks.map((task) =>
+                    task.id === 2 ? { ...task, status: 'failed' } : task
+                )
+            );
         }
     };
 
@@ -286,221 +494,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                 }
             }, 2000);
         });
-    };
-
-    const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
-        // if files and codes are already generated, skip this task
-        if (projectContext.details.isCode) {console.log('Files and codes have already been generated.'); return;}
-        // if project ID is missing, throw an error
-        if (!projectId) {console.error('Project ID is undefined'); return;}
-        // if nodes or edges are missing, throw an error
-        if (projectContext.details.nodes.length === 0 || projectContext.details.edges.length === 0) {
-            console.error('Nodes or edges are missing in saved project details.');
-            return;
-        }
-
-        // set the task status to loading
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task.id === 2 ? { ...task, status: 'loading' } : task
-            )
-        );
-
-        // generate the structure prompt - to generate the file structure
-        const structurePrompt = genStructure(projectContext.details.nodes, projectContext.details.edges);
-        const choices = await promptAI(structurePrompt);
-
-        try {
-            if (choices && choices.length > 0) {
-                const files = JSON.parse(choices[0].message?.content) as FileTreeItemType;
-
-                // set the file tree paths
-                setFileTreePaths(files);
-
-                // Store ai-generated file paths in `aiFilePaths`
-                const aiFilePaths = getFileList(files).map(file => file.path);
-                setProjectContext((prevContext) => ({
-                    ...prevContext,
-                    details: {
-                        ...prevContext.details,
-                        aiFilePaths,
-                    }
-                }));
-
-                // Update file paths to correct the root directory
-                const updatedFileList = getFileList(files).map(file => {
-                    const updatedPath = file.path.split('/').slice(1).join('/');
-                    return { ...file, path: updatedPath, name: file.name };
-                });
-                console.log('updatedFileList', updatedFileList);
-
-                // Deduplicate `updatedFileList` by path to ensure unique entries
-                const uniqueFileMap = new Map(updatedFileList.map(file => [file.path, file]));
-                const uniqueFileList = Array.from(uniqueFileMap.values());
-
-                console.log("Deduplicated updatedFileList:", uniqueFileList);
-
-                // Initialize the next ID for file tasks
-                let nextId = 3;
-
-                // Create a set of processed file paths
-                const processedFiles = new Set(projectContext.details.codes?.map((code) => code.path) || []);
-
-                const fileTasks = uniqueFileList
-                    .filter(({ path }) => !processedFiles.has(path)) 
-                    .map(({ name, path }) => ({
-                        id: nextId++,
-                        name,
-                        path,
-                        status: 'loading',
-                        type: 'file',
-                    } as Task));
-
-                console.log("Final file tasks to be set:", fileTasks);
-
-                setTasks((prevTasks) => {
-                    const mainTasks = prevTasks.filter((task) => task.type !== 'file');
-                    return [...mainTasks, ...fileTasks];
-                });
-
-                if (!projectName || !rootPath) {
-                    console.error('(handleGenCodesTask) Project name or root path is missing.');
-                    return;
-                }
-
-                const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
-                if (!existingFilesResponse) {
-                    console.error('Existing files not found');
-                    return;
-                }
-
-                const existingFilePaths = new Set<string>();
-                const traverseFileTree = (nodes: FileTreeNode[]) => {
-                    for (const node of nodes) {
-                        if (node.type === 'file' && node.path) {
-                            existingFilePaths.add(node.path);
-                        } else if (node.type === 'directory' && node.children) {
-                            traverseFileTree(node.children);
-                        }
-                    }
-                };
-                traverseFileTree(existingFilesResponse);
-
-                const configFiles = ['Cargo.toml', 'Anchor.toml', '.gitignore'];
-
-                for (const fileTask of fileTasks) {
-                    if (processedFiles.has(fileTask.path || '')) {
-                        continue;
-                    }
-
-                    setTasks((prevTasks) =>
-                        prevTasks.map((task) =>
-                            task.id === fileTask.id ? { ...task, status: 'loading' } : task
-                        )
-                    );
-
-                    try {
-                        const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
-                        const fileName = fileTask.name;
-                        const filePath = fileTask.path;
-
-                        if (configFiles.includes(fileName)) {
-                            console.log(`Skipping config file: ${fileName}`);
-                            setTasks((prevTasks) =>
-                                prevTasks.map((task) =>
-                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
-                                )
-                            );
-                            continue;
-                        }
-
-                        const promptContent = genFiles(nodes, edges, fileName || '', filePath || '');
-                        const fileChoices = await promptAI(promptContent);
-
-                        if (fileChoices && fileChoices.length > 0) {
-                            const aiContent = fileChoices[0].message?.content;
-                            const codeContent = extractCodeBlock(aiContent);
-
-                            // Check and replace 'Anchor Program' with 'programs' in the file path
-                            const updatedFilePath = filePath?.startsWith('Anchor Program/')
-                                ? filePath.replace('Anchor Program/', 'programs/')
-                                : filePath;
-
-                            if (existingFilePaths.has(updatedFilePath || '')) {
-                                await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
-                                console.log(`Updated existing file: ${updatedFilePath}`);
-                            } else {
-                                await fileApi.createFile(projectId, updatedFilePath || '', codeContent);
-                                console.log(`Created new file: ${updatedFilePath}`);
-                            }
-
-                            setProjectContext((prevProjectContext) => ({
-                                ...prevProjectContext,
-                                details: {
-                                    ...prevProjectContext.details,
-                                    codes: [
-                                        ...(prevProjectContext.details.codes || []),
-                                        { name: fileName || '', path: updatedFilePath || '', content: '' },
-                                    ],
-                                },
-                            }));
-
-                            setTasks((prevTasks) =>
-                                prevTasks.map((task) =>
-                                    task.id === fileTask.id ? { ...task, status: 'completed' } : task
-                                )
-                            );
-                            if (fileTask.path) {
-                                processedFiles.add(fileTask.path);
-                            } else {
-                                throw new Error('File path is undefined');
-                            }
-                        } else {
-                            throw new Error('No AI response for file generation');
-                        }
-                    } catch (error) {
-                        console.error('Error generating file content for', fileTask.name, error);
-                        setTasks((prevTasks) =>
-                            prevTasks.map((task) =>
-                                task.id === fileTask.id ? { ...task, status: 'failed' } : task
-                            )
-                        );
-                    }
-                }
-
-                setTasks((prevTasks) =>
-                    prevTasks.map((task) =>
-                        task.id === 2 ? { ...task, status: 'completed' } : task
-                    )
-                );
-
-                setProjectContext((prevProjectContext) => ({
-                    ...prevProjectContext,
-                    details: {
-                        ...prevProjectContext.details,
-                        isCode: true,
-                    },
-                }));
-
-                setProjectInfoToSave((prevInfo) => ({
-                    ...prevInfo,
-                    details: {
-                      ...prevInfo.details,
-                      isAnchorInit: true,
-                      isCode: true,
-                    },
-                  }));
-            } else {
-                throw new Error('No AI response for structure generation');
-            }
-        } catch (error) {
-            console.error('Error generating files:', error);
-            setTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === 2 ? { ...task, status: 'failed' } : task
-                )
-            );
-        }
     };
 
     const handleRegenerate = async () => {
@@ -651,4 +644,3 @@ function StatusSymbol({ status }: { status: TaskStatus }) {
         />
     );
 }
-

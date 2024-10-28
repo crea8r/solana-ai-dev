@@ -35,22 +35,11 @@ const CodePage = () => {
     if (isBuildLog) {
       setTerminalLogs(prevLogs => [...prevLogs, message]);
     }
-    console.log(message); // Keep general logging for debugging if needed
+   // console.log(message);
   };
 
   useEffect(() => {
-    const log = `-- [CodePage] - useEffect --
-    projectContext updated: 
-    Project Id: ${projectContext.id}
-    Root Path: ${projectContext.rootPath}
-    Name: ${projectContext.name}git
-    Description: ${projectContext.description}  
-    nodes: ${projectContext.details.nodes.length}
-    edges: ${projectContext.details.edges.length}
-    anchorInitCompleted: ${projectContext.details.isAnchorInit}
-    filesAndCodesGenerated: ${projectContext.details.isCode}`;
-    
-    //console.log(log);
+    console.log(projectContext);
   }, [projectContext]);
 
   useEffect(() => {
@@ -189,9 +178,9 @@ const CodePage = () => {
             terminalLogs={terminalLogs}
           />
         </Box>
-        <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
+        {/* <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
           <AIChat />
-        </Box>
+        </Box> */}
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
     </Flex>

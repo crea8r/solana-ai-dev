@@ -123,4 +123,18 @@ export const fileApi = {
       throw error;
     }
   },
+
+  renameDirectory: async (
+    rootPath: string,
+    newDirName: string
+  ): Promise<TaskResponse> => {
+    try {
+      console.log('calling rename directory');
+      const response = await api.post(`/files/rename-directory`, {rootPath, newDirName});
+      return response.data;
+    } catch (error) {
+      console.error('Error renaming directory:', error);
+      throw error;
+    }
+  },
 };

@@ -13,8 +13,8 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const { projectContext } = useProjectContext();
   const { codeFiles } = useCodeFiles();
-  console.log('project: ', projectContext);
-  console.log('codeFiles: ', codeFiles);
+  //console.log('project: ', projectContext);
+  //console.log('codeFiles: ', codeFiles);
 
   const sendMessage = () => {
     if (input.trim()) {
