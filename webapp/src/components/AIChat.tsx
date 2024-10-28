@@ -1,4 +1,5 @@
 import { Box, Button, Flex, Input, VStack, Text, IconButton } from '@chakra-ui/react';
+import { BsPaperclip } from "react-icons/bs";
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { useProjectContext } from '../contexts/ProjectContext';
@@ -55,17 +56,35 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onClearSelec
     }
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      sendMessage();
+    }
+  };
+
   return (
-    <VStack h="90vh" spacing={4}>
-      <Box flex={1} h="100%" w="100%" overflowY="auto" bg="gray.100" p={4} borderRadius="md">
+    <VStack h="90vh" spacing={4} fontSize='xs' p={2}>
+      <Box flex={1} h="100%" w="100%" overflowY="auto" bg="gray.50" p={4} borderRadius="md" >
         {messages.map((message, index) => (
-          <Box key={index} bg={message.sender === 'user' ? 'blue.100' : 'green.100'} p={2} borderRadius="md" mb={2}>
-            {message.text}
-          </Box>
+          <Flex 
+            key={index} 
+            justifyContent={message.sender === 'user' ? 'flex-end' : 'flex-start'}
+            mb={2}
+          >
+            <Box 
+              bg={message.sender === 'user' ? 'blue.100' : 'green.100'} 
+              p={2} 
+              borderRadius="md" 
+              display="inline-block"
+              maxWidth="80%"
+            >
+              {message.text}
+            </Box>
+          </Flex>
         ))}
       </Box>
 
-      <Flex direction="row" justifyContent="space-between" alignItems="center" gap={2}>
+      <Flex direction="row" justifyContent="flex-start" alignItems="center" gap={2} width='100%'>
         <Button
           size="sm"
           variant="ghost"
@@ -97,9 +116,16 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onClearSelec
         )}
       </Flex>
 
-      <Flex w="100%">
-        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask AI for help..." />
-        <Button onClick={sendMessage} ml={2}>
+      <Flex w="100%" justifyContent="space-between" alignItems="center" gap={2}>
+        <BsPaperclip size={26} />
+        <Input 
+          fontSize='xs' 
+          value={input} 
+          onChange={(e) => setInput(e.target.value)} 
+          placeholder="Message AI" 
+          onKeyPress={handleKeyPress}
+        />
+        <Button onClick={sendMessage} ml={2} fontSize='xs'>
           Send
         </Button>
       </Flex>
