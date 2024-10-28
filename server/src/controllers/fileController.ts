@@ -272,6 +272,29 @@ export const updateFile = async (
   }
 };
 
+export const updateFileServer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { rootPath, filePath, content } = req.body;
+  const rootFolder = process.env.ROOT_FOLDER;
+
+  if (!filePath || !content || !rootFolder) return next(new AppError('Missing required parameters', 400));
+
+  const fullPath = path.join(rootFolder, rootPath, filePath);
+
+  try {
+    await fs.access(fullPath);
+    await fs.writeFile(fullPath, content, 'utf8');
+
+    res.status(200).json({message: 'File updated successfully'});
+  } catch (error) {
+    console.error('Error updating file:', error);
+    next(new AppError('Failed to update file', 500));
+  }
+};
+
 export const deleteFile = async (
   req: Request,
   res: Response,

@@ -163,9 +163,38 @@ const CodePage = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!selectedFile || !selectedFile.path || !projectContext.id) {
+      addLog("No file selected or project context missing", true);
+      return;
+    }
+  
+    setIsLoading(true);
+    const rootPath = projectContext.rootPath;
+    const filePath = selectedFile.path;
+    const content = fileContent; 
+  
+    try {
+      const response = await fileApi.updateFile(rootPath, filePath, content);
+      addLog(`File saved successfully: ${filePath}`, true);
+    } catch (error) {
+      addLog(`Error saving file: ${error}`, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleContentChange = (newContent: string) => {
+    setFileContent(newContent);
+    console.log("New content:", newContent);
+  };
+
   return (
     <Flex direction='column' height='100vh'>
-      <TopPanel onBuild={handleBuildProject} />
+      <TopPanel 
+        onBuild={handleBuildProject}
+        onSave={handleSave}
+      />
       <Flex height='100%'>
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
@@ -176,6 +205,7 @@ const CodePage = () => {
             selectedFile={selectedFile}
             language={getLanguage(selectedFile?.name || '')}
             terminalLogs={terminalLogs}
+            onChange={handleContentChange}
           />
         </Box>
         {/* <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>

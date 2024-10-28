@@ -5,7 +5,7 @@ import {
   getDirectoryStructure,
   getFileContent,
   getProjectFileTree,
-  updateFile,
+  updateFileServer,
   deleteDirectory,
   renameDirectory,
 } from 'src/controllers/fileController';
@@ -17,7 +17,7 @@ router.get('/directory/:projectName/:rootPath', authMiddleware, getDirectoryStru
 router.get('/tree/:id', authMiddleware, getProjectFileTree);
 router.get('/:projectId/:filePath(*)', authMiddleware, getFileContent);
 router.post('/:projectId/:filePath(*)', authMiddleware, createFile);
-router.put('/:projectId/:filePath(*)', authMiddleware, updateFile);
+router.put('/update', authMiddleware, updateFileServer);
 router.delete('/:projectId/:filePath(*)', authMiddleware, deleteFile);
 router.delete('/:rootPath', authMiddleware, deleteDirectory);
 router.post('/rename-directory', authMiddleware, renameDirectory);

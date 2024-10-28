@@ -11,9 +11,10 @@ import {
 
 interface TopPanelProps {
   onBuild: () => void;
+  onSave: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ onBuild }) => {
+const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave }) => {
   return (
     <Flex
       height='10vh'
@@ -31,7 +32,7 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild }) => {
           <MenuButton as={Button} variant="ghost" size="sm" mr={2}>File</MenuButton>
           <MenuList>
             <MenuItem onClick={() => {}}>Open</MenuItem>
-            <MenuItem onClick={() => {}}>Save</MenuItem>
+            <MenuItem onClick={onSave}>Save</MenuItem>
             <MenuItem onClick={() => {}}>New</MenuItem>
           </MenuList>
         </Menu>

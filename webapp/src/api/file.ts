@@ -68,14 +68,14 @@ export const fileApi = {
 
   // Update file
   updateFile: async (
-    projectId: string,
+    rootPath: string,
     filePath: string,
     content: string
   ): Promise<TaskResponse> => {
     try {
       const response = await api.put(
-        `/files/${projectId}/${encodeURIComponent(filePath)}`,
-        { content }
+        `/files/update`,
+        { rootPath, filePath, content }
       );
       return response.data;
     } catch (error) {

@@ -10,6 +10,7 @@ type CodeEditorProps = {
   language?: string;
   selectedFile?: FileTreeItemType;
   terminalLogs: string[]; 
+  onChange: (newContent: string) => void;
 };
 
 const CodeEditor = ({
@@ -17,6 +18,7 @@ const CodeEditor = ({
   language = 'javascript',
   selectedFile,
   terminalLogs,
+  onChange,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
 
@@ -100,6 +102,11 @@ const CodeEditor = ({
     }
   }, [selectedFile, content]);
 
+  // Trigger onChange whenever content is modified in the editor
+  const handleEditorChange = (newValue: string) => {
+    onChange(newValue);
+  };
+
   return (
     <Flex direction='column' height='100%' overflowY='hidden'>
       {selectedFile ? (
@@ -118,6 +125,7 @@ const CodeEditor = ({
           value={content}
           options={options}
           editorDidMount={editorDidMount}
+          onChange={handleEditorChange}
         />
         <Terminal logs={terminalLogs} />
       </Box>
