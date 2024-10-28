@@ -189,11 +189,33 @@ const CodePage = () => {
     console.log("New content:", newContent);
   };
 
+  const handleTestProject = async () => {
+    setIsLoading(true);
+    try {
+      const projectId = projectContext.id || '';
+      addLog(`Starting tests for project ID: ${projectId}`, true);
+
+      const response = await projectApi.testProject(projectId);
+
+      if (response.taskId) {
+        addLog(`Test process initiated. Task ID: ${response.taskId}`, true);
+        startPollingTaskStatus(response.taskId);
+      } else {
+        addLog('Test initiation failed.', true);
+      }
+    } catch (error) {
+      addLog(`Error during project test: ${error}`, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Flex direction='column' height='100vh'>
       <TopPanel 
         onBuild={handleBuildProject}
         onSave={handleSave}
+        onTest={handleTestProject}
       />
       <Flex height='100%'>
         <Box w='20%' borderRight='1px' borderColor='gray.200'>
