@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select } from '@chakra-ui/react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
@@ -24,6 +24,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   const [input, setInput] = useState('');
   const [localSelectedFile, setLocalSelectedFile] = useState<FileTreeItemType | undefined>(selectedFile);
   const [additionalFiles, setAdditionalFiles] = useState<FileTreeItemType[]>([]);
+  const [selectedModel, setSelectedModel] = useState('GPT-4');
   const { projectContext } = useProjectContext();
   const { codeFiles } = useCodeFiles();
   
@@ -61,7 +62,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           }))
         ];
 
-        const response = await chatAI(messageWithContext, fileContexts);
+        const response = await chatAI(messageWithContext, fileContexts, selectedModel);
 
         setMessages((messages) => [
           ...messages,
@@ -97,7 +98,6 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     setAdditionalFiles((prevFiles) => prevFiles.filter((file) => file.path !== path));
   };
 
-  // Helper function to recursively collect all files with full paths
   const getAllFiles = (nodes: FileTreeItemType[], basePath = ''): FileTreeItemType[] => {
     let allFiles: FileTreeItemType[] = [];
     nodes.forEach(node => {
@@ -134,6 +134,17 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
 
   return (
     <Flex direction="column" h="100%" w="100%" p={2} gap={4} fontSize="xs">
+      <Select
+        size="sm"
+        value={selectedModel}
+        onChange={(e) => setSelectedModel(e.target.value)}
+        mb={2}
+      >
+        <option value="GPT-4">GPT-4</option>
+        <option value="GPT-4o">GPT-4o</option>
+        <option value="Codestral">Codestral</option>
+      </Select>
+
       <Box flex={1} h="100%" w="100%" overflowY="auto" bg="gray.50" p={4} borderRadius="md">
         {messages.map((message, index) => (
           <Flex 

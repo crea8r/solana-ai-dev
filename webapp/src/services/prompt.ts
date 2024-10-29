@@ -16,10 +16,15 @@ export const promptAI = async (text: string) => {
   return resp.data?.data?.choices;
 };
 
-export const chatAI = async (text: string, fileContexts: { path: string; content: string }[] = []) => {
+export const chatAI = async (
+  text: string, 
+  fileContexts: { path: string; content: string }[], 
+  model: string
+) => {
   const body = { 
-    messages: [{ content: text }],
-    fileContexts: fileContexts.length > 0 ? fileContexts : null,
+    message: text,
+    fileContext: fileContexts,
+    model,
   };
 
   try {
