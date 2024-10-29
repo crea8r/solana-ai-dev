@@ -73,7 +73,8 @@ export const handleAIChat = async (
   const chatMessages = [
     {
       role: 'user',
-      content: `User is asking about file ${fileContext?.path || 'an unspecified file'}.\n\nFile Content:\n${fileContext?.content || 'No content available'}\n\nQuestion:\n${message}`,
+      content: `User's question:\n"${message}"\n\nPlease answer the question directly. If relevant, refer to the following additional context about the file:\n\nFile: ${fileContext?.path || 'No specific file'}\nFile Content:\n${fileContext?.content || 'No content provided'}`
+
     },
   ];
 

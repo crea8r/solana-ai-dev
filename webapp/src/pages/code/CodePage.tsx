@@ -236,10 +236,12 @@ const CodePage = () => {
           />
         </Box>
         <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
-          <AIChat selectedFile={selectedFile} fileContent={fileContent} onClearSelectedFile={closeFileContext} onSelectFile={() => {
-            // Open file selection menu on button click in AIChat
-            // This would trigger the list menu logic in CodePage, connecting it to AIChat
-          }} />
+          <AIChat 
+            selectedFile={selectedFile} 
+            fileContent={fileContent} 
+            onSelectFile={handleSelectFile} 
+            files={files?.children || []}  // Passing available files from root
+          />
         </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
