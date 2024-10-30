@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { useRef, useEffect, useState } from 'react';
+import { Box, Flex } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from './FileTree';
@@ -7,7 +7,6 @@ import Terminal from './Terminal';
 
 type CodeEditorProps = {
   content: string; 
-  language?: string;
   selectedFile?: FileTreeItemType;
   terminalLogs: string[]; 
   onChange: (newContent: string) => void;
@@ -15,12 +14,12 @@ type CodeEditorProps = {
 
 const CodeEditor = ({
   content,
-  language = 'javascript',
   selectedFile,
   terminalLogs,
   onChange,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
+  const [language, setLanguage] = useState('plaintext');
 
   const options = {
     selectOnLineNumbers: true,
@@ -30,29 +29,46 @@ const CodeEditor = ({
     automaticLayout: true,
   };
 
-  const editorDidMount = (editor: any, monaco: any) => {
-    editorRef.current = editor;
-
-    monaco.editor.defineTheme('myCustomLightTheme', {
+  useEffect(() => {
+    monaco.editor.defineTheme('materialLighterHighContrast', {
       base: 'vs',
       inherit: true,
       rules: [
-        { token: 'comment', foreground: '008000', fontStyle: 'italic' },
-        { token: 'keyword', foreground: '0000FF' },
-        { token: 'string', foreground: 'A31515' },
-        { token: 'variable', foreground: '001080' },
-        { token: 'number', foreground: '09885A' },
-        { token: 'identifier', foreground: '000000' },
+        { token: 'comment', foreground: '4CAF50', fontStyle: 'italic' },
+        { token: 'keyword', foreground: '#ca3bf7', fontStyle: 'bold' },
+        { token: 'variable', foreground: '#BABABA', fontStyle: 'bold' },
+        { token: 'string', foreground: '#795548' },
+        { token: 'number', foreground: '#E91E63' },
+        { token: 'type', foreground: '#673AB7' },
+        { token: 'function', foreground: '#00796B', fontStyle: 'bold' },
+        { token: 'identifier', foreground: '#212121' },
       ],
       colors: {
         'editor.foreground': '#000000',
         'editor.background': '#FFFFFF',
         'editorCursor.foreground': '#000000',
-        'editor.lineHighlightBackground': '#F0F0F0',
-        'editorLineNumber.foreground': '#B0B0B0',
+        'editor.lineHighlightBackground': '#f7f7f7',
+        'editor.lineHighlightBorder': '#f7f7f7',
+        'editor.selectionBackground': '#A0C4FF',
+        'editor.selectionHighlightBackground': '#D0EBFF80',
+        // word highlight
+        'editor.wordHighlightBackground': '#ccffc2',
+        //'editor.wordHighlightBorder': '#FFD700',
+
+        'editor.wordHighlightStrongBackground': '#FFF176',
+        'editor.wordHighlightStrongBorder': '#FFEB3B',
+
+        'editor.inactiveSelectionBackground': '#B0BEC5',
+        'editorIndentGuide.background': '#E0E0E0',
+        'editorIndentGuide.activeBackground': '#B0BEC5',
       },
     });
-    monaco.editor.setTheme('myCustomLightTheme');
+    monaco.editor.setTheme('materialLighterHighContrast');
+  }, []);
+
+  const editorDidMount = (editor: any) => {
+    editorRef.current = editor;
+    monaco.editor.setTheme('materialLighterHighContrast');
   };
 
   const determineLanguage = (path: string): string => {
@@ -63,6 +79,24 @@ const CodeEditor = ({
   };
 
   useEffect(() => {
+    if (selectedFile?.path) {
+      const fileLanguage = determineLanguage(selectedFile.path);
+      setLanguage(fileLanguage);
+      
+      let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
+      
+      if (!model) {
+        model = monaco.editor.createModel(content, fileLanguage, monaco.Uri.parse(`file:///${selectedFile.path}`));
+        console.log(`Created new model with language: ${fileLanguage}`);
+      } else {
+        model.setValue(content);
+        console.log('Updated model for URI:', selectedFile.path);
+      }
+      editorRef.current?.setModel(model);
+    }
+  }, [selectedFile, content]);
+
+  useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;
 
     const handleResize = () => {
@@ -71,7 +105,7 @@ const CodeEditor = ({
         if (editorRef.current && typeof editorRef.current.layout === 'function') {
           editorRef.current.layout();
         }
-      }, 100); // Adjust the timeout as necessary
+      }, 100);
     };
 
     const observer = new ResizeObserver(handleResize);
@@ -87,46 +121,46 @@ const CodeEditor = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (selectedFile?.path && content) {
-      const language = determineLanguage(selectedFile.path);
-      let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
-      
-      if (!model) {
-        model = monaco.editor.createModel(content, language);
-        console.log(`Created new model with language: ${language}`);
-      } else {
-        model.setValue(content);
-        console.log('Updated model for URI:', selectedFile.path);
-      }
-    }
-  }, [selectedFile, content]);
-
-  // Trigger onChange whenever content is modified in the editor
   const handleEditorChange = (newValue: string) => {
     onChange(newValue);
   };
 
+  useEffect(() => {
+    monaco.editor.setTheme('materialLighterHighContrast');
+    editorRef.current?.layout();
+  }, []);
+
   return (
-    <Flex direction='column' height='100%' overflowY='hidden'>
+    <Flex direction="column" height="100%" overflowY="hidden">
       {selectedFile ? (
-        <Box py={1} px={2} borderBottom={'1px solid #ccc'}>
+        <Box py={1} px={2} borderBottom="1px solid #ccc">
           {selectedFile.path}
         </Box>
       ) : null}
-      
-      <Box maxHeight='100vh'>
+
+      <Box
+        flex="4"
+        overflow="hidden"
+        sx={{
+          '::-webkit-scrollbar': { width: '8px' },
+          '::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '10px' },
+          '::-webkit-scrollbar-thumb:hover': { backgroundColor: '#555' },
+          '::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1', borderRadius: '10px' },
+        }}
+      >
         <MonacoEditor
-          height='60vh'
-          width='100%'
-          key={selectedFile?.path || 'default'}
+          height="75vh"
+          width="100%"
           language={language}
-          theme="myCustomLightTheme"
+          theme="materialLighterHighContrast"
           value={content}
           options={options}
           editorDidMount={editorDidMount}
           onChange={handleEditorChange}
         />
+      </Box>
+
+      <Box flex="1" mb={2}>
         <Terminal logs={terminalLogs} />
       </Box>
     </Flex>

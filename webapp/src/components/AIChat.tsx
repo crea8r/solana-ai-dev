@@ -1,4 +1,5 @@
 import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select } from '@chakra-ui/react';
+import { Copy } from 'lucide-react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
@@ -6,6 +7,8 @@ import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
 import { FileTreeItemType } from '../components/FileTree';
 import { chatAI } from '../services/prompt'; 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export interface AIMessageType {
   text: string;
@@ -19,12 +22,38 @@ interface AIChatProps {
   files: FileTreeItemType[]; 
 }
 
+const CodeBlock = ({ children }: { children: string }) => {
+  const handleCopy = () => {
+    navigator.clipboard.writeText(children);
+  };
+
+  return (
+    <Box position="relative" p={4} bg="gray.100" color="black" borderRadius="md" fontSize="sm" fontFamily="monospace">
+      <Button
+        size="xs"
+        position="absolute"
+        top="4px"
+        right="4px"
+        onClick={handleCopy}
+        leftIcon={<Copy size={12} />}
+        colorScheme="blue"
+        variant="ghost"
+      >
+        Copy
+      </Button>
+      <Text as="pre" fontSize="xs" whiteSpace="pre-wrap" overflowWrap="break-word">
+        {children}
+      </Text>
+    </Box>
+  );
+};
+
 const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile, files }) => {
   const [messages, setMessages] = useState<AIMessageType[]>([]);
   const [input, setInput] = useState('');
   const [localSelectedFile, setLocalSelectedFile] = useState<FileTreeItemType | undefined>(selectedFile);
   const [additionalFiles, setAdditionalFiles] = useState<FileTreeItemType[]>([]);
-  const [selectedModel, setSelectedModel] = useState('GPT-4');
+  const [selectedModel, setSelectedModel] = useState('GPT-4o');
   const { projectContext } = useProjectContext();
   const { codeFiles } = useCodeFiles();
   
@@ -63,11 +92,12 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
         ];
 
         const response = await chatAI(messageWithContext, fileContexts, selectedModel);
+        const responseText = await response;
 
         setMessages((messages) => [
           ...messages,
           {
-            text: response,
+            text: responseText,
             sender: 'ai',
           },
         ]);
@@ -133,40 +163,88 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   };
 
   return (
-    <Flex direction="column" h="100%" w="100%" p={2} gap={4} fontSize="xs">
-      <Select
-        size="sm"
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-        mb={2}
+    <Flex direction="column" maxHeight="100%" w="100%" p={2} pt={4} gap={6} fontSize="xs" justifyContent="space-between">
+      <Box
+        flex="1"
+        flexGrow={1}
+        flexShrink={0}
+        minHeight="60vh !important"
+        maxHeight="60vh !important"
+        w="100%"
+        overflowY="auto"
+        p={4}
+        borderRadius="md"
+        sx={{
+          '::-webkit-scrollbar': { width: '8px' },
+          '::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '10px' },
+          '::-webkit-scrollbar-thumb:hover': { backgroundColor: '#555' },
+          '::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1', borderRadius: '10px' },
+        }}
       >
-        <option value="GPT-4">GPT-4</option>
-        <option value="GPT-4o">GPT-4o</option>
-        <option value="Codestral">Codestral</option>
-      </Select>
-
-      <Box flex={1} h="100%" w="100%" overflowY="auto" bg="gray.50" p={4} borderRadius="md">
         {messages.map((message, index) => (
           <Flex 
+            flex="1"
             key={index} 
             justifyContent={message.sender === 'user' ? 'flex-end' : 'flex-start'}
             mb={2}
           >
             <Box 
-              bg={message.sender === 'user' ? 'blue.100' : 'green.100'} 
+              bg={message.sender === 'user' ? 'blue.100' : 'gray.50'} 
               p={2} 
               borderRadius="md" 
               display="inline-block"
               maxWidth="80%"
             >
-              {message.text}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({ node, className, children, ...props }) {
+                    const isInline = !className;
+                    return isInline ? (
+                      <Text as="code" bg="gray.200" p={1} borderRadius="md" {...props}>
+                        {children}
+                      </Text>
+                    ) : (
+                      <CodeBlock>{String(children).trim()}</CodeBlock>
+                    );
+                  },
+                }}
+              >
+                {message.text}
+              </ReactMarkdown>
             </Box>
           </Flex>
         ))}
         <div ref={messagesEndRef} />
       </Box>
 
-      <Flex w="100%" justifyContent="space-between" alignItems="center" gap={2}>
+      <Flex w="100%" direction="column" gap={2} mt={4}>
+        <Flex direction="row" wrap="wrap" gap={2} alignItems="center">
+          {localSelectedFile && (
+            <Flex alignItems="center" bg="gray.50" p={1} borderRadius="sm">
+              <Text fontSize="xs" fontWeight="500">{localSelectedFile.name}</Text>
+              <IconButton
+                size="xs"
+                aria-label="Remove default file"
+                icon={<X size={10} />}
+                onClick={() => setLocalSelectedFile(undefined)}
+                variant="ghost"
+              />
+            </Flex>
+          )}
+          {additionalFiles.map((file) => (
+            <Flex key={file.path} alignItems="center" bg="gray.50" p={1} borderRadius="sm">
+              <Text fontSize="xs" fontWeight="500">{file.name}</Text>
+              <IconButton
+                size="xs"
+                aria-label="Remove additional file"
+                icon={<X size={10} />}
+                onClick={() => removeFile(file.path ?? '')}
+                variant="ghost"
+              />
+            </Flex>
+          ))}
+        </Flex>
         <Textarea 
           fontSize="xs" 
           value={input} 
@@ -176,6 +254,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           resize="none"
         />
       </Flex>
+
       <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" gap={2} px={4}>
         <Flex direction="row" justifyContent="flex-start" alignItems="center" gap={2} width="100%">
           <Menu>
@@ -202,32 +281,15 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
             onChange={handleCustomFileUpload}
           />
 
-          <Flex direction="row" wrap="wrap" gap={2} alignItems="center">
-            {localSelectedFile && (
-              <Flex alignItems="center" bg="gray.50" p={1} borderRadius="sm">
-                <Text fontSize="xs" fontWeight="500">{localSelectedFile.name}</Text>
-                <IconButton
-                  size="xs"
-                  aria-label="Remove default file"
-                  icon={<X size={10} />}
-                  onClick={() => setLocalSelectedFile(undefined)}
-                  variant="ghost"
-                />
-              </Flex>
-            )}
-            {additionalFiles.map((file) => (
-              <Flex key={file.path} alignItems="center" bg="gray.50" p={1} borderRadius="sm">
-                <Text fontSize="xs" fontWeight="500">{file.name}</Text>
-                <IconButton
-                  size="xs"
-                  aria-label="Remove additional file"
-                  icon={<X size={10} />}
-                  onClick={() => removeFile(file.path ?? '')}
-                  variant="ghost"
-                />
-              </Flex>
-            ))}
-          </Flex>
+          <Select
+              size="sm"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              mb={2}
+            >
+              <option value="GPT-4o">GPT-4o</option>
+              <option value="Codestral">Codestral</option>
+          </Select>
         </Flex>
       </Flex>
     </Flex>

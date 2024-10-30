@@ -72,7 +72,7 @@ export const handleAIChat = async (
 ) => {
   const { message, fileContext, model } = req.body;
 
-  let messageContent = `User's question:\n"${message}"`;
+  let messageContent = `User's question:\n"${message}"\n\nPlease respond with markdown formatting. For code snippets, use triple backticks (\`\`\`) for block code and single backticks (\`) for inline code.`;
 
   if (fileContext && Array.isArray(fileContext) && fileContext.length > 0) {
     fileContext.forEach((file, index) => {
@@ -88,9 +88,6 @@ export const handleAIChat = async (
       content: messageContent,
     },
   ];
-
-  console.log('chatMessages:', chatMessages);
-  console.log('Selected model:', model);
 
   try {
     if (model === 'GPT-4o') {

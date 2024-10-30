@@ -216,31 +216,34 @@ const CodePage = () => {
   };
 
   return (
-    <Flex direction='column' height='100%' margin='0' overflow='hidden'>
-      <TopPanel 
-        onBuild={handleBuildProject}
-        onSave={handleSave}
-        onTest={handleTestProject}
-      />
-      <Flex height='100%'>
-        <Box w='20%' borderRight='1px' borderColor='gray.200'>
+    <Flex direction="column" maxHeight="100vh !important" overflow="auto" justifyContent="space-between">
+      <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
+        <TopPanel 
+          onBuild={handleBuildProject}
+          onSave={handleSave}
+          onTest={handleTestProject}
+        /> 
+      </Flex>
+      
+      <Flex flex="1" overflow="hidden">
+        <Box w="15vw" borderRight="1px" borderColor="gray.200">
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
-        <Box flex={1} maxHeight='100vh' boxSizing='border-box' overflow='auto'>
+        <Box flex={1} maxHeight="100%" boxSizing="border-box" overflow="auto">
           <CodeEditor
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
-            language={getLanguage(selectedFile?.name || '')}
+            //language={getLanguage(selectedFile?.name || '')}
             terminalLogs={terminalLogs}
             onChange={handleContentChange}
           />
         </Box>
-        <Box w={'400px'} height='100vh' borderLeft='1px' borderColor='gray.200'>
+        <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">
           <AIChat 
             selectedFile={selectedFile} 
             fileContent={fileContent} 
             onSelectFile={handleSelectFile} 
-            files={files?.children || []}  // Passing available files from root
+            files={files?.children || []}
           />
         </Box>
       </Flex>

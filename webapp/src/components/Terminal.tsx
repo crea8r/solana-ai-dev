@@ -9,6 +9,7 @@ type TerminalProps = {
 const Terminal: React.FC<TerminalProps> = ({ logs }) => {
   return (
     <Box
+      height="35vh"
       w="full"
       bg="gray.50"
       color="gray.800"
