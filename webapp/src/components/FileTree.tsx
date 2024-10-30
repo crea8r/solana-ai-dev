@@ -57,7 +57,7 @@ const FileTreeItem = ({
           <FaRegFile size={12} style={{ color: '#5688e8', marginRight: 5 }} />
         )}
         {item.type === 'directory' ? (
-          <FaFolder style={{ color: '#ffd57a', marginLeft: 5 }} />
+          <FaFolder style={{ color:'#a8b5e6', marginLeft: 5 }} />
         ) : null}
         <Text ml={2} fontSize='sm'>{item.name}</Text>
       </Flex>

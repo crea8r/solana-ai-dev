@@ -1,16 +1,25 @@
 import React from 'react';
 import { Box, Flex, Text, Icon } from '@chakra-ui/react';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
+import { keyframes } from '@emotion/react';
 
 type TerminalProps = {
   logs: string[];
 };
 
+const pulse = keyframes`
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+`;
+
 const Terminal: React.FC<TerminalProps> = ({ logs }) => {
   return (
     <Box
-      height="35vh"
-      w="full"
+      flex="1"
       bg="gray.50"
       color="gray.800"
       fontFamily="mono"
@@ -20,9 +29,8 @@ const Terminal: React.FC<TerminalProps> = ({ logs }) => {
       border="1px"
       borderColor="gray.200"
     >
-      <Flex bg="gray.100" px={4} py={2} alignItems="center" justifyContent="flex-end">
-        {/* <Text fontSize="xs" color="gray.500">/projects/subscription-service/build</Text> */}
-        <Flex alignItems="center" gap={2}>
+      <Flex bg="gray.100" px={4} alignItems="center" justifyContent="flex-end">
+        <Flex alignItems="center" gap={2} p={2}>
           <Icon as={Minus} w={3} h={3} color="gray.500" />
           <Icon as={Square} w={3} h={3} color="gray.500" />
           <Icon as={X} w={3} h={3} color="gray.500" />
@@ -44,8 +52,8 @@ const Terminal: React.FC<TerminalProps> = ({ logs }) => {
           </Box>
         </Flex>
         <Flex alignItems="center" mt={2} color="gray.600">
-          <Icon as={ChevronRight} w={4} h={4} mr={2} />
-          <Text className="animate-pulse">_</Text>
+          <Icon as={ChevronRight} w={3} h={3} mr={1} />
+          <Text fontSize="xs" animation={`${pulse} 0.8s infinite`} className="animate-pulse">_</Text>
         </Flex>
       </Box>
     </Box>

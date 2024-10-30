@@ -138,16 +138,7 @@ const CodeEditor = ({
         </Box>
       ) : null}
 
-      <Box
-        flex="4"
-        overflow="hidden"
-        sx={{
-          '::-webkit-scrollbar': { width: '8px' },
-          '::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '10px' },
-          '::-webkit-scrollbar-thumb:hover': { backgroundColor: '#555' },
-          '::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1', borderRadius: '10px' },
-        }}
-      >
+      <Box flex="4" overflow="hidden">
         <MonacoEditor
           height="75vh"
           width="100%"

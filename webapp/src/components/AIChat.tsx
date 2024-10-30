@@ -13,6 +13,7 @@ import remarkGfm from 'remark-gfm';
 export interface AIMessageType {
   text: string;
   sender: 'ai' | 'user';
+  files?: FileTreeItemType[];
 }
 
 interface AIChatProps {
@@ -77,7 +78,12 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
 
   const sendMessage = async () => {
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: 'user' }]);
+      const selectedFiles = [
+        localSelectedFile,
+        ...additionalFiles
+      ].filter((file): file is FileTreeItemType => Boolean(file));
+
+      setMessages([...messages, { text: input, sender: 'user', files: selectedFiles }]);
       setInput('');
 
       try {
@@ -163,13 +169,10 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   };
 
   return (
-    <Flex direction="column" maxHeight="100%" w="100%" p={2} pt={4} gap={6} fontSize="xs" justifyContent="space-between">
+    <Flex direction="column" maxHeight="100%" w="100%" p={2} pt={4} gap={2} fontSize="xs" justifyContent="space-between">
       <Box
         flex="1"
         flexGrow={1}
-        flexShrink={0}
-        minHeight="60vh !important"
-        maxHeight="60vh !important"
         w="100%"
         overflowY="auto"
         p={4}
@@ -190,11 +193,30 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           >
             <Box 
               bg={message.sender === 'user' ? 'blue.100' : 'gray.50'} 
-              p={2} 
+              p={3} 
               borderRadius="md" 
               display="inline-block"
               maxWidth="80%"
             >
+              {message.sender === 'user' && message.files && (
+                <Box mb={1}>
+                  {message.files.map(file => (
+                    <Box 
+                      key={file.path}
+                      px={2}
+                      py={1}
+                      mb={1}
+                      bg="blue.200" 
+                      width="fit-content"
+                      borderRadius="md" 
+                      fontSize="0.6rem"
+                      fontWeight="500"
+                    >
+                      {file.name}
+                    </Box>
+                  ))}
+                </Box>
+              )}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -255,10 +277,10 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
         />
       </Flex>
 
-      <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" gap={2} px={4}>
-        <Flex direction="row" justifyContent="flex-start" alignItems="center" gap={2} width="100%">
+      <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" >
+        <Flex direction="row" justifyContent="flex-start" alignItems="center" width="100%">
           <Menu>
-            <MenuButton as={Button} size="xs" leftIcon={<Plus size={12} />} />
+            <MenuButton as={Button} size="xs" leftIcon={<Plus size={13} />} variant="ghost"/>
             <MenuList>
               <MenuItem icon={<BsPaperclip />} onClick={() => fileInputRef.current?.click()}>
                 Upload Custom File
@@ -281,15 +303,15 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
             onChange={handleCustomFileUpload}
           />
 
-          <Select
-              size="sm"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              mb={2}
-            >
-              <option value="GPT-4o">GPT-4o</option>
-              <option value="Codestral">Codestral</option>
-          </Select>
+          <Menu>
+            <MenuButton as={Button} size="xs" variant="ghost" leftIcon={<ChevronUp size={13} />}>
+              <Text fontSize="xs" fontWeight="400">{selectedModel}</Text>
+            </MenuButton>
+            <MenuList>
+              <MenuItem onClick={() => setSelectedModel('GPT-4o')}>GPT-4o</MenuItem>
+              <MenuItem onClick={() => setSelectedModel('Codestral')}>Codestral</MenuItem>
+            </MenuList>
+          </Menu>
         </Flex>
       </Flex>
     </Flex>
