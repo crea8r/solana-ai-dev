@@ -42,7 +42,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     const toast = useToast(); 
     const [isRegenerating, setIsRegenerating] = useState(false); 
     const [existingDirectory, setExistingDirectory] = useState(false);
-    const [isCloseDisabled, setIsCloseDisabled] = useState(true);
+
+    // Compute isCloseDisabled based on tasks' statuses
+    const isCloseDisabled = tasks.some(task => task.status === 'loading');
 
     useEffect(() => {
         if (projectContext) {
@@ -119,8 +121,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             return;
         }
 
-        setIsCloseDisabled(true);  // Disable close at the start of tasks
-
         try {
             const { id: projectId, rootPath, name: projectName } = projectContext;
 
@@ -179,7 +179,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 console.log('Files and codes have already been generated or the task has already run.');
             }
         } finally {
-            setIsCloseDisabled(false);  // Re-enable close after tasks are completed
+            // No need to manually set isCloseDisabled
         }
     };
 
@@ -578,7 +578,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         );
     }
     return (
-        <Modal isOpen={isOpen} onClose={isCloseDisabled ? () => {} : onClose}>
+        <Modal 
+            isOpen={isOpen} 
+            onClose={isCloseDisabled ? () => {} : onClose}
+            closeOnOverlayClick={!isCloseDisabled}
+            closeOnEsc={!isCloseDisabled}
+        >
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader p={1} height={30}>
