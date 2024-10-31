@@ -19,6 +19,7 @@ import { Link as RouterLink } from 'react-router-dom';
 interface genTaskProps {
     isOpen: boolean;
     onClose: () => void;
+    disableClose?: boolean;
 }
 
 type TaskStatus = 'completed' | 'loading' | 'failed' | 'succeed' | 'warning';
@@ -31,7 +32,7 @@ type Task = {
     type: 'main' | 'file';
 };
 
-export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
+export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose }) => {
     const { projectContext, setProjectContext, projectInfoToSave, setProjectInfoToSave } = useProjectContext();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [contextReady, setContextReady] = useState(false);
@@ -41,6 +42,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     const toast = useToast(); 
     const [isRegenerating, setIsRegenerating] = useState(false); 
     const [existingDirectory, setExistingDirectory] = useState(false);
+    const [isCloseDisabled, setIsCloseDisabled] = useState(true);
 
     useEffect(() => {
         if (projectContext) {
@@ -112,66 +114,72 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
     }, [genCodeTaskRun]);
 
     const runTasksSequentially = async () => {
-        if (!projectContext) { 
-            console.error("Project context not available."); 
+        if (!projectContext) {
+            console.error("Project context not available.");
             return;
         }
 
-        const { id: projectId, rootPath, name: projectName } = projectContext;
+        setIsCloseDisabled(true);  // Disable close at the start of tasks
 
-        if (!projectId || !rootPath || !projectName) {
-            toast({
-                title: 'Project not saved',
-                description: 'Project name, root path, and description are required. Please save the project first.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
-            return;
-        }
-
-        // Checking if the project directory already exists
         try {
-            const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
-            if (directory && directory.length > 0) {
-                console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
-                setProjectContext((prevProjectContext) => ({
-                    ...prevProjectContext,
-                    details: {
-                        ...prevProjectContext.details,
-                        isAnchorInit: true,
-                        isCode: true,
-                    },
-                }));
-                setExistingDirectory(true);
+            const { id: projectId, rootPath, name: projectName } = projectContext;
+
+            if (!projectId || !rootPath || !projectName) {
                 toast({
-                    title: 'Directory already exists',
-                    description: `The project directory ${rootPath} already exists on the server.`,
-                    status: 'info',
+                    title: 'Project not saved',
+                    description: 'Project name, root path, and description are required. Please save the project first.',
+                    status: 'error',
                     duration: 5000,
                     isClosable: true,
                 });
-                return; 
-            } else {
-                setExistingDirectory(false);
+                return;
             }
-        } catch (error) {
-            console.error('Error checking directory existence:', error);
-        }
 
-        // if anchor project is not initialized, initialize it
-        if (!projectContext.details.isAnchorInit) {
-            await handleAnchorInitTask(projectId, rootPath, projectName);
-        } else {
-            console.log('Anchor project is already initialized.');
-        }
+            // Checking if the project directory already exists
+            try {
+                const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
+                if (directory && directory.length > 0) {
+                    console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
+                    setProjectContext((prevProjectContext) => ({
+                        ...prevProjectContext,
+                        details: {
+                            ...prevProjectContext.details,
+                            isAnchorInit: true,
+                            isCode: true,
+                        },
+                    }));
+                    setExistingDirectory(true);
+                    toast({
+                        title: 'Directory already exists',
+                        description: `The project directory ${rootPath} already exists on the server.`,
+                        status: 'info',
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                    return; 
+                } else {
+                    setExistingDirectory(false);
+                }
+            } catch (error) {
+                console.error('Error checking directory existence:', error);
+            }
 
-        // if files and codes are not generated, generate them
-        if (!genCodeTaskRun && !projectContext.details.isCode) {
-            await handleGenCodesTask(projectId, rootPath, projectName);
-            setGenCodeTaskRun(true);
-        } else {
-            console.log('Files and codes have already been generated or the task has already run.');
+            // if anchor project is not initialized, initialize it
+            if (!projectContext.details.isAnchorInit) {
+                await handleAnchorInitTask(projectId, rootPath, projectName);
+            } else {
+                console.log('Anchor project is already initialized.');
+            }
+
+            // if files and codes are not generated, generate them
+            if (!genCodeTaskRun && !projectContext.details.isCode) {
+                await handleGenCodesTask(projectId, rootPath, projectName);
+                setGenCodeTaskRun(true);
+            } else {
+                console.log('Files and codes have already been generated or the task has already run.');
+            }
+        } finally {
+            setIsCloseDisabled(false);  // Re-enable close after tasks are completed
         }
     };
 
@@ -569,9 +577,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
             />
         );
     }
-
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={isCloseDisabled ? () => {} : onClose}>
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader p={1} height={30}>
@@ -588,7 +595,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose }) => {
                             <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
                         </Button>
                     ) : ( <Box height={30} /> )}
-                    <Button onClick={onClose} variant="ghost" size="sm" colorScheme="gray" position="absolute" top={2} right={2}>
+                    <Button
+                        onClick={isCloseDisabled ? undefined : onClose}
+                        variant="ghost"
+                        size="sm"
+                        colorScheme="gray"
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        isDisabled={isCloseDisabled}
+                    >
                         <X className="h-4 w-4" />
                     </Button>
                 </ModalHeader>
