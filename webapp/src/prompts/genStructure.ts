@@ -8,7 +8,7 @@ interface TextGeneratorOptions {
   programDescription: string;
   accountText?: string; 
   instructionText?: string; 
-  libraryVersion?: string; // default Anchor version
+  libraryVersion?: string;
 }
 
 const generateGeneralInstructions = (libraryVersion: string) => {
@@ -99,7 +99,7 @@ const findNodesByType = (nodes: Node[], edges: Edge[], programId: string, nodeTy
     programDescription,
     accountText = '',
     instructionText = '',
-    libraryVersion = '0.30.1',
+    libraryVersion = '0.30.0',
   } = options;
 
   const generalInstructions = generateGeneralInstructions(libraryVersion);

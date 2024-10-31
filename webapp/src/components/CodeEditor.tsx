@@ -10,6 +10,7 @@ type CodeEditorProps = {
   selectedFile?: FileTreeItemType;
   terminalLogs: string[]; 
   onChange: (newContent: string) => void;
+  onSave: () => void;
 };
 
 const CodeEditor = ({
@@ -17,9 +18,13 @@ const CodeEditor = ({
   selectedFile,
   terminalLogs,
   onChange,
+  onSave,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
+
+  // Define a set to keep track of defined themes
+  const definedThemes = new Set<string>();
 
   const options = {
     selectOnLineNumbers: true,
@@ -27,42 +32,51 @@ const CodeEditor = ({
     readOnly: false,
     cursorStyle: 'line' as const,
     automaticLayout: true,
+    wordWrap: 'on' as const,
+    wordHighlight: false,
+    wordHighlightStrong: false,
+    occurrencesHighlight: 'off' as const,
+    selectionHighlight: false,
+    minimap: { enabled: false }
   };
 
   useEffect(() => {
-    monaco.editor.defineTheme('materialLighterHighContrast', {
-      base: 'vs',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '4CAF50', fontStyle: 'italic' },
-        { token: 'keyword', foreground: '#ca3bf7', fontStyle: 'bold' },
-        { token: 'variable', foreground: '#BABABA', fontStyle: 'bold' },
-        { token: 'string', foreground: '#795548' },
-        { token: 'number', foreground: '#E91E63' },
-        { token: 'type', foreground: '#673AB7' },
-        { token: 'function', foreground: '#00796B', fontStyle: 'bold' },
-        { token: 'identifier', foreground: '#212121' },
-      ],
-      colors: {
-        'editor.foreground': '#000000',
-        'editor.background': '#FFFFFF',
-        'editorCursor.foreground': '#000000',
-        'editor.lineHighlightBackground': '#f7f7f7',
-        'editor.lineHighlightBorder': '#f7f7f7',
-        'editor.selectionBackground': '#A0C4FF',
-        'editor.selectionHighlightBackground': '#D0EBFF80',
-        // word highlight
-        'editor.wordHighlightBackground': '#ccffc2',
-        //'editor.wordHighlightBorder': '#FFD700',
+    if (!definedThemes.has('materialLighterHighContrast')) {
+      monaco.editor.defineTheme('materialLighterHighContrast', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+          { token: 'comment', foreground: '4CAF50', fontStyle: 'italic' },
+          { token: 'keyword', foreground: '#ca3bf7', fontStyle: 'bold' },
+          { token: 'variable', foreground: '#BABABA', fontStyle: 'bold' },
+          { token: 'string', foreground: '#795548' },
+          { token: 'number', foreground: '#E91E63' },
+          { token: 'type', foreground: '#673AB7' },
+          { token: 'function', foreground: '#00796B', fontStyle: 'bold' },
+          { token: 'identifier', foreground: '#212121' },
+        ],
+        colors: {
+          'editor.foreground': '#000000',
+          'editor.background': '#FFFFFF',
+          'editorCursor.foreground': '#000000',
+          'editor.lineHighlightBackground': '#f7f7f7',
+          'editor.lineHighlightBorder': '#f7f7f7',
+          'editor.selectionBackground': '#A0C4FF',
+          'editor.selectionHighlightBackground': '#D0EBFF80',
+          // word highlight
+          'editor.wordHighlightBackground': '#ccffc2',
+          //'editor.wordHighlightBorder': '#FFD700',
 
-        'editor.wordHighlightStrongBackground': '#FFF176',
-        'editor.wordHighlightStrongBorder': '#FFEB3B',
+          'editor.wordHighlightStrongBackground': '#FFF176',
+          'editor.wordHighlightStrongBorder': '#FFEB3B',
 
-        'editor.inactiveSelectionBackground': '#B0BEC5',
-        'editorIndentGuide.background': '#E0E0E0',
-        'editorIndentGuide.activeBackground': '#B0BEC5',
-      },
-    });
+          'editor.inactiveSelectionBackground': '#B0BEC5',
+          'editorIndentGuide.background': '#E0E0E0',
+          'editorIndentGuide.activeBackground': '#B0BEC5',
+        },
+      });
+      definedThemes.add('materialLighterHighContrast');
+    }
     monaco.editor.setTheme('materialLighterHighContrast');
   }, []);
 
@@ -80,21 +94,23 @@ const CodeEditor = ({
 
   useEffect(() => {
     if (selectedFile?.path) {
-      const fileLanguage = determineLanguage(selectedFile.path);
-      setLanguage(fileLanguage);
+      const uri = monaco.Uri.parse(`file:///${selectedFile.path}`);
+      let model = monaco.editor.getModel(uri);
       
-      let model = monaco.editor.getModel(monaco.Uri.parse(`file:///${selectedFile.path}`));
-      
-      if (!model) {
-        model = monaco.editor.createModel(content, fileLanguage, monaco.Uri.parse(`file:///${selectedFile.path}`));
-        console.log(`Created new model with language: ${fileLanguage}`);
-      } else {
-        model.setValue(content);
-        console.log('Updated model for URI:', selectedFile.path);
+      // Dispose of the old model if it exists
+      if (editorRef.current?.getModel() !== model) {
+        editorRef.current?.getModel()?.dispose();
       }
+
+      if (!model) {
+        model = monaco.editor.createModel(content, language, uri);
+      } else if (model.getValue() !== content) {
+        model.setValue(content);
+      }
+
       editorRef.current?.setModel(model);
     }
-  }, [selectedFile, content]);
+  }, [selectedFile]);
 
   useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;
@@ -105,7 +121,7 @@ const CodeEditor = ({
         if (editorRef.current && typeof editorRef.current.layout === 'function') {
           editorRef.current.layout();
         }
-      }, 100);
+      }, 200); // Debounce delay
     };
 
     const observer = new ResizeObserver(handleResize);
@@ -130,6 +146,20 @@ const CodeEditor = ({
     editorRef.current?.layout();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        onSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onSave]);
+
   return (
     <Flex direction="column" height="100%" overflowY="hidden">
       {selectedFile ? (
@@ -145,7 +175,7 @@ const CodeEditor = ({
           language={language}
           theme="materialLighterHighContrast"
           value={content}
-          options={options}
+          options={options}  // Ensure options are correctly typed
           editorDidMount={editorDidMount}
           onChange={handleEditorChange}
         />

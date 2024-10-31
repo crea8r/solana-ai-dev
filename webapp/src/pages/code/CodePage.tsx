@@ -233,9 +233,9 @@ const CodePage = () => {
           <CodeEditor
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
-            //language={getLanguage(selectedFile?.name || '')}
             terminalLogs={terminalLogs}
             onChange={handleContentChange}
+            onSave={handleSave}
           />
         </Box>
         <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">

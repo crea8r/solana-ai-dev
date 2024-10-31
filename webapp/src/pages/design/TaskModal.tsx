@@ -43,7 +43,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     const [isRegenerating, setIsRegenerating] = useState(false); 
     const [existingDirectory, setExistingDirectory] = useState(false);
 
-    // Compute isCloseDisabled based on tasks' statuses
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
 
     useEffect(() => {
@@ -179,7 +178,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 console.log('Files and codes have already been generated or the task has already run.');
             }
         } finally {
-            // No need to manually set isCloseDisabled
         }
     };
 
