@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select } from '@chakra-ui/react';
+import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select, Tooltip, Divider } from '@chakra-ui/react';
 import { Copy } from 'lucide-react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
@@ -54,7 +54,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   const [input, setInput] = useState('');
   const [localSelectedFile, setLocalSelectedFile] = useState<FileTreeItemType | undefined>(selectedFile);
   const [additionalFiles, setAdditionalFiles] = useState<FileTreeItemType[]>([]);
-  const [selectedModel, setSelectedModel] = useState('GPT-4o');
+  const [selectedModel, setSelectedModel] = useState('Codestral');
   const { projectContext } = useProjectContext();
   const { codeFiles } = useCodeFiles();
   
@@ -189,32 +189,37 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
             flex="1"
             key={index} 
             justifyContent={message.sender === 'user' ? 'flex-end' : 'flex-start'}
+            alignItems="center"
             mb={2}
           >
             <Box 
-              bg={message.sender === 'user' ? 'blue.100' : 'gray.50'} 
-              p={3} 
+              bg={message.sender === 'user' ? 'blue.50' : 'gray.50'} 
+              color={message.sender === 'user' ? 'blue.600' : 'gray.700'}
+              p={2}
+              py={0}
               borderRadius="md" 
               display="inline-block"
               maxWidth="80%"
             >
               {message.sender === 'user' && message.files && (
                 <Box mb={1}>
-                  {message.files.map(file => (
-                    <Box 
-                      key={file.path}
-                      px={2}
-                      py={1}
-                      mb={1}
-                      bg="blue.200" 
-                      width="fit-content"
-                      borderRadius="md" 
-                      fontSize="0.6rem"
-                      fontWeight="500"
-                    >
-                      {file.name}
-                    </Box>
-                  ))}
+                  <Flex wrap="wrap" gap={1} mt={3}>
+                    {message.files.map(file => (
+                      <Box 
+                        key={file.path}
+                        px={2}
+                        py={1}
+                        mb={1}
+                        bg="blue.100" 
+                        width="fit-content"
+                        borderRadius="md" 
+                        fontSize="0.6rem"
+                        fontWeight="500"
+                      >
+                        {file.name}
+                      </Box>
+                    ))}
+                  </Flex>
                 </Box>
               )}
               <ReactMarkdown
@@ -230,6 +235,11 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                       <CodeBlock>{String(children).trim()}</CodeBlock>
                     );
                   },
+                  p: ({ node, ...props }) => (
+                    <Box mb={4}>
+                      <Text lineHeight="1.8" {...props} />
+                    </Box>
+                  ),
                 }}
               >
                 {message.text}
@@ -288,14 +298,30 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                 overflowY="auto" 
                 shadow="2xl"
                 sx={{
-                  maxWidth: '70vw', // Limit menu width within viewport
+                  maxWidth: '70vw',
                 }}
               >
-                <MenuItem icon={<BsPaperclip />} onClick={() => fileInputRef.current?.click()}>
+                <MenuItem 
+                  icon={<BsPaperclip />} 
+                  onClick={() => fileInputRef.current?.click()}
+                  sx={{
+                    _hover: {
+                      bg: 'blue.50',
+                    },
+                  }}
+                >
                   Upload Custom File
                 </MenuItem>
                 {allFiles.map((file) => (
-                  <MenuItem key={file.path} onClick={() => handleFileSelect(file)}>
+                  <MenuItem 
+                    key={file.path} 
+                    onClick={() => handleFileSelect(file)}
+                    sx={{
+                      _hover: {
+                        bg: 'blue.50',
+                      },
+                    }}
+                  >
                     <Flex justify="space-between" w="100%">
                       <Text fontWeight="medium" fontSize="sm">{file.name}</Text>
                       <Text fontSize="xs" color="gray.500">{file.path}</Text>
@@ -317,8 +343,40 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                 <Text fontSize="xs" fontWeight="400">{selectedModel}</Text>
               </MenuButton>
               <MenuList>
-                <MenuItem onClick={() => setSelectedModel('GPT-4o')}>GPT-4o</MenuItem>
-                <MenuItem onClick={() => setSelectedModel('Codestral')}>Codestral</MenuItem>
+                <MenuItem 
+                  onClick={() => setSelectedModel('Codestral')}
+                  sx={{
+                    _hover: {
+                      bg: 'blue.50',
+                    },
+                  }}
+                >
+                  Codestral
+                </MenuItem>
+                
+                <Divider my={2} />
+
+                <Tooltip 
+                  label="Coming Soon" 
+                  fontSize="xs" 
+                  fontWeight="medium"
+                  placement="top" 
+                  sx={{
+                    bg: 'white',
+                    color: '#5688e8',
+                    mt: '4px',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                  }}
+                >
+                  <Box>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>GPT-4o</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>Claude 3.5 Sonnet</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>GPT-4o Mini</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>O1 Mini</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>O1 Preview</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>Cursor Small</MenuItem>
+                  </Box>
+                </Tooltip>
               </MenuList>
             </Menu>
           </Box>
