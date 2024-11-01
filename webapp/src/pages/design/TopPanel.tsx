@@ -39,32 +39,29 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const handleMouseLeave = () => setHover(false);
 
   return (
-    <Box as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" px={1} py={1}>
-      <Flex alignItems="center" justifyContent="space-evenly" width="100%" px={8} gap={10}>
+    <Flex as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" p={1} justifyContent="space-evenly" alignItems="center">
+      <Flex flex={1} alignItems="center" justifyContent="space-evenly" px={8} gap={10}>
+
         <Flex alignItems="center" gap={2}>
-          <Menu>
-              <MenuButton as={Button} variant="ghost" colorScheme="blue" fontSize="xs" opacity={0.8}>
-                <Text fontSize="sm" fontWeight="medium">File</Text>
-              </MenuButton>
-              <MenuList fontSize="xs">
-                <MenuItem onClick={onClickOpen}>Open</MenuItem>
-                <MenuItem onClick={onClickSave}>Save</MenuItem>
-                <MenuItem onClick={onClickNew}>New</MenuItem>
-              </MenuList>
-            </Menu>
-          <Button variant="ghost"colorScheme="blue" fontSize="xs" opacity={0.8}><Text fontSize="sm" fontWeight="medium">Team</Text></Button>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickOpen}>Open</Button>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickSave}>Save</Button>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickNew}>New</Button>
+            <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}><Text fontSize="xs" color="#5688e8" fontWeight="medium">Generate Code</Text></Button>
+
         </Flex>
         <Flex justifyContent="space-between" alignItems="center" gap={2} flexGrow={1}>
-          <Flex width="100%" alignItems="center" justifyContent="center">
+
+          <Flex flex={1} alignItems="center" justifyContent="space-evenly" gap={8}>
             <Box
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
               p={2}
+              gap={2}
               borderRadius="md"
               position="relative"
-              fontSize="sm"
-              fontWeight="semibold"
-              color="blue.600"
+              fontSize="xs"
+              fontWeight="medium"
+              color="gray.700"
             >
               {projectContext.name || 'Untitled Project'}
               {hover && (
@@ -83,28 +80,20 @@ const TopPanel: React.FC<TopPanelProps> = ({
                   {projectContext.description && <Text fontSize="xs">{projectContext.description}</Text>}
                 </Box>
               )}
+              <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickInput}><Pencil className="h-3 w-3" /></Button>
             </Box>
-          <Button variant="ghost" size="xs" colorScheme="blue" onClick={onClickInput}><Pencil className="h-3 w-3" /></Button>
+          
           </Flex>
-          <Flex justifyContent="center" alignItems="center" flexGrow={1}>
-          <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}>
-            <Sparkles className="h-3 w-3 mr-1 text-blue-600"/>
-            <Text fontSize="xs" color="blue.600">Generate Code</Text>
-            </Button>
-          </Flex>
+            
         </Flex>
         <Flex alignItems="center" gap={1} padding={1}>
           <Flex alignItems="center" gap={4}>
-           <Button variant="ghost" size="sm" colorScheme="blue" fontSize="xs" opacity={0.8}>
-              <Settings className="h-3 w-3 mr-1" />
-              <Text fontSize="sm" fontWeight="medium">Settings</Text>
-           </Button>
             <Avatar size="xs" src="/placeholder.svg" />
           </Flex>
         </Flex>
         
       </Flex>
-    </Box>
+    </Flex>
   );
 };
 

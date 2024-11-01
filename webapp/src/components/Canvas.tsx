@@ -41,10 +41,8 @@ const Canvas: React.FC<CanvasProps> = ({
   const canvasRef = useRef<HTMLDivElement>(null);
   const { projectContext, setProjectContext } = useProjectContext();
 
-  // Memoize nodeTypes
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
-  // Handle drop event for adding new nodes
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();

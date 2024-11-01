@@ -134,20 +134,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
 
   return (
-    <Box 
-      width='300px' 
-      bg='white' 
-      p={4} 
-      borderLeft="1px solid" 
-      borderColor="gray.200" 
-      shadow="md"
-    >
+    <Box width='300px' bg='white' p={4} borderLeft="1px solid" borderColor="gray.200" shadow="xl">
       <VStack spacing={4} align='stretch'>
         {selectedNode && (
           <>
-            <Text fontSize='xl' fontWeight='bold'>
-              {(selectedNode.data.item as ToolboxItem).getType()}
-            </Text>
+            <Text fontSize='lg' fontWeight='medium'>{(selectedNode.data.item as ToolboxItem).getType()} </Text>
             {(selectedNode.data.item as ToolboxItem).renderProperties(
               programs.map((p) => {
                 const item = p.data.item as ToolboxItem;
@@ -160,43 +151,50 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         )}
         {selectedEdge && (
           <>
-            <Text fontSize='xl' fontWeight='bold'>
+            <Text fontSize='lg' fontWeight='medium'>
               Edge
             </Text>
-            <Text fontSize='sm' fontWeight='bold'>
+            <Text fontSize='sm' fontWeight='normal'>
               From: {fromNode?.data.label} - To: {toNode?.data.label}
             </Text>
             <Input
               placeholder='Label'
               value={edgeLabel}
               onChange={(e) => setEdgeLabel(e.target.value)}
+              fontSize="sm"
+              color="gray.700"
+              _placeholder={{ color: 'gray.400' }}
+              py={0}
+              px={3}
             />
           </>
         )}
         <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center" gap={4}>
           <Button 
-            width="70%"
+            width="60%"
             bg="white" 
-            color="black" 
+            color="gray.700"
+            fontWeight="normal"
             _hover={{ bg: "gray.100" }} 
             onClick={handleSave}
-            leftIcon={<IoSaveOutline />}
             border="1px solid"
             borderColor="gray.300"
-            shadow="md"
+            shadow="sm"
+            size="xs"
           >
             Save
           </Button>
           <Button 
-            width="70%"
+            width="60%"
             bg="white" 
-            color="black" 
+            color="gray.700"
+            fontWeight="normal"
             _hover={{ bg: "gray.100" }} 
             onClick={handleDelete}
-            leftIcon={<IoTrashOutline />}
             border="1px solid"
             borderColor="gray.300"
-            shadow="md"
+            shadow="sm"
+            size="xs"
           >
             Delete
           </Button>
