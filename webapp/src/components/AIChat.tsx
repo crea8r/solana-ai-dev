@@ -279,39 +279,49 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
 
       <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" >
         <Flex direction="row" justifyContent="flex-start" alignItems="center" width="100%">
-          <Menu>
-            <MenuButton as={Button} size="xs" leftIcon={<Plus size={13} />} variant="ghost"/>
-            <MenuList>
-              <MenuItem icon={<BsPaperclip />} onClick={() => fileInputRef.current?.click()}>
-                Upload Custom File
-              </MenuItem>
-              {allFiles.map((file) => (
-                <MenuItem key={file.path} onClick={() => handleFileSelect(file)}>
-                  <Flex justify="space-between" w="100%">
-                    <Text fontWeight="bold" fontSize="sm">{file.name}</Text>
-                    <Text fontSize="xs" color="gray.500">{file.path}</Text>
-                  </Flex>
+          <Box shadow="md">
+            <Menu placement="auto" isLazy>
+              <MenuButton as={Button} size="xs" leftIcon={<Plus size={13} />} variant="ghost"/>
+              <MenuList 
+                zIndex={10} 
+                maxHeight="70vh" 
+                overflowY="auto" 
+                shadow="2xl"
+                sx={{
+                  maxWidth: '70vw', // Limit menu width within viewport
+                }}
+              >
+                <MenuItem icon={<BsPaperclip />} onClick={() => fileInputRef.current?.click()}>
+                  Upload Custom File
                 </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
-
+                {allFiles.map((file) => (
+                  <MenuItem key={file.path} onClick={() => handleFileSelect(file)}>
+                    <Flex justify="space-between" w="100%">
+                      <Text fontWeight="medium" fontSize="sm">{file.name}</Text>
+                      <Text fontSize="xs" color="gray.500">{file.path}</Text>
+                    </Flex>
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+          </Box>
           <input
             type="file"
             ref={fileInputRef}
             style={{ display: 'none' }}
             onChange={handleCustomFileUpload}
           />
-
-          <Menu>
-            <MenuButton as={Button} size="xs" variant="ghost" leftIcon={<ChevronUp size={13} />}>
-              <Text fontSize="xs" fontWeight="400">{selectedModel}</Text>
-            </MenuButton>
-            <MenuList>
-              <MenuItem onClick={() => setSelectedModel('GPT-4o')}>GPT-4o</MenuItem>
-              <MenuItem onClick={() => setSelectedModel('Codestral')}>Codestral</MenuItem>
-            </MenuList>
-          </Menu>
+          <Box shadow="md" ml={2}>
+            <Menu placement="auto">
+              <MenuButton as={Button} size="xs" variant="ghost" leftIcon={<ChevronUp size={13} />}>
+                <Text fontSize="xs" fontWeight="400">{selectedModel}</Text>
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={() => setSelectedModel('GPT-4o')}>GPT-4o</MenuItem>
+                <MenuItem onClick={() => setSelectedModel('Codestral')}>Codestral</MenuItem>
+              </MenuList>
+            </Menu>
+          </Box>
         </Flex>
       </Flex>
     </Flex>

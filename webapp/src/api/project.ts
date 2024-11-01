@@ -104,4 +104,19 @@ export const projectApi = {
       throw error;
     }
   },
+
+  runProjectCommand: async (
+    projectId: string,
+    commandType: 'anchor clean' | 'cargo clean'
+  ): Promise<{ message: string; taskId: string }> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/run-command`, {
+        commandType,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error running project command:', error);
+      throw error;
+    }
+  },
 };

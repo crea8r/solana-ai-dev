@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, Flex, Text, Icon } from '@chakra-ui/react';
+import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
 import { keyframes } from '@emotion/react';
 
 type TerminalProps = {
   logs: string[];
+  clearLogs: () => void;
+  onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
 };
 
 const pulse = keyframes`
@@ -16,7 +18,7 @@ const pulse = keyframes`
   }
 `;
 
-const Terminal: React.FC<TerminalProps> = ({ logs }) => {
+const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) => {
   return (
     <Box
       flex="1"
@@ -30,6 +32,19 @@ const Terminal: React.FC<TerminalProps> = ({ logs }) => {
       borderColor="gray.200"
     >
       <Flex bg="gray.100" px={4} alignItems="center" justifyContent="flex-end">
+        <Menu>
+          <MenuButton as={Button} size="xs" colorScheme="gray" variant="ghost">
+            <Text fontSize="xs" color="gray.600" fontWeight="normal">Commands</Text>
+          </MenuButton>
+          <MenuList fontSize="xs" p={0}>
+            <MenuItem onClick={clearLogs}>clear</MenuItem>
+            <MenuItem onClick={() => onRunCommand('cargo clean')}>cargo clean</MenuItem>
+            <MenuItem onClick={() => onRunCommand('anchor clean')}>anchor clean</MenuItem>
+            {/* <MenuItem onClick={() => onRunCommand('anchor build')}>anchor build</MenuItem>
+            <MenuItem onClick={() => onRunCommand('anchor deploy')}>anchor deploy</MenuItem>
+            <MenuItem onClick={() => onRunCommand('anchor test')}>anchor test</MenuItem> */}
+          </MenuList>
+        </Menu>
         <Flex alignItems="center" gap={2} p={2}>
           <Icon as={Minus} w={3} h={3} color="gray.500" />
           <Icon as={Square} w={3} h={3} color="gray.500" />

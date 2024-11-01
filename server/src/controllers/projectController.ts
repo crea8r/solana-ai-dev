@@ -2,12 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import pool from 'src/config/database';
 import { AppError } from 'src/middleware/errorHandler';
-import { startDeleteProjectFolderTask } from 'src/utils/fileUtils';
+import { getProjectRootPath, startDeleteProjectFolderTask } from 'src/utils/fileUtils';
 import { normalizeProjectName } from 'src/utils/stringUtils';
 import {
   startAnchorBuildTask,
   startAnchorInitTask,
   startAnchorTestTask,
+  startCustomCommandTask,
 } from 'src/utils/projectUtils';
 
 // Initialize default Anchor project
@@ -397,3 +398,45 @@ export const getProjectDetails = async (
     next(error);
   }
 };
+
+export const runProjectCommand = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const { commandType } = req.body;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+  if (!['anchor clean', 'cargo clean'].includes(commandType)) return next(new AppError('Invalid command type', 400));
+
+  try {
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to access it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startCustomCommandTask(id, userId, commandType);
+
+    res.status(200).json({
+      message: `${commandType} process started`,
+      taskId: taskId,
+    });
+  } catch (error) {
+    console.error('Error in runProjectCommand:', error);
+    next(new AppError('Failed to run project command', 500));
+  }
+};
+
+

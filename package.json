@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@types/react-resize-detector": "^6.1.0",
-    "react-resize-detector": "^11.0.1"
-  }
-}

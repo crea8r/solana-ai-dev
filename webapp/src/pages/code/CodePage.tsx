@@ -11,7 +11,7 @@ import { useProjectContext } from '../../contexts/ProjectContext';
 import { extractCodeBlock } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { taskApi } from '../../api/task';
-import { projectApi } from '../../api/project'; 
+import { projectApi } from '../../api/project';
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -38,6 +38,10 @@ const CodePage = () => {
    // console.log(message);
   };
 
+  const clearLogs = () => {
+    setTerminalLogs([]);
+  };
+
   useEffect(() => {
     console.log(projectContext);
   }, [projectContext]);
@@ -56,6 +60,13 @@ const CodePage = () => {
           };
           setFiles(rootNode);
           console.log('Mapped Files:', rootNode);
+
+          if (mappedFiles.length > 0) {
+            const firstFile = findFirstFile(mappedFiles);
+            if (firstFile) {
+              handleSelectFile(firstFile);
+            }
+          }
         } catch (error) {
           console.error('Failed to fetch directory structure', error);
         }
@@ -63,6 +74,21 @@ const CodePage = () => {
     };
     fetchDirectoryStructure();
   }, [projectContext.name]);
+
+  const findFirstFile = (files: FileTreeItemType[]): FileTreeItemType | undefined => {
+    for (const file of files) {
+      if (file.type === 'file') {
+        return file;
+      }
+      if (file.children) {
+        const found = findFirstFile(file.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return undefined;
+  };
 
   function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
     const mappedChildren = node.children
@@ -215,6 +241,27 @@ const CodePage = () => {
     setFileContent('');
   };
 
+  const handleRunCommand = async (commandType: 'anchor clean' | 'cargo clean') => {
+    setIsLoading(true);
+    try {
+      const projectId = projectContext.id || '';
+      addLog(`Running command: ${commandType} for project ID: ${projectId}`, true);
+
+      const response = await projectApi.runProjectCommand(projectId, commandType);
+
+      if (response.taskId) {
+        addLog(`Command process initiated. Task ID: ${response.taskId}`, true);
+        startPollingTaskStatus(response.taskId);
+      } else {
+        addLog('Command initiation failed.', true);
+      }
+    } catch (error) {
+      addLog(`Error running command: ${error}`, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Flex direction="column" maxHeight="100vh !important" overflow="auto" justifyContent="space-between">
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
@@ -234,8 +281,10 @@ const CodePage = () => {
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
             terminalLogs={terminalLogs}
+            clearLogs={clearLogs}
             onChange={handleContentChange}
             onSave={handleSave}
+            onRunCommand={handleRunCommand}
           />
         </Box>
         <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">

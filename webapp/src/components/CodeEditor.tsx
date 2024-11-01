@@ -9,19 +9,26 @@ type CodeEditorProps = {
   content: string; 
   selectedFile?: FileTreeItemType;
   terminalLogs: string[]; 
+  clearLogs: () => void;
   onChange: (newContent: string) => void;
   onSave: () => void;
+  onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
 };
 
 const CodeEditor = ({
   content,
   selectedFile,
   terminalLogs,
+  clearLogs,
   onChange,
   onSave,
+  onRunCommand,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
+
+  // Add a state to manage the selected file
+  const [currentFile, setCurrentFile] = useState<FileTreeItemType | undefined>(selectedFile);
 
   // Define a set to keep track of defined themes
   const definedThemes = new Set<string>();
@@ -93,8 +100,14 @@ const CodeEditor = ({
   };
 
   useEffect(() => {
-    if (selectedFile?.path) {
-      const uri = monaco.Uri.parse(`file:///${selectedFile.path}`);
+    if (!currentFile && selectedFile) {
+      setCurrentFile(selectedFile);
+    }
+  }, [selectedFile]);
+
+  useEffect(() => {
+    if (currentFile?.path) {
+      const uri = monaco.Uri.parse(`file:///${currentFile.path}`);
       let model = monaco.editor.getModel(uri);
       
       // Dispose of the old model if it exists
@@ -110,7 +123,7 @@ const CodeEditor = ({
 
       editorRef.current?.setModel(model);
     }
-  }, [selectedFile]);
+  }, [currentFile]);
 
   useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;
@@ -162,9 +175,9 @@ const CodeEditor = ({
 
   return (
     <Flex direction="column" height="100%" overflowY="hidden">
-      {selectedFile ? (
+      {currentFile ? (
         <Box py={1} px={2} borderBottom="1px solid #ccc">
-          {selectedFile.path}
+          {currentFile.path}
         </Box>
       ) : null}
 
@@ -182,7 +195,7 @@ const CodeEditor = ({
       </Box>
 
       <Box flex="1" mb={2}>
-        <Terminal logs={terminalLogs} />
+        <Terminal logs={terminalLogs} clearLogs={clearLogs} onRunCommand={onRunCommand} />
       </Box>
     </Flex>
   );
