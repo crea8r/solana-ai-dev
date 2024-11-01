@@ -32,7 +32,6 @@ export const fileApi = {
     }
   },
 
-  // Get file content
   getFileContent: async (
     projectId: string,
     filePath: string
@@ -48,7 +47,6 @@ export const fileApi = {
     }
   },
 
-  // Create file
   createFile: async (
     projectId: string,
     filePath: string,
@@ -66,7 +64,6 @@ export const fileApi = {
     }
   },
 
-  // Update file
   updateFile: async (
     rootPath: string,
     filePath: string,

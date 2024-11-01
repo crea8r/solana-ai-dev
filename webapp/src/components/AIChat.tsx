@@ -9,6 +9,8 @@ import { FileTreeItemType } from '../components/FileTree';
 import { chatAI } from '../services/prompt'; 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { fileApi } from '../api/file';
+import { taskApi } from '../api/task';
 
 export interface AIMessageType {
   text: string;
@@ -69,6 +71,10 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   };
 
   useEffect(() => {
+    console.log('projectContext: ', projectContext);
+  }, [projectContext]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -76,48 +82,59 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     setLocalSelectedFile(selectedFile);
   }, [selectedFile]);
 
-  const fetchFileContent = async (path: string): Promise<string> => {
+  const fetchFileContent = async (projectId: string, filePath: string): Promise<string> => {
     try {
-      const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      return data.content; // Adjust based on your API response
+      const data = await fileApi.getFileContent(projectId, filePath);
+      return data.message;
     } catch (error) {
-      console.error(`Error fetching content for ${path}:`, error);
+      console.error(`Error fetching content for ${filePath}:`, error);
       return 'Error loading content.';
     }
   };
 
   const sendMessage = async () => {
     if (input.trim()) {
-      const selectedFiles = [
-        localSelectedFile,
-        ...additionalFiles
-      ].filter((file): file is FileTreeItemType => Boolean(file));
+      const selectedFiles = [localSelectedFile, ...additionalFiles].filter(
+        (file): file is FileTreeItemType => Boolean(file)
+      );
 
       setMessages([...messages, { text: input, sender: 'user', files: selectedFiles }]);
       setInput('');
 
       try {
         const messageWithContext = `User's Question: ${input}`;
-        
-        // Fetch contents for all selected files
-        const fileContexts = await Promise.all(selectedFiles.map(async (file) => {
-          if (file.path) {
-            const content = await fetchFileContent(file.path);
-            return {
-              path: file.path,
-              content: content || 'No content available',
-            };
-          } else {
-            return {
-              path: 'Unknown path',
-              content: 'No content available',
-            };
+
+        const fileTasks = await Promise.all(
+          selectedFiles.map(async (file) => {
+            if (file.path) {
+              const taskResponse = await fileApi.getFileContent(projectContext.id, file.path);
+              return { filePath: file.path, taskId: taskResponse.taskId };
+            }
+            return null;
+          })
+        );
+
+        const fetchContent = async (taskId: string): Promise<string> => {
+          while (true) {
+            const { task } = await taskApi.getTask(taskId);
+            if (task.status === 'succeed') return task.result || 'No content available';
+            if (task.status === 'failed') throw new Error('Failed to fetch file content');
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
-        }));
+        };
+
+        const fileContexts = await Promise.all(
+          fileTasks.map(async (fileTask) => {
+            if (fileTask) {
+              const content = await fetchContent(fileTask.taskId);
+              return {
+                path: fileTask.filePath,
+                content: content || 'No content available',
+              };
+            }
+            return { path: 'Unknown path', content: 'No content available' };
+          })
+        );
 
         const response = await chatAI(messageWithContext, fileContexts, selectedModel);
         const responseText = await response;
@@ -373,7 +390,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                     },
                   }}
                 >
-                  Codestral
+                  codestral
                 </MenuItem>
                 
                 <Divider my={2} />
@@ -391,12 +408,12 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                   }}
                 >
                   <Box>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>GPT-4o</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>Claude 3.5 Sonnet</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>GPT-4o Mini</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>O1 Mini</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>O1 Preview</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>Cursor Small</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>gpt-4o</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>claude 3.5 sonnet</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>gpt-4o mini</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>o1 mini</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>o1 preview</MenuItem>
+                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>cursor small</MenuItem>
                   </Box>
                 </Tooltip>
               </MenuList>

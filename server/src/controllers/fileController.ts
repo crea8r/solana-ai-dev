@@ -150,11 +150,9 @@ export const getFileContent = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+
   try {
-    // Check if the project exists and belongs to the user's organization
     const projectCheck = await pool.query(
       'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
       [projectId, orgId]
