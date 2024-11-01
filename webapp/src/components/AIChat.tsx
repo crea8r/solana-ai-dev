@@ -76,6 +76,20 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     setLocalSelectedFile(selectedFile);
   }, [selectedFile]);
 
+  const fetchFileContent = async (path: string): Promise<string> => {
+    try {
+      const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      return data.content; // Adjust based on your API response
+    } catch (error) {
+      console.error(`Error fetching content for ${path}:`, error);
+      return 'Error loading content.';
+    }
+  };
+
   const sendMessage = async () => {
     if (input.trim()) {
       const selectedFiles = [
@@ -89,13 +103,21 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
       try {
         const messageWithContext = `User's Question: ${input}`;
         
-        const fileContexts = [
-          { path: localSelectedFile?.path || '', content: fileContent },
-          ...additionalFiles.map((file) => ({
-            path: file.path || '',
-            content: 'Content not loaded',
-          }))
-        ];
+        // Fetch contents for all selected files
+        const fileContexts = await Promise.all(selectedFiles.map(async (file) => {
+          if (file.path) {
+            const content = await fetchFileContent(file.path);
+            return {
+              path: file.path,
+              content: content || 'No content available',
+            };
+          } else {
+            return {
+              path: 'Unknown path',
+              content: 'No content available',
+            };
+          }
+        }));
 
         const response = await chatAI(messageWithContext, fileContexts, selectedModel);
         const responseText = await response;
