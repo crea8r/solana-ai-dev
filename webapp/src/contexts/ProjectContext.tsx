@@ -1,56 +1,26 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Edge, Node } from 'react-flow-renderer';
-import { FileTreeItemType } from '../components/FileTree';
-import { Docs } from './DocsContext';
-import { CodeFile } from './CodeFileContext';
-import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { ProjectInfoToSave } from '../interfaces/project';
+import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
+import { Project, ProjectInfoToSave } from '../interfaces/project';
 
-interface ProjectDetails {
-  nodes: Node[];
-  edges: Edge[];
-}
-
-export interface SavedProject {
-  id?: string;
-  rootPath?: string;
-  name: string;
-  description: string;
-  details: ProjectDetails;
-  files: FileTreeItemType;
-  codes?: CodeFile[];
-  docs?: Docs[];
-  projectSaved: boolean;
-  anchorInitCompleted: boolean;
-  filesAndCodesGenerated: boolean;
-}
-
-export interface InMemoryProject {
-  //id: string;
-  name: string;
-  description: string;
-  nodes: Node[];
-  edges: Edge[];
-  files: FileTreeItemType;
-  codes?: CodeFile[];
-  docs?: Docs[];
-}
-
-interface Program {
-  id: string;
-  label: string;
-  localValues: {
-    name: string;
-    description?: string;
-  };
-}
+// Define transformation function
+export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSave => ({
+  id: project.id,
+  name: project.name,
+  description: project.description,
+  details: {
+    nodes: project.details.nodes,
+    edges: project.details.edges,
+    isAnchorInit: project.details.isAnchorInit,
+    isCode: project.details.isCode,
+    aiFilePaths: project.details.aiFilePaths,
+    aiStructure: project.details.aiStructure,
+  },
+});
 
 interface ProjectContextType {
-  project: InMemoryProject | null;
-  savedProject: SavedProject | null;
-  setProject: (project: InMemoryProject | null) => void;
-  updateProject: (updatedData: Partial<InMemoryProject>) => void;
-  updateSavedProject: (updatedData: Partial<SavedProject>) => void;
+  projectContext: Project;
+  setProjectContext: Dispatch<SetStateAction<Project>>;
+  projectInfoToSave: ProjectInfoToSave;
+  setProjectInfoToSave: Dispatch<SetStateAction<ProjectInfoToSave>>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -58,10 +28,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [project, setProject] = useState<InMemoryProject | null>(null);
-
-  // Initialize savedProject with default values
-  const [savedProject, setSavedProject] = useState<SavedProject>({
+  const [projectContext, setProjectContext] = useState<Project>({
     id: '',
     rootPath: '',
     name: '',
@@ -69,84 +36,44 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     details: {
       nodes: [],
       edges: [],
+      files: { name: '', type: 'directory', children: [] },
+      codes: [],
+      docs: [],
+      isAnchorInit: false,
+      isCode: false,
+      aiFilePaths: [],
+      aiStructure: '',
     },
-    files: { name: '', children: [] },
-    codes: [],
-    docs: [],
-    projectSaved: false,
-    anchorInitCompleted: false,
-    filesAndCodesGenerated: false,
   });
 
-  const updateSavedProject = (updatedData: Partial<SavedProject>) => {
-    setSavedProject((prevProject) => {
-      // Merge existing savedProject state with new updatedData
-      const newProject = {
-        id: updatedData.id ?? prevProject.id,
-        rootPath: updatedData.rootPath ?? prevProject.rootPath,
-        name: updatedData.name ?? prevProject.name,
-        description: updatedData.description ?? prevProject.description,
-        details: {
-          nodes: updatedData.details?.nodes ?? prevProject.details.nodes,
-          edges: updatedData.details?.edges ?? prevProject.details.edges,
-        },
-        files: updatedData.files ?? prevProject.files,
-        codes: updatedData.codes ?? prevProject.codes,
-        docs: updatedData.docs ?? prevProject.docs,
-        projectSaved: updatedData.projectSaved ?? prevProject.projectSaved,
-        anchorInitCompleted: updatedData.anchorInitCompleted ?? prevProject.anchorInitCompleted,
-        filesAndCodesGenerated: updatedData.filesAndCodesGenerated ?? prevProject.filesAndCodesGenerated,
-      };
-      return newProject;
-    });
-  };
+  // State for projectInfoToSave, initially synchronized with projectContext
+  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(
+    transformToProjectInfoToSave(projectContext)
+  );
 
-  const updateProject = (updatedData: Partial<InMemoryProject>) => {
-    setProject((prevProject) => {
-      if (!prevProject) {
-        return {
-          name: updatedData.name || '[Project Context] Project name',
-          description: updatedData.description || '[Project Context] project description',
-          nodes: updatedData.nodes || [],
-          edges: updatedData.edges || [],
-          files: updatedData.files || { name: '', children: [] },
-          codes: updatedData.codes || [],
-          docs: updatedData.docs || [],
-        };
-      }
-      return {
-        ...prevProject,
-        ...updatedData,
-        nodes: updatedData.nodes || prevProject.nodes,
-      };
-    });
-  };
-
-  /*
+  // Synchronize projectInfoToSave whenever projectContext changes
   useEffect(() => {
-    if (savedProject) {
-      console.log(`[Project Context] savedProject updated: \n Project ID: ${savedProject.id} \n Root Path: ${savedProject.rootPath} \n Name: ${savedProject.name} \n Description: ${savedProject.description}`);
-    }
-  }, [savedProject]);
-
-  useEffect(() => {
-      if (project) {
-      console.log(`[Project Context] project updated: \n Project Name: ${project.name} \n ProjectDescription: ${project.description} \n Nodes: ${JSON.stringify(project.nodes)}`);
-    }
-  }, [project]);
-  */
+    setProjectInfoToSave(transformToProjectInfoToSave(projectContext));
+  }, [projectContext]);
 
   return (
-    <ProjectContext.Provider value={{ project, savedProject, setProject, updateProject, updateSavedProject }}>
+    <ProjectContext.Provider
+      value={{
+        projectContext,
+        setProjectContext,
+        projectInfoToSave,
+        setProjectInfoToSave,
+      }}
+    >
       {children}
     </ProjectContext.Provider>
   );
 };
 
-export const useProject = () => {
+export const useProjectContext = () => {
   const context = useContext(ProjectContext);
   if (context === undefined) {
-    throw new Error('useProject must be used within a ProjectProvider');
+    throw new Error('useProjectContext must be used within a ProjectProvider');
   }
   return context;
 };

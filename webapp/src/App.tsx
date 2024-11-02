@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -14,8 +14,16 @@ import MainLayout from './components/MainLayout';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DocsProvider } from './contexts/DocsContext';
 import { CodeFileProvider } from './contexts/CodeFileContext';
+import { initGA, logPageView } from './utils/analytics';
+
+const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 
 const App: React.FC = () => {
+  useEffect(() => {
+    initGA(GA_MEASUREMENT_ID);
+    logPageView();
+  }, []);
+
   return (
     <ChakraProvider>
       <Router>

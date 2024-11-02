@@ -11,7 +11,7 @@ import ReactFlow, {
 import { Box } from '@chakra-ui/react';
 import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
-import { useProject } from '../contexts/ProjectContext';
+import { useProjectContext } from '../contexts/ProjectContext';
 
 interface CanvasProps {
   nodes: Node[];
@@ -39,12 +39,10 @@ const Canvas: React.FC<CanvasProps> = ({
   onAddNode,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const { project, setProject, updateProject } = useProject();
+  const { projectContext, setProjectContext } = useProjectContext();
 
-  // Memoize nodeTypes
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
-  // Handle drop event for adding new nodes
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -88,7 +86,9 @@ const Canvas: React.FC<CanvasProps> = ({
 
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
-      updateProject({ nodes, edges });
+      setProjectContext((prevProjectContext) => ({ 
+        ...prevProjectContext, 
+        details: { ...prevProjectContext.details, nodes, edges } }));
     }
   }, [nodes, edges]);
 

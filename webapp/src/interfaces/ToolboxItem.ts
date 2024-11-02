@@ -1,4 +1,3 @@
-// src/interfaces/ToolboxItem.ts
 import { Node } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
 

@@ -6,25 +6,10 @@ import {
   ListProjectsResponse,
 } from '../interfaces/project';
 import { TaskResponse } from '../interfaces/task';
-import { InMemoryProject, useProject } from '../contexts/ProjectContext';
+import { Project } from '../interfaces/project';
 
 export const projectApi = {
 
-  // save project (create new project on database)
-  saveProject: async (
-    projectInfo: ProjectInfoToSave,
-  ): Promise<SaveProjectResponse> => {
-    //console.log('inside projectApi.saveProject', projectInfo);
-    try {
-      const response = await api.post('/projects/create', projectInfo);
-      return response.data;
-    } catch (error) {
-      console.error('Error saving project:', error);
-      throw error;
-    }
-  },
-
-  // List projects
   listProjects: async (
     page: number = 1,
     limit: number = 10,
@@ -41,7 +26,6 @@ export const projectApi = {
     }
   },
 
-  // Get project details
   getProjectDetails: async (projectId: string): Promise<ProjectDetail> => {
     try {
       const response = await api.get(`/projects/details/${projectId}`);
@@ -52,7 +36,6 @@ export const projectApi = {
     }
   },
 
-  // Create a new project
   createProject: async (
     projectInfo: ProjectInfoToSave
   ): Promise<SaveProjectResponse> => {
@@ -65,7 +48,6 @@ export const projectApi = {
     }
   },
 
-  // Update an existing project
   updateProject: async (
     projectId: string,
     projectInfo: ProjectInfoToSave
@@ -79,7 +61,6 @@ export const projectApi = {
     }
   },
 
-  // Delete a project
   deleteProject: async (projectId: string): Promise<TaskResponse> => {
     try {
       const response = await api.delete(`/projects/${projectId}`);
@@ -90,7 +71,6 @@ export const projectApi = {
     }
   },
 
-  // Initialize Anchor project
   initAnchorProject: async (
     projectId: string, 
     rootPath: string,
@@ -105,7 +85,6 @@ export const projectApi = {
     }
   },
 
-  // Build a project
   buildProject: async (projectId: string): Promise<TaskResponse> => {
     try {
       const response = await api.post(`/projects/${projectId}/build`);
@@ -116,13 +95,27 @@ export const projectApi = {
     }
   },
 
-  // Test a project
   testProject: async (projectId: string): Promise<TaskResponse> => {
     try {
       const response = await api.post(`/projects/${projectId}/test`);
       return response.data;
     } catch (error) {
       console.error('Error testing project:', error);
+      throw error;
+    }
+  },
+
+  runProjectCommand: async (
+    projectId: string,
+    commandType: 'anchor clean' | 'cargo clean'
+  ): Promise<{ message: string; taskId: string }> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/run-command`, {
+        commandType,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error running project command:', error);
       throw error;
     }
   },

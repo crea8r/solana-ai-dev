@@ -20,6 +20,7 @@ import {
   ListProjectsResponse,
   ProjectListItem,
 } from '../../interfaces/project';
+import { Trash2 } from 'lucide-react';
 import { shortenText } from '../../utils/text';
 
 interface ListProjectProps {
@@ -69,6 +70,11 @@ const ListProject: React.FC<ListProjectProps> = ({
     setPage(1);
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    await projectApi.deleteProject(projectId);
+    fetchProjects();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size='xl'>
       <ModalOverlay />
@@ -85,13 +91,21 @@ const ListProject: React.FC<ListProjectProps> = ({
             {loading && <Spinner />}
             {error && <Text color='red.500'>{error}</Text>}
             {projects?.map((project) => (
+              <Flex 
+                key={project.id} 
+                justify="center" 
+                align="center" 
+                mb={2}   
+                p={2}              
+                borderWidth={1}
+                borderRadius='md'
+>
               <Box
                 key={project.id}
                 p={3}
-                borderWidth={1}
-                borderRadius='md'
                 _hover={{ bg: 'gray.100', cursor: 'pointer' }}
                 onClick={() => handleProjectClick(project.id, project.name)}
+                width="100%"
               >
                 <Text fontWeight='bold'>{project.name}</Text>
                 <Text fontSize='sm' color='gray.600'>
@@ -100,8 +114,12 @@ const ListProject: React.FC<ListProjectProps> = ({
                 <Text fontSize='xs' color='gray.400'>
                   Last updated:{' '}
                   {new Date(project.last_updated).toLocaleString()}
-                </Text>
-              </Box>
+                  </Text>
+                </Box>
+                <Button variant="ghost" size="sm" colorScheme="gray" onClick={() => handleDeleteProject(project.id)}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </Flex>
             ))}
           </VStack>
         </ModalBody>

@@ -113,3 +113,23 @@ export const startAnchorTestTask = async (
 
   return taskId;
 };
+
+export const startCustomCommandTask = async (
+  projectId: string,
+  creatorId: string,
+  commandType: 'anchor clean' | 'cargo clean'
+): Promise<string> => {
+  const taskId = await createTask(commandType, creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const rootPath = await getProjectRootPath(projectId);
+      const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
+      await runCommand(commandType, projectPath, taskId);
+    } catch (error: any) {
+      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+    }
+  });
+
+  return taskId;
+};

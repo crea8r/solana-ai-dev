@@ -30,14 +30,14 @@ const getFullDirectoryStructure = async (
   const fileStructure: FileStructure[] = await Promise.all(
     files.map(async (file) => {
       const fullPath = path.join(directoryPath, file.name);
-      const fileRelativePath = path.join(relativePath, file.name); // Get the relative path
+      const fileRelativePath = path.join(relativePath, file.name); 
 
       if (file.isDirectory()) {
         return {
           name: file.name,
           isDirectory: true,
           path: fileRelativePath,
-          children: await getFullDirectoryStructure(fullPath, fileRelativePath), // Pass the relative path
+          children: await getFullDirectoryStructure(fullPath, fileRelativePath),
         };
       } else {
         return {
@@ -150,11 +150,9 @@ export const getFileContent = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+
   try {
-    // Check if the project exists and belongs to the user's organization
     const projectCheck = await pool.query(
       'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
       [projectId, orgId]
@@ -272,6 +270,29 @@ export const updateFile = async (
   }
 };
 
+export const updateFileServer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { rootPath, filePath, content } = req.body;
+  const rootFolder = process.env.ROOT_FOLDER;
+
+  if (!filePath || !content || !rootFolder) return next(new AppError('Missing required parameters', 400));
+
+  const fullPath = path.join(rootFolder, rootPath, filePath);
+
+  try {
+    await fs.access(fullPath);
+    await fs.writeFile(fullPath, content, 'utf8');
+
+    res.status(200).json({message: 'File updated successfully'});
+  } catch (error) {
+    console.error('Error updating file:', error);
+    next(new AppError('Failed to update file', 500));
+  }
+};
+
 export const deleteFile = async (
   req: Request,
   res: Response,
@@ -309,5 +330,73 @@ export const deleteFile = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const deleteDirectory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { projectId, rootPath } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
+
+  const rootFolder = process.env.ROOT_FOLDER;
+  if (!rootFolder) { return next(new AppError('Root folder not configured', 500)); }
+
+  const directoryPath = path.join(rootFolder, rootPath);
+  console.log("[controller] directoryPath", directoryPath);
+
+  try {
+    await fs.access(directoryPath);
+    await fs.rmdir(directoryPath, { recursive: true });
+
+    res.status(200).json({ message: 'Directory deleted successfully' });
+  } catch (error) {
+    console.error('Error in deleteDirectory:', error);
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      next(new AppError('Directory not found', 404));
+    } else {
+      next(new AppError('Failed to delete directory', 500));
+    }
+  }
+};
+
+export const renameDirectory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
+
+  const { rootPath, newDirName } = req.body;
+  if (!rootPath || !newDirName) return next(new AppError('Missing required parameters', 400));
+
+  const rootFolder = process.env.ROOT_FOLDER;
+  if (!rootFolder) return next(new AppError('Root folder not configured', 500));
+
+  const oldPath = path.join(rootFolder, rootPath, 'programs', rootPath);
+  const newPath = path.join(rootFolder, rootPath, 'programs', newDirName);
+
+  try {
+    await fs.access(newPath).catch((err) => { if (err.code !== 'ENOENT') throw err; });
+
+    await fs.rename(oldPath, newPath);
+
+    res.status(200).json({
+      message: 'Directory renamed successfully',
+      newDirName,
+    });
+  } catch (error) {
+    console.error('Error renaming directory:', error);
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      next(new AppError('Directory not found', 404));
+    } else {
+      next(new AppError('Failed to rename directory', 500));
+    }
   }
 };

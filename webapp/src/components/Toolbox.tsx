@@ -16,8 +16,6 @@ import {
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
-import { useProject } from '../contexts/ProjectContext';
-
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}', ''),
@@ -26,13 +24,6 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC = () => {
-  const { savedProject, updateSavedProject } = useProject();
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-
-  const handleSubmitName = (value: string) => { updateSavedProject({ name: value });};
-  const handleSubmitDescription = (value: string) => { updateSavedProject({ description: value });};
-
   return (
     <Box
       width='30%'
@@ -54,22 +45,9 @@ const Toolbox: React.FC = () => {
           ml={2}
           mr={2}
         >
-          <Input
-            placeholder='Project Name'
-            value={projectName || savedProject?.name}
-            onChange={(e) => handleSubmitName(e.target.value)}
-            p={2}
-          />
-          <Textarea
-            placeholder='Project Description'
-            value={projectDescription || savedProject?.description}
-            onChange={(e) => handleSubmitDescription(e.target.value)}
-            p={2}
-          />
-
         </Flex>
-        <Text fontWeight='light' textAlign='left'>
-          Drag items into canvas
+        <Text fontWeight='400' textAlign='left' fontSize='xs'>
+          Drag items onto canvas
         </Text>
         <Divider />
         <SimpleGrid columns={2} spacing={4}>
@@ -92,8 +70,8 @@ const Toolbox: React.FC = () => {
                 justifyContent='center'
                 height='80px'
               >
-                <Icon as={item.getIcon()} boxSize={6} mb={2} />
-                <Text fontSize='sm'>{item.getName()}</Text>
+                <Icon as={item.getIcon()} boxSize={4} mb={2} />
+                <Text fontSize='xs'>{item.getName()}</Text>
               </Box>
             </Tooltip>
           ))}

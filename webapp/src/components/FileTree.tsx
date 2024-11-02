@@ -2,7 +2,7 @@
 
 import { VStack, Text, Flex } from '@chakra-ui/react';
 import { useState } from 'react';
-import { CiFolderOn, CiFileOn } from "react-icons/ci";
+import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 
 // name, ext, type, path, children
 export interface FileTreeItemType {
@@ -17,52 +17,62 @@ export interface FileTreeItemProps {
   item: FileTreeItemType;
   onSelectFile: (item: FileTreeItemType) => void;
   selectedItem?: FileTreeItemType;
+  level: number;
 }
 
 const FileTreeItem = ({
   item,
   onSelectFile,
   selectedItem,
+  level,
 }: FileTreeItemProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(level === 0); // Always open if root
 
-  const toggleFolder = () => setIsOpen(!isOpen);
-  if (item.type === 'directory' || (item.children && item.children.length > 0)) {
-    return (
-      <VStack align='stretch' ml={2}>
-        <Flex alignItems='center' cursor='pointer' onClick={toggleFolder}>
-          <CiFolderOn />
-          <Text ml={2}>{item.name}</Text>
-        </Flex>
-        {isOpen &&
-          item.children?.map((child, index) => (
-            <FileTreeItem
-              key={child.path || index}
-              item={child}
-              onSelectFile={onSelectFile}
-              selectedItem={selectedItem}
-            />
-          ))}
-      </VStack>
-    );
-  } else {
-    return (
+  const toggleFolder = () => {
+    if (item.type === 'directory') {
+      setIsOpen(!isOpen);
+    } else {
+      onSelectFile(item);
+    }
+  };
+
+  const hasChildren = item.type === 'directory' || (item.children && item.children.length > 0);
+
+  return (
+    <VStack
+      align='stretch'
+      ml={2}
+      pl={2}
+      borderLeft={isOpen && hasChildren ? "1px solid #ccc" : "none"}
+    >
       <Flex
         alignItems='center'
-        ml={2}
         cursor='pointer'
-        onClick={() => onSelectFile(item)}
+        onClick={toggleFolder}
+        bg={item.path === selectedItem?.path ? 'gray.100' : ''}
       >
-        <CiFileOn />
-        <Text
-          ml={2}
-          background={item.path === selectedItem?.path ? 'yellow.100' : ''}
-        >
-          {item.name}
-        </Text>
+        {hasChildren ? (
+          isOpen ? <FaChevronDown size={10} style={{ color: '#51545c' }}/> : <FaChevronRight size={10} style={{ color: '#51545c', marginRight: 5 }} />
+        ) : (
+          <FaRegFile size={12} style={{ color: '#5688e8', marginRight: 5 }} />
+        )}
+        {item.type === 'directory' ? (
+          <FaFolder style={{ color:'#a8b5e6', marginLeft: 5 }} />
+        ) : null}
+        <Text ml={2} fontSize='sm'>{item.name}</Text>
       </Flex>
-    );
-  }
+      {isOpen && hasChildren &&
+        item.children?.map((child, index) => (
+          <FileTreeItem
+            key={child.path || index}
+            item={child}
+            onSelectFile={onSelectFile}
+            selectedItem={selectedItem}
+            level={level + 1}
+          />
+        ))}
+    </VStack>
+  );
 };
 
 type FileTreeProps = {
@@ -84,6 +94,7 @@ const FileTree = ({
           item={files}
           onSelectFile={onSelectFile}
           selectedItem={selectedItem}
+          level={0}
         />
       )}
     </VStack>

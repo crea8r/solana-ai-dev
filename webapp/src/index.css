@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body, #root {
+  height: 100vh;
+  overflow: hidden; 
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -14,4 +16,52 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+:root {
+  --scrollbar-width: 8px;
+  --scrollbar-bg: #e0e0e0;
+  --scrollbar-thumb-bg: #888;
+  --scrollbar-thumb-hover-bg: #555;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-bg);
+}
+
+/* Apply custom scrollbar to Monaco Editor */
+.monaco-editor .monaco-scrollable-element {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-bg) !important;
+}
+
+.monaco-editor .monaco-scrollable-element::-webkit-scrollbar {
+  width: var(--scrollbar-width) !important;
+}
+
+.monaco-editor .monaco-scrollable-element::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg) !important;
+}
+
+.monaco-editor .monaco-scrollable-element::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg) !important;
+  border-radius: 10px !important;
+}
+
+.monaco-editor .monaco-scrollable-element::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-bg) !important;
 }

@@ -3,7 +3,7 @@ import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { useProject } from '../contexts/ProjectContext';
+import { useProjectContext } from '../contexts/ProjectContext';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -26,64 +26,99 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   programs,
   nodes,
 }) => {
-  const [localValues, setLocalValues] = useState<any>({});
+  const [localValues, setLocalValues] = useState<Record<string, any>>({});
   const [edgeLabel, setEdgeLabel] = useState('');
-  const { project, savedProject, setProject, updateProject, updateSavedProject } = useProject();
-
+  const { projectContext, setProjectContext } = useProjectContext();
 
   useEffect(() => {
     if (selectedNode) {
       const item = selectedNode.data.item as ToolboxItem;
-      setLocalValues(item.getPropertyValues());
+
+      // Find the existing node in the project context
+      const existingNode = projectContext?.details?.nodes?.find(n => n.id === selectedNode.id);
+
+      if (existingNode && existingNode.data?.localValues) {
+        // Initialize localValues from projectContext
+        setLocalValues({
+          ...item.getPropertyValues(),
+          ...existingNode.data.localValues,
+        });
+      } else {
+        // Initialize localValues from item or default
+        setLocalValues({
+          ...item.getPropertyValues(),
+        });
+      }
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
     } else {
       setLocalValues({});
       setEdgeLabel('');
     }
-  }, [selectedNode, selectedEdge]);
+  }, [selectedNode, selectedEdge, projectContext]);
 
   if (!selectedNode && !selectedEdge) return null;
 
   const handleChange = (field: string, value: any) => {
-    setLocalValues((prev: any) => ({ ...prev, [field]: value }));
+    setLocalValues((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
     if (selectedNode) {
-      const updatedNode = {
+      const updatedNode: Node = {
         ...selectedNode,
         data: {
           ...selectedNode.data,
           label: localValues.name || selectedNode.data.label,
-          localValues,
+          localValues: {
+            ...selectedNode.data.localValues,
+            ...localValues,
+          },
         },
       };
 
       onUpdateNode(updatedNode);
 
-      updateProject({
-        nodes: nodes.map(node => node.id === updatedNode.id ? updatedNode : node)
-      });
+      // Update project context with the updated node
+      setProjectContext((prev) => ({
+        ...prev,
+        details: { 
+          ...prev.details, 
+          nodes: prev.details.nodes.map(node => node.id === updatedNode.id ? updatedNode : node) 
+        },
+      }));
 
+      // If the node is a program, update project name and description
       const isProgramNode = programs.some(p => p.id === selectedNode.id);
-
       if (isProgramNode) {
         const programNode = programs.find(p => p.id === selectedNode.id);
         const programItem = programNode?.data.item as ToolboxItem;
 
-        updateSavedProject({
-          name: programItem?.name || '[Default Project Name]',
-          description: programItem?.description || '[Default Project Description]'
-        });
+        setProjectContext((prev) => ({
+          ...prev,
+          details: { 
+            ...prev.details, 
+            name: localValues.name || programItem?.name || '[Default Project Name]', 
+            description: localValues.description || programItem?.description || '[Default Project Description]' 
+          },
+        }));
       }
 
     } else if (selectedEdge) {
-      const updatedEdge = {
+      const updatedEdge: Edge = {
         ...selectedEdge,
         data: { ...selectedEdge.data, label: edgeLabel },
       };
       onUpdateEdge(updatedEdge);
+
+      // Update project context with the updated edge
+      setProjectContext((prev) => ({
+        ...prev,
+        details: { 
+          ...prev.details, 
+          edges: prev.details.edges.map(edge => edge.id === updatedEdge.id ? updatedEdge : edge) 
+        },
+      }));
     }
   };
 
@@ -94,23 +129,16 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       onDeleteEdge(selectedEdge.id);
     }
   };
+
   const fromNode = nodes.find((n) => n.id === selectedEdge?.source);
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
+
   return (
-    <Box 
-    width='300px' 
-    bg='white' 
-    p={4} 
-    borderLeft="1px solid" 
-    borderColor="gray.200" 
-    shadow="md"
-    >
+    <Box width='300px' bg='white' p={4} borderLeft="1px solid" borderColor="gray.200" shadow="xl">
       <VStack spacing={4} align='stretch'>
         {selectedNode && (
           <>
-            <Text fontSize='xl' fontWeight='bold'>
-              {(selectedNode.data.item as ToolboxItem).getType()}
-            </Text>
+            <Text fontSize='lg' fontWeight='medium'>{(selectedNode.data.item as ToolboxItem).getType()} </Text>
             {(selectedNode.data.item as ToolboxItem).renderProperties(
               programs.map((p) => {
                 const item = p.data.item as ToolboxItem;
@@ -123,43 +151,50 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         )}
         {selectedEdge && (
           <>
-            <Text fontSize='xl' fontWeight='bold'>
+            <Text fontSize='lg' fontWeight='medium'>
               Edge
             </Text>
-            <Text fontSize='sm' fontWeight='bold'>
+            <Text fontSize='sm' fontWeight='normal'>
               From: {fromNode?.data.label} - To: {toNode?.data.label}
             </Text>
             <Input
               placeholder='Label'
               value={edgeLabel}
               onChange={(e) => setEdgeLabel(e.target.value)}
+              fontSize="sm"
+              color="gray.700"
+              _placeholder={{ color: 'gray.400' }}
+              py={0}
+              px={3}
             />
           </>
         )}
         <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center" gap={4}>
           <Button 
-            width="70%"
+            width="60%"
             bg="white" 
-            color="black" 
+            color="gray.700"
+            fontWeight="normal"
             _hover={{ bg: "gray.100" }} 
             onClick={handleSave}
-            leftIcon={<IoSaveOutline />}
             border="1px solid"
             borderColor="gray.300"
-            shadow="md"
+            shadow="sm"
+            size="xs"
           >
             Save
           </Button>
           <Button 
-            width="70%"
+            width="60%"
             bg="white" 
-            color="black" 
+            color="gray.700"
+            fontWeight="normal"
             _hover={{ bg: "gray.100" }} 
             onClick={handleDelete}
-            leftIcon={<IoTrashOutline />}
             border="1px solid"
             borderColor="gray.300"
-            shadow="md"
+            shadow="sm"
+            size="xs"
           >
             Delete
           </Button>

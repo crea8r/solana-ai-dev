@@ -1,0 +1,82 @@
+/* src/styles/nodeStyles.css */
+
+:root {
+    font-size: 10px;
+    --delay: 0.5s;
+    --timing: 1s;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+  }
+  
+  .node-container {
+    position: relative;
+    background: white;
+    color: #51545c;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.2s;
+  }
+  
+  .node-container.selected {
+    box-shadow: 0 0 0 2px #aaa;
+  }
+  
+  /* Animated Border */
+  .node-container::before,
+  .node-container::after {
+    content: '';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    width: calc(100% + 1rem);
+    height: calc(100% + 1rem);
+    border: 0.5rem solid transparent;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  /* Top Border Animation */
+  .node-container::before {
+    border-top-color: currentColor; /* Inherit color based on node type */
+    animation: h-move var(--timing) linear infinite;
+    animation-delay: var(--delay);
+  }
+  
+  /* Bottom Border Animation */
+  .node-container::after {
+    border-bottom-color: currentColor; /* Inherit color based on node type */
+    animation: h-move var(--timing) linear infinite;
+    animation-delay: calc(var(--delay) * 2);
+  }
+  
+  @keyframes h-move {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  /* Customize border colors for different node types */
+  .node-account {
+    color: #decae2; /* Purple */
+  }
+  
+  .node-instruction {
+    color: #9de19f; /* Green */
+  }
+  
+  .node-program {
+    color: #ff9494; /* Red */
+  }
+  

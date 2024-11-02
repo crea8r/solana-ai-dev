@@ -1,6 +1,4 @@
-// src/components/TopPanel.tsx
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Flex,
   Menu,
@@ -9,12 +7,19 @@ import {
   MenuItem,
   Button,
   Avatar,
+  Box,
+  Text,
+  IconButton,
 } from '@chakra-ui/react';
-import { FaCog } from 'react-icons/fa';
+import { Settings, Sparkles, Pencil } from 'lucide-react';
 import { logEvent } from '../../utils/analytics';
+import InputModal from '../../components/InputModal';
+import logo from '../../assets/logo/solai_logo_png.png';
+import { useProjectContext } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
   generatePrompt: () => void;
+  onClickInput: () => void;
   onClickOpen: () => void;
   onClickSave: () => void;
   onClickNew: () => void;
@@ -22,72 +27,71 @@ interface TopPanelProps {
 
 const TopPanel: React.FC<TopPanelProps> = ({
   generatePrompt,
+  onClickInput,
   onClickOpen,
   onClickSave,
   onClickNew,
 }) => {
+  const { projectContext } = useProjectContext();
+  const [hover, setHover] = useState(false);
+
+  const handleMouseEnter = () => setHover(true);
+  const handleMouseLeave = () => setHover(false);
 
   return (
-    <Flex
-      as="header"
-      borderBottom="1px solid"
-      borderColor="gray.200"
-      justifyContent="space-between"
-      alignItems="center"
-      height="14"
-      px={4}
-      shadow="md"
-    >
-      <Flex alignItems="center" gap={6}>
-        <Flex
-          direction="row"
-          alignItems="center"
-          gap={4}
-          ml={4}
-        >
-          <h1 className="text-lg font-semibold">
-            {/* Removed {projectName} */}
-          </h1>
+    <Flex as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" p={1} justifyContent="space-evenly" alignItems="center">
+      <Flex flex={1} alignItems="center" justifyContent="space-evenly" px={8} gap={10}>
+
+        <Flex alignItems="center" gap={2}>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickOpen}>Open</Button>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickSave}>Save</Button>
+            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickNew}>New</Button>
+            <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}><Text fontSize="xs" color="#5688e8" fontWeight="medium">Generate Code</Text></Button>
+
         </Flex>
-      </Flex>
-      <Flex>
-        <Menu>
-          <MenuButton as={Button} variant="ghost" size="sm">
-            Project
-          </MenuButton>
-          <MenuList>
-            <MenuItem onClick={onClickOpen}>Open</MenuItem>
-            <MenuItem onClick={onClickSave}>Save</MenuItem>
-            <MenuItem onClick={onClickNew}>New</MenuItem>
-          </MenuList>
-        </Menu>
-        <Menu>
-          <MenuButton as={Button} variant="ghost" size="sm">
-            Team
-          </MenuButton>
-          <MenuList>
-            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>
-              Manage
-            </MenuItem>
-            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>
-              Invite
-            </MenuItem>
-          </MenuList>
-        </Menu>
-        <Button
-          leftIcon={React.createElement(FaCog)}
-          variant="ghost"
-          size="sm"
-          onClick={generatePrompt}
-        >
-          Prompt
-        </Button>
-      </Flex>
-      <Flex alignItems="center" gap={4}>
-        <Button variant="ghost" size="sm">
-          <FaCog className="h-5 w-5" />
-        </Button>
-        <Avatar size="sm" src="/placeholder.svg" />
+        <Flex justifyContent="space-between" alignItems="center" gap={2} flexGrow={1}>
+
+          <Flex flex={1} alignItems="center" justifyContent="space-evenly" gap={8}>
+            <Box
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              p={2}
+              gap={2}
+              borderRadius="md"
+              position="relative"
+              fontSize="xs"
+              fontWeight="medium"
+              color="gray.700"
+            >
+              {projectContext.name || 'Untitled Project'}
+              {hover && (
+                <Box
+                  bg="gray.100"
+                  p={2}
+                  borderRadius="md"
+                  position="absolute"
+                  top="100%"
+                  mt={2}
+                  width="250px"
+                  maxWidth="300px"
+                  zIndex="tooltip"
+                  boxShadow="md"
+                >
+                  {projectContext.description && <Text fontSize="xs">{projectContext.description}</Text>}
+                </Box>
+              )}
+              <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickInput}><Pencil className="h-3 w-3" /></Button>
+            </Box>
+          
+          </Flex>
+            
+        </Flex>
+        <Flex alignItems="center" gap={1} padding={1}>
+          <Flex alignItems="center" gap={4}>
+            <Avatar size="xs" src="/placeholder.svg" />
+          </Flex>
+        </Flex>
+        
       </Flex>
     </Flex>
   );

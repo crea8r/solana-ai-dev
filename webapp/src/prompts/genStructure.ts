@@ -8,26 +8,30 @@ interface TextGeneratorOptions {
   programDescription: string;
   accountText?: string; 
   instructionText?: string; 
-  libraryVersion?: string; // default Anchor version
+  libraryVersion?: string;
 }
 
 const generateGeneralInstructions = (libraryVersion: string) => {
   return `
-    I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
+    I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
     --- File structure for the Anchor program ---
-    Please structure the project into multiple files for ease of management.
+    The root folder should include:
+    - Cargo.toml: This file should define the workspace and include all program members.
+    Each program should have its own directory (e.g., programs/subscription_service) that includes:
+    - Cargo.toml: specific to that program to manage dependencies.
+    - src/lib.rs: with the main logic for the program.
     Account-related code should be in state.rs.
     Each instruction should be in its own file, grouped by groups of users.
     The function inside the file should be run_[the name of the file].
     Remember to add mod.rs in the folder and sub-folders in the instructions.
     The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
     --- Library ---
-    Use @coral-xyz/anchor for typescript test code.
+    Use @coral-xyz/anchor for TypeScript test code.
     Use Anchor version >= ${libraryVersion}
     --- The test ---
-    Write test cases using typescript for each of the functions. The test-case should use the SDK.
-    --- The ts SDK ---
-    The SDK should cover all instructions and function to get all accounts with filters.\n
+    Write test cases using TypeScript for each of the functions. The test case should use the SDK.
+    --- The TypeScript SDK ---
+    The SDK should cover all instructions and functions to get all accounts with filters.\n
     `;
 };
 
@@ -95,7 +99,7 @@ const findNodesByType = (nodes: Node[], edges: Edge[], programId: string, nodeTy
     programDescription,
     accountText = '',
     instructionText = '',
-    libraryVersion = '0.30.1',
+    libraryVersion = '0.30.0',
   } = options;
 
   const generalInstructions = generateGeneralInstructions(libraryVersion);

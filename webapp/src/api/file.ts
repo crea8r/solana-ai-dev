@@ -32,7 +32,6 @@ export const fileApi = {
     }
   },
 
-  // Get file content
   getFileContent: async (
     projectId: string,
     filePath: string
@@ -48,7 +47,6 @@ export const fileApi = {
     }
   },
 
-  // Create file
   createFile: async (
     projectId: string,
     filePath: string,
@@ -66,16 +64,15 @@ export const fileApi = {
     }
   },
 
-  // Update file
   updateFile: async (
-    projectId: string,
+    rootPath: string,
     filePath: string,
     content: string
   ): Promise<TaskResponse> => {
     try {
       const response = await api.put(
-        `/files/${projectId}/${encodeURIComponent(filePath)}`,
-        { content }
+        `/files/update`,
+        { rootPath, filePath, content }
       );
       return response.data;
     } catch (error) {
@@ -100,12 +97,40 @@ export const fileApi = {
     }
   },
 
+  deleteDirectory: async (
+    rootPath: string
+  ): Promise<TaskResponse> => {
+    try {
+      const response = await api.delete(
+       `/files/${encodeURIComponent(rootPath)}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting directory:', error);
+      throw error;
+    }
+  },
+
   checkTaskStatus: async (taskId: string) => {
     try {
       const response = await api.get(`/tasks/${taskId}/status`);
       return response.data;
     } catch (error) {
       console.error('Error checking task status:', error);
+      throw error;
+    }
+  },
+
+  renameDirectory: async (
+    rootPath: string,
+    newDirName: string
+  ): Promise<TaskResponse> => {
+    try {
+      console.log('calling rename directory');
+      const response = await api.post(`/files/rename-directory`, {rootPath, newDirName});
+      return response.data;
+    } catch (error) {
+      console.error('Error renaming directory:', error);
       throw error;
     }
   },

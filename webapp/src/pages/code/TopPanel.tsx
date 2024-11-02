@@ -1,5 +1,3 @@
-// src/components/TopPanel.tsx
-
 import React from 'react';
 import {
   Flex,
@@ -11,48 +9,42 @@ import {
   Avatar,
 } from '@chakra-ui/react';
 
-interface TopPanelProps {}
-const TopPanel: React.FC<TopPanelProps> = () => {
+interface TopPanelProps {
+  onBuild: () => void;
+  onSave: () => void;
+  onTest: () => void; // New onTest prop
+}
+
+const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest }) => {
   return (
     <Flex
-      as="header"
       borderBottom="1px solid"
       borderColor="gray.200"
       justifyContent="space-between"
       alignItems="center"
-      height="14"
-      px={4}
-      shadow="md"
+      p={4}
+      shadow="sm"
     >
-      <Flex flexDirection="row" justifyContent="space-between" alignItems="center" gap={4}>
+      <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center">
         <Menu>
-          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>
-            Project
-          </MenuButton>
+          <MenuButton as={Button} variant="ghost" size="xs" mr={2}>File</MenuButton>
           <MenuList>
-            <MenuItem onClick={() => {}}>Open</MenuItem>
-            <MenuItem onClick={() => {}}>Save</MenuItem>
-            <MenuItem onClick={() => {}}>New</MenuItem>
+            <MenuItem fontSize="xs" onClick={() => {}}>Open</MenuItem>
+            <MenuItem fontSize="xs" onClick={onSave}>Save</MenuItem>
+            <MenuItem fontSize="xs" onClick={() => {}}>New</MenuItem>
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button} variant="ghost" size="sm" mr={2}>
-            Team
-          </MenuButton>
+          <MenuButton as={Button} variant="ghost" size="xs" mr={2}>Team</MenuButton>
           <MenuList>
-            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>
-              Manage
-            </MenuItem>
-            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>
-              Invite
-            </MenuItem>
+            <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>Manage</MenuItem>
+            <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>Invite</MenuItem>
           </MenuList>
         </Menu>
-        <Button variant="ghost" size="sm" mr={2}>Save</Button>
-        <Button variant="ghost" size="sm" mr={2}>Build</Button>
-        <Button variant="ghost" size="sm">Test</Button>
+        <Button variant="ghost" size="xs" mr={2} onClick={onBuild}>Build</Button>
+        <Button variant="ghost" size="xs" onClick={onTest}>Test</Button>
       </Flex>
-      <Avatar size='sm' src="/placeholder.svg" />
+      <Avatar size="xs" src="/placeholder.svg" />
     </Flex>
   );
 };

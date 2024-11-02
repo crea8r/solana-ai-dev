@@ -1,8 +1,13 @@
 import { FileTreeItemType } from '../components/FileTree';
 import { CodeFile } from '../contexts/CodeFileContext';
-import { InMemoryProject } from '../contexts/ProjectContext';
-// todoproject is type of InMemoryProject
-const todoproject = {
+import { Project, ProjectDetails } from '../interfaces/project';
+
+const todoproject: Project = {
+  id: '123',
+  rootPath: 'todo_program',
+  name: 'Todo Program',
+  description: 'A todo program',
+  details: {
   nodes: [
     {
       width: 56,
@@ -213,6 +218,13 @@ const todoproject = {
       content:
         'import { Program, AnchorProvider, web3 } from "@coral-xyz/anchor";\nimport { TodoProgram } from "../target/types/todo_program";\nimport { Keypair, PublicKey } from "@solana/web3.js";\n\nexport class TodoSDK {\n  private program: Program<TodoProgram>;\n  private provider: AnchorProvider;\n\n  constructor(provider: AnchorProvider) {\n    this.provider = provider;\n    this.program = new Program(\n      JSON.parse(require("fs").readFileSync("../target/idl/todo_program.json", "utf8")),\n      new PublicKey("your_program_id"),\n      provider\n    );\n  }\n\n  async createTask(content: string): Promise<web3.PublicKey> {\n    const task = Keypair.generate();\n    await this.program.rpc.create(content, {\n      accounts: {\n        task: task.publicKey,\n        owner: this.provider.wallet.publicKey,\n        systemProgram: web3.SystemProgram.programId,\n      },\n      signers: [task],\n    });\n    return task.publicKey;\n  }\n\n  async getTasks(owner: PublicKey): Promise<any[]> {\n    const tasks = await this.program.account.task.all([\n      {\n        memcmp: {\n          offset: 8, // Discriminator.\n          bytes: owner.toBase58(),\n        },\n      },\n    ]);\n    return tasks;\n  }\n}',
     },
-  ] as CodeFile[],
-} as InMemoryProject;
+    ] as CodeFile[],
+    docs: [],
+    isSaved: false,
+    isAnchorInit: false,
+    isCode: true,
+    aiFilePaths: [],
+    aiStructure: '',
+  } as ProjectDetails,
+} as Project;
 export { todoproject };
