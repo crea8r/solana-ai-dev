@@ -232,8 +232,8 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
             mb={2}
           >
             <Box 
-              bg={message.sender === 'user' ? 'blue.50' : 'gray.50'} 
-              color={message.sender === 'user' ? 'blue.600' : 'gray.700'}
+              bg={message.sender === 'user' ? 'rgba(114, 146, 211, 0.2)' : 'gray.50'} 
+              color={message.sender === 'user' ? 'gray.600' : 'gray.700'}
               p={2}
               py={0}
               borderRadius="md" 
@@ -249,7 +249,8 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                         px={2}
                         py={1}
                         mb={1}
-                        bg="blue.100" 
+                        bg="rgba(114, 146, 211, 0.4)" 
+                        color="gray.600"
                         width="fit-content"
                         borderRadius="md" 
                         fontSize="0.6rem"
