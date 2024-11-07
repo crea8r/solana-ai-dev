@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import pool from 'src/config/database';
-import { generateToken } from 'src/utils/jwt';
-import { APP_CONFIG } from 'src/config/appConfig';
+import pool from '../config/database';
+import { generateToken } from '../utils/jwt';
+import { APP_CONFIG } from '../config/appConfig';
 
 export const register = async (req: Request, res: Response) => {
   const { username, password, organisation, description } = req.body;

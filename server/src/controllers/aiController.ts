@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from 'src/middleware/errorHandler';
-import { logMessages } from 'src/utils/aiLog';
+import { AppError } from '../middleware/errorHandler';
+import { logMessages } from '../utils/aiLog';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const MISTRAL_API_URL = 'https://codestral.mistral.ai/v1/chat/completions';

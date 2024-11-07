@@ -175,9 +175,9 @@ const CodeEditor = ({
 
   return (
     <Flex direction="column" height="100%" overflowY="hidden">
-      {currentFile ? (
+      {selectedFile ? (
         <Box py={1} px={2} borderBottom="1px solid #ccc">
-          {currentFile.path}
+          {selectedFile.path}
         </Box>
       ) : null}
 

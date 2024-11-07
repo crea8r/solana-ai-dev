@@ -8,8 +8,8 @@ import {
   updateFileServer,
   deleteDirectory,
   renameDirectory,
-} from 'src/controllers/fileController';
-import { authMiddleware } from 'src/middleware/authMiddleware';
+} from '../controllers/fileController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 

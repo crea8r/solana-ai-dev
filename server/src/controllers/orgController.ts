@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import pool from 'src/config/database';
-import { AppError } from 'src/middleware/errorHandler';
-import { PaginatedResponse } from 'src/types';
+import pool from '../config/database';
+import { AppError } from '../middleware/errorHandler';
+import { PaginatedResponse } from '../types';
 
 export const listOrganizationProjects = async (
   req: Request,

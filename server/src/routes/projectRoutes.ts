@@ -6,9 +6,9 @@ import {
   getProjectDetails,
   anchorInitProject,
   runProjectCommand
-} from 'src/controllers/projectController';
-import { authMiddleware } from 'src/middleware/authMiddleware';
-import { buildProject, testProject } from 'src/controllers/projectController';
+} from '../controllers/projectController';
+import { authMiddleware } from '../middleware/authMiddleware';
+import { buildProject, testProject } from '../controllers/projectController';
 
 const router = express.Router();
 

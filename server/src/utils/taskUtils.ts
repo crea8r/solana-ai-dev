@@ -1,4 +1,4 @@
-import pool from 'src/config/database';
+import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createTask = async (

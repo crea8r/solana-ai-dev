@@ -1,20 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Flex,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   Button,
   Avatar,
   Box,
   Text,
-  IconButton,
+  useToast,
 } from '@chakra-ui/react';
-import { Settings, Sparkles, Pencil } from 'lucide-react';
-import { logEvent } from '../../utils/analytics';
-import InputModal from '../../components/InputModal';
-import logo from '../../assets/logo/solai_logo_png.png';
+import { Pencil } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
@@ -23,6 +16,7 @@ interface TopPanelProps {
   onClickOpen: () => void;
   onClickSave: () => void;
   onClickNew: () => void;
+  onLogout: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -31,6 +25,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onClickOpen,
   onClickSave,
   onClickNew,
+  onLogout,
 }) => {
   const { projectContext } = useProjectContext();
   const [hover, setHover] = useState(false);
@@ -41,16 +36,15 @@ const TopPanel: React.FC<TopPanelProps> = ({
   return (
     <Flex as="header" bg="white" borderBottom="1px solid" borderColor="gray.200" p={1} justifyContent="space-evenly" alignItems="center">
       <Flex flex={1} alignItems="center" justifyContent="space-evenly" px={8} gap={10}>
-
         <Flex alignItems="center" gap={2}>
-            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickOpen}>Open</Button>
-            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickSave}>Save</Button>
-            <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickNew}>New</Button>
-            <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}><Text fontSize="xs" color="#5688e8" fontWeight="medium">Generate Code</Text></Button>
-
+          <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickOpen}>Open</Button>
+          <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickSave}>Save</Button>
+          <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickNew}>New</Button>
+          <Button variant="ghost" size="xs" colorScheme="blue" onClick={generatePrompt}>
+            <Text fontSize="xs" color="#5688e8" fontWeight="medium">Generate Code</Text>
+          </Button>
         </Flex>
         <Flex justifyContent="space-between" alignItems="center" gap={2} flexGrow={1}>
-
           <Flex flex={1} alignItems="center" justifyContent="space-evenly" gap={8}>
             <Box
               onMouseEnter={handleMouseEnter}
@@ -82,16 +76,14 @@ const TopPanel: React.FC<TopPanelProps> = ({
               )}
               <Button variant="ghost" size="xs" colorScheme="gray" onClick={onClickInput}><Pencil className="h-3 w-3" /></Button>
             </Box>
-          
           </Flex>
-            
         </Flex>
         <Flex alignItems="center" gap={1} padding={1}>
           <Flex alignItems="center" gap={4}>
             <Avatar size="xs" src="/placeholder.svg" />
+            <Button variant="ghost" size="xs" colorScheme="red" onClick={onLogout}>Logout</Button>
           </Flex>
         </Flex>
-        
       </Flex>
     </Flex>
   );

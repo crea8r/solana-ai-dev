@@ -214,64 +214,11 @@ const AccountPage: React.FC = () => {
                                         <FormLabel htmlFor="email">Email</FormLabel>
                                         <Input id="email" type="email" placeholder={user.email} />
                                     </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="phone">Phone Number</FormLabel>
-                                        <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
-                                    </Box>
                                     <Button>Save Changes</Button>
                                 </FormControl>
                             </CardBody>
                         </Card>
-                        <Card className="bg-white border border-gray-200">
-                            <CardHeader>
-                                <Text>Company Information</Text>
-                                <Text>Your role and company details</Text>
-                            </CardHeader>
-                            <CardBody>
-                                <Box className="space-y-4">
-                                    <Box className="space-y-2">
-                                        <FormLabel>Company</FormLabel>
-                                        <Text className="text-sm font-medium">{user.orgName}</Text>
-                                    </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel>Role</FormLabel>
-                                        <Text className="text-sm font-medium">Senior Developer</Text>
-                                    </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel>Department</FormLabel>
-                                        <Text className="text-sm font-medium">Engineering</Text>
-                                    </Box>
-                                </Box>
-                            </CardBody>
-                        </Card>
                     </Box>
-                    <Text className="text-xl font-semibold mb-4">Team Members</Text>
-                    <Card className="bg-white border border-gray-200">
-                        <Table>
-                            <Thead>
-                                <Tr>
-                                    <Th>Name</Th>
-                                    <Th>Role</Th>
-                                    <Th>Email</Th>
-                                    <Th className="text-right">Actions</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {teamMembers.map((member) => (
-                                    <Tr key={member.email}>
-                                        <Td className="font-medium">{member.name}</Td>
-                                        <Td>{member.role}</Td>
-                                        <Td>{member.email}</Td>
-                                        <Td className="text-right">
-                                            <Button variant="ghost" size="sm">
-                                                View
-                                            </Button>
-                                        </Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
-                    </Card>
                 </Box>
             </Box>
         </Flex>

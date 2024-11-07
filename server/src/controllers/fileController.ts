@@ -2,15 +2,15 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
-import pool from 'src/config/database';
-import { AppError } from 'src/middleware/errorHandler';
+import pool from '../config/database';
+import { AppError } from '../middleware/errorHandler';
 import {
   startCreateFileTask,
   startDeleteFileTask,
   startGenerateFileTreeTask,
   startGetFileContentTask,
   startUpdateFileTask,
-} from 'src/utils/fileUtils';
+} from '../utils/fileUtils';
 
 dotenv.config();
 

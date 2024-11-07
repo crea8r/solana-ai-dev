@@ -1,9 +1,9 @@
 import fs from 'fs';
-import { APP_CONFIG } from 'src/config/appConfig';
+import { APP_CONFIG } from '../config/appConfig';
 import { createTask, updateTaskStatus } from './taskUtils';
 import { exec } from 'child_process';
 import path from 'path';
-import { AppError } from 'src/middleware/errorHandler';
+import { AppError } from '../middleware/errorHandler';
 import { getProjectRootPath } from './fileUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeProjectName } from './stringUtils';

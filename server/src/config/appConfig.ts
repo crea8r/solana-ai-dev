@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { AppError } from 'src/middleware/errorHandler';
+import { AppError } from '../middleware/errorHandler';
 
 dotenv.config();
 

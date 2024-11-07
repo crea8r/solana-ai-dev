@@ -1,13 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from 'src/routes/authRoutes';
-import projectRoutes from 'src/routes/projectRoutes';
-import fileRoutes from 'src/routes/fileRoutes';
-import orgRoutes from 'src/routes/orgRoutes';
-import taskRoutes from 'src/routes/taskRoutes';
-import aiRoutes from 'src/routes/aiRoutes';
-import { errorHandler } from 'src/middleware/errorHandler';
+import authRoutes from './routes/authRoutes';
+import projectRoutes from './routes/projectRoutes';
+import fileRoutes from './routes/fileRoutes';
+import orgRoutes from './routes/orgRoutes';
+import taskRoutes from './routes/taskRoutes';
+import aiRoutes from './routes/aiRoutes';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 

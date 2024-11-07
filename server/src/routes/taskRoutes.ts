@@ -2,8 +2,8 @@ import express from 'express';
 import {
   listProjectTasks,
   getTaskStatus,
-} from 'src/controllers/taskController';
-import { authMiddleware } from 'src/middleware/authMiddleware';
+} from '../controllers/taskController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 

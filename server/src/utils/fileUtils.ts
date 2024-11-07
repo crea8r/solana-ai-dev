@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { APP_CONFIG } from 'src/config/appConfig';
-import { AppError } from 'src/middleware/errorHandler';
-import pool from 'src/config/database';
+import { APP_CONFIG } from '../config/appConfig';
+import { AppError } from '../middleware/errorHandler';
+import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 import { exec } from 'child_process';
-import { createTask, updateTaskStatus } from 'src/utils/taskUtils';
+import { createTask, updateTaskStatus } from '../utils/taskUtils';
 
 const SKIP_FOLDERS = ['.anchor', '.github', '.git', 'target', 'node_modules'];
 const SKIP_FILES = [

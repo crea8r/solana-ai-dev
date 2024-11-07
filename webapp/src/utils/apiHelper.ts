@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://172.30.185.216:9999';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const createApiInstance = (): AxiosInstance => {
   const api = axios.create({
@@ -10,10 +10,16 @@ const createApiInstance = (): AxiosInstance => {
     },
   });
 
+  const token = localStorage.getItem('token');
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
   api.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token');
       if (token) {
+        console.log("Adding Authorization header:", token);
         config.headers['Authorization'] = `Bearer ${token}`;
       }
       return config;

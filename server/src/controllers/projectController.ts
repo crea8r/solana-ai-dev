@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import pool from 'src/config/database';
-import { AppError } from 'src/middleware/errorHandler';
-import { getProjectRootPath, startDeleteProjectFolderTask } from 'src/utils/fileUtils';
-import { normalizeProjectName } from 'src/utils/stringUtils';
+import pool from '../config/database';
+import { AppError } from '../middleware/errorHandler';
+import { getProjectRootPath, startDeleteProjectFolderTask } from '../utils/fileUtils';
+import { normalizeProjectName } from '../utils/stringUtils';
 import {
   startAnchorBuildTask,
   startAnchorInitTask,
   startAnchorTestTask,
   startCustomCommandTask,
-} from 'src/utils/projectUtils';
+} from '../utils/projectUtils';
 
 // Initialize default Anchor project
 export const anchorInitProject = async (

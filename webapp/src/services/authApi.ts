@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://172.30.185.216:9999';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const authApi = axios.create({
   baseURL: API_URL,
@@ -14,6 +14,9 @@ export const login = async (username: string, password: string) => {
     const response = await authApi.post('/auth/login', { username, password });
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
+      console.log('Token set:', localStorage.getItem('token'));
+    } else {
+      console.error('No token received in response');
     }
     return response.data;
   } catch (error) {

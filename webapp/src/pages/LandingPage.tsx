@@ -1,49 +1,213 @@
-import React from 'react';
-import { Button, Box, Heading, Text, VStack, HStack, Container } from '@chakra-ui/react';
+import React, { useCallback, useEffect, useState, memo } from "react";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
+import type { Container, Engine } from "@tsparticles/engine";
+import { Input, Button, Flex, Box, Heading, Text, Link as ChakraLink } from "@chakra-ui/react";
+//import logo from '../assets/brand/solai_logo_png.png';
 import { Link as RouterLink } from 'react-router-dom';
-import YouTube from 'react-youtube';
-import { Link } from 'react-router-dom';
+import { FaXTwitter } from "react-icons/fa6";
+import { IoSunnyOutline, IoMoonOutline, IoMoon } from "react-icons/io5"; 
 
-const LandingPage: React.FC = () => {
-  const opts = {
-    height: '370',
-    width: '620',
-    playerVars: {
-      autoplay: 0,
-    },
+
+const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
+  const [ init, setInit ] = useState(false);
+
+  useEffect(() => {
+      initParticlesEngine(async (engine) => {
+          await loadSlim(engine);
+      }).then(() => {
+          setInit(true);
+      });
+  }, []);
+
+  const particlesLoaded = (container: any) => {
+      console.log(container);
   };
 
   return (
-    <Box className="min-h-screen bg-white text-gray-800 flex flex-col items-center justify-center">
-       <Heading className="w-full flex justify-end space-x-2 pr-6">
-        <Button as={RouterLink} to='/login' className="px-4 py-2 rounded inline-block text-center">
-            Log In
-        </Button>
-        <Button as={RouterLink} to='/register' className="px-4 py-2 rounded inline-block text-center">
-            Sign Up
-        </Button>
-        </Heading>
-        <Box className="w-full max-w-3xl mx-auto text-center space-y-4">
-          <Heading className="text-xl md:text-2xl font-bold text-[#7292d3]/90">
-            Welcome to Solana AI IDE
-          </Heading>
-          <Text className="text-md md:text-lg text-gray-600">
-            Design, Code, and Document your Solana dApps.
-          </Text>
-
-          <Box className="bg-gray-50 rounded-lg p-4 shadow-md">
-            <Box className="aspect-video bg-gray-200 rounded flex items-center justify-center mb-3">
-              <YouTube videoId='FK5WILag95s' opts={opts} />
-            </Box>
-            <Text className="text-sm text-gray-600">
-              Watch our tutorial video to learn how to use Solana IDE effectively.
-              This video will guide you through the process of designing, coding,
-              and documenting your Solana dApps.
-            </Text>
-          </Box>
-        </Box>
-    </Box>
+    <div>  
+      { init && <Particles
+          id="tsparticles"
+          particlesLoaded={async (container?: Container) => {
+              console.log(container);
+          }}
+          options={{
+              background: {
+                  color: {
+                    value: isDarkMode ? "#232734" : "#aac9fc",
+                  },
+              },
+              fpsLimit: 130,
+              interactivity: {
+                  events: {
+                      onClick: {
+                          enable: true,
+                          mode: "repulse",
+                      },
+                      onHover: {
+                          enable: true,
+                          mode: ["grab"],
+                      },
+                      //resize: true,
+                  },
+                  modes: {
+                      grab: {
+                          distance: 250,
+                      },
+                      bubble: {
+                          color: "#ffffff",
+                          distance: 400,
+                          duration: 5,
+                          opacity: 0.8,
+                          size: 6,
+                      },
+                      attract: {
+                          enable: true,
+                          distance: 1000,
+                      },
+                      push: {
+                          quantity: 4,
+                      },
+                      repulse: {
+                          distance: 200,
+                          duration: 0.3,
+                      },
+                  },
+              },
+              particles: {
+                  color: {
+                      value: "#ffffff",
+                  },
+                  links: {
+                      color: "#ffffff",
+                      distance: 280,
+                      enable: true,
+                      opacity: 0.4,
+                      width: 1,
+                  },
+                  move: {
+                      direction: "none",
+                      enable: true,
+                      outModes: {
+                          default: "bounce",
+                      },
+                      random: true,
+                      speed: 3,
+                      straight: false,
+                  },
+                  number: {
+                      density: {
+                          enable: true,
+                          //area: 800,
+                      },
+                      value: 50,
+                  },
+                  opacity: {
+                      value: 0.6,
+                  },
+                  shape: {
+                      type: "circle",
+                  },
+                  size: {
+                      value: { min: 4, max: 6 },
+                  },
+              },
+              detectRetina: true,
+          }}
+      />
+      }
+    </div>
   );
-};
+});
 
-export default LandingPage;
+
+
+export default function LandingPage() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  return (
+    <div className={`${isDarkMode ? 'dark' : ''}`}>
+      <ParticlesContainer isDarkMode={isDarkMode} />
+      <Flex h="100vh" w="100vw" justifyContent="center" alignItems="center" p="4">
+        <Flex
+          direction="column" justifyContent="space-between"
+          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.800" backdropFilter="blur(10px)"
+          rounded="lg" shadow="2xl" p="5" zIndex="10"
+        >
+          <Box textAlign="center" pt="6">
+            <Heading as="h1" size="xl" mb="2" color="#7aa0ff" fontFamily="Oxanium" fontWeight="200" letterSpacing="0.2em">SOLAI</Heading>
+            <Text color="gray.500">Solana development made easy</Text>
+          </Box>
+
+          <Flex w="full" direction="column" justifyContent="center" alignItems="center">
+            <Flex justifyContent="center" w="full">
+              <Button
+                fontSize="sm"
+                fontFamily="Oxanium"
+                variant={activeTab === 'login' ? 'solid' : 'outline'}
+                onClick={() => setActiveTab('login')}
+                w="50%"
+                bg={activeTab === 'login' ? "#ffffff" : "transparent"}
+                color="gray.700"
+                _hover={{ bg: "#ffffff" }}
+              >
+                Login
+              </Button>
+              <Button
+                fontSize="sm"
+                fontFamily="Oxanium"
+                variant={activeTab === 'register' ? 'solid' : 'outline'}
+                onClick={() => setActiveTab('register')}
+                w="50%"
+                bg={activeTab === 'register' ? "#ffffff" : "transparent"}
+                color="gray.700"
+                _hover={{ bg: "#ffffff" }}
+              >
+                Register
+              </Button>
+            </Flex>
+            <Box mt="2" textAlign="center" w="full">
+              {activeTab === 'login' ? (
+                <Button 
+                  w="full" size="md" fontSize="sm" fontFamily="Oxanium" fontWeight="300"
+                  bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }} alignItems="center"
+                  p="4" 
+                  as={RouterLink} to='/login'
+                >
+                  Login to Continue
+                </Button>
+              ) : (
+                <Button 
+                  w="full" size="md" fontSize="sm" fontFamily="Oxanium" fontWeight="300"
+                  bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }} alignItems="center"
+                  p="4"
+                  as={RouterLink} to='/register'
+                >
+                  Create Account
+                </Button>
+              )}
+            </Box>
+          </Flex>
+          <Flex justifyContent="center" mt="4">
+            <ChakraLink
+              href="https://x.com/usesolai"
+              color="gray.500"
+              _hover={{ color: "#7292d3" }}
+              display="flex"
+              alignItems="center"
+              gap="1"
+            >
+              <FaXTwitter className="text-sm" />
+              <Text fontSize="sm" pb="1">@usesolai</Text>
+            </ChakraLink>
+          </Flex>
+        </Flex>
+      </Flex>
+    </div>
+  );
+}

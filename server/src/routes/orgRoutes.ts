@@ -1,6 +1,6 @@
 import express from 'express';
-import { listOrganizationProjects } from 'src/controllers/orgController';
-import { authMiddleware } from 'src/middleware/authMiddleware';
+import { listOrganizationProjects } from '../controllers/orgController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 

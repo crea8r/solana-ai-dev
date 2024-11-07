@@ -1,6 +1,6 @@
 import { projectApi } from '../api/project';
 import { SaveProjectResponse, Project } from '../interfaces/project';
-import { transformToProjectInfoToSave } from '../contexts/ProjectContext'; // Import the transformation function
+import { transformToProjectInfoToSave } from '../contexts/ProjectContext'; 
 
 export const saveProject = async (
   projectContext: Project,

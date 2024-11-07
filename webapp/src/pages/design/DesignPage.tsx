@@ -35,11 +35,10 @@ import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import InputModal from '../../components/InputModal';
+import { logout } from '../../services/authApi';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
-// load env
-const isProduction =
-  (process.env.REACT_APP_ENV || 'development') === 'production';
+const isProduction = (process.env.REACT_APP_ENV || 'development') === 'production';
 
 function setFileTreePaths(
   item: FileTreeItemType,
@@ -73,6 +72,12 @@ const DesignPage: React.FC = () => {
   useEffect(() => {
     console.log('[DesignPage] projectContext', projectContext);
   }, [projectContext]);
+  */
+
+  /*
+  useEffect(() => {
+    console.log("Token on load:", localStorage.getItem('token'));
+  }, []);
   */
 
   const loadMock = useCallback(() => {
@@ -367,7 +372,16 @@ const DesignPage: React.FC = () => {
     setIsInputModalOpen((prev) => !prev);
   };
 
-
+  const handleLogout = useCallback(() => {
+    logout();
+    toast({
+      title: 'Logged out successfully',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+    window.location.href = '/';
+  }, [toast]);
 
   return (
     <>
@@ -393,6 +407,7 @@ const DesignPage: React.FC = () => {
           onClickNew={handleNewClick}
           onClickOpen={handleOpenClick}
           onClickSave={handleSaveClick}
+          onLogout={handleLogout}
         />
         <Flex flex={1}>
           <Toolbox />

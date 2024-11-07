@@ -1,6 +1,6 @@
 import express from 'express';
-import { generateAIResponse, handleAIChat } from 'src/controllers/aiController';
-import { authMiddleware } from 'src/middleware/authMiddleware';
+import { generateAIResponse, handleAIChat } from '../controllers/aiController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 

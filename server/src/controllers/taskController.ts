@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import pool from 'src/config/database';
-import { AppError } from 'src/middleware/errorHandler';
+import pool from '../config/database';
+import { AppError } from '../middleware/errorHandler';
 
 import { PaginatedResponse, TaskQueryParams } from 'src/types';
 
