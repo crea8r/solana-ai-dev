@@ -48,60 +48,66 @@ const CodeEditor = ({
   };
 
   useEffect(() => {
-    if (!definedThemes.has('materialLighterHighContrast')) {
-      monaco.editor.defineTheme('materialLighterHighContrast', {
-        base: 'vs',
+    if (!definedThemes.has('wechatLightStyle')) {
+      monaco.editor.defineTheme('wechatLightStyle', {
+        base: 'vs', // Use 'vs' for light mode
         inherit: true,
         rules: [
-          { token: 'comment', foreground: '4CAF50', fontStyle: 'italic' },
-          { token: 'keyword', foreground: '#ca3bf7', fontStyle: 'bold' },
-          { token: 'variable', foreground: '#BABABA', fontStyle: 'bold' },
-          { token: 'string', foreground: '#795548' },
-          { token: 'number', foreground: '#E91E63' },
-          { token: 'type', foreground: '#673AB7' },
-          { token: 'function', foreground: '#00796B', fontStyle: 'bold' },
-          { token: 'identifier', foreground: '#212121' },
+          { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },  // Green for comments
+          { token: 'keyword', foreground: 'FF6188', fontStyle: 'bold' },     // Pink for keywords
+          { token: 'variable', foreground: 'FF9E64' },                      // Orange for variables
+          { token: 'string', foreground: 'A9DC76' },                        // Light green for strings
+          { token: 'number', foreground: 'FD9353' },                        // Orange for numbers
+          { token: 'type', foreground: '78DCE8' },                          // Cyan for types
+          { token: 'function', foreground: 'AB9DF2', fontStyle: 'bold' },   // Purple for functions
+          { token: 'identifier', foreground: '333333' },                    // Dark gray for identifiers
         ],
         colors: {
-          'editor.foreground': '#000000',
-          'editor.background': '#FFFFFF',
-          'editorCursor.foreground': '#000000',
-          'editor.lineHighlightBackground': '#f7f7f7',
-          'editor.lineHighlightBorder': '#f7f7f7',
-          'editor.selectionBackground': '#A0C4FF',
-          'editor.selectionHighlightBackground': '#D0EBFF80',
-          // word highlight
-          'editor.wordHighlightBackground': '#ccffc2',
-          //'editor.wordHighlightBorder': '#FFD700',
-
-          'editor.wordHighlightStrongBackground': '#FFF176',
-          'editor.wordHighlightStrongBorder': '#FFEB3B',
-
-          'editor.inactiveSelectionBackground': '#B0BEC5',
-          'editorIndentGuide.background': '#E0E0E0',
-          'editorIndentGuide.activeBackground': '#B0BEC5',
+          'editor.foreground': '#333333',                  // Dark gray text
+          'editor.background': '#FFFFFF',                  // Pure white background
+          'editorCursor.foreground': '#333333',            // Dark gray cursor
+          'editor.lineHighlightBackground': '#F3F3F3',     // Very light gray for line highlight
+          'editor.selectionBackground': '#ADD6FF',         // Light blue for selected text
+          'editor.selectionHighlightBackground': '#DAECF7', // Slightly darker blue for highlights
+          'editor.wordHighlightBackground': '#EAEAEA',     // Light gray for word highlights
+          'editor.wordHighlightStrongBackground': '#E0E0E0',
+          'editor.inactiveSelectionBackground': '#E0E0E0', // Light gray for inactive selection
+          'editorIndentGuide.background': '#DDDDDD',       // Light gray indent guides
+          'editorIndentGuide.activeBackground': '#BBBBBB', // Slightly darker active indent guide
         },
       });
-      definedThemes.add('materialLighterHighContrast');
+      definedThemes.add('wechatLightStyle');
     }
-    monaco.editor.setTheme('materialLighterHighContrast');
+    monaco.editor.setTheme('wechatLightStyle');
   }, []);
 
   const editorDidMount = (editor: any) => {
     editorRef.current = editor;
-    monaco.editor.setTheme('materialLighterHighContrast');
+    monaco.editor.setTheme('monokaiProLight');
   };
 
   const determineLanguage = (path: string): string => {
     if (path.endsWith('.ts')) return 'typescript';
+    if (path.endsWith('.js')) return 'javascript';
     if (path.endsWith('.rs')) return 'rust';
+    if (path.endsWith('.json')) return 'json';
+    if (path.endsWith('.html')) return 'html';
+    if (path.endsWith('.css')) return 'css';
     if (path.endsWith('.toml')) return 'toml';
+    if (path.endsWith('.md')) return 'markdown';
+    console.log(`File path: ${path}, Language: plaintext (default)`);
     return 'plaintext';
   };
 
   useEffect(() => {
-    if (!currentFile && selectedFile) {
+    if (selectedFile) {
       setCurrentFile(selectedFile);
+      console.log(`Selected file: ${selectedFile.path}`);
+      if (selectedFile.path) {
+        const language = determineLanguage(selectedFile.path);
+        setLanguage(language);
+        console.log(`File path: ${selectedFile.path}, Language: ${language}`);
+      }
     }
   }, [selectedFile]);
 
@@ -109,21 +115,21 @@ const CodeEditor = ({
     if (currentFile?.path) {
       const uri = monaco.Uri.parse(`file:///${currentFile.path}`);
       let model = monaco.editor.getModel(uri);
-      
-      // Dispose of the old model if it exists
-      if (editorRef.current?.getModel() !== model) {
-        editorRef.current?.getModel()?.dispose();
-      }
 
       if (!model) {
         model = monaco.editor.createModel(content, language, uri);
-      } else if (model.getValue() !== content) {
-        model.setValue(content);
+      } else {
+        if (model.getValue() !== content) {
+          model.setValue(content);
+        }
+          monaco.editor.setModelLanguage(model, language);
       }
 
-      editorRef.current?.setModel(model);
+      if (editorRef.current?.getModel() !== model) {
+        editorRef.current?.setModel(model);
+      }
     }
-  }, [currentFile]);
+  }, [currentFile, language, content]);
 
   useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;
@@ -172,6 +178,25 @@ const CodeEditor = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [onSave]);
+
+  useEffect(() => {
+    // Register TOML language if not already registered
+    monaco.languages.register({ id: 'toml' });
+
+    // Define simple TOML syntax highlighting
+    monaco.languages.setMonarchTokensProvider('toml', {
+      tokenizer: {
+        root: [
+          [/^\s*\[.*?\]/, 'type'],  // Sections in TOML, e.g., [section]
+          [/^\s*[a-zA-Z0-9_-]+\s*=\s*/, 'variable'],  // Keys in TOML, e.g., key =
+          [/"[^"]*"/, 'string'],  // Double-quoted strings
+          [/'[^']*'/, 'string'],  // Single-quoted strings
+          [/\b\d+\b/, 'number'],  // Numbers
+          [/(true|false)/, 'keyword'],  // Booleans
+        ],
+      },
+    });
+  }, []);
 
   return (
     <Flex direction="column" height="100%" overflowY="hidden">

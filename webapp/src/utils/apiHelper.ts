@@ -19,7 +19,7 @@ const createApiInstance = (): AxiosInstance => {
     (config) => {
       const token = localStorage.getItem('token');
       if (token) {
-        console.log("Adding Authorization header:", token);
+        //console.log("Adding Authorization header:", token);
         config.headers['Authorization'] = `Bearer ${token}`;
       }
       return config;

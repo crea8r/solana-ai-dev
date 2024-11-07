@@ -42,9 +42,11 @@ const CodePage = () => {
     setTerminalLogs([]);
   };
 
+  /*
   useEffect(() => {
     console.log(projectContext);
   }, [projectContext]);
+  */
 
   useEffect(() => {
     const fetchDirectoryStructure = async () => {
@@ -59,7 +61,7 @@ const CodePage = () => {
             children: mappedFiles,
           };
           setFiles(rootNode);
-          console.log('Mapped Files:', rootNode);
+          //console.log('Mapped Files:', rootNode);
 
           if (mappedFiles.length > 0) {
             const firstFile = findFirstFile(mappedFiles);
@@ -119,7 +121,7 @@ const CodePage = () => {
     try {
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-      console.log(`Fetching content for file: ${filePath}`);
+      //console.log(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
@@ -212,7 +214,7 @@ const CodePage = () => {
 
   const handleContentChange = (newContent: string) => {
     setFileContent(newContent);
-    console.log("New content:", newContent);
+    //console.log("New content:", newContent);
   };
 
   const handleTestProject = async () => {
