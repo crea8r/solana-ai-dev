@@ -94,14 +94,26 @@ const CodeEditor = ({
 
   const determineLanguage = (path: string): string => {
     if (path.endsWith('.ts')) return 'typescript';
+    if (path.endsWith('.js')) return 'javascript';
     if (path.endsWith('.rs')) return 'rust';
+    if (path.endsWith('.json')) return 'json';
+    if (path.endsWith('.html')) return 'html';
+    if (path.endsWith('.css')) return 'css';
     if (path.endsWith('.toml')) return 'toml';
+    if (path.endsWith('.md')) return 'markdown';
+    console.log(`File path: ${path}, Language: plaintext (default)`);
     return 'plaintext';
   };
 
   useEffect(() => {
-    if (!currentFile && selectedFile) {
+    if (selectedFile) {
       setCurrentFile(selectedFile);
+      console.log(`Selected file: ${selectedFile.path}`);
+      if (selectedFile.path) {
+        const language = determineLanguage(selectedFile.path);
+        setLanguage(language);
+        console.log(`File path: ${selectedFile.path}, Language: ${language}`);
+      }
     }
   }, [selectedFile]);
 
@@ -109,21 +121,21 @@ const CodeEditor = ({
     if (currentFile?.path) {
       const uri = monaco.Uri.parse(`file:///${currentFile.path}`);
       let model = monaco.editor.getModel(uri);
-      
-      // Dispose of the old model if it exists
-      if (editorRef.current?.getModel() !== model) {
-        editorRef.current?.getModel()?.dispose();
-      }
 
       if (!model) {
         model = monaco.editor.createModel(content, language, uri);
-      } else if (model.getValue() !== content) {
-        model.setValue(content);
+      } else {
+        if (model.getValue() !== content) {
+          model.setValue(content);
+        }
+          monaco.editor.setModelLanguage(model, language);
       }
 
-      editorRef.current?.setModel(model);
+      if (editorRef.current?.getModel() !== model) {
+        editorRef.current?.setModel(model);
+      }
     }
-  }, [currentFile]);
+  }, [currentFile, language, content]);
 
   useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;

@@ -70,9 +70,11 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     }
   };
 
+  /*
   useEffect(() => {
     console.log('projectContext: ', projectContext);
   }, [projectContext]);
+  */
 
   useEffect(() => {
     scrollToBottom();
