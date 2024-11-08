@@ -627,7 +627,15 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                                     .filter((task) => task.type === 'file')
                                     .map((task) => (
                                         <Flex key={task.id} justify="space-between" align="center" ml={4} mb={2}>
-                                            <Text fontSize="sm">{task.path}</Text> {/* Updated to show full path */}
+                                            <Text 
+                                                fontSize="sm" 
+                                                maxW="300px" 
+                                                whiteSpace="nowrap" 
+                                                overflow="hidden" 
+                                                textOverflow="ellipsis"
+                                            >
+                                                {task.path}
+                                            </Text>
                                             <StatusSymbol status={task.status} />
                                         </Flex>
                                     ))}
