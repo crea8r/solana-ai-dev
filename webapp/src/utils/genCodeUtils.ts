@@ -50,5 +50,3 @@ export function extractCodeBlock(text: string): string {
   
     return codeBlockLines.join('\n');
 }
-
-

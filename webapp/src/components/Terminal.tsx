@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Divider } from '@chakra-ui/react';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
 import { keyframes } from '@emotion/react';
 
@@ -55,14 +55,23 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) =>
         <Flex>
           <Box color="gray.400" mr={4} userSelect="none">
             {Array.from({ length: logs.length }, (_, i) => (
-              <Text key={i} mb={1}>{i + 1}</Text>
+              <Text key={i} mb={3}>{i + 1}</Text>
             ))}
           </Box>
           <Box flex="1">
             {logs.map((log, index) => (
-              <Text key={index} mb={1} whiteSpace="pre-wrap" fontSize='xs'>
-                {log}
-              </Text>
+              <Box key={index} mb={3}>
+                <Text
+                  mb={1}
+                  whiteSpace="pre-wrap"
+                  fontSize="xs"
+                  color={log.startsWith('>') ? 'blue.600' : 'gray.700'}
+                  fontWeight={log.startsWith('>') ? 'bold' : 'normal'}
+                >
+                  {log}
+                </Text>
+                {index < logs.length - 1 && <Divider borderColor="gray.200" />}
+              </Box>
             ))}
           </Box>
         </Flex>

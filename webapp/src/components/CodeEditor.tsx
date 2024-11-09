@@ -95,18 +95,18 @@ const CodeEditor = ({
     if (path.endsWith('.css')) return 'css';
     if (path.endsWith('.toml')) return 'toml';
     if (path.endsWith('.md')) return 'markdown';
-    console.log(`File path: ${path}, Language: plaintext (default)`);
+    //console.log(`File path: ${path}, Language: plaintext (default)`);
     return 'plaintext';
   };
 
   useEffect(() => {
     if (selectedFile) {
       setCurrentFile(selectedFile);
-      console.log(`Selected file: ${selectedFile.path}`);
+     // console.log(`Selected file: ${selectedFile.path}`);
       if (selectedFile.path) {
         const language = determineLanguage(selectedFile.path);
         setLanguage(language);
-        console.log(`File path: ${selectedFile.path}, Language: ${language}`);
+        //console.log(`File path: ${selectedFile.path}, Language: ${language}`);
       }
     }
   }, [selectedFile]);
