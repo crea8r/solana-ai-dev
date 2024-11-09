@@ -275,7 +275,7 @@ const CodePage = () => {
       </Flex>
       
       <Flex flex="1" overflow="hidden">
-        <Box w="15vw" borderRight="1px" borderColor="gray.200">
+        <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
         <Box flex={1} maxHeight="100%" boxSizing="border-box" overflow="auto">
