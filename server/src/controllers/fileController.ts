@@ -379,13 +379,25 @@ export const renameDirectory = async (
   const rootFolder = process.env.ROOT_FOLDER;
   if (!rootFolder) return next(new AppError('Root folder not configured', 500));
 
-  const oldPath = path.join(rootFolder, rootPath, 'programs', rootPath);
-  const newPath = path.join(rootFolder, rootPath, 'programs', newDirName);
+  const programsDir = path.join(rootFolder, rootPath, 'programs');
+  const oldPath = path.join(programsDir, rootPath);
+  const newPath = path.join(programsDir, newDirName);
 
   try {
-    await fs.access(newPath).catch((err) => { if (err.code !== 'ENOENT') throw err; });
+    try {
+      await fs.access(newPath);
+      // Directory exists, remove it
+      await fs.rm(newPath, { recursive: true, force: true });
+      console.log(`Removed existing directory: ${newPath}`);
+    } catch (err) {
+      if (err instanceof Error && 'code' in err && err.code !== 'ENOENT') {
+        throw err;
+      }
+      // Directory does not exist, proceed
+    }
 
     await fs.rename(oldPath, newPath);
+    console.log(`Renamed directory from ${oldPath} to ${newPath}`);
 
     res.status(200).json({
       message: 'Directory renamed successfully',
