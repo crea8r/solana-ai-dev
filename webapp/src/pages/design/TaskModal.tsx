@@ -49,8 +49,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         if (projectContext) {
             setContextReady(true);
         }
-        console.log('contextReady', contextReady);
-        console.log('projectContext', projectContext);
+        //console.log('contextReady', contextReady);
+        //console.log('projectContext', projectContext);
     }, [projectContext]);
 
     useEffect(() => {
@@ -201,6 +201,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 setFileTreePaths(files);
 
                 const aiFilePaths = getFileList(files).map(file => file.path).filter(Boolean) as string[];
+                console.log('aiFilePaths', aiFilePaths);
 
                 // Get the directory name of the AI generated program
                 const aiGeneratedProgramDirs = aiFilePaths
@@ -208,14 +209,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     .map(path => path.split('/').find((segment, index, array) => array[index - 1] === 'programs'));
                 const aiProgramDirectoryName = aiGeneratedProgramDirs[0];
                 if (!aiProgramDirectoryName) { console.error('AI-generated program name not found'); return; }
-                console.log('aiProgramDirectoryName', aiProgramDirectoryName);
+                //console.log('aiProgramDirectoryName', aiProgramDirectoryName);
 
                 if (!rootPath || !aiProgramDirectoryName) return;
                 const _existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
                 if (!_existingFilesResponse) { console.error('Existing files not found'); return; }
                 // rename the directory to the ai program name
                 const response = await fileApi.renameDirectory(rootPath, aiProgramDirectoryName);
-                console.log('renameDirectory:', response);
+                //console.log('renameDirectory:', response);
 
                 // update the project context with the ai file paths
                 setProjectContext((prevContext) => ({
@@ -232,14 +233,24 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     return { ...file, path: updatedPath, name: file.name };
                 }).filter(file => file.path);
 
-                // filter the src files
-                const srcFiles = updatedFileList.filter(file => file.path.startsWith(`programs/${aiProgramDirectoryName}/src/`));
+                //const srcFiles = updatedFileList.filter(file => file.path.startsWith(`programs/${aiProgramDirectoryName}/src/`));
+
+                 // Filter the files we want to process
+                const filesToProcess = updatedFileList.filter(file => {
+                    // Include files under 'programs/aiProgramDirectoryName/src/',
+                    // 'tests/', and 'sdk/' directories
+                    return (
+                        file.path.startsWith(`programs/${aiProgramDirectoryName}/src/`) ||
+                        file.path.startsWith('tests/') ||
+                        file.path.startsWith('sdk/')
+                    );
+                });
 
                 // config files to skip
                 const configFiles = ['Cargo.toml', 'Xargo.toml', 'Anchor.toml', '.gitignore'];
 
                 // create a unique file map
-                const uniqueFileMap = new Map(srcFiles.map(file => [file.path, file]));
+                const uniqueFileMap = new Map(filesToProcess.map(file => [file.path, file]));
                 const uniqueFileList = Array.from(uniqueFileMap.values());
                 let nextId = 3;
 

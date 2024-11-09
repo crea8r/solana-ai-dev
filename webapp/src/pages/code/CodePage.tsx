@@ -42,17 +42,18 @@ const CodePage = () => {
     setTerminalLogs([]);
   };
 
-  
+  /*
   useEffect(() => {
     console.log(projectContext);
   }, [projectContext]);
-  
+  */
 
   useEffect(() => {
     const fetchDirectoryStructure = async () => {
       if (projectContext.name) {
         try {
           const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
+          console.log('Directory Structure:', directoryStructure);
           const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
           const rootNode: FileTreeItemType = {
             name: projectContext.name || '',
