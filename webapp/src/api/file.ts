@@ -7,7 +7,16 @@ import { FileTreeNode } from '../interfaces/file';
 // }
 
 export const fileApi = {
-  // Get directory structure
+  getFilePath: async (projectId: string, fileName: string): Promise<string> => {
+    try {
+      const response = await api.get(`/files/path/${projectId}/${fileName}`);
+      return response.data.filePath;
+    } catch (error) {
+      console.error('Error retrieving file path:', error);
+      throw error;
+    }
+  },
+  
   getDirectoryStructure: async (
     projectName: string,
     rootPath: string
@@ -21,7 +30,6 @@ export const fileApi = {
     }
   },
 
-  // Get project file tree
   getProjectFileTree: async (projectId: string): Promise<FileTreeNode[]> => {
     try {
       const response = await api.get(`/files/tree/${projectId}`);
@@ -65,14 +73,14 @@ export const fileApi = {
   },
 
   updateFile: async (
-    rootPath: string,
+    projectId: string,
     filePath: string,
     content: string
   ): Promise<TaskResponse> => {
     try {
       const response = await api.put(
-        `/files/update`,
-        { rootPath, filePath, content }
+        `/files/update/${projectId}/${filePath}`,
+        { content }
       );
       return response.data;
     } catch (error) {
@@ -81,7 +89,6 @@ export const fileApi = {
     }
   },
 
-  // Delete file
   deleteFile: async (
     projectId: string,
     filePath: string

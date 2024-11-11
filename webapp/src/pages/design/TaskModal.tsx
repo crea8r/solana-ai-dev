@@ -15,6 +15,7 @@ import { useProjectContext } from '../../contexts/ProjectContext';
 import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useToast } from '@chakra-ui/react'; 
 import { Link as RouterLink } from 'react-router-dom';
+import { amendConfigFile } from '../../utils/genCodeUtils';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -216,7 +217,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 if (!_existingFilesResponse) { console.error('Existing files not found'); return; }
                 // rename the directory to the ai program name
                 const response = await fileApi.renameDirectory(rootPath, aiProgramDirectoryName);
-                //console.log('renameDirectory:', response);
+
+                // amend the config files
+                //const filePath = await fileApi.getFilePath(projectId, 'Cargo.toml');
+                const cargoFilePath = `programs/${aiProgramDirectoryName}/Cargo.toml`;
+                const anchorFilePath = `Anchor.toml`;
+
+                const cargoResult = await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, aiProgramDirectoryName);
+                console.log('Cargo.toml amended', cargoResult);
+
+                const anchorResult = await amendConfigFile(projectId, 'Anchor.toml', anchorFilePath, aiProgramDirectoryName);
+                console.log('Anchor.toml amended', anchorResult);
 
                 // update the project context with the ai file paths
                 setProjectContext((prevContext) => ({
@@ -269,7 +280,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         type: 'file',
                     } as Task));
 
-                console.log("Final file tasks to be set:", fileTasks);
+                //console.log("Final file tasks to be set:", fileTasks);
 
                 // update the tasks to include the file tasks
                 setTasks((prevTasks) => {
@@ -431,7 +442,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const response = await projectApi.initAnchorProject(projectId, rootPath, projectName);
             const { taskId } = response;
             console.log('taskId', taskId);
-            await pollTaskStatus(taskId, projectId, rootPath, projectName);
+            await pollTaskStatus(taskId);
 
         } catch (error) {
             console.error('Error initializing Anchor project:', error);
@@ -444,7 +455,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         }
     };
 
-    const pollTaskStatus = (taskId: string, projectId: string, rootPath: string, projectName: string): Promise<void> => {
+    const pollTaskStatus = (taskId: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             const interval = setInterval(async () => {
                 try {

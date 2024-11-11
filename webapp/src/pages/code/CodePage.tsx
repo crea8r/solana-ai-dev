@@ -25,6 +25,7 @@ const CodePage = () => {
   const { projectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
@@ -152,6 +153,8 @@ const CodePage = () => {
   };
 
   const startPollingTaskStatus = (taskId: string) => {
+    setIsPolling(true);
+
     const intervalId = setInterval(async () => {
       try {
         const taskResponse = await taskApi.getTask(taskId);
@@ -159,13 +162,16 @@ const CodePage = () => {
 
         if (status === 'finished' || status === 'succeed') {
           clearInterval(intervalId);
+          setIsPolling(false);
           addLog(`Build complete: ${taskResponse.task.result}`, true);
         } else if (status === 'failed') {
           clearInterval(intervalId);
+          setIsPolling(false);
           addLog(`Build failed: ${taskResponse.task.result}`, true);
         }
       } catch (error) {
         clearInterval(intervalId);
+        setIsPolling(false);
         addLog(`Polling error: ${error}`, true);
       }
     }, 5000);
@@ -199,12 +205,13 @@ const CodePage = () => {
     }
   
     setIsLoading(true);
-    const rootPath = projectContext.rootPath;
+    const projectId = projectContext.id;
     const filePath = selectedFile.path;
     const content = fileContent; 
   
     try {
-      const response = await fileApi.updateFile(rootPath, filePath, content);
+      const response = await fileApi.updateFile(projectId, filePath, content);
+      console.log('File saved successfully:', response);
       addLog(`File saved successfully: ${filePath}`, true);
     } catch (error) {
       addLog(`Error saving file: ${error}`, true);
@@ -288,7 +295,8 @@ const CodePage = () => {
             onChange={handleContentChange}
             onSave={handleSave}
             onRunCommand={handleRunCommand}
-          />
+            isPolling={isPolling}
+          />  
         </Box>
         <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">
           <AIChat 

@@ -2,6 +2,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
+import webpack from 'webpack';
 
 // Resolve __dirname in ES module format
 const __filename = fileURLToPath(import.meta.url);
@@ -26,9 +27,18 @@ export default {
     new MonacoWebpackPlugin({
       languages: ['javascript', 'typescript', 'json', 'css', 'html'], 
     }),
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer']
+    }),
   ],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'], 
+    fallback: {
+      "stream": require.resolve("stream-browserify"),
+      "buffer": require.resolve("buffer/"),
+      "process": require.resolve("process/browser"),
+    }
   },
   devServer: {
     static: {

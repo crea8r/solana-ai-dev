@@ -2,11 +2,13 @@ import React from 'react';
 import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Divider } from '@chakra-ui/react';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
 import { keyframes } from '@emotion/react';
+import { Spinner } from './Spinner';
 
 type TerminalProps = {
   logs: string[];
   clearLogs: () => void;
   onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
+  isPolling: boolean;
 };
 
 const pulse = keyframes`
@@ -18,7 +20,7 @@ const pulse = keyframes`
   }
 `;
 
-const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) => {
+const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPolling }) => {
   return (
     <Box
       flex="1"
@@ -75,6 +77,11 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) =>
             ))}
           </Box>
         </Flex>
+        {isPolling && (
+          <Flex alignItems="center" mt={2} color="gray.600">
+            <Spinner />
+          </Flex>
+        )}
         <Flex alignItems="center" mt={2} color="gray.600">
           <Icon as={ChevronRight} w={3} h={3} mr={1} />
           <Text fontSize="xs" animation={`${pulse} 0.8s infinite`} className="animate-pulse">_</Text>

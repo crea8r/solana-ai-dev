@@ -13,6 +13,7 @@ type CodeEditorProps = {
   onChange: (newContent: string) => void;
   onSave: () => void;
   onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
+  isPolling: boolean;
 };
 
 const CodeEditor = ({
@@ -23,6 +24,7 @@ const CodeEditor = ({
   onChange,
   onSave,
   onRunCommand,
+  isPolling,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
@@ -220,7 +222,12 @@ const CodeEditor = ({
       </Box>
 
       <Box flex="1" mb={2}>
-        <Terminal logs={terminalLogs} clearLogs={clearLogs} onRunCommand={onRunCommand} />
+        <Terminal 
+          logs={terminalLogs} 
+          clearLogs={clearLogs} 
+          onRunCommand={onRunCommand} 
+          isPolling={isPolling}
+        />
       </Box>
     </Flex>
   );

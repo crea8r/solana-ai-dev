@@ -10,6 +10,8 @@ import {
   startGenerateFileTreeTask,
   startGetFileContentTask,
   startUpdateFileTask,
+  getProjectRootPath,
+  findFileRecursive,
 } from '../utils/fileUtils';
 
 dotenv.config();
@@ -20,6 +22,36 @@ interface FileStructure {
   path: string; // Added path property
   children?: FileStructure[];
 }
+
+
+export const getFilePath = async (req: Request, res: Response, next: NextFunction) => {
+  const { projectId, fileName } = req.params;
+  console.log('getFilePath projectId', projectId);
+  console.log('getFilePath fileName', fileName);
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+
+  try {
+    const rootPath = await getProjectRootPath(projectId);
+    if (!rootPath) return next(new AppError('Root path not found for the project', 404));
+
+    const projectPath = path.join(process.env.ROOT_FOLDER as string, rootPath);
+
+    const filePath = await findFileRecursive(projectPath, fileName);
+
+    if (!filePath) return next(new AppError('File not found', 404));
+
+    res.status(200).json({
+      message: 'File path retrieved successfully',
+      filePath,
+    });
+  } catch (error) {
+    console.error('Error retrieving file path:', error);
+    next(new AppError('Failed to retrieve file path', 500));
+  }
+};
+
 
 const getFullDirectoryStructure = async (
   directoryPath: string,
