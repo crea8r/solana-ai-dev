@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
-import { exec } from 'child_process';
-import path from 'path';
 import { AppError } from '../middleware/errorHandler';
 import { getProjectRootPath, startDeleteProjectFolderTask } from '../utils/fileUtils';
 import { normalizeProjectName } from '../utils/stringUtils';
@@ -12,6 +10,7 @@ import {
   startAnchorTestTask,
   startCustomCommandTask,
 } from '../utils/projectUtils';
+
 
 export const anchorInitProject = async (
   req: Request,
@@ -438,20 +437,4 @@ export const runProjectCommand = async (
     console.error('Error in runProjectCommand:', error);
     next(new AppError('Failed to run project command', 500));
   }
-};
-
-export const createWallet = async (userId: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const walletPath = path.join('/path/to/wallets', `${userId}.json`);
-    
-    exec(`solana-keygen new --outfile ${walletPath} --no-bip39-passphrase`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error generating wallet: ${stderr}`);
-        reject(new Error(`Error generating wallet: ${stderr}`));
-      } else {
-        console.log(`Wallet created at: ${walletPath}`);
-        resolve(walletPath);
-      }
-    });
-  });
 };

@@ -33,6 +33,9 @@ CREATE TABLE Creator (
     role TEXT CHECK (role IN ('member', 'admin'))
 );
 
+ALTER TABLE Creator ADD COLUMN wallet_created BOOLEAN DEFAULT FALSE;
+ALTER TABLE Creator ADD COLUMN private_key_viewed BOOLEAN DEFAULT FALSE;
+
 -- Create indexes on Creator username and org_id
 CREATE INDEX idx_creator_username ON Creator(username);
 CREATE INDEX idx_creator_org_id ON Creator(org_id);

@@ -1,20 +1,161 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
 import { generateToken } from '../utils/jwt';
 import { APP_CONFIG } from '../config/appConfig';
+import { WalletInfo } from 'src/types';
+import { AppError } from 'src/middleware/errorHandler';
+import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
+import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+
+const connection = new Connection("https://api.devnet.solana.com");
+
+export const createWallet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.user?.id;
+  if (!userId) return next(new AppError('User ID not found', 400));
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query('SELECT wallet_created FROM Creator WHERE id = $1', [userId]);
+    const walletCreated = result.rows[0]?.wallet_created;
+    if (walletCreated) return next(new AppError('Wallet already created for this user', 400));
+
+    const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${userId}.json`);
+    exec(`solana-keygen new --outfile ${walletPath} --no-bip39-passphrase`, async (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error generating wallet: ${stderr}`);
+        return next(new AppError(`Error generating wallet: ${stderr}`, 500));
+      }
+
+      try {
+        const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+        console.log(walletData);
+
+        // Create a Uint8Array from the private key array
+        const privateKeyArray = Uint8Array.from(walletData);
+        const keypair = Keypair.fromSecretKey(privateKeyArray);
+        const publicKey = keypair.publicKey.toBase58();
+        console.log("privateKeyArray", privateKeyArray);
+        console.log("keypair", keypair);
+        console.log("publicKey", publicKey);
+
+
+        const walletInfo: WalletInfo = {
+          publicKey,
+          balance: 0,
+          creationDate: new Date().toISOString(),
+        };
+
+      // Optionally overwrite the wallet file to remove the private key after returning it
+      //fs.writeFileSync(walletPath, JSON.stringify([publicKey]), 'utf-8');
+
+        try {
+          await client.query('BEGIN');
+          await client.query('UPDATE Creator SET wallet_created = $1 WHERE id = $2', [true, userId]);
+          await client.query('COMMIT');
+          console.log(`Wallet creation recorded for user ${userId}`);
+
+          res.status(201).json(walletInfo);
+        } catch (dbError) {
+          await client.query('ROLLBACK');
+          console.error(`Database error: ${dbError}`);
+          return next(new AppError('Failed to update wallet creation status', 500));
+        }
+      } catch (err) {
+        console.error(`Error reading wallet file: ${err}`);
+        return next(new AppError('Failed to read wallet information', 500));
+      }
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    return next(new AppError('Database error while checking wallet creation status', 500));
+  } finally {
+    client.release();
+  }
+};
+
+export const getWalletInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const userId = req.user?.id;
+  if (!userId) return next(new AppError('User ID not found', 400));
+
+  const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${userId}.json`);
+
+  try {
+    const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+
+    const privateKeyArray = Uint8Array.from(walletData);
+    const keypair = Keypair.fromSecretKey(privateKeyArray);
+    const publicKey = keypair.publicKey.toBase58(); 
+
+    const balanceInLamports = await connection.getBalance(new PublicKey(publicKey));
+    const balanceInSol = balanceInLamports / 1e9; // Convert from lamports to SOL
+    //const balanceInSol = 0;
+
+    const creationDate = fs.statSync(walletPath).birthtime.toISOString();
+
+    const walletInfo: WalletInfo = {
+      publicKey,
+      balance: balanceInSol,
+      creationDate,
+    };
+
+    res.status(200).json(walletInfo);
+  } catch (error) {
+    console.error(`Error retrieving wallet info for user ${userId}:`, error);
+    return next(new AppError('Failed to retrieve wallet information', 500));
+  }
+};
+
+export const getPrivateKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.user?.id;
+  if (!userId) return next(new AppError('User ID not found', 400));
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query('SELECT private_key_viewed FROM Creator WHERE id = $1', [userId]);
+    const privateKeyViewed = result.rows[0]?.private_key_viewed;
+    if (privateKeyViewed) return next(new AppError('Private key already retrieved for this user', 400));
+
+    const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${userId}.json`);
+    const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+
+    // Update private_key_viewed to true to prevent further access
+    await client.query('BEGIN');
+    await client.query('UPDATE Creator SET private_key_viewed = $1 WHERE id = $2', [true, userId]);
+    await client.query('COMMIT');
+
+    res.status(200).json({
+      privateKey: JSON.stringify(walletData),
+      creationDate: fs.statSync(walletPath).birthtime.toISOString(),
+    });
+  } catch (error) {
+    console.error('Error retrieving private key:', error);
+    await client.query('ROLLBACK');
+    next(new AppError('Failed to retrieve private key', 500));
+  } finally {
+    client.release();
+  }
+};
 
 export const register = async (req: Request, res: Response) => {
   const { username, password, organisation, description } = req.body;
 
   try {
-    // Start a transaction
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Check if the organisation already exists
       const orgResult = await client.query(
         'SELECT * FROM Organisation WHERE name = $1',
         [organisation]
@@ -23,7 +164,6 @@ export const register = async (req: Request, res: Response) => {
       let orgId: string;
 
       if (orgResult.rows.length > 0) {
-        // Organisation exists, check if the username is unique within the org
         const userResult = await client.query(
           'SELECT * FROM Creator WHERE username = $1 AND org_id = $2',
           [username, orgResult.rows[0].id]
@@ -37,7 +177,6 @@ export const register = async (req: Request, res: Response) => {
 
         orgId = orgResult.rows[0].id;
       } else {
-        // Create new organisation
         orgId = uuidv4();
         await client.query(
           'INSERT INTO Organisation (id, name, description) VALUES ($1, $2, $3)',
@@ -45,21 +184,17 @@ export const register = async (req: Request, res: Response) => {
         );
       }
 
-      // Hash the password
       const salt = await bcrypt.genSalt(APP_CONFIG.PASSWORD_SALT_ROUNDS);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Create new user
       const userId = uuidv4();
       await client.query(
-        'INSERT INTO Creator (id, username, password, org_id, role) VALUES ($1, $2, $3, $4, $5)',
-        [userId, username, hashedPassword, orgId, 'admin']
+        'INSERT INTO Creator (id, username, password, org_id, role, wallet_created, private_key_viewed) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [userId, username, hashedPassword, orgId, 'admin', false, false]
       );
 
-      // Commit the transaction
       await client.query('COMMIT');
 
-      // Generate JWT token
       const token = generateToken({
         id: userId,
         org_id: orgId,
@@ -70,6 +205,7 @@ export const register = async (req: Request, res: Response) => {
       res.status(201).json({
         message: 'User registered successfully',
         token,
+        wallet_created: false,
         user: { id: userId, username, org_id: orgId, role: 'admin' },
       });
     } catch (error) {
@@ -123,6 +259,7 @@ export const login = async (req: Request, res: Response) => {
         username: user.username,
         org_id: user.org_id,
         role: user.role,
+        wallet_created: user.wallet_created,
       },
     });
   } catch (error) {

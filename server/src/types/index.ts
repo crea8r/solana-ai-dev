@@ -68,3 +68,9 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+export interface WalletInfo {
+  publicKey: string;
+  balance: number;
+  creationDate?: string;
+}

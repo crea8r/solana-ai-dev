@@ -5,7 +5,7 @@ import {
   editProject,
   getProjectDetails,
   anchorInitProject,
-  runProjectCommand
+  runProjectCommand,
 } from '../controllers/projectController';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { buildProject, testProject } from '../controllers/projectController';

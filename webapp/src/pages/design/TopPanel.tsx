@@ -7,7 +7,7 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
-import { Pencil } from 'lucide-react';
+import { Pencil, WalletIcon } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
@@ -17,6 +17,7 @@ interface TopPanelProps {
   onClickSave: () => void;
   onClickNew: () => void;
   onLogout: () => void;
+  onToggleWallet: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -26,6 +27,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   onClickSave,
   onClickNew,
   onLogout,
+  onToggleWallet,
 }) => {
   const { projectContext } = useProjectContext();
   const [hover, setHover] = useState(false);
@@ -78,6 +80,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </Box>
           </Flex>
         </Flex>
+        <Button variant="ghost" size="xs" colorScheme="blue" onClick={onToggleWallet} leftIcon={<WalletIcon size={16} />}>Wallet</Button>
         <Flex alignItems="center" gap={1} padding={1}>
           <Flex alignItems="center" gap={4}>
             <Avatar size="xs" src="/placeholder.svg" />
