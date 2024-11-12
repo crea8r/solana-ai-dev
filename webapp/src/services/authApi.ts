@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { createWallet } from '../api/wallet';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -35,6 +36,10 @@ export const register = async (
       username,
       password,
     });
+
+    localStorage.setItem('token', response.data.token);
+    await createWallet(response.data.user.id);
+
     return response.data;
   } catch (error) {
     throw error;

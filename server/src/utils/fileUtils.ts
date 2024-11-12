@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { Dirent } from 'fs';
 import path from 'path';
 import { APP_CONFIG } from '../config/appConfig';
 import { AppError } from '../middleware/errorHandler';
@@ -23,6 +23,23 @@ interface FileNode {
   ext?: string;
   path: string;
   children?: FileNode[];
+}
+
+export async function findFileRecursive(dir: string, fileName: string): Promise<string | null> {
+  const files: Dirent[] = fs.readdirSync(dir, { withFileTypes: true }) as Dirent[];
+
+  for (const file of files) {
+    const fullPath = path.join(dir, file.name);
+
+    if (file.isDirectory()) {
+      const result = await findFileRecursive(fullPath, fileName);
+      if (result) return result;
+    } else if (file.name === fileName) {
+      return fullPath;
+    }
+  }
+
+  return null;
 }
 
 export async function getProjectRootPath(projectId: string): Promise<string> {
@@ -223,6 +240,7 @@ export const startUpdateFileTask = async (
         projectRootPath,
         filePath
       );
+      console.log('Updating file:', fullPath);
       await fs.promises.writeFile(fullPath, content, 'utf-8');
       await updateTaskStatus(taskId, 'succeed', 'File updated successfully');
     } catch (error) {

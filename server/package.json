@@ -17,6 +17,7 @@
   "author": "hieubt",
   "license": "MIT",
   "dependencies": {
+    "@solana/web3.js": "^1.95.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

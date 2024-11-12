@@ -175,6 +175,7 @@ const RegisterPage: React.FC = () => {
                   required 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="off"
                 />
               </Box>
               <Box className="space-y-2">
@@ -185,6 +186,7 @@ const RegisterPage: React.FC = () => {
                   required 
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
+                  autoComplete="off"
                 />
               </Box>
               <Box className="space-y-2">
@@ -196,6 +198,7 @@ const RegisterPage: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="off"
                   />
                   <Button
                     type="button"
@@ -219,6 +222,7 @@ const RegisterPage: React.FC = () => {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="off"
                 />
               </Box>
               {error && <p className="text-sm text-red-500">{error}</p>}

@@ -1,12 +1,14 @@
 import React from 'react';
-import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Divider } from '@chakra-ui/react';
 import { ChevronRight, X, Minus, Square } from 'lucide-react';
 import { keyframes } from '@emotion/react';
+import { Spinner } from './Spinner';
 
 type TerminalProps = {
   logs: string[];
   clearLogs: () => void;
   onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
+  isPolling: boolean;
 };
 
 const pulse = keyframes`
@@ -18,7 +20,7 @@ const pulse = keyframes`
   }
 `;
 
-const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) => {
+const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPolling }) => {
   return (
     <Box
       flex="1"
@@ -55,17 +57,31 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand }) =>
         <Flex>
           <Box color="gray.400" mr={4} userSelect="none">
             {Array.from({ length: logs.length }, (_, i) => (
-              <Text key={i} mb={1}>{i + 1}</Text>
+              <Text key={i} mb={3}>{i + 1}</Text>
             ))}
           </Box>
           <Box flex="1">
             {logs.map((log, index) => (
-              <Text key={index} mb={1} whiteSpace="pre-wrap" fontSize='xs'>
-                {log}
-              </Text>
+              <Box key={index} mb={3}>
+                <Text
+                  mb={1}
+                  whiteSpace="pre-wrap"
+                  fontSize="xs"
+                  color={log.startsWith('>') ? 'blue.600' : 'gray.700'}
+                  fontWeight={log.startsWith('>') ? 'bold' : 'normal'}
+                >
+                  {log}
+                </Text>
+                {index < logs.length - 1 && <Divider borderColor="gray.200" />}
+              </Box>
             ))}
           </Box>
         </Flex>
+        {isPolling && (
+          <Flex alignItems="center" mt={2} color="gray.600">
+            <Spinner />
+          </Flex>
+        )}
         <Flex alignItems="center" mt={2} color="gray.600">
           <Icon as={ChevronRight} w={3} h={3} mr={1} />
           <Text fontSize="xs" animation={`${pulse} 0.8s infinite`} className="animate-pulse">_</Text>

@@ -175,6 +175,7 @@ const LoginPage: React.FC = () => {
                   required 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="off"
                 />
               </Box>
               <Box className="space-y-2">
@@ -186,6 +187,7 @@ const LoginPage: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="off"
                   />
                   <Button
                     type="button"

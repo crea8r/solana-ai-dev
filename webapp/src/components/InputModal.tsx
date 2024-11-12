@@ -24,14 +24,14 @@ const InputModal : React.FC<InputModalProps> = ({ isOpen, onClose }) => {
                 <Text fontSize='sm' fontWeight='medium'>Project Name</Text>
                 <Input w="100%" type="text" value={projectContext.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   {
-                    console.log(`[InputModal] - name: ${e.target.value}`);
+                    //console.log(`[InputModal] - name: ${e.target.value}`);
                     setProjectContext((prev) => ({ ...prev, name: e.target.value }));
                   }} />
               </Flex>
               <Flex direction='column' gap={4} p={4}>
                 <Text fontSize='sm' fontWeight='medium'>Project Description</Text>
                 <Textarea value={projectContext.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  console.log(`[InputModal] - description: ${e.target.value}`);
+                  //console.log(`[InputModal] - description: ${e.target.value}`);
                   setProjectContext((prev) => ({ ...prev, description: e.target.value }));
                 }} />
               </Flex>

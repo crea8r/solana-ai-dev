@@ -13,6 +13,7 @@ type CodeEditorProps = {
   onChange: (newContent: string) => void;
   onSave: () => void;
   onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
+  isPolling: boolean;
 };
 
 const CodeEditor = ({
@@ -23,6 +24,7 @@ const CodeEditor = ({
   onChange,
   onSave,
   onRunCommand,
+  isPolling,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
@@ -95,18 +97,18 @@ const CodeEditor = ({
     if (path.endsWith('.css')) return 'css';
     if (path.endsWith('.toml')) return 'toml';
     if (path.endsWith('.md')) return 'markdown';
-    console.log(`File path: ${path}, Language: plaintext (default)`);
+    //console.log(`File path: ${path}, Language: plaintext (default)`);
     return 'plaintext';
   };
 
   useEffect(() => {
     if (selectedFile) {
       setCurrentFile(selectedFile);
-      console.log(`Selected file: ${selectedFile.path}`);
+     // console.log(`Selected file: ${selectedFile.path}`);
       if (selectedFile.path) {
         const language = determineLanguage(selectedFile.path);
         setLanguage(language);
-        console.log(`File path: ${selectedFile.path}, Language: ${language}`);
+        //console.log(`File path: ${selectedFile.path}, Language: ${language}`);
       }
     }
   }, [selectedFile]);
@@ -220,7 +222,12 @@ const CodeEditor = ({
       </Box>
 
       <Box flex="1" mb={2}>
-        <Terminal logs={terminalLogs} clearLogs={clearLogs} onRunCommand={onRunCommand} />
+        <Terminal 
+          logs={terminalLogs} 
+          clearLogs={clearLogs} 
+          onRunCommand={onRunCommand} 
+          isPolling={isPolling}
+        />
       </Box>
     </Flex>
   );

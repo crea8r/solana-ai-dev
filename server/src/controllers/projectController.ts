@@ -11,7 +11,7 @@ import {
   startCustomCommandTask,
 } from '../utils/projectUtils';
 
-// Initialize default Anchor project
+
 export const anchorInitProject = async (
   req: Request,
   res: Response,
@@ -438,5 +438,3 @@ export const runProjectCommand = async (
     next(new AppError('Failed to run project command', 500));
   }
 };
-
-

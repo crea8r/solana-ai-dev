@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { Button, Flex, useDisclosure, useToast } from '@chakra-ui/react';
 import {
   Node,
@@ -36,6 +36,8 @@ import { TaskModal } from './TaskModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import InputModal from '../../components/InputModal';
 import { logout } from '../../services/authApi';
+import { Wallet, WalletCreationModal } from '../../components/Wallet';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 const isProduction = (process.env.REACT_APP_ENV || 'development') === 'production';
@@ -67,6 +69,9 @@ const DesignPage: React.FC = () => {
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
+  const { user, firstLoginAfterRegistration, markWalletModalViewed } = useContext(AuthContext)!;
+  const [showWalletModal, setShowWalletModal] = useState(firstLoginAfterRegistration);
 
   /*
   useEffect(() => {
@@ -383,6 +388,15 @@ const DesignPage: React.FC = () => {
     window.location.href = '/';
   }, [toast]);
 
+  const handleToggleWallet = () => {
+    setShowWallet((prev) => !prev);
+  };
+
+  const handleModalClose = () => {
+    setShowWalletModal(false);
+    markWalletModalViewed();
+  };
+
   return (
     <>
       <PromptModal
@@ -408,8 +422,10 @@ const DesignPage: React.FC = () => {
           onClickOpen={handleOpenClick}
           onClickSave={handleSaveClick}
           onLogout={handleLogout}
+          onToggleWallet={handleToggleWallet}
         />
         <Flex flex={1}>
+         {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
           <Toolbox />
           <Canvas
             nodes={nodes}
@@ -421,6 +437,7 @@ const DesignPage: React.FC = () => {
             onSelectEdge={handleSelectEdge}
             onAddNode={handleAddNode}
           />
+          {showWallet && <Wallet />}
           <PropertyPanel
             selectedNode={selectedNode}
             selectedEdge={selectedEdge}

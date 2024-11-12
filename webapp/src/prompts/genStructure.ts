@@ -21,10 +21,13 @@ const generateGeneralInstructions = (libraryVersion: string) => {
     - Cargo.toml: specific to that program to manage dependencies.
     - src/lib.rs: with the main logic for the program.
     Account-related code should be in state.rs.
-    Each instruction should be in its own file, grouped by groups of users.
+    Each instruction should be in its own file.
     The function inside the file should be run_[the name of the file].
     Remember to add mod.rs in the folder and sub-folders in the instructions.
+    Do not produce mod.rs file for the project root folder.
     The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
+
+
     --- Library ---
     Use @coral-xyz/anchor for TypeScript test code.
     Use Anchor version >= ${libraryVersion}

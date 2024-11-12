@@ -10,6 +10,8 @@ interface User {
   username: string;
   org_id: string;
   orgName: string;
+  walletCreated: boolean;
+  hasViewedWalletModal?: boolean;
 }
 
 interface AuthContextType {
@@ -21,6 +23,8 @@ interface AuthContextType {
     password: string
   ) => Promise<void>;
   logout: () => void;
+  firstLoginAfterRegistration: boolean;
+  markWalletModalViewed: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -31,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [firstLoginAfterRegistration, setFirstLoginAfterRegistration] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -39,15 +44,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // For now, we'll assume if there's a token, the user is logged in
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+
+        setFirstLoginAfterRegistration(parsedUser.walletCreated && !parsedUser.hasViewedWalletModal);
       }
     }
   }, []);
+
+  const markWalletModalViewed = () => {
+    setFirstLoginAfterRegistration(false);
+    if (user) {
+      const updatedUser = { ...user, hasViewedWalletModal: true };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
 
   const login = async (username: string, password: string) => {
     try {
       const response = await apiLogin(username, password);
       setUser(response.user);
+      setFirstLoginAfterRegistration(!response.user.walletCreated);
       localStorage.setItem('user', JSON.stringify(response.user));
     } catch (error) {
       console.error('Login failed:', error);
@@ -62,8 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       await apiRegister(orgName, username, password);
-      // After successful registration, you might want to automatically log the user in
-      // or redirect them to the login page
+      setFirstLoginAfterRegistration(true);
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -73,11 +90,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = () => {
     apiLogout();
     setUser(null);
+    setFirstLoginAfterRegistration(false);
     localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        firstLoginAfterRegistration,
+        markWalletModalViewed,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

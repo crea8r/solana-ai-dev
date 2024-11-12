@@ -25,6 +25,7 @@ const CodePage = () => {
   const { projectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
@@ -53,6 +54,7 @@ const CodePage = () => {
       if (projectContext.name) {
         try {
           const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
+          console.log('Directory Structure:', directoryStructure);
           const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
           const rootNode: FileTreeItemType = {
             name: projectContext.name || '',
@@ -61,7 +63,7 @@ const CodePage = () => {
             children: mappedFiles,
           };
           setFiles(rootNode);
-          //console.log('Mapped Files:', rootNode);
+          console.log('Mapped Files:', rootNode);
 
           if (mappedFiles.length > 0) {
             const firstFile = findFirstFile(mappedFiles);
@@ -121,7 +123,7 @@ const CodePage = () => {
     try {
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-      //console.log(`Fetching content for file: ${filePath}`);
+      console.log(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
@@ -151,6 +153,8 @@ const CodePage = () => {
   };
 
   const startPollingTaskStatus = (taskId: string) => {
+    setIsPolling(true);
+
     const intervalId = setInterval(async () => {
       try {
         const taskResponse = await taskApi.getTask(taskId);
@@ -158,13 +162,16 @@ const CodePage = () => {
 
         if (status === 'finished' || status === 'succeed') {
           clearInterval(intervalId);
+          setIsPolling(false);
           addLog(`Build complete: ${taskResponse.task.result}`, true);
         } else if (status === 'failed') {
           clearInterval(intervalId);
+          setIsPolling(false);
           addLog(`Build failed: ${taskResponse.task.result}`, true);
         }
       } catch (error) {
         clearInterval(intervalId);
+        setIsPolling(false);
         addLog(`Polling error: ${error}`, true);
       }
     }, 5000);
@@ -198,12 +205,13 @@ const CodePage = () => {
     }
   
     setIsLoading(true);
-    const rootPath = projectContext.rootPath;
+    const projectId = projectContext.id;
     const filePath = selectedFile.path;
     const content = fileContent; 
   
     try {
-      const response = await fileApi.updateFile(rootPath, filePath, content);
+      const response = await fileApi.updateFile(projectId, filePath, content);
+      console.log('File saved successfully:', response);
       addLog(`File saved successfully: ${filePath}`, true);
     } catch (error) {
       addLog(`Error saving file: ${error}`, true);
@@ -275,7 +283,7 @@ const CodePage = () => {
       </Flex>
       
       <Flex flex="1" overflow="hidden">
-        <Box w="15vw" borderRight="1px" borderColor="gray.200">
+        <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
         <Box flex={1} maxHeight="100%" boxSizing="border-box" overflow="auto">
@@ -287,7 +295,8 @@ const CodePage = () => {
             onChange={handleContentChange}
             onSave={handleSave}
             onRunCommand={handleRunCommand}
-          />
+            isPolling={isPolling}
+          />  
         </Box>
         <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">
           <AIChat 
