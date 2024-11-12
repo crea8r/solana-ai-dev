@@ -1,5 +1,3 @@
-// src/components/Toolbox.tsx
-
 import React, { useContext, useState } from 'react';
 import {
   Flex,
@@ -12,10 +10,13 @@ import {
   Divider,
   Text,
   Input,
+  Select,
 } from '@chakra-ui/react';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { useProjectContext } from '../contexts/ProjectContext';
+import { predefinedProjects, Project } from '../interfaces/project';
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}', ''),
@@ -23,7 +24,38 @@ const toolboxItems = [
   new Program('program-template', 'Program', ''),
 ];
 
-const Toolbox: React.FC = () => {
+interface ToolboxProps {
+  onExampleChange: (exampleName: string) => void;
+}
+
+const Toolbox: React.FC<ToolboxProps> = ({ onExampleChange }) => {
+  const { setProjectContext } = useProjectContext();
+  const [selectedExample, setSelectedExample] = useState('');
+
+  const handleExampleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const exampleName = event.target.value;
+    setSelectedExample(exampleName);
+    onExampleChange(exampleName);
+    
+    if (exampleName && predefinedProjects[exampleName]) {
+      const selectedProject = predefinedProjects[exampleName];
+      
+      setProjectContext((prev) => {
+        if (prev.id === selectedProject.id) return prev;
+        return {
+          ...prev,
+          id: selectedProject.id,
+          name: selectedProject.name,
+          description: selectedProject.description,
+          details: {
+            ...prev.details, 
+            ...selectedProject.details, 
+          },
+        };
+      });
+    }
+  };
+
   return (
     <Box
       width='30%'
@@ -36,7 +68,7 @@ const Toolbox: React.FC = () => {
       shadow='md'
     >
       <VStack spacing={2} align='stretch'>
-      <Flex
+        <Flex
           direction="column"
           alignItems="stretch"
           gap={4}
@@ -45,6 +77,16 @@ const Toolbox: React.FC = () => {
           ml={2}
           mr={2}
         >
+          <Select
+            placeholder="Select Example"
+            value={selectedExample}
+            onChange={handleExampleChange}
+            size="sm"
+            mb={4}
+          >
+            <option value="Counter">Counter Program</option>
+            <option value="Voting">Voting Program</option>
+          </Select>
         </Flex>
         <Text fontWeight='400' textAlign='left' fontSize='xs'>
           Drag items onto canvas

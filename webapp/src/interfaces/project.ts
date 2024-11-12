@@ -2,6 +2,8 @@ import { Node, Edge } from 'react-flow-renderer';
 import { FileTreeItemType } from '../components/FileTree';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
+import { counterProject } from '../data/examples/counterProject';
+import { votingProject } from '../data/examples/votingProject';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -37,6 +39,12 @@ export interface Project {
   name: string;
   description: string;
   details: ProjectDetails;
+}
+
+export type ProjectExample = {
+  name: string;
+  description: string;
+  project: Project;
 }
 
 export type ProjectDetail = {
@@ -86,3 +94,8 @@ interface Program {
     description?: string;
   };
 }
+
+export const predefinedProjects: Record<string, Project> = {
+  Counter: counterProject,
+  Voting: votingProject,
+};

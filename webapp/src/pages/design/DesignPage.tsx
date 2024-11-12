@@ -30,7 +30,7 @@ import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
-import { SaveProjectResponse } from '../../interfaces/project';
+import { predefinedProjects, SaveProjectResponse } from '../../interfaces/project';
 import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
@@ -57,11 +57,9 @@ function setFileTreePaths(
 }
 
 const DesignPage: React.FC = () => {
-  const { projectContext: projectContext, setProjectContext: setProjectContext } = useProjectContext();
+  const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
-  const [nodes, setNodes] = useState<Node[]>(projectContext.details.nodes || []);
-  const [edges, setEdges] = useState<Edge[]>(projectContext.details.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -72,39 +70,7 @@ const DesignPage: React.FC = () => {
   const [showWallet, setShowWallet] = useState(false);
   const { user, firstLoginAfterRegistration, markWalletModalViewed } = useContext(AuthContext)!;
   const [showWalletModal, setShowWalletModal] = useState(firstLoginAfterRegistration);
-
-  /*
-  useEffect(() => {
-    console.log('[DesignPage] projectContext', projectContext);
-  }, [projectContext]);
-  */
-
-  /*
-  useEffect(() => {
-    console.log("Token on load:", localStorage.getItem('token'));
-  }, []);
-  */
-
-  const loadMock = useCallback(() => {
-    console.log('todoproject', todoproject);
-    setProjectContext(todoproject);
-    const tmpNodes = [];
-    for (const node of todoproject.details.nodes) {
-      const item = loadItem(node.data.item.type, node.data.item);
-      if (item) {
-        const newNode = loadItem(node.data.item.type, node.data.item)?.toNode({
-          x: node.position.x,
-          y: node.position.y,
-        });
-        if (newNode) {
-          newNode.id = node.id;
-          tmpNodes.push(newNode);
-        }
-      }
-    }
-    setNodes(tmpNodes);
-    setEdges(todoproject.details.edges);
-  }, [setProjectContext]);
+  const [loadingExample, setLoadingExample] = useState(false);
 
   const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
   const {
@@ -114,30 +80,36 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-  /*
-  useEffect(() => {
-    if (isProduction) {
-      initGA(GA_MEASUREMENT_ID);
-      logPageView();
-    }
-    if (!isProduction) {
-      loadMock();
-    }
-  }, [setProjectContext, loadMock]);
-  */
-
+  
   const onNodesChange = useCallback((changes: any) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        nodes: applyNodeChanges(changes, prevProjectContext.details.nodes),
+      },
+    }));
+  }, [setProjectContext]);
 
   const onEdgesChange = useCallback((changes: any) => {
-    setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        edges: applyEdgeChanges(changes, prevProjectContext.details.edges),
+      },
+    }));
+  }, [setProjectContext]);
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge(connection, eds));
-  }, []);
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        edges: addEdge(connection, prevProjectContext.details.edges),
+      },
+    }));
+  }, [setProjectContext]);
 
   const handleSelectNode = (node: Node | null) => {
     setSelectedNode(node);
@@ -150,34 +122,49 @@ const DesignPage: React.FC = () => {
   };
 
   const handleDeleteNode = (id: string) => {
-    setNodes(nodes.filter((node) => node.id !== id));
-    setEdges(edges.filter((edge) => edge.source !== id && edge.target !== id));
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        nodes: prevProjectContext.details.nodes.filter((node) => node.id !== id),
+      },
+    }));
     setSelectedNode(null);
   };
 
   const handleDeleteEdge = (id: string) => {
-    setEdges(edges.filter((edge) => edge.id !== id));
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        edges: prevProjectContext.details.edges.filter((edge) => edge.id !== id),
+      },
+    }));
     setSelectedEdge(null);
   };
 
   const handleUpdateNode = (updatedNode: Node) => {
     // Check if ownerProgramId has changed
-    const oldNode = nodes.find((node) => node.id === updatedNode.id);
+    const oldNode = projectContext.details.nodes.find((node) => node.id === updatedNode.id);
     const newOwnerProgramId = (updatedNode.data.localValues as any).ownerProgramId;
     const oldOwnerProgramId = oldNode && (oldNode.data.item as any).ownerProgramId;
     
     if (newOwnerProgramId !== oldOwnerProgramId) {
       // Remove old edge if it exists
       if (oldOwnerProgramId) {
-        setEdges(
-          edges.filter(
-            (edge) =>
-              !(
-                edge.source === oldOwnerProgramId &&
-                edge.target === updatedNode.id
-              )
-          )
-        );
+        setProjectContext((prevProjectContext) => ({
+          ...prevProjectContext,
+          details: {
+            ...prevProjectContext.details,
+            edges: prevProjectContext.details.edges.filter(
+              (edge) =>
+                !(
+                  edge.source === oldOwnerProgramId &&
+                  edge.target === updatedNode.id
+                )
+            ),
+          },
+        }));
       }
 
       // Add new edge if ownerProgramId is set
@@ -196,19 +183,22 @@ const DesignPage: React.FC = () => {
           },
         };
         //console.log(newEdge);
-        setEdges((edges) => [...edges, newEdge]);
+        setProjectContext((prevProjectContext) => ({
+          ...prevProjectContext,
+          details: {
+            ...prevProjectContext.details,
+            edges: [...prevProjectContext.details.edges, newEdge],
+          },
+        }));
       }
     }
     const item = updatedNode.data.item as ToolboxItem;
     item.setPropertyValues(updatedNode.data.localValues);
 
-    const updatedNodes = nodes.map((node) =>
+    const updatedNodes = projectContext.details.nodes.map((node) =>
       node.id === updatedNode.id ? updatedNode : node
     );
     
-    setNodes(updatedNodes);
-    setSelectedNode(updatedNode);
-
     setProjectContext((prevProjectContext) => ({
       ...prevProjectContext,
       details: {
@@ -216,17 +206,28 @@ const DesignPage: React.FC = () => {
         nodes: updatedNodes,
       }
     }));
+    setSelectedNode(updatedNode);
   };
 
   const handleUpdateEdge = (updatedEdge: Edge) => {
-    setEdges(
-      edges.map((edge) => (edge.id === updatedEdge.id ? updatedEdge : edge))
-    );
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        edges: prevProjectContext.details.edges.map((edge) => (edge.id === updatedEdge.id ? updatedEdge : edge)),
+      },
+    }));
     setSelectedEdge(updatedEdge);
   };
 
   const handleAddNode = (newNode: Node) => {
-    setNodes((nds) => [...nds, newNode]);
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        nodes: [...prevProjectContext.details.nodes, newNode],
+      },
+    }));
   };
 
   const handlePrompt = () => {
@@ -298,8 +299,14 @@ const DesignPage: React.FC = () => {
         },
       }));
 
-      setNodes([]);
-      setEdges([]);
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
+        details: {
+          ...prevProjectContext.details,
+          nodes: [],
+          edges: [],
+        },
+      }));
 
     } catch (error) {
       console.error('Error creating new project:', error);
@@ -341,8 +348,14 @@ const DesignPage: React.FC = () => {
         },
       }));
 
-      setNodes(nodesWithTypedItems || []);
-      setEdges(fetchedProject.details.edges || []);
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
+        details: {
+          ...prevProjectContext.details,
+          nodes: nodesWithTypedItems || [],
+          edges: fetchedProject.details.edges || [],
+        },
+      }));
 
     } catch (e) {
       toast({
@@ -357,17 +370,6 @@ const DesignPage: React.FC = () => {
       handleCloseWalkthrough();
     }
   };
-  
-  useEffect(() => {
-    setProjectContext((prevProjectContext) => ({
-      ...prevProjectContext,
-      details: {
-        ...prevProjectContext.details,
-        nodes: nodes,
-        edges: edges,
-      }
-    }));
-  }, [nodes, edges]);
 
   const toggleTaskModal = () => {
     setIsTaskModalOpen((prev) => !prev);
@@ -396,6 +398,63 @@ const DesignPage: React.FC = () => {
     setShowWalletModal(false);
     markWalletModalViewed();
   };
+
+  const handleExampleChange = (exampleName: string) => {
+    if (exampleName && predefinedProjects[exampleName]) {
+      const selectedProject = predefinedProjects[exampleName];
+      setProjectContext({
+        ...projectContext,
+        ...selectedProject,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (projectContext && projectContext.details.nodes.length > 0 && !loadingExample) {
+      const { nodes: contextNodes, edges: contextEdges } = projectContext.details;
+  
+      const tmpNodes = contextNodes
+        .map((node) => {
+          const item = loadItem(node.data.item.type, node.data.item);
+          if (item) {
+            const newNode = item.toNode({
+              x: node.position.x,
+              y: node.position.y,
+            });
+            if (newNode) {
+              newNode.id = node.id;
+              return newNode;
+            }
+          }
+          return null;
+        })
+        .filter((node): node is Node => node !== null);
+  
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
+        details: {
+          ...prevProjectContext.details,
+          nodes: tmpNodes,
+          edges: contextEdges,
+        },
+      }));
+    }
+  }, [projectContext.details.nodes]);
+  
+  
+  useEffect(() => {
+    if (!loadingExample) {
+      setProjectContext((prevProjectContext) => ({
+        ...prevProjectContext,
+        details: {
+          ...prevProjectContext.details,
+          nodes: projectContext.details.nodes,
+          edges: projectContext.details.edges,
+        }
+      }));
+    }
+    console.log('projectContext:', projectContext);
+  }, [projectContext.details.nodes, projectContext.details.edges, setProjectContext, loadingExample]);
 
   return (
     <>
@@ -426,10 +485,10 @@ const DesignPage: React.FC = () => {
         />
         <Flex flex={1}>
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
-          <Toolbox />
+          <Toolbox onExampleChange={handleExampleChange} />
           <Canvas
-            nodes={nodes}
-            edges={edges}
+            nodes={projectContext.details.nodes}
+            edges={projectContext.details.edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -445,8 +504,8 @@ const DesignPage: React.FC = () => {
             onDeleteEdge={handleDeleteEdge}
             onUpdateNode={handleUpdateNode}
             onUpdateEdge={handleUpdateEdge}
-            programs={nodes.filter((node) => node.type === 'program')}
-            nodes={nodes}
+            programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
+            nodes={projectContext.details.nodes}
           />
         </Flex>
         <Button
