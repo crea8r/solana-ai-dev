@@ -3,6 +3,19 @@ import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../components/FileTree';
 import { parse, stringify } from 'smol-toml'
 
+type CargoToml = {
+  package?: { name?: string; };
+  lib?: { name?: string; };
+};
+
+type RootAnchorToml = {
+  programs?: {
+    localnet?: {
+      [key: string]: string;
+    };
+  };
+};
+
 const pollTaskStatus = (taskId: string): Promise<string> => {
   return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
@@ -83,19 +96,6 @@ export function extractCodeBlock(text: string): string {
     return codeBlockLines.join('\n');
 }
 
-type CargoToml = {
-  package?: { name?: string; };
-  lib?: { name?: string; };
-};
-
-type RootAnchorToml = {
-  programs?: {
-    localnet?: {
-      [key: string]: string;
-    };
-  };
-};
-
 export const amendConfigFile = async (
   projectId: string,
   fileName: string,
@@ -137,3 +137,69 @@ export const amendConfigFile = async (
   const updatedFileContent = await pollTaskStatus(res.taskId);
   return updatedFileContent;
 }
+
+export const removeModFile = async (
+  projectId: string,
+  programName: string
+): Promise<void> => {
+  const modFilePath = `programs/${programName}/src/mod.rs`;
+
+  try {
+    const fileContentResponse = await fileApi.getFileContent(projectId, modFilePath);
+    const taskId = fileContentResponse.taskId;
+    const fileExists = await pollTaskStatus(taskId).then(() => true).catch(() => false);
+
+    if (fileExists) {
+      await fileApi.deleteFile(projectId, modFilePath);
+      console.log(`Removed ${modFilePath} successfully.`);
+    } else {
+      console.log(`File ${modFilePath} does not exist.`);
+    }
+  } catch (error) {
+    console.error(`Error removing ${modFilePath}:`, error);
+  }
+};
+
+export const ensureInstructionNaming = async (
+  projectId: string,
+  aiFilePaths: string[],
+  aiProgramDirectoryName: string
+): Promise<void> => {
+  if (!aiFilePaths) return;
+
+  const instructionPaths = aiFilePaths.filter(
+    (filePath) =>
+      filePath.startsWith(`programs/${aiProgramDirectoryName}/src/instructions`) &&
+      !filePath.endsWith('mod.rs')
+  );
+  console.log('instructionPaths', instructionPaths);
+
+  for (const filePath of instructionPaths) {
+    try {
+      console.log('(add run_) processing:', filePath);
+
+      const fileContentResponse = await fileApi.getFileContent(projectId, filePath);
+      const taskId = fileContentResponse.taskId;
+      const fileContent = await pollTaskStatus(taskId);
+
+      const updatedContent = fileContent.replace(
+        /pub fn\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
+        (match, functionName) => {
+          if (!functionName.startsWith('run_')) {
+            const newFunctionName = `run_${functionName}`;
+            console.log(`Renaming function: ${functionName} to ${newFunctionName}`);
+            return `pub fn ${newFunctionName}`;
+          }
+          return match;
+        }
+      );
+
+      if (updatedContent !== fileContent) {
+        await fileApi.updateFile(projectId, filePath, updatedContent);
+        console.log(`Updated function names in ${filePath}`);
+      }
+    } catch (error) {
+      console.error(`Error processing file ${filePath}:`, error);
+    }
+  }
+};

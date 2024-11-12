@@ -22,9 +22,9 @@ const generateGeneralInstructions = (libraryVersion: string) => {
     - src/lib.rs: with the main logic for the program.
     Account-related code should be in state.rs.
     Each instruction should be in its own file.
-    The function inside the file should be run_[the name of the file].
-    Remember to add mod.rs in the folder and sub-folders in the instructions.
-    Do not produce mod.rs file for the project root folder.
+    The function inside the file should be run_[the name of the file] !important.
+    Remember to add mod.rs in the folder and sub-folders in the instructions only.
+    Under no circumstances, do not produce mod.rs file for the project root folder (src/) !important
     The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
 
 

@@ -8,7 +8,7 @@ import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
 import { promptAI } from "../../services/prompt";
-import { extractCodeBlock, getFileList, setFileTreePaths } from '../../utils/genCodeUtils';
+import { ensureInstructionNaming, extractCodeBlock, getFileList, removeModFile, setFileTreePaths } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
@@ -43,6 +43,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     const toast = useToast(); 
     const [isRegenerating, setIsRegenerating] = useState(false); 
     const [existingDirectory, setExistingDirectory] = useState(false);
+    //const [aiProgramDirectoryName, setAiProgramDirectoryName] = useState('');
+    //const [aiFilePaths, setAiFilePaths] = useState<string[]>([]);
 
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
 
@@ -208,6 +210,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 const aiGeneratedProgramDirs = aiFilePaths
                     .filter(path => path.includes('/programs/'))
                     .map(path => path.split('/').find((segment, index, array) => array[index - 1] === 'programs'));
+
                 const aiProgramDirectoryName = aiGeneratedProgramDirs[0];
                 if (!aiProgramDirectoryName) { console.error('AI-generated program name not found'); return; }
                 //console.log('aiProgramDirectoryName', aiProgramDirectoryName);
@@ -385,6 +388,18 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         task.id === 2 ? { ...task, status: 'completed' } : task
                     )
                 );
+
+                // remove the mod.rs file if it exists
+                if (aiProgramDirectoryName !== '') removeModFile(projectId, aiProgramDirectoryName);
+                else console.error('AI program directory name not found');
+               
+                // ensure the instruction naming
+                if (aiGeneratedProgramDirs && aiGeneratedProgramDirs.length > 0) {
+                    const validDirs = aiGeneratedProgramDirs.filter((dir): dir is string => !!dir);
+                    ensureInstructionNaming(projectId, validDirs, aiProgramDirectoryName);
+                } else {
+                    console.error('AI file paths not found');
+                }
 
                 // Update project context to indicate that code generation is complete
                 setProjectContext((prevProjectContext) => ({
