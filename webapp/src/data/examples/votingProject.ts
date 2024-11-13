@@ -14,7 +14,7 @@ const votingProject: Project = {
         height: 44,
         id: 'program-56789',
         type: 'program',
-        position: { x: 200, y: 100 },
+        position: { x: 50, y: 200 }, // Left side
         data: {
           label: 'Voting Program',
           item: {
@@ -25,14 +25,14 @@ const votingProject: Project = {
           },
         },
         selected: false,
-        positionAbsolute: { x: 200, y: 100 },
+        positionAbsolute: { x: 50, y: 200 },
       },
       {
         width: 80,
         height: 44,
         id: 'account-56790',
         type: 'account',
-        position: { x: 450, y: 100 },
+        position: { x: 300, y: 50 }, // Top-right
         data: {
           label: 'VotingAccount',
           item: {
@@ -45,14 +45,14 @@ const votingProject: Project = {
           },
         },
         selected: false,
-        positionAbsolute: { x: 450, y: 100 },
+        positionAbsolute: { x: 300, y: 50 },
       },
       {
         width: 66,
         height: 44,
         id: 'instruction-56791',
         type: 'instruction',
-        position: { x: 200, y: 250 },
+        position: { x: 300, y: 150 }, // Second from top-right
         data: {
           label: 'InitializeVoting',
           item: {
@@ -66,14 +66,14 @@ const votingProject: Project = {
           },
         },
         selected: true,
-        positionAbsolute: { x: 200, y: 250 },
+        positionAbsolute: { x: 300, y: 150 },
       },
       {
         width: 66,
         height: 44,
         id: 'instruction-56792',
         type: 'instruction',
-        position: { x: 450, y: 250 },
+        position: { x: 300, y: 250 }, // Third from top-right
         data: {
           label: 'CastVote',
           item: {
@@ -87,14 +87,14 @@ const votingProject: Project = {
           },
         },
         selected: true,
-        positionAbsolute: { x: 450, y: 250 },
+        positionAbsolute: { x: 300, y: 250 },
       },
       {
         width: 66,
         height: 44,
         id: 'instruction-56793',
         type: 'instruction',
-        position: { x: 700, y: 250 },
+        position: { x: 300, y: 350 }, // Bottom-right
         data: {
           label: 'CloseVoting',
           item: {
@@ -108,7 +108,7 @@ const votingProject: Project = {
           },
         },
         selected: true,
-        positionAbsolute: { x: 700, y: 250 },
+        positionAbsolute: { x: 300, y: 350 },
       },
     ],
     edges: [

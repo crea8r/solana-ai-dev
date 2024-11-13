@@ -212,6 +212,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     .map(path => path.split('/').find((segment, index, array) => array[index - 1] === 'programs'));
 
                 const aiProgramDirectoryName = aiGeneratedProgramDirs[0];
+                console.log('aiGeneratedProgramDirs', aiGeneratedProgramDirs);
                 if (!aiProgramDirectoryName) { console.error('AI-generated program name not found'); return; }
                 //console.log('aiProgramDirectoryName', aiProgramDirectoryName);
 

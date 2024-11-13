@@ -4,6 +4,7 @@ import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
 import { counterProject } from '../data/examples/counterProject';
 import { votingProject } from '../data/examples/votingProject';
+import { crowdfundingProject } from '../data/examples/crowdfundingProject';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -98,4 +99,5 @@ interface Program {
 export const predefinedProjects: Record<string, Project> = {
   Counter: counterProject,
   Voting: votingProject,
+  Crowdfunding: crowdfundingProject,
 };
