@@ -30,12 +30,13 @@ import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
 import ProjectBanner from './ProjectBanner';
-import { predefinedProjects, SaveProjectResponse } from '../../interfaces/project';
+import { predefinedProjects } from '../../interfaces/example';
+import { SaveProjectResponse } from '../../interfaces/project';
 import { createItem } from '../../utils/itemFactory';
 import { TaskModal } from './TaskModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import InputModal from '../../components/InputModal';
-import { logout } from '../../services/authApi';
+import { logout } from '../../services/authApi';  
 import { Wallet, WalletCreationModal } from '../../components/Wallet';
 import { AuthContext } from '../../contexts/AuthContext';
 
@@ -251,6 +252,10 @@ const DesignPage: React.FC = () => {
     if (!hasSeenWalkthrough) {
       setIsWalkthroughOpen(true);
       localStorage.setItem('hasSeenWalkthrough', 'true');
+    }
+    if (isProduction) {
+      initGA(GA_MEASUREMENT_ID);
+      logPageView();
     }
   }, []);
 

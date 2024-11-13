@@ -11,7 +11,7 @@ import {
   Select,
 } from '@chakra-ui/react';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { predefinedProjects } from '../interfaces/project';
+import { predefinedProjects } from '../interfaces/example';
 import { loadItem } from '../utils/itemFactory';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
@@ -87,6 +87,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             <option value="Counter">Counter Program</option>
             <option value="Voting">Voting Program</option>
             <option value="Crowdfunding">Crowdfunding Program</option>
+            <option value="LoyaltyRewards">Loyalty Rewards Program</option>
           </Select>
         </Flex>
         <Text fontWeight="400" textAlign="left" fontSize="xs">

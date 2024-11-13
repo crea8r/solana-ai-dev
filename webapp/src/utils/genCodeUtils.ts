@@ -138,38 +138,18 @@ export const amendConfigFile = async (
   return updatedFileContent;
 }
 
-export const removeModFile = async (
-  projectId: string,
-  programName: string
-): Promise<void> => {
-  const modFilePath = `programs/${programName}/src/mod.rs`;
-
-  try {
-    const fileContentResponse = await fileApi.getFileContent(projectId, modFilePath);
-    const taskId = fileContentResponse.taskId;
-    const fileExists = await pollTaskStatus(taskId).then(() => true).catch(() => false);
-
-    if (fileExists) {
-      await fileApi.deleteFile(projectId, modFilePath);
-      console.log(`Removed ${modFilePath} successfully.`);
-    } else {
-      console.log(`File ${modFilePath} does not exist.`);
-    }
-  } catch (error) {
-    console.error(`Error removing ${modFilePath}:`, error);
-  }
-};
-
 export const ensureInstructionNaming = async (
   projectId: string,
-  aiFilePaths: string[],
+  _instructionPaths: string[],
   aiProgramDirectoryName: string
 ): Promise<void> => {
-  if (!aiFilePaths) return;
+  if (!_instructionPaths) {
+    console.error('No instruction paths provided', _instructionPaths);
+    return;
+  }
 
-  const instructionPaths = aiFilePaths.filter(
+  const instructionPaths = _instructionPaths.filter(
     (filePath) =>
-      filePath.startsWith(`programs/${aiProgramDirectoryName}/src/instructions`) &&
       !filePath.endsWith('mod.rs')
   );
   console.log('instructionPaths', instructionPaths);
@@ -202,4 +182,26 @@ export const ensureInstructionNaming = async (
       console.error(`Error processing file ${filePath}:`, error);
     }
   }
+};
+
+export const sortFilesByPriority = (files: FileTreeItemType[], aiProgramDirectoryName: string): FileTreeItemType[] => {
+  return files.sort((a, b) => {
+      const getPriority = (file: FileTreeItemType): number => {
+        if (file.path?.endsWith('state.rs')) return 1; // Highest priority
+        if (file.path?.includes('/instructions/')) return 2; // Medium priority
+        if (file.path?.endsWith('lib.rs')) return 3; // Lower priority
+        return 4; // Lowest priority
+      };
+
+      return getPriority(a) - getPriority(b);
+  });
+};
+
+export const normalizeName = (name: string): string => {
+  if (!name) { throw new Error('Name cannot be empty'); }
+  return name
+      .trim() 
+      .toLowerCase()         
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
 };

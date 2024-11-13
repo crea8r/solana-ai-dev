@@ -1,3 +1,16 @@
+import { counterProject } from "../data/examples/counterProject";
+import { votingProject } from "../data/examples/votingProject";
+import { crowdfundingProject } from "../data/examples/crowdfundingProject";
+import { loyaltyRewardsProject } from "../data/examples/loyaltyRewardsProject";
+import { Project } from "./project";
+
+export const predefinedProjects: Record<string, Project> = {
+  Counter: counterProject,
+  Voting: votingProject,
+  Crowdfunding: crowdfundingProject,
+  LoyaltyRewards: loyaltyRewardsProject,
+};  
+
 export interface ProjectExample {
     id: string;
     name: string;
