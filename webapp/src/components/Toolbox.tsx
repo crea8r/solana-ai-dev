@@ -89,6 +89,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             <option value="Crowdfunding">Crowdfunding Program</option>
             <option value="LoyaltyRewards">Loyalty Rewards Program</option>
             <option value="TimeLockedSavings">Time Locked Savings Program</option>
+            <option value="EscrowPayment">Escrow Payment Program</option>
           </Select>
         </Flex>
         <Text fontWeight="400" textAlign="left" fontSize="xs">

@@ -4,6 +4,7 @@ import { crowdfundingProject } from "../data/examples/crowdfundingProject";
 import { loyaltyRewardsProject } from "../data/examples/loyaltyRewardsProject";
 import { Project } from "./project";
 import { timeLockedSavingsProject } from "../data/examples/timeLockedSavingsProject";
+import { escrowPaymentProject } from "../data/examples/escrowPaymentProject";
 
 export const predefinedProjects: Record<string, Project> = {
   Counter: counterProject,
@@ -11,6 +12,7 @@ export const predefinedProjects: Record<string, Project> = {
   Crowdfunding: crowdfundingProject,
   LoyaltyRewards: loyaltyRewardsProject,
   TimeLockedSavings: timeLockedSavingsProject,
+  EscrowPayment: escrowPaymentProject,
 };  
 
 export interface ProjectExample {

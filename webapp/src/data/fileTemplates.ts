@@ -1,25 +1,32 @@
-import { snakeToPascal, normalizeName } from '../utils/genCodeUtils';
+import { snakeToPascal, normalizeName, extractInstructionContext } from '../utils/genCodeUtils';
 
-export const getLibRsTemplate = (
+export const getLibRsTemplate = async (
+    projectId: string,
     programName: string,
     programId: string,
-    instructions: string[]
-  ): string => `
+    instructions: string[],
+    instructionPaths: string[]
+): Promise<string> => {
+    const instructionContextMapping = await extractInstructionContext(projectId, instructions, instructionPaths);
+    const instructionContexts = Object.values(instructionContextMapping);
+
+    return `
   use anchor_lang::prelude::*;
   
   declare_id!("${programId}");
   
   pub mod instructions;
+  pub mod state;
   
   #[program]
   pub mod ${normalizeName(programName)} {
       use super::*;
   
       ${instructions
-        .map(instruction => {
+        .map((instruction, index) => {
           const funcName = normalizeName(instruction);
-          const structName = snakeToPascal(instruction);
-          const paramsStruct = `Params${snakeToPascal(instruction)}`;
+          const structName = snakeToPascal(instructionContexts[index]);
+          const paramsStruct = `Params${snakeToPascal(instructionContexts[index])}`;
   
           return `
       pub fn ${funcName}(ctx: Context<${structName}>, params: ${paramsStruct}) -> ProgramResult {
@@ -29,6 +36,7 @@ export const getLibRsTemplate = (
         .join('\n')}
   }
   `;
+};
   
 
   export const getModRsTemplate = (instructions: string[]): string => {

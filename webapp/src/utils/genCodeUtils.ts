@@ -233,11 +233,12 @@ export const insertTemplateFiles = async (
   programDirName: string,
   existingFilePaths: Set<string>,
   instructions: string[],
+  instructionPaths: string[],
   libRsPath: string,
   modRsPath: string,
   programId: string
 ) => {
-  const libRsContent = getLibRsTemplate(programDirName, programId, instructions);
+  const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, instructions, instructionPaths);
   const modRsContent = getModRsTemplate(instructions);
 
   try {
@@ -287,4 +288,33 @@ export const extractProgramIdFromAnchorToml = async (
     console.error('Error parsing Anchor.toml:', error);
     throw error;
   }
+};
+
+export const extractInstructionContext = async (
+  projectId: string, 
+  instructions: string[],
+  instructionPaths: string[]
+): Promise<Record<string, string>> => {
+  const instructionContextMapping: Record<string, string> = {};
+
+  for (let index = 0; index < instructions.length; index++) {
+    const i = instructions[index];
+   try {
+    console.log('instructionPaths[index]', instructionPaths[index]);
+    console.log('i', i);
+    const contentTaskId = await fileApi.getFileContent(projectId, instructionPaths[index]);
+    const pollDesc = `Getting ${i} content.`;
+    const content = await pollTaskStatus(contentTaskId.taskId, pollDesc);
+    const contextMatch = content.match(/pub fn\s+(\w+)\s*\(ctx:\s*Context<(\w+)>/);
+    if (contextMatch) {
+      const instructionName = contextMatch[1];
+      const contextStruct = contextMatch[2];
+      instructionContextMapping[instructionName] = contextStruct;
+    }
+   } catch (error) {
+    console.error(`Error getting ${i} content:`, error);
+   }
+  }
+
+  return instructionContextMapping;
 };

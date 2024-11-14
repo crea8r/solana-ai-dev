@@ -394,9 +394,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 const anchorTomlPath = `Anchor.toml`;
                 const programId = await extractProgramIdFromAnchorToml(projectId, anchorTomlPath, programDirName);
                 console.log('Extracted Program ID:', programId);
+            
+                const instructionPaths = updatedFileList
+                    .filter((file) => file.path.includes('/instructions/'))
+                    .map((file) => file.path)
+                    .map((path) =>
+                        path.replace(/\/programs\/[^/]+\//, `/programs/${programDirName}/`)
+                    );
 
-
-                const libRsContent = getLibRsTemplate(programDirName, programId, normInstructionNames);
+                console.log('normInstructionNames', normInstructionNames);
+                console.log('instructionPaths', instructionPaths);
+                const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, normInstructionNames, instructionPaths);
                 const modRsContent = getModRsTemplate(normInstructionNames);
 
                 setProjectContext((prevProjectContext) => ({
@@ -416,6 +424,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     programDirName,
                     existingFilePaths,
                     normInstructionNames,
+                    instructionPaths,
                     libRsPath,
                     modRsPath,
                     programId
