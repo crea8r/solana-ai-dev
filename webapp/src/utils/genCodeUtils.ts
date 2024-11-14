@@ -2,6 +2,8 @@ import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../components/FileTree';
 import { parse, stringify } from 'smol-toml'
+import { getLibRsTemplate, getModRsTemplate } from '../data/fileTemplates';
+import { useToast, UseToastOptions } from '@chakra-ui/react';
 
 type CargoToml = {
   package?: { name?: string; };
@@ -16,7 +18,7 @@ type RootAnchorToml = {
   };
 };
 
-const pollTaskStatus = (taskId: string): Promise<string> => {
+const pollTaskStatus = (taskId: string, pollDesc: string): Promise<string> => {
   return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
           try {
@@ -24,7 +26,7 @@ const pollTaskStatus = (taskId: string): Promise<string> => {
               console.log('task', task);
 
               if (task.status === 'succeed' || task.status === 'warning') {
-                  
+                  console.log(`${pollDesc} succeeded.`);
                   clearInterval(interval);
                   if (task.result) {
                     resolve(task.result);
@@ -104,9 +106,11 @@ export const amendConfigFile = async (
 ): Promise<string> => {
   //const filePath = await fileApi.getFilePath(projectId, fileName);
   console.log('amendConfigFile filePath', filePath);
+  let _pollDesc;
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
-  const oldContent = await pollTaskStatus(taskId);
+  _pollDesc = `Getting ${fileName} content to amend content.`;
+  const oldContent = await pollTaskStatus(taskId, _pollDesc);
 
   let parsedToml;
   let updatedToml;
@@ -134,7 +138,8 @@ export const amendConfigFile = async (
   updatedToml = stringify(parsedToml);
 
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
-  const updatedFileContent = await pollTaskStatus(res.taskId);
+  _pollDesc = `Updating ${fileName} content.`;
+  const updatedFileContent = await pollTaskStatus(res.taskId, _pollDesc);
   return updatedFileContent;
 }
 
@@ -143,24 +148,19 @@ export const ensureInstructionNaming = async (
   _instructionPaths: string[],
   aiProgramDirectoryName: string
 ): Promise<void> => {
-  if (!_instructionPaths) {
-    console.error('No instruction paths provided', _instructionPaths);
-    return;
-  }
+  if (!_instructionPaths) return;
 
   const instructionPaths = _instructionPaths.filter(
     (filePath) =>
       !filePath.endsWith('mod.rs')
   );
-  console.log('instructionPaths', instructionPaths);
 
   for (const filePath of instructionPaths) {
     try {
-      console.log('(add run_) processing:', filePath);
-
       const fileContentResponse = await fileApi.getFileContent(projectId, filePath);
       const taskId = fileContentResponse.taskId;
-      const fileContent = await pollTaskStatus(taskId);
+      const pollDesc = `Getting ${filePath} content to change function names.`;
+      const fileContent = await pollTaskStatus(taskId, pollDesc);
 
       const updatedContent = fileContent.replace(
         /pub fn\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
@@ -198,10 +198,93 @@ export const sortFilesByPriority = (files: FileTreeItemType[], aiProgramDirector
 };
 
 export const normalizeName = (name: string): string => {
-  if (!name) { throw new Error('Name cannot be empty'); }
+  if (!name) {
+    throw new Error('Name cannot be empty');
+  }
   return name
-      .trim() 
-      .toLowerCase()         
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '');
+    .trim() // Remove leading and trailing whitespace
+    .replace(/([a-z])([A-Z])/g, '$1_$2') // Add underscore before each capital letter
+    .replace(/\s+/g, '_') // Replace spaces with underscores
+    .toLowerCase() // Convert the entire string to lowercase
+    .replace(/[^a-z0-9_]+/g, '') // Remove non-alphanumeric characters except underscores
+    .replace(/^_+|_+$/g, ''); // Remove leading or trailing underscores
+};
+
+
+export const getNormalizedInstructionNames = (
+  nodes: { type: string; data: { label: string } }[]
+): string[] => {
+  return nodes
+    .filter(node => node.type === 'instruction')
+    .map(node => node.data.label)
+    .filter(Boolean)
+    .map(label => `run_${normalizeName(label)}`);
+};
+
+export const snakeToPascal = (snakeStr: string): string => {
+  return snakeStr
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+};
+
+export const insertTemplateFiles = async (
+  projectId: string,
+  programDirName: string,
+  existingFilePaths: Set<string>,
+  instructions: string[],
+  libRsPath: string,
+  modRsPath: string,
+  programId: string
+) => {
+  const libRsContent = getLibRsTemplate(programDirName, programId, instructions);
+  const modRsContent = getModRsTemplate(instructions);
+
+  try {
+    if (!existingFilePaths.has(libRsPath)) {
+      await fileApi.createFile(projectId, libRsPath, libRsContent);
+      console.log(`Created template file: ${libRsPath}`);
+    } else {
+      console.log(`Template file already exists: ${libRsPath}`);
+    }
+  } catch (error) {
+    console.error(`Error creating template file ${libRsPath}:`, error);
+  }
+
+  try {
+    if (!existingFilePaths.has(modRsPath)) {
+      await fileApi.createFile(projectId, modRsPath, modRsContent);
+      console.log(`Created template file: ${modRsPath}`);
+    } else {
+      console.log(`Template file already exists: ${modRsPath}`);
+    }
+  } catch (error) {
+    console.error(`Error creating template file ${modRsPath}:`, error);
+  }
+};
+
+export const extractProgramIdFromAnchorToml = async (
+  projectId: string,
+  anchorTomlPath: string,
+  programName: string
+): Promise<string> => {
+  try {
+    const anchorTomlContentResponse = await fileApi.getFileContent(projectId, anchorTomlPath);
+    const anchorTomlContentTaskId = anchorTomlContentResponse.taskId;
+    const pollDesc = `Getting Anchor.toml content.`;
+    const anchorTomlContent = await pollTaskStatus(anchorTomlContentTaskId, pollDesc);
+
+    const parsedToml = parse(anchorTomlContent) as RootAnchorToml;
+
+    const programSection = parsedToml.programs?.localnet;
+    if (!programSection)  throw new Error('No [programs.localnet] section found in Anchor.toml');
+
+    const programId = programSection[programName];
+    if (!programId) throw new Error(`Program ID for "${programName}" not found in Anchor.toml`);
+
+    return programId;
+  } catch (error) {
+    console.error('Error parsing Anchor.toml:', error);
+    throw error;
+  }
 };
