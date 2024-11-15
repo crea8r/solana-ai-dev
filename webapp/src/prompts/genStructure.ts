@@ -14,7 +14,7 @@ interface TextGeneratorOptions {
 const generateGeneralInstructions = (libraryVersion: string) => {
   return `
     I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
-    
+
     --- File structure for the Anchor program ---
 
     The root folder should include:
@@ -44,6 +44,8 @@ const generateGeneralInstructions = (libraryVersion: string) => {
     --- Library ---
     Use @coral-xyz/anchor for TypeScript test code.
     Use Anchor version >= ${libraryVersion}
+
+    
     --- The test ---
     Write test cases using TypeScript for each of the functions. The test case should use the SDK.
     --- The TypeScript SDK ---
