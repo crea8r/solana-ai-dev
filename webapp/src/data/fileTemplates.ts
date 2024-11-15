@@ -1,53 +1,158 @@
 import { snakeToPascal, normalizeName, extractInstructionContext } from '../utils/genCodeUtils';
 
 export const getLibRsTemplate = async (
-    projectId: string,
-    programName: string,
-    programId: string,
-    instructions: string[],
-    instructionPaths: string[]
+  projectId: string,
+  programName: string,
+  programId: string,
+  instructionContextMapping: Record<string, { context: string; params: string }>,
+  instructionPaths: string[]
 ): Promise<string> => {
-    const instructionContextMapping = await extractInstructionContext(projectId, instructions, instructionPaths);
-    const instructionContexts = Object.values(instructionContextMapping);
+  const instructionContexts = Object.entries(instructionContextMapping);
+  console.log("instructionContexts", instructionContexts);
 
-    return `
+  // Generate imports for each instruction
+  const instructionImports = instructionContexts
+    .map(([instruction, { context, params }]) => {
+      console.log("!!!!!instruction", instruction);
+      console.log("!!!!!context", context);
+      console.log("!!!!!params", params);
+      const moduleName = instruction.startsWith('run_') ? instruction.slice(4) : instruction;
+      const contextStruct = context;
+      const paramsStruct = params;
+      const imports = [contextStruct, paramsStruct].filter(Boolean).join(", ");
+      return `use instructions::${moduleName}::{${imports}};`;
+    })
+    .join('\n');
+
+  // Generate program implementation
+  const programFunctions = instructionContexts
+    .map(([instruction, { context, params }]) => {
+      const moduleName = instruction.startsWith('run_') ? instruction.slice(4) : instruction;
+      const publicFuncName = moduleName;
+      const contextStruct = snakeToPascal(context);
+      const paramsStruct = snakeToPascal(params);
+      return `
+    pub fn ${publicFuncName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
+        instructions::${moduleName}::${instruction}(ctx, params)
+    }`;
+    })
+    .join('\n');
+
+  return `
+use anchor_lang::prelude::*;
+
+declare_id!("${programId}");
+
+pub mod instructions;
+pub mod state;
+
+${instructionImports}
+
+#[program]
+pub mod ${normalizeName(programName)} {
+    use super::*;
+
+    ${programFunctions}
+}
+`;
+};
+
+export const getModRsTemplate = (instructions: string[]): string => {
+  const normalizedInstructions = instructions.map((instruction) => {
+    return instruction.startsWith('run_') ? instruction.slice(4) : instruction;
+  });
+
+  return [
+    normalizedInstructions.map(name => `pub mod ${name};`).join('\n'),
+    '',
+    normalizedInstructions.map(name => `pub use ${name}::*;`).join('\n')
+  ].join('\n');
+};
+
+export const getStateTemplate = (
+  accountStructs: { name: string; fields: { name: string; type: string }[] }[]
+): string => {
+  console.log("accountStructs", accountStructs);
+  const accounts = accountStructs
+    .map(({ name, fields }) => {
+      const fieldsStr = fields
+        .map(({ name, type }) => `    pub ${name}: ${type},`)
+        .join('\n');
+      return `#[account]
+      pub struct ${name} {
+      ${fieldsStr}
+      }
+      `;
+    })
+    .join('\n');
+
+  return `
   use anchor_lang::prelude::*;
-  
-  declare_id!("${programId}");
-  
-  pub mod instructions;
-  pub mod state;
-  
-  #[program]
-  pub mod ${normalizeName(programName)} {
-      use super::*;
-  
-      ${instructions
-        .map((instruction, index) => {
-          const funcName = normalizeName(instruction);
-          const structName = snakeToPascal(instructionContexts[index]);
-          const paramsStruct = `Params${snakeToPascal(instructionContexts[index])}`;
-  
-          return `
-      pub fn ${funcName}(ctx: Context<${structName}>, params: ${paramsStruct}) -> ProgramResult {
-          instructions::${funcName}(ctx, params)
-      }`;
-        })
-        .join('\n')}
-  }
+
+  ${accounts}
   `;
 };
-  
 
-  export const getModRsTemplate = (instructions: string[]): string => {
-    const normalizedInstructions = instructions.map(normalizeName);
-  
-    return [
-      normalizedInstructions.map(name => `pub mod ${name.replace('run_', '')};`).join('\n'),
-      '',
-      normalizedInstructions
-        .map(name => `pub use ${name.replace('run_', '')}::${name};`)
-        .join('\n')
-    ].join('\n');
-  };
+export const getInstructionTemplate = (
+  instructionName: string,
+  contextStruct: string,
+  paramsStruct: string,
+  accounts: { name: string; type: string; attributes: string[] }[],
+  paramsFields: { name: string; type: string }[],
+  errorCodes: { name: string; msg: string }[]
+): string => {
+  const pascalCaseName = snakeToPascal(instructionName);
+  const errorEnumName = `${pascalCaseName}ErrorCode`;
+
+  // Generate error codes enum
+  const errorCodesEnum = errorCodes
+    .map(
+      ({ name, msg }) => `    #[msg("${msg}")]
+    ${name},`
+    )
+    .join('\n');
+
+  // Generate accounts struct
+  const accountsStruct = accounts
+    .map(
+      ({ name, type, attributes }) =>
+        `${attributes.map(attr => `    ${attr}`).join('\n')}
+    pub ${name}: ${type},`
+    )
+    .join('\n\n');
+
+  // Generate params struct
+  const paramsStructFields = paramsFields
+    .map(({ name, type }) => `    pub ${name}: ${type},`)
+    .join('\n');
+
+  return `
+use anchor_lang::prelude::*;
+use crate::state::*;
+
+pub fn ${instructionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
+    // Instruction logic here
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct ${contextStruct}<'info> {
+${accountsStruct}
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct ${paramsStruct} {
+${paramsStructFields}
+}
+
+#[error_code]
+pub enum ${errorEnumName} {
+${errorCodesEnum}
+}
+`;
+};
+
+
+
+
   

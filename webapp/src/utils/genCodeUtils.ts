@@ -18,15 +18,23 @@ type RootAnchorToml = {
   };
 };
 
+type InstructionContext = {
+  context: string;
+  params: string;
+  accounts: { name: string; type: string; attributes: string[] }[];
+  paramsFields: { name: string; type: string }[];
+  errorCodes: { name: string; msg: string }[];
+};
+
 const pollTaskStatus = (taskId: string, pollDesc: string): Promise<string> => {
   return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
           try {
               const { task } = await taskApi.getTask(taskId);
-              console.log('task', task);
+              //console.log('task', task);
 
               if (task.status === 'succeed' || task.status === 'warning') {
-                  console.log(`${pollDesc} succeeded.`);
+                  //console.log(`${pollDesc} succeeded.`);
                   clearInterval(interval);
                   if (task.result) {
                     resolve(task.result);
@@ -145,15 +153,10 @@ export const amendConfigFile = async (
 
 export const ensureInstructionNaming = async (
   projectId: string,
-  _instructionPaths: string[],
-  aiProgramDirectoryName: string
+  instructionPaths: string[],
+  programDirName: string
 ): Promise<void> => {
-  if (!_instructionPaths) return;
-
-  const instructionPaths = _instructionPaths.filter(
-    (filePath) =>
-      !filePath.endsWith('mod.rs')
-  );
+  if (!instructionPaths) return;
 
   for (const filePath of instructionPaths) {
     try {
@@ -184,6 +187,8 @@ export const ensureInstructionNaming = async (
   }
 };
 
+
+
 export const sortFilesByPriority = (files: FileTreeItemType[], aiProgramDirectoryName: string): FileTreeItemType[] => {
   return files.sort((a, b) => {
       const getPriority = (file: FileTreeItemType): number => {
@@ -202,13 +207,15 @@ export const normalizeName = (name: string): string => {
     throw new Error('Name cannot be empty');
   }
   return name
-    .trim() // Remove leading and trailing whitespace
-    .replace(/([a-z])([A-Z])/g, '$1_$2') // Add underscore before each capital letter
-    .replace(/\s+/g, '_') // Replace spaces with underscores
-    .toLowerCase() // Convert the entire string to lowercase
-    .replace(/[^a-z0-9_]+/g, '') // Remove non-alphanumeric characters except underscores
-    .replace(/^_+|_+$/g, ''); // Remove leading or trailing underscores
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')     // Insert underscore between lower-upper
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')   // Insert underscore between upper-upper-lower
+    .replace(/\s+/g, '_')                       // Replace spaces with underscores
+    .toLowerCase()                              // Convert to lowercase
+    .replace(/[^a-z0-9_]+/g, '')                // Remove non-alphanumeric except underscores
+    .replace(/^_+|_+$/g, '');                   // Remove leading/trailing underscores
 };
+
 
 
 export const getNormalizedInstructionNames = (
@@ -221,6 +228,7 @@ export const getNormalizedInstructionNames = (
     .map(label => `run_${normalizeName(label)}`);
 };
 
+
 export const snakeToPascal = (snakeStr: string): string => {
   return snakeStr
     .split('_')
@@ -232,14 +240,14 @@ export const insertTemplateFiles = async (
   projectId: string,
   programDirName: string,
   existingFilePaths: Set<string>,
-  instructions: string[],
+  instructionContextMapping: Record<string, { context: string; params: string }>,
   instructionPaths: string[],
   libRsPath: string,
   modRsPath: string,
   programId: string
 ) => {
-  const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, instructions, instructionPaths);
-  const modRsContent = getModRsTemplate(instructions);
+  const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, instructionContextMapping, instructionPaths);
+  const modRsContent = getModRsTemplate(Object.keys(instructionContextMapping));
 
   try {
     if (!existingFilePaths.has(libRsPath)) {
@@ -291,30 +299,157 @@ export const extractProgramIdFromAnchorToml = async (
 };
 
 export const extractInstructionContext = async (
-  projectId: string, 
+  projectId: string,
   instructions: string[],
   instructionPaths: string[]
-): Promise<Record<string, string>> => {
-  const instructionContextMapping: Record<string, string> = {};
+): Promise<Record<string, InstructionContext>> => {
+  const instructionContextMapping: Record<string, InstructionContext> = {};
 
   for (let index = 0; index < instructions.length; index++) {
-    const i = instructions[index];
-   try {
-    console.log('instructionPaths[index]', instructionPaths[index]);
-    console.log('i', i);
-    const contentTaskId = await fileApi.getFileContent(projectId, instructionPaths[index]);
-    const pollDesc = `Getting ${i} content.`;
-    const content = await pollTaskStatus(contentTaskId.taskId, pollDesc);
-    const contextMatch = content.match(/pub fn\s+(\w+)\s*\(ctx:\s*Context<(\w+)>/);
-    if (contextMatch) {
-      const instructionName = contextMatch[1];
-      const contextStruct = contextMatch[2];
-      instructionContextMapping[instructionName] = contextStruct;
+    const instructionName = instructions[index];
+    try {
+      const contentTaskId = await fileApi.getFileContent(
+        projectId,
+        instructionPaths[index]
+      );
+      const pollDesc = `Getting ${instructionName} content.`;
+      const content = await pollTaskStatus(contentTaskId.taskId, pollDesc);
+
+      if (!content) {
+        console.error(`Empty or invalid content for instruction: ${instructionName}`);
+        continue;
+      }
+
+      console.log(`Instruction Content for ${instructionName}:\n`, content);
+
+      // Extract function signature
+      const funcRegex = /\bfn\s+(\w+)\s*\(\s*ctx:\s*Context<([^>]+)>(?:,\s*params:\s*([^,)]+))?\s*\)/;
+      console.log("funcRegex", funcRegex);
+
+      const funcMatch = content.match(funcRegex);
+      if (!funcMatch) {
+        console.error(`Function signature not found in ${instructionName}`);
+        continue;
+      }
+
+      const contextStruct = funcMatch ? funcMatch[1] : '';
+      const paramsStruct = funcMatch ? funcMatch[2] : '';
+
+      if (!contextStruct) throw new Error(`Context struct not found for instruction: ${instructionName}`);
+      if (!paramsStruct) console.warn(`Params struct not found for instruction: ${instructionName}`);
+
+      // Extract accounts
+      const accountsRegex = new RegExp(
+        `#[derive\\(Accounts\\)]\\s*pub struct ${contextStruct}<'info>\\s*{([\\s\\S]*?)}`
+      );
+      const accountsMatch = content.match(accountsRegex);
+      const accounts = [];
+      if (accountsMatch) {
+        const accountsContent = accountsMatch[1];
+        const accountRegex = /((?:\s*#\[[^\]]+\]\s*)*)\s*pub\s+(\w+):\s+([^\s,]+),/g;
+        let match;
+        while ((match = accountRegex.exec(accountsContent)) !== null) {
+          const attrBlock = match[1];
+          const name = match[2];
+          const type = match[3];
+          const attributes = attrBlock
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line.startsWith('#['));
+          accounts.push({ name, type, attributes });
+        }
+      }
+
+      // Extract params fields
+      const paramsRegex = new RegExp(
+        `#[derive\\(AnchorSerialize,\\s*AnchorDeserialize\\)]\\s*pub struct ${paramsStruct}\\s*{([\\s\\S]*?)}`
+      );
+      const paramsMatch = content.match(paramsRegex);
+      const paramsFields = [];
+      if (paramsMatch) {
+        const paramsContent = paramsMatch[1];
+        const fieldRegex = /\s*pub\s+(\w+):\s+([^\s,]+),/g;
+        let match;
+        while ((match = fieldRegex.exec(paramsContent)) !== null) {
+          const name = match[1];
+          const type = match[2];
+          paramsFields.push({ name, type });
+        }
+      }
+
+      // Extract error codes
+      const errorRegex = /#[error_code]\s*pub enum \w+\s*{([\s\S]*?)}/;
+      const errorMatch = content.match(errorRegex);
+      const errorCodes = [];
+      if (errorMatch) {
+        const errorContent = errorMatch[1];
+        const errorCodeRegex = /#[msg\("([^"]+\)"\)]\s*(\w+),/g;
+        let match;
+        while ((match = errorCodeRegex.exec(errorContent)) !== null) {
+          const msg = match[1];
+          const name = match[2];
+          errorCodes.push({ name, msg });
+        }
+      } else {
+        console.warn(`Error codes not found for instruction: ${instructionName}`);
+      }
+
+      instructionContextMapping[instructionName] = {
+        context: contextStruct,
+        params: paramsStruct,
+        accounts,
+        paramsFields,
+        errorCodes,
+      };
+    } catch (error) {
+      console.error(`Error getting ${instructionName} content:`, error);
     }
-   } catch (error) {
-    console.error(`Error getting ${i} content:`, error);
-   }
   }
 
   return instructionContextMapping;
+};
+
+export const extractStateStructs = async (
+  projectId: string,
+  stateRsPath: string
+): Promise<{ name: string; fields: { name: string; type: string }[] }[]> => {
+  try {
+    const contentTaskId = await fileApi.getFileContent(projectId, stateRsPath);
+    const pollDesc = `Getting state.rs content.`;
+    const content = await pollTaskStatus(contentTaskId.taskId, pollDesc);
+
+    // Regex to match #[account] structs
+    const structRegex = /#\[account\]\s*pub struct (\w+)\s*{([^}]*)}/g;
+
+    const structs = [];
+    let match;
+
+    // Iterate over matches for structs
+    while ((match = structRegex.exec(content)) !== null) {
+      const name = match[1]; // Struct name
+      const fieldsContent = match[2]; // Struct fields block
+
+      // Regex to match fields within the struct
+      const fieldRegex = /\s*pub\s+(\w+):\s+([^\s,]+)[,]?/g;
+
+      const fields = [];
+      let fieldMatch;
+
+      // Iterate over matches for fields
+      while ((fieldMatch = fieldRegex.exec(fieldsContent)) !== null) {
+        const fieldName = fieldMatch[1];
+        const fieldType = fieldMatch[2];
+        fields.push({ name: fieldName, type: fieldType });
+      }
+
+      // Add the struct to the result
+      structs.push({ name, fields });
+    }
+
+    console.log("structs", structs);
+    return structs;
+  } catch (error) {
+    console.error(`Error extracting state structs:`, error);
+    return [];
+  }
 };

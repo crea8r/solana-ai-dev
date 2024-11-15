@@ -2,6 +2,7 @@ import { Edge, Node } from 'react-flow-renderer';
 import { Program } from '../items/Program';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
+import { genIns } from './genIns';
 
 const textGenerator = (
   program_name: string,
@@ -9,14 +10,15 @@ const textGenerator = (
   account_text: string,
   instruction_text: string,
   file_name: string,
-  file_path: string
+  file_path: string,
+  additionalPrompt?: string
 ) => {
   const general_instruction = `I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
 --- File structure for the Anchor program ---
 Please structure the project into multiple files for ease of management.
 Account-related code should be in state.rs
 Each instruction should be in its own file, grouped by groups of users.
-The function inside the file should be run_[the name of the file]
+!important - The function inside the file should be run_[the name of the file]
 Remember to add mod.rs in the folder and sub-folders in the instructions.
 The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
 The code you are generating is Solana Anchor program, it only relate to rust, typescript, json, md and toml code.
@@ -33,7 +35,7 @@ The SDK should cover all instructions and function to get all accounts with filt
   Give me the code for the ${file_name} at this path ${file_path} related to the root folder. The code should be text, friendly to display in browser. Omit any additional instruction, I just need the code.
   \n`;
   return (
-    general_instruction + program_insruction + account_text + instruction_text
+    general_instruction + program_insruction + account_text + instruction_text + additionalPrompt
   );
 };
 
@@ -101,8 +103,10 @@ const genFile = (
     let all_instruction_text = '';
     if (instructionNodes.length) {
       all_instruction_text += `There are ${instructionNodes.length} instructions in this program.\n`;
+
       instructionNodes.forEach((instruction) => {
         const instruction_data = instruction.data.item as Instruction;
+        const instruction_prompt = genIns(instruction_data);
         const instruction_name = instruction_data.getName();
         const instruction_desc = instruction_data.getDescription();
         const instruction_params = instruction_data.getParameters();
@@ -114,7 +118,9 @@ const genFile = (
           ' with parameters:' +
           instruction_params +
           '; and logic as following: ' +
-          instruction_ai;
+          instruction_ai +
+          '\n' +
+          instruction_prompt;
         all_instruction_text += instruction_text + '\n';
       });
     }
@@ -125,7 +131,7 @@ const genFile = (
         all_account_text,
         all_instruction_text,
         fileName,
-        filePath
+        filePath,
       ) + '\n';
   });
   return all_text;

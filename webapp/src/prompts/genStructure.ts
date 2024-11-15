@@ -14,17 +14,30 @@ interface TextGeneratorOptions {
 const generateGeneralInstructions = (libraryVersion: string) => {
   return `
     I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
+    
     --- File structure for the Anchor program ---
+
     The root folder should include:
+
     - Cargo.toml: This file should define the workspace and include all program members.
+
     Each program should have its own directory (e.g., programs/subscription_service) that includes:
+
     - Cargo.toml: specific to that program to manage dependencies.
+
     - src/lib.rs: with the main logic for the program.
+
     Account-related code should be in state.rs.
+
     Each instruction should be in its own file.
-    The function inside the file should be run_[the name of the file] !important.
+
+
+    !important - The function inside the file should be run_[the name of the file].
+
     Remember to add mod.rs in the folder and sub-folders in the instructions only.
+
     Under no circumstances, do not produce mod.rs file for the project root folder (src/) !important
+
     The mod.rs file should include 'pub use [filename]::*;' at the beginning of the file.
 
 

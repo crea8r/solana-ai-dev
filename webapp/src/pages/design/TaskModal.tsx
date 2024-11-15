@@ -8,15 +8,24 @@ import { FileTreeItemType } from "../../components/FileTree";
 import genStructure from "../../prompts/genStructure";
 import genFiles from "../../prompts/genFile";
 import { promptAI } from "../../services/prompt";
-import { ensureInstructionNaming, extractCodeBlock, extractProgramIdFromAnchorToml, getFileList, insertTemplateFiles, normalizeName, getNormalizedInstructionNames, setFileTreePaths } from '../../utils/genCodeUtils';
+import { 
+    ensureInstructionNaming, 
+    extractCodeBlock, 
+    extractProgramIdFromAnchorToml, 
+    getFileList, 
+    insertTemplateFiles, 
+    normalizeName, 
+    getNormalizedInstructionNames, 
+    setFileTreePaths 
+} from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useToast } from '@chakra-ui/react'; 
 import { Link as RouterLink } from 'react-router-dom';
-import { amendConfigFile, sortFilesByPriority } from '../../utils/genCodeUtils';
-import { getLibRsTemplate, getModRsTemplate } from '../../data/fileTemplates'; 
+import { amendConfigFile, sortFilesByPriority, extractInstructionContext, extractStateStructs } from '../../utils/genCodeUtils';
+import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../../data/fileTemplates'; 
 
 interface genTaskProps {
     isOpen: boolean;
@@ -202,16 +211,26 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 setFileTreePaths(files);
 
                 let aiFilePaths = getFileList(files).map((file) => file.path).filter(Boolean) as string[];
-
                 const normalizedProgramName = normalizeName(projectContext.name);
-                console.log('projectContext.name', projectContext.name);
-                console.log('normalizedProgramName', normalizedProgramName);
 
-                let updatedFilePaths = aiFilePaths.map((path) => path.replace(/\/programs\/[^/]+\//, `/programs/${normalizedProgramName}/`));
+
+                let updatedFilePaths = aiFilePaths.map((path) => {
+                    const instructionsPrefix = `/programs/${normalizedProgramName}/src/instructions/`;
+                    if (path.includes(instructionsPrefix)) {
+                        const pathParts = path.split('/');
+                        const fileName = pathParts.pop();
+                        if (fileName) {
+                            const directoryPath = pathParts.join('/');
+                            const newFileName = `run_${fileName}`;
+                            return `${directoryPath}/${newFileName}`;
+                        }
+                    }
+                    return path;
+                });
 
                 updatedFilePaths = updatedFilePaths.filter((path) => {
                     const instructionsPrefix = `programs/${normalizedProgramName}/src/instructions/`;
-                    if (path.startsWith(instructionsPrefix)) {
+                    if (path.includes(instructionsPrefix)) {
                         const fileName = path.split('/').pop();
                         return fileName !== 'lib.rs' && fileName !== 'mod.rs';  
                     }
@@ -225,10 +244,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         aiFilePaths: updatedFilePaths,
                     },
                 }));
+                console.log("updatedFilePaths", updatedFilePaths);
+                console.log("projectContext", projectContext);
 
                 const programDirName = normalizedProgramName;
-
-                if (!programDirName) return;
                 if (!rootPath || !programDirName) return;
 
                 const _existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
@@ -401,10 +420,17 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     .map((path) =>
                         path.replace(/\/programs\/[^/]+\//, `/programs/${programDirName}/`)
                     );
+                
+                    const instructionContextMapping = await extractInstructionContext(
+                        projectId,
+                        normInstructionNames,
+                        instructionPaths
+                    );
+                    
+                    if (!instructionContextMapping) throw new Error("Failed to extract instruction context mapping.");
 
-                console.log('normInstructionNames', normInstructionNames);
-                console.log('instructionPaths', instructionPaths);
-                const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, normInstructionNames, instructionPaths);
+                
+                const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, instructionContextMapping, instructionPaths);
                 const modRsContent = getModRsTemplate(normInstructionNames);
 
                 setProjectContext((prevProjectContext) => ({
@@ -423,7 +449,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     projectId,
                     programDirName,
                     existingFilePaths,
-                    normInstructionNames,
+                    instructionContextMapping,
                     instructionPaths,
                     libRsPath,
                     modRsPath,
@@ -444,7 +470,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                             path.replace(/\/programs\/[^/]+\//, `/programs/${programDirName}/`)
                         );
 
-                    ensureInstructionNaming(projectId, instructionPaths, programDirName);
+                    await ensureInstructionNaming(projectId, instructionPaths, programDirName);
                 }
 
                 setProjectContext((prevProjectContext) => ({
@@ -463,6 +489,57 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         isCode: true,
                     },
                 }));
+
+                // Generate instruction files using the template
+                for (const [instructionName, { context, params, accounts, paramsFields, errorCodes }] of Object.entries(
+                    instructionContextMapping
+                )) {
+                    const content = getInstructionTemplate(
+                        instructionName,
+                        context,
+                        params,
+                        accounts,
+                        paramsFields,
+                        errorCodes
+                    );
+                    const filePath = `programs/${programDirName}/src/instructions/${instructionName}.rs`;
+
+                    if (existingFilePaths.has(filePath)) {
+                        // Optionally, you can choose to overwrite or skip
+                        console.log(`Overwriting instruction file: ${filePath}`);
+                    }
+
+                    await fileApi
+                        .updateFile(projectId, filePath, content)
+                        .then(() => console.log(`Generated instruction file: ${filePath}`))
+                        .catch((error: any) => console.error(`Error creating ${filePath}:`, error));
+                }
+
+                // Handle state.rs
+                const stateRsPath = `programs/${programDirName}/src/state.rs`;
+
+                // Extract account structs from AI-generated state.rs
+                const accountStructs = await extractStateStructs(projectId, stateRsPath);
+
+                // Generate state.rs using the template
+                if (accountStructs.length > 0) {
+                    const stateContent = getStateTemplate(accountStructs);
+                    console.log('stateContent', stateContent);
+
+                    // Overwrite the content of the existing state.rs file
+                    await fileApi.updateFile(projectId, stateRsPath, stateContent)
+                        .then(() => console.log(`Updated state.rs file: ${stateRsPath}`))
+                        .catch((error) => console.error(`Error updating ${stateRsPath}:`, error));
+                } else {
+                    console.error(`No account structs found in AI-generated state.rs`);
+                }
+
+                // Update tasks status
+                setTasks((prevTasks) =>
+                    prevTasks.map((task) =>
+                        task.id === 2 ? { ...task, status: 'completed' } : task
+                    )
+                );
             } else {
                 throw new Error('No AI response for structure generation');
             }
