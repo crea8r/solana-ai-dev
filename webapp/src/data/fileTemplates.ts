@@ -70,31 +70,57 @@ export const getModRsTemplate = (instructions: string[]): string => {
 };
 
 export const getStateTemplate = (
-  accountStructs: { name: string; fields: { name: string; type: string }[] }[]
+  accountStructs: {
+    name: string;
+    description?: string;
+    data_structure: {
+      fields: { field_name: string; field_type: string; attributes?: string[] }[];
+    };
+  }[]
 ): string => {
   console.log("accountStructs", accountStructs);
-  const accounts = accountStructs
-    .map(({ name, fields }) => {
-      const fieldsStr = fields
-        .map(({ name, type }) => `    pub ${name}: ${type},`)
+
+  // Deduplicate accounts by `name`
+  const uniqueAccounts = Array.from(
+    new Map(accountStructs.map(account => [account.name, account])).values()
+  );
+
+  const accounts = uniqueAccounts
+    .map(({ name, description, data_structure }) => {
+      const fieldsStr = data_structure.fields
+        .map(({ field_name, field_type, attributes }) => {
+          const attributeStr = attributes?.length
+            ? attributes.map(attr => `    #[${attr}]`).join('\n') + '\n'
+            : '';
+          return `${attributeStr}    pub ${field_name}: ${field_type},`;
+        })
         .join('\n');
-      return `#[account]
-      pub struct ${name} {
-      ${fieldsStr}
-      }
-      `;
+
+      const descriptionStr = description
+        ? `#[doc = "${description}"]\n`
+        : '';
+
+      return `
+${descriptionStr}#[account]
+pub struct ${name} {
+${fieldsStr}
+}
+`;
     })
     .join('\n');
 
   return `
-  use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 
-  ${accounts}
-  `;
+${accounts}
+`;
 };
+
+
 
 export const getInstructionTemplate = (
   instructionName: string,
+  functionLogic: string,
   contextStruct: string,
   paramsStruct: string,
   accounts: { name: string; type: string; attributes: string[] }[],
@@ -104,52 +130,40 @@ export const getInstructionTemplate = (
   const pascalCaseName = snakeToPascal(instructionName);
   const errorEnumName = `${pascalCaseName}ErrorCode`;
 
-  // Generate error codes enum
-  const errorCodesEnum = errorCodes
-    .map(
-      ({ name, msg }) => `    #[msg("${msg}")]
-    ${name},`
-    )
-    .join('\n');
+  const errorCodesEnum = errorCodes.map(
+      ({ name, msg }) => 
+      `#[msg("${msg}")] ${name},`
+    ).join('\n');
 
-  // Generate accounts struct
-  const accountsStruct = accounts
-    .map(
+  const accountsStruct = accounts.map(
       ({ name, type, attributes }) =>
-        `${attributes.map(attr => `    ${attr}`).join('\n')}
-    pub ${name}: ${type},`
-    )
-    .join('\n\n');
+        `#[account(${attributes.join(", ")})] pub ${name}: ${type},`).join('\n\n');
 
-  // Generate params struct
-  const paramsStructFields = paramsFields
-    .map(({ name, type }) => `    pub ${name}: ${type},`)
-    .join('\n');
+  const paramsStructFields = paramsFields.map(({ name, type }) => `pub ${name}: ${type},`).join('\n');
 
   return `
-use anchor_lang::prelude::*;
-use crate::state::*;
+    use anchor_lang::prelude::*;
+    use crate::state::*;
 
-pub fn ${instructionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
-    // Instruction logic here
-    Ok(())
-}
+    pub fn ${instructionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
+        ${functionLogic}
+    }
 
-#[derive(Accounts)]
-pub struct ${contextStruct}<'info> {
-${accountsStruct}
-}
+    #[derive(Accounts)]
+    pub struct ${contextStruct}<'info> {
+    ${accountsStruct}
+    }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct ${paramsStruct} {
-${paramsStructFields}
-}
+    #[derive(AnchorSerialize, AnchorDeserialize)]
+    pub struct ${paramsStruct} {
+    ${paramsStructFields}
+    }
 
-#[error_code]
-pub enum ${errorEnumName} {
-${errorCodesEnum}
-}
-`;
+    #[error_code]
+    pub enum ${errorEnumName} {
+    ${errorCodesEnum}
+    }
+    `;
 };
 
 

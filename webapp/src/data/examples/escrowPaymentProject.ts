@@ -8,6 +8,8 @@ const escrowPaymentProject: Project = {
   name: 'Escrow Payment Program',
   description:
     'A Solana program that securely holds funds in escrow until both parties agree to release the payment.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -188,6 +190,7 @@ const escrowPaymentProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 

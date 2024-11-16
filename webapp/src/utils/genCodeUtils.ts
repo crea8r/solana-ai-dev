@@ -2,8 +2,10 @@ import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../components/FileTree';
 import { parse, stringify } from 'smol-toml'
-import { getLibRsTemplate, getModRsTemplate } from '../data/fileTemplates';
-import { useToast, UseToastOptions } from '@chakra-ui/react';
+import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../data/fileTemplates';
+import instructionSchema from '../data/ai_schema/instruction_schema.json';
+import stateSchema from '../data/ai_schema/state_schema.json';
+import Ajv from 'ajv';
 
 type CargoToml = {
   package?: { name?: string; };
@@ -26,7 +28,7 @@ type InstructionContext = {
   errorCodes: { name: string; msg: string }[];
 };
 
-const pollTaskStatus = (taskId: string, pollDesc: string): Promise<string> => {
+export const pollTaskStatus = (taskId: string, pollDesc: string): Promise<string> => {
   return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
           try {
@@ -70,18 +72,28 @@ export function setFileTreePaths(
 }
 
 export function getFileList(
-    item: FileTreeItemType,
-    fileList: { name: string; path: string }[] = []
+  item: FileTreeItemType,
+  fileList: { name: string; path: string }[] = []
 ): { name: string; path: string }[] {
-    if (item.children && item.children.length > 0) {
-        for (const child of item.children) {
-            getFileList(child, fileList);
-        }
-    } else {
-        fileList.push({ name: item.name, path: item.path || item.name });
+  // Validate item and ensure it has a valid name
+  if (!item || !item.name) {
+    console.error('Invalid item encountered:', item);
+    return fileList; // Skip invalid items
+  }
+
+  // If the item has children, recursively process them
+  if (item.children && item.children.length > 0) {
+    for (const child of item.children) {
+      getFileList(child, fileList);
     }
-    return fileList;
-};
+  } else {
+    // Add item to the file list with a fallback for missing `path`
+    const path = item.path || item.name; // Fallback to `name` if `path` is missing
+    fileList.push({ name: item.name, path });
+  }
+
+  return fileList;
+}
 
 export function extractCodeBlock(text: string): string {
     const lines = text.split('\n');
@@ -187,8 +199,6 @@ export const ensureInstructionNaming = async (
   }
 };
 
-
-
 export const sortFilesByPriority = (files: FileTreeItemType[], aiProgramDirectoryName: string): FileTreeItemType[] => {
   return files.sort((a, b) => {
       const getPriority = (file: FileTreeItemType): number => {
@@ -216,8 +226,6 @@ export const normalizeName = (name: string): string => {
     .replace(/^_+|_+$/g, '');                   // Remove leading/trailing underscores
 };
 
-
-
 export const getNormalizedInstructionNames = (
   nodes: { type: string; data: { label: string } }[]
 ): string[] => {
@@ -227,7 +235,6 @@ export const getNormalizedInstructionNames = (
     .filter(Boolean)
     .map(label => `run_${normalizeName(label)}`);
 };
-
 
 export const snakeToPascal = (snakeStr: string): string => {
   return snakeStr
@@ -453,3 +460,177 @@ export const extractStateStructs = async (
     return [];
   }
 };
+
+export function extractJSON(content: string): string {
+  try {
+    // Step 1: Remove Markdown enclosures
+    const cleanedContent = content
+      .replace(/```json/g, '') // Remove opening markdown enclosure
+      .replace(/```/g, '') // Remove closing markdown enclosure
+      .trim(); // Remove unnecessary whitespace
+
+    // Step 2: Attempt to parse and validate as JSON directly
+    try {
+      JSON.parse(cleanedContent); // If this works, it's valid JSON
+      return cleanedContent; // Return it as is
+    } catch {
+      // Step 3: Fallback to regex to extract JSON if parsing fails
+      const jsonMatch = cleanedContent.match(/({[\s\S]*})|(\[[\s\S]*\])/); // Match JSON object or array
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in the content.');
+      }
+
+      const extractedJSON = jsonMatch[0];
+      JSON.parse(extractedJSON); // Validate extracted JSON
+      return extractedJSON; // Return the valid JSON
+    }
+  } catch (error) {
+    console.error('Error extracting JSON:', error, 'Content:', content);
+    throw new Error('Failed to extract JSON from AI response.');
+  }
+}
+
+
+export function validateFileTree(tree: any): FileTreeItemType | null {
+  if (!tree || typeof tree.name !== 'string' || typeof tree.type !== 'string') {
+    console.error('Invalid file tree item:', tree);
+    return null;
+  }
+
+  if (tree.type !== 'file' && tree.type !== 'directory') {
+    console.error('Invalid type for file tree item:', tree.type);
+    return null;
+  }
+
+  if (tree.children && !Array.isArray(tree.children)) {
+    console.error('Invalid children for file tree item:', tree.children);
+    return null;
+  }
+
+  // Validate children recursively
+  if (tree.children) {
+    tree.children = tree.children.map((child: any) => validateFileTree(child)).filter(Boolean);
+  }
+
+  return tree as FileTreeItemType;
+}
+
+export function logNestedObject(obj: any, indent: string = '') {
+  if (typeof obj === 'object' && obj !== null) {
+      if (Array.isArray(obj)) {
+          console.log(`${indent}[Array]`);
+          obj.forEach((item, index) => {
+              console.log(`${indent}  [Index ${index}]:`);
+              logNestedObject(item, `${indent}    `);
+          });
+      } else {
+          console.log(`${indent}{`);
+          for (const key in obj) {
+              if (obj.hasOwnProperty(key)) {
+                  console.log(`${indent}  "${key}":`);
+                  logNestedObject(obj[key], `${indent}    `);
+              }
+          }
+          console.log(`${indent}}`);
+      }
+  } else {
+      console.log(`${indent}${JSON.stringify(obj)}`);
+  }
+}
+
+
+// ------------------------------------------------------------------------------------------------
+
+// state
+export interface AIStateOutput {
+  accounts: {
+    name: string;
+    description: string;
+    data_structure: {
+      fields: { field_name: string; field_type: string; attributes: string[] }[];
+    };
+  }[];
+  additional_context: string;
+}
+export const processAIStateOutput = async (
+  projectId: string,
+  normalizedProgramName: string,
+  aiJson: string,
+): Promise<string> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile(stateSchema);
+
+  try {
+    const aiData: AIStateOutput = JSON.parse(aiJson);
+
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error('AI JSON does not conform to schema:', validate.errors);
+      throw new Error('Invalid AI JSON structure.');
+    }
+
+    const codeContent = getStateTemplate(aiData.accounts);
+
+    const filePath = `programs/${normalizedProgramName}/src/state.rs`;
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated file: ${filePath}`);
+    return codeContent;
+
+  } catch (error) {
+    console.error('Error processing AI state output:', error);
+    throw error;
+  }
+};
+
+// instructions
+export interface AIInstructionOutput {
+  function_name: string;
+  context_struct: string;
+  params_struct: string;
+  accounts: { name: string; type: string; attributes: string[] }[];
+  params_fields: { name: string; type: string }[];
+  error_codes: { name: string; msg: string }[];
+  function_logic: string;
+  accounts_structure: { name: string; description: string; data_structure: object }[];
+}
+export const processAIInstructionOutput = async (
+  projectId: string,
+  normalizedProgramName: string,
+  aiJson: string,
+): Promise<string> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile(instructionSchema);
+
+  try {
+    const aiData: AIInstructionOutput = JSON.parse(aiJson);
+
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error('AI JSON does not conform to schema:', validate.errors);
+      throw new Error('Invalid AI JSON structure.');
+    }
+
+    const codeContent = getInstructionTemplate(
+      aiData.function_name,
+      aiData.function_logic,
+      aiData.context_struct,
+      aiData.params_struct,
+      aiData.accounts,
+      aiData.params_fields,
+      aiData.error_codes
+    );
+
+    const filePath = `programs/${normalizedProgramName}/src/instructions/${aiData.function_name}.rs`;
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated file: ${filePath}`);
+    return codeContent;
+
+  } catch (error) {
+    console.error('Error processing AI instruction output:', error);
+    throw error;
+  }
+};
+
+

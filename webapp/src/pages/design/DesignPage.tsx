@@ -61,6 +61,8 @@ const DesignPage: React.FC = () => {
   const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
+  const [aiModel, setAiModel] = useState('codestral-latest');
+  const [apiKey, setApiKey] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -81,6 +83,13 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
+  const handleSelectModel = (model: string, apiKey: string) => {
+    setAiModel(model);
+    console.log('handleselectmodel model:', model);
+    console.log('handleselectmodel apiKey:', apiKey);
+    setProjectContext({ ...projectContext, aiModel: model });
+  };
   
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
@@ -487,6 +496,7 @@ const DesignPage: React.FC = () => {
           onClickSave={handleSaveClick}
           onLogout={handleLogout}
           onToggleWallet={handleToggleWallet}
+          onSelectModel={handleSelectModel}
         />
         <Flex flex={1}>
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}

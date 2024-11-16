@@ -8,6 +8,8 @@ const timeLockedSavingsProject: Project = {
   name: 'Time-Locked Savings Program',
   description:
     'A Solana program that allows users to lock funds into accounts that can only be withdrawn after a specified unlock time.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -188,6 +190,7 @@ const timeLockedSavingsProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 

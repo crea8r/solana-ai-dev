@@ -12,6 +12,8 @@ export type ProjectInfoToSave = {
   name: string;
   description: string;
   details: ProjectDetailsToSave;
+  aiModel: string;
+  apiKey: string;
 }
 
 export interface ProjectDetailsToSave {
@@ -33,6 +35,7 @@ export interface ProjectDetails {
   isCode: boolean;
   aiFilePaths: string[];
   aiStructure: string;
+  stateContent: string | undefined;
 }
 
 export interface Project {
@@ -41,6 +44,8 @@ export interface Project {
   name: string;
   description: string;
   details: ProjectDetails;
+  aiModel: string;
+  apiKey: string;
 }
 
 export type ProjectExample = {

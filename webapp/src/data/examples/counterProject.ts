@@ -7,6 +7,8 @@ const counterProject: Project = {
   rootPath: '',
   name: 'Counter Program',
   description: 'A Solana program to increment or reset a shared counter, with restricted reset permissions.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -153,6 +155,7 @@ const counterProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 

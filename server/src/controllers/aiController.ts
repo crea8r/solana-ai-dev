@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, response } from 'express';
 import { AppError } from '../middleware/errorHandler';
 import { logMessages } from '../utils/aiLog';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const MISTRAL_API_URL = 'https://codestral.mistral.ai/v1/chat/completions';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+let OPENAI_API_KEY = '';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const generateAIResponse = async (
@@ -12,49 +12,86 @@ export const generateAIResponse = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { messages } = req.body;
+  const { messages, model, _apiKey, _schema, _promptType } = req.body;
+  OPENAI_API_KEY = _apiKey;
+  console.log('OPENAI_API_KEY:', OPENAI_API_KEY);
 
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return next(new AppError('Invalid messages format', 400));
-  }
+  // preliminary checks
+  if (!Array.isArray(messages) || messages.length === 0) return next(new AppError('Invalid messages format', 400));
+  if (!model) return next(new AppError('Model is not provided', 400));
+  if (!MISTRAL_API_KEY && model === 'Codestral') return next(new AppError('Mistral API key is not configured', 500));
+  if (!OPENAI_API_KEY && model === 'GPT-4o') return next(new AppError('OpenAI API key is not configured', 500));
 
-  if (!MISTRAL_API_KEY) {
-    return next(new AppError('Mistral API key is not configured', 500));
-  }
-  console.log('MISTRAL_API_KEY: ', MISTRAL_API_KEY);
   const transformMessages = messages.map((message) => ({
     role: 'user',
     content: message,
   }));
+
+  let apiKey, apiUrl, requestBody;
+
+  switch (model) {
+    case 'codestral-latest':
+      apiKey = MISTRAL_API_KEY;
+      apiUrl = MISTRAL_API_URL;
+      requestBody = {
+        model: 'codestral-latest',
+        temperature: 0.2,
+        messages: transformMessages,
+        response_format: {
+          type: 'json_object',
+        },
+      };
+      break;
+    case 'gpt-4o':
+      apiKey = OPENAI_API_KEY;
+      apiUrl = OPENAI_API_URL;
+      requestBody = {
+        model: 'gpt-4o',
+        messages: transformMessages,
+        max_tokens: 3000,
+        temperature: 0.2,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: `${_promptType}_schema`,
+            strict: true,
+            schema: _schema,
+          },
+        }
+      };
+      break;
+    default:
+      return next(new AppError(`Model ${model} is not supported`, 400));
+  }
+
+  //console.log('apiKey', apiKey);
+
   try {
-    const response = await fetch(MISTRAL_API_URL, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        Authorization: `Bearer ${MISTRAL_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: 'codestral-latest',
-        temperature: 0.2,
-        messages: transformMessages,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new AppError(
-        `AI API error: ${errorData.error || response.statusText}`,
-        response.status
-      );
+      console.error('Error details:', JSON.stringify(errorData, null, 2));
+      throw new AppError(`AI API error: ${JSON.stringify(errorData, null, 2)}`, response.status);
     }
     const data = await response.json();
     await logMessages(messages, data);
+
+    //console.log('data', JSON.stringify(data.choices[0].message, null, 2));
 
     res.status(200).json({
       message: 'AI response generated successfully',
       data: data,
     });
+
   } catch (error) {
     console.error('Error generating AI response:', error);
     if (error instanceof AppError) {

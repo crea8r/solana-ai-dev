@@ -8,6 +8,8 @@ const loyaltyRewardsProject: Project = {
   name: 'Loyalty Rewards Program',
   description:
     'A Solana program that allows businesses to reward customers with loyalty points and manage point balances.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -189,6 +191,7 @@ const loyaltyRewardsProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 

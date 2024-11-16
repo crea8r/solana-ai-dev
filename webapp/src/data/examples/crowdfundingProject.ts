@@ -8,6 +8,8 @@ const crowdfundingProject: Project = {
   name: 'Crowdfunding Program',
   description:
     'A Solana program that enables users to create and participate in crowdfunding campaigns, track contributions, and manage fund distributions.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -277,6 +279,7 @@ const crowdfundingProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 

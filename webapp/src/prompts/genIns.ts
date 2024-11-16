@@ -1,69 +1,83 @@
 import { Instruction } from '../items/Instruction';
 
 export const genIns = (instruction: Instruction) => {
-  // Instruction template
-  const instructionTemplate = `
+  const instructionName = instruction.getName();
+  const contextStruct = `${instructionName}Context`;
+  const paramsStruct = `${instructionName}Params`;
+
+  const templatePrompt = `
+--- Instruction Template ---
+Here is the template for generating instruction files:
+
+\`\`\`rust
 use anchor_lang::prelude::*;
-use crate::state::*; // Import state definitions (if needed)
+use crate::state::*;
 
-/// Instruction: {INSTRUCTION_NAME}
-pub fn {FUNCTION_NAME}(ctx: Context<{CONTEXT_STRUCT}>, params: {PARAMS_STRUCT}) -> Result<()> {
-    let {PRIMARY_ACCOUNT_NAME} = &mut ctx.accounts.{PRIMARY_ACCOUNT_NAME};
-    let {SECONDARY_ACCOUNT_NAME} = &mut ctx.accounts.{SECONDARY_ACCOUNT_NAME};
-
-    // Business logic for the instruction
-    if {CONDITION} {
-        return err!(ErrorCode::{ERROR_CODE});
-    }
-
-    {PRIMARY_ACCOUNT_NAME}.{FIELD} += params.{PARAM_NAME};
-    {SECONDARY_ACCOUNT_NAME}.{FIELD} -= params.{PARAM_NAME};
-
+pub fn run_${instructionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
+    // Instruction logic here
     Ok(())
 }
 
-/// Accounts struct: defines all accounts involved in this instruction
 #[derive(Accounts)]
-pub struct {CONTEXT_STRUCT}<'info> {
-    #[account(mut)]
-    pub {PRIMARY_ACCOUNT_NAME}: Account<'info, {PRIMARY_ACCOUNT_TYPE}>, // Example mutable account
-    pub {SECONDARY_ACCOUNT_NAME}: Account<'info, {SECONDARY_ACCOUNT_TYPE}>, // Example readonly account
-    pub system_program: Program<'info, System>, // System program if required
+pub struct ${contextStruct}<'info> {
+    // List of accounts involved
 }
 
-/// Params struct: defines parameters passed to the instruction
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct {PARAMS_STRUCT} {
-    pub {PARAM_NAME}: u64, // Example parameter
+pub struct ${paramsStruct} {
+    // List of parameters
 }
 
-/// Error codes: defines all errors specific to this instruction
 #[error_code]
-pub enum ErrorCode {
-    #[msg("The provided value is too high.")]
-    ValueTooHigh,
-    #[msg("Not enough points.")]
-    NotEnoughPoints,
+pub enum ${instructionName}ErrorCode {
+    // Error codes
 }
+\`\`\`
+
+--- Generate Content ---
+Please provide the following in structured JSON:
+1. Function logic (without the signature).
+2. Accounts (name, type, attributes).
+3. Parameters (name, type).
+4. Error codes and messages.
+
+Provide the required instruction details in the following strict JSON format:
+{
+  "function_name": "run_{instruction_name}",
+  "context_struct": "{ContextStruct}",
+  "params_struct": "{ParamsStruct}",
+  "accounts": [
+    {"name": "{account_name}", "type": "{account_type}", "attributes": ["{attributes}"]}
+  ],
+  "params_fields": [
+    {"name": "{param_name}", "type": "{param_type}"}
+  ],
+  "error_codes": [
+    {"name": "{error_name}", "msg": "{error_message}"}
+  ],
+  "function_logic": "{function_logic}"
+}
+  
+### Field Descriptions:
+1. "function_name": The name of the function in snake_case format prefixed with "run_".
+2. "context_struct": The struct name for context (e.g., {InstructionName}Context).
+3. "params_struct": The struct name for parameters (e.g., {InstructionName}Params).
+4. "accounts": A list of accounts used by the instruction, each with:
+   - "name": Account name as a string.
+   - "type": Account type (e.g., "Signer", "Program", "System").
+   - "attributes": A list of attributes (e.g., ["mut", "signer"]).
+5. "params_fields": A list of parameter fields, each with:
+   - "name": Parameter name as a string.
+   - "type": Parameter type (e.g., "u64", "String").
+6. "error_codes": A list of error codes, each with:
+   - "name": Error code name in PascalCase.
+   - "msg": A human-readable error message.
+7. "function_logic": A string containing the main function logic.
+
+### Additional Instructions:
+- Always follow this JSON structure. All fields must be present, even if empty (use empty strings or arrays as placeholders).
+- Do not include any extraneous text or explanations outside the JSON object.
 `;
 
-  // AI Prompt
-  const prompt = `
-I want to generate an instruction file for a Solana program using the Anchor framework.
-
-Below is a predefined template for the instruction file. Replace all placeholders with appropriate values for the instruction: ${instruction.getName()}.
-
-Template:
-${instructionTemplate}
-
-Instruction Details:
-- Instruction Name: ${instruction.getName()}
-- Business logic: Define the logic for this instruction.
-- Accounts: Identify all required accounts and their roles in the instruction.
-- Parameters: Define the parameters to be passed to the instruction.
-- Conditions: Define any conditions or validations for the instruction.
-
-Please ensure the output conforms strictly to the template structure and fills all placeholders correctly.
-`;
-  return prompt;
+  return templatePrompt;
 };

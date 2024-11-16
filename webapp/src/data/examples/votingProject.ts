@@ -7,6 +7,8 @@ const votingProject: Project = {
   rootPath: '',
   name: 'Voting Program',
   description: 'A Solana program that allows users to vote on a proposal. The program stores the votes and tracks which users have voted.',
+  aiModel: '',
+  apiKey: '',
   details: {
     nodes: [
       {
@@ -153,6 +155,7 @@ const votingProject: Project = {
     isCode: false,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 };
 
