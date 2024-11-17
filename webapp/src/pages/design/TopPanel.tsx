@@ -60,8 +60,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <Text fontSize="xs" color="#5688e8" fontWeight="medium">Select AI Model</Text>
             </MenuButton>
             <MenuList>
-              <MenuItem onClick={() => {onSelectModel('codestral-latest', ''); setSelectedModel('codestral-latest')}}>codestral-latest</MenuItem>
-              <MenuItem onClick={() => {onSelectModel('gpt-4o', apiKey); setSelectedModel('gpt-4o')}}>gpt-4o</MenuItem>
+              <MenuItem onClick={() => {onSelectModel('codestral-latest', ''); setSelectedModel('codestral-latest')}}><Text fontSize="xs">codestral-latest</Text></MenuItem>
+              <MenuItem onClick={() => {onSelectModel('gpt-4o', apiKey); setSelectedModel('gpt-4o')}}><Text fontSize="xs">gpt-4o</Text></MenuItem>
             </MenuList>
           </Menu>
           {selectedModel === 'gpt-4o' && (
@@ -73,7 +73,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
                 onChange={(e) => {
                   setApiKey(e.target.value);
                 }}
-                style={{ marginLeft: '10px', padding: '5px', fontSize: '12px' }}
+                style={{ marginLeft: '10px', padding: '2px', fontSize: '12px' }}
               />
               <Button
                 variant="ghost"

@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "LibRsTemplateSchema",
+    "type": "object",
+    "properties": {
+      "program_name": {
+        "type": "string",
+        "description": "The name of the Solana program."
+      },
+      "program_id": {
+        "type": "string",
+        "description": "The program ID for the Solana program."
+      },
+      "instruction_context_mapping": {
+        "type": "array",
+        "description": "A list of instructions with their contexts and parameters.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "instruction_name": {
+              "type": "string",
+              "description": "The name of the instruction."
+            },
+            "context": {
+              "type": "string",
+              "description": "The context struct name for the instruction."
+            },
+            "params": {
+              "type": "string",
+              "description": "The parameters struct name for the instruction."
+            }
+          },
+          "required": ["instruction_name", "context", "params"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["program_name", "program_id", "instruction_context_mapping"],
+    "additionalProperties": false
+  }
+  

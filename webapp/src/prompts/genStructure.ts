@@ -14,40 +14,46 @@ interface TextGeneratorOptions {
 
 const generateGeneralInstructions = (programName: string, programDescription: string, libraryVersion: string) => {
   return `
-    I want to develop a Solana program using Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
+    I want to develop a Solana program using the Anchor framework, test cases using TypeScript, and a TypeScript SDK to interact with the program.
 
     --- The App ---
     This is a ${programName} for ${programDescription}.
 
     --- File Structure ---
     Please generate the project file structure for an Anchor-based Solana program as a JSON object. The structure should follow the default Anchor project generated on initialization.
-    
-      **Important Exclusions:**
+
+    **Additional Files to Include:**
+    - src/instructions/mod.rs: A mod.rs file that aggregates all instruction files.
+    - src/lib.rs: A lib.rs file that serves as the program's entry point.
+
+    **Important Exclusions:**
     - Do **not** include the following files in the output:
       - \`/Cargo.toml\`
       - \`/Anchor.toml\`
       - \`programs/${programName}/Cargo.toml\`
       - \`programs/${programName}/Xargo.toml\`
-      - \`programs/${programName}/src/lib.rs\`
 
-    The root folder should include:
+    **Directory Rules**:
     - Each program should have its own directory (e.g., programs/${programName}) that includes:
-    The program's directory should include:
-    - state.rs: Account-related code.
-    - instruction.rs: Instruction-related code.
+
+     - **Accounts**:
+      - **state.rs**: Account-related code, located directly under \`src/\`. !important DO NOT put the state.rs file in any other directory or in an 'accounts' directory.
 
     Instructions:
-    - Each instruction should be in its own file.
-    - The function name inside the file should be called run_[the name of the file].
+      - Each instruction should be in its own file.
+      - The function name inside the file should be called run_[the name of the file].
+      - instruction files in the src/instructions directory (instruction related code).
 
     --- Library ---
     Use @coral-xyz/anchor for TypeScript test code.
     Use Anchor version >= ${libraryVersion}
 
-    --- The test ---
+    --- Test Cases ---
     Write test cases using TypeScript for each of the functions. The test case should use the SDK.
+
     --- The TypeScript SDK ---
     The SDK should cover all instructions and functions to get all accounts with filters.\n
+    **Include the SDK file (\`sdk/index.ts\`) in the file structure.**
   `;
 };
 
@@ -76,7 +82,15 @@ const generateProgramInstruction = (programName: string, programDescription: str
 
     - !IMPORTANT! **Specific Directories**:
       1. All instructions must be located in a directory named "instructions" under "programs/${programName}/src".
-      2. Each instruction file must follow the naming convention "run_instruction_name.rs", where "instruction_name" matches the name of the instruction in lowercase snake_case format.
+      2. Each instruction file must follow the naming convention "run_instruction_name.rs", where "instruction_name" matches the name of the instruction in lowercase snake_case format (!except for the mod.rs file).
+
+    - **Files to Include**:
+      1. Each instruction must be in its own file in the "src/instructions" directory.
+      2. Include \`src/state.rs\` as the file containing account-related code, located directly under \`src/\`.
+      3. Include \`src/instructions/mod.rs\` to aggregate all instructions. (make sure the mod.rs is called mod.rs)
+      4. Include \`src/lib.rs\` as the entry point for the program.
+      5. **Include the SDK file at \`sdk/index.ts\` for the TypeScript SDK.**
+      6. **Include the test file at \`tests/${programName}.test.ts\` for the TypeScript tests.**
 
     - **Output Requirements**:
       - The root object must represent the root directory and include all child files and directories.

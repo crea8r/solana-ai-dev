@@ -2,9 +2,11 @@ import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../components/FileTree';
 import { parse, stringify } from 'smol-toml'
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../data/fileTemplates';
+import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getSdkTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
 import instructionSchema from '../data/ai_schema/instruction_schema.json';
 import stateSchema from '../data/ai_schema/state_schema.json';
+import sdkSchema from '../data/ai_schema/sdk_schema.json';
+import testSchema from '../data/ai_schema/test_schema.json';
 import Ajv from 'ajv';
 
 type CargoToml = {
@@ -199,18 +201,22 @@ export const ensureInstructionNaming = async (
   }
 };
 
-export const sortFilesByPriority = (files: FileTreeItemType[], aiProgramDirectoryName: string): FileTreeItemType[] => {
+export const sortFilesByPriority = (
+  files: FileTreeItemType[],
+  aiProgramDirectoryName: string
+): FileTreeItemType[] => {
   return files.sort((a, b) => {
-      const getPriority = (file: FileTreeItemType): number => {
-        if (file.path?.endsWith('state.rs')) return 1; // Highest priority
-        if (file.path?.includes('/instructions/')) return 2; // Medium priority
-        if (file.path?.endsWith('lib.rs')) return 3; // Lower priority
-        return 4; // Lowest priority
-      };
+    const getPriority = (file: FileTreeItemType): number => {
+      if (file.path?.endsWith('state.rs')) return 1; // Highest priority
+      if (file.path?.includes('/instructions/')) return 2; // Medium priority
+      if (file.path?.endsWith('lib.rs')) return 3; // Lower priority
+      return 4; // Lowest priority
+    };
 
-      return getPriority(a) - getPriority(b);
+    return getPriority(a) - getPriority(b);
   });
 };
+
 
 export const normalizeName = (name: string): string => {
   if (!name) {
@@ -241,42 +247,6 @@ export const snakeToPascal = (snakeStr: string): string => {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
-};
-
-export const insertTemplateFiles = async (
-  projectId: string,
-  programDirName: string,
-  existingFilePaths: Set<string>,
-  instructionContextMapping: Record<string, { context: string; params: string }>,
-  instructionPaths: string[],
-  libRsPath: string,
-  modRsPath: string,
-  programId: string
-) => {
-  const libRsContent = await getLibRsTemplate(projectId, programDirName, programId, instructionContextMapping, instructionPaths);
-  const modRsContent = getModRsTemplate(Object.keys(instructionContextMapping));
-
-  try {
-    if (!existingFilePaths.has(libRsPath)) {
-      await fileApi.createFile(projectId, libRsPath, libRsContent);
-      console.log(`Created template file: ${libRsPath}`);
-    } else {
-      console.log(`Template file already exists: ${libRsPath}`);
-    }
-  } catch (error) {
-    console.error(`Error creating template file ${libRsPath}:`, error);
-  }
-
-  try {
-    if (!existingFilePaths.has(modRsPath)) {
-      await fileApi.createFile(projectId, modRsPath, modRsContent);
-      console.log(`Created template file: ${modRsPath}`);
-    } else {
-      console.log(`Template file already exists: ${modRsPath}`);
-    }
-  } catch (error) {
-    console.error(`Error creating template file ${modRsPath}:`, error);
-  }
 };
 
 export const extractProgramIdFromAnchorToml = async (
@@ -515,29 +485,6 @@ export function validateFileTree(tree: any): FileTreeItemType | null {
   return tree as FileTreeItemType;
 }
 
-export function logNestedObject(obj: any, indent: string = '') {
-  if (typeof obj === 'object' && obj !== null) {
-      if (Array.isArray(obj)) {
-          console.log(`${indent}[Array]`);
-          obj.forEach((item, index) => {
-              console.log(`${indent}  [Index ${index}]:`);
-              logNestedObject(item, `${indent}    `);
-          });
-      } else {
-          console.log(`${indent}{`);
-          for (const key in obj) {
-              if (obj.hasOwnProperty(key)) {
-                  console.log(`${indent}  "${key}":`);
-                  logNestedObject(obj[key], `${indent}    `);
-              }
-          }
-          console.log(`${indent}}`);
-      }
-  } else {
-      console.log(`${indent}${JSON.stringify(obj)}`);
-  }
-}
-
 
 // ------------------------------------------------------------------------------------------------
 
@@ -597,13 +544,17 @@ export interface AIInstructionOutput {
 export const processAIInstructionOutput = async (
   projectId: string,
   normalizedProgramName: string,
+  instructionName: string, // Add this parameter
   aiJson: string,
-): Promise<string> => {
+): Promise<{ codeContent: string; aiData: AIInstructionOutput }> => {
   const ajv = new Ajv();
   const validate = ajv.compile(instructionSchema);
 
   try {
-    const aiData: AIInstructionOutput = JSON.parse(aiJson);
+    console.log("PPPPaiJson", aiJson);
+    const jsonContent = extractJSON(aiJson);
+    console.log("PPPPjsonContent", jsonContent);
+    const aiData: AIInstructionOutput = JSON.parse(jsonContent);
 
     const valid = validate(aiData);
     if (!valid) {
@@ -612,6 +563,7 @@ export const processAIInstructionOutput = async (
     }
 
     const codeContent = getInstructionTemplate(
+      instructionName, // Use the instructionName from the parameter
       aiData.function_name,
       aiData.function_logic,
       aiData.context_struct,
@@ -621,14 +573,246 @@ export const processAIInstructionOutput = async (
       aiData.error_codes
     );
 
-    const filePath = `programs/${normalizedProgramName}/src/instructions/${aiData.function_name}.rs`;
+    const filePath = `programs/${normalizedProgramName}/src/instructions/${instructionName}.rs`;
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated file: ${filePath}`);
+    return { codeContent, aiData };
+
+  } catch (error) {
+    console.error('Error processing AI instruction output:', error);
+    throw error;
+  }
+};
+
+
+// instructions mod
+export interface AIModRsOutput {
+  instructions: string[];
+  additional_context?: string;
+}
+
+export const processAIModRsOutput = async (
+  projectId: string,
+  normalizedProgramName: string,
+  aiJson: string,
+): Promise<string> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile({
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "instructions": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "List of instruction file names."
+        }
+      },
+      "additional_context": {
+        "type": "string",
+        "description": "Optional additional context for the mod.rs file."
+      }
+    },
+    "required": ["instructions"],
+    "additionalProperties": false
+  });
+
+  try {
+    const aiData: AIModRsOutput = JSON.parse(aiJson);
+
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error('AI JSON does not conform to schema:', validate.errors);
+      throw new Error('Invalid AI JSON structure.');
+    }
+
+    const codeContent = getModRsTemplate(aiData.instructions, aiData.additional_context);
+
+    const filePath = `programs/${normalizedProgramName}/src/instructions/mod.rs`;
+
     await fileApi.updateFile(projectId, filePath, codeContent);
 
     console.log(`Successfully processed and updated file: ${filePath}`);
     return codeContent;
 
   } catch (error) {
-    console.error('Error processing AI instruction output:', error);
+    console.error('Error processing AI mod.rs output:', error);
+    throw error;
+  }
+};
+
+// lib
+// Define the expected structure of the AI response for lib.rs
+export interface AILibOutput {
+  program_name: string;
+  program_id: string;
+  instruction_context_mapping: {
+    instruction_name: string;
+    context: string;
+    params: string;
+  }[];
+}
+
+// Utility function to process the AI-generated JSON for lib.rs
+export const processAILibOutput = async (
+  projectId: string,
+  programId: string,
+  normalizedProgramName: string,
+  aiJson: string,
+  instructionDetails: { instruction_name: string; context: string; params: string }[]
+): Promise<string> => {
+  const ajv = new Ajv();
+  const libSchema = {
+    type: 'object',
+    properties: {
+      program_name: { type: 'string' },
+      program_id: { type: 'string' },
+      instruction_context_mapping: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            instruction_name: { type: 'string' },
+            context: { type: 'string' },
+            params: { type: 'string' },
+          },
+          required: ['instruction_name', 'context', 'params'],
+        },
+      },
+    },
+    required: ['program_name', 'program_id', 'instruction_context_mapping'],
+  };
+
+  const validate = ajv.compile(libSchema);
+
+  try {
+    // Parse the AI-generated JSON
+    const aiData: AILibOutput = JSON.parse(aiJson);
+
+    // Validate the AI response against the schema
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error('AI JSON does not conform to schema:', validate.errors);
+      throw new Error('Invalid AI JSON structure.');
+    }
+
+    const codeContent = getLibRsTemplate(normalizedProgramName, programId, instructionDetails);
+
+    // Define the file path for lib.rs
+    const filePath = `programs/${normalizedProgramName}/src/lib.rs`;
+
+    // Update the lib.rs file
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated file: ${filePath}`);
+    return codeContent;
+  } catch (error) {
+    console.error('Error processing AI lib.rs output:', error);
+    throw error;
+  }
+};
+
+// sdk
+export interface AISdkOutput {
+  program_name: string;
+  program_id: string;
+  instructions: {
+    name: string;
+    description: string;
+    params: string[];
+  }[];
+  accounts: {
+    name: string;
+    description: string;
+    fields: { name: string; type: string }[];
+  }[];
+}
+
+export const processAISdkOutput = async (
+  projectId: string,
+  normalizedProgramName: string,
+  aiJson: string
+): Promise<string> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile(sdkSchema);
+
+  try {
+    const aiData: AISdkOutput = JSON.parse(aiJson);
+
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error('AI JSON does not conform to schema:', validate.errors);
+      throw new Error('Invalid AI JSON structure.');
+    }
+
+    // Generate SDK code using the template
+    const codeContent = getSdkTemplate(
+      aiData.program_name,
+      aiData.program_id,
+      aiData.instructions,
+      aiData.accounts
+    );
+
+    const filePath = `sdk/${normalizedProgramName}_sdk.ts`;
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated SDK file: ${filePath}`);
+    return codeContent;
+  } catch (error) {
+    console.error('Error processing AI SDK output:', error);
+    throw error;
+  }
+};
+
+// test
+export interface AITestOutput {
+  program_name: string;
+  program_id: string;
+  instructions: {
+    name: string;
+    description: string;
+    params: string[];
+  }[];
+  accounts: {
+    name: string;
+    description: string;
+    fields: { name: string; type: string }[];
+  }[];
+}
+
+export const processAITestOutput = async (
+  projectId: string,
+  normalizedProgramName: string,
+  aiJson: string
+): Promise<string> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile(testSchema); // Replace with the actual test schema JSON import
+
+  try {
+    const aiData: AITestOutput = JSON.parse(aiJson);
+
+    const valid = validate(aiData);
+    if (!valid) {
+      console.error("AI JSON does not conform to schema:", validate.errors);
+      throw new Error("Invalid AI JSON structure.");
+    }
+
+    // Generate test file content using the template
+    const codeContent = getTestTemplate(
+      aiData.program_name,
+      aiData.program_id,
+      aiData.instructions,
+      aiData.accounts
+    );
+
+    const filePath = `tests/${normalizedProgramName}.test.ts`;
+    await fileApi.updateFile(projectId, filePath, codeContent);
+
+    console.log(`Successfully processed and updated Test file: ${filePath}`);
+    return codeContent;
+  } catch (error) {
+    console.error("Error processing AI Test output:", error);
     throw error;
   }
 };
