@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Anchor Project File Structure",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the file or directory"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["file", "directory"],
+      "description": "Type of the item: 'file' or 'directory'"
+    },
+    "ext": {
+      "type": ["string", "null"],
+      "description": "File extension (e.g., .rs, .toml). Should be null if type is 'directory'."
+    },
+    "path": {
+      "type": "string",
+      "description": "Relative path to the file or directory"
+    },
+    "children": {
+      "type": ["array", "null"],
+      "description": "Child files or directories. Should be null if type is 'file'.",
+      "items": { "$ref": "#" }
+    }
+  },
+  "required": ["name", "type", "path", "ext", "children"],
+  "additionalProperties": false
+}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
 import { Project, ProjectInfoToSave } from '../interfaces/project';
 
 // Define transformation function
@@ -14,6 +14,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     aiFilePaths: project.details.aiFilePaths,
     aiStructure: project.details.aiStructure,
   },
+  aiModel: project.aiModel,
+  apiKey: project.apiKey,
 });
 
 interface ProjectContextType {
@@ -21,6 +23,8 @@ interface ProjectContextType {
   setProjectContext: Dispatch<SetStateAction<Project>>;
   projectInfoToSave: ProjectInfoToSave;
   setProjectInfoToSave: Dispatch<SetStateAction<ProjectInfoToSave>>;
+  stateContent: string;
+  setStateContent: Dispatch<SetStateAction<string>>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -43,13 +47,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       isCode: false,
       aiFilePaths: [],
       aiStructure: '',
+      stateContent: '',
     },
+    aiModel: '',
+    apiKey: '',
   });
 
   // State for projectInfoToSave, initially synchronized with projectContext
   const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(
     transformToProjectInfoToSave(projectContext)
   );
+
+  // State for stateContent
+  const [stateContent, setStateContent] = useState<string>('');
 
   // Synchronize projectInfoToSave whenever projectContext changes
   useEffect(() => {
@@ -63,6 +73,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
         setProjectContext,
         projectInfoToSave,
         setProjectInfoToSave,
+        stateContent,
+        setStateContent,
       }}
     >
       {children}

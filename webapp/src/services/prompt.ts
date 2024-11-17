@@ -1,7 +1,9 @@
 import { api } from '../utils/apiHelper';
 
-export const promptAI = async (text: string) => {
-  const body = { messages: [text] };
+export const promptAI = async (text: string, model: string, apiKey: string, schema: any, promptType: string) => {
+  console.log('model:', model);
+  console.log('apiKey:',  apiKey);
+  const body = { messages: [text], model, _apiKey: apiKey, _schema: schema, _promptType: promptType };
   const resp = await api.post('/ai/prompt', body);
   return resp.data?.data?.choices;
 };

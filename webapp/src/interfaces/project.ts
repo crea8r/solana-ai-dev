@@ -2,12 +2,18 @@ import { Node, Edge } from 'react-flow-renderer';
 import { FileTreeItemType } from '../components/FileTree';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
+import { counterProject } from '../data/examples/counterProject';
+import { votingProject } from '../data/examples/votingProject';
+import { crowdfundingProject } from '../data/examples/crowdfundingProject';
+import { loyaltyRewardsProject } from '../data/examples/loyaltyRewardsProject';
 
 export type ProjectInfoToSave = {
   id?: string;
   name: string;
   description: string;
   details: ProjectDetailsToSave;
+  aiModel: string;
+  apiKey: string;
 }
 
 export interface ProjectDetailsToSave {
@@ -29,6 +35,7 @@ export interface ProjectDetails {
   isCode: boolean;
   aiFilePaths: string[];
   aiStructure: string;
+  stateContent: string | undefined;
 }
 
 export interface Project {
@@ -37,6 +44,14 @@ export interface Project {
   name: string;
   description: string;
   details: ProjectDetails;
+  aiModel: string;
+  apiKey: string;
+}
+
+export type ProjectExample = {
+  name: string;
+  description: string;
+  project: Project;
 }
 
 export type ProjectDetail = {
@@ -86,3 +101,4 @@ interface Program {
     description?: string;
   };
 }
+  

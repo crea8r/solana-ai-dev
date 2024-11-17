@@ -225,6 +225,7 @@ const todoproject: Project = {
     isCode: true,
     aiFilePaths: [],
     aiStructure: '',
+    stateContent: '',
   } as ProjectDetails,
 } as Project;
 export { todoproject };
