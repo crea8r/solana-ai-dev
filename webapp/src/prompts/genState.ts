@@ -36,16 +36,74 @@ Please provide the following in structured JSON format:
 1. Accounts: List each account with its fields and types.
 2. Additional context, such as constants or enums, if required.
 
-Provide the required state details in the following strict JSON format:
+--- JSON Structure ---
+Provide the output strictly as a JSON object in this exact format:
 {
-  "accounts": [
-    {
-      "name": "{account_name}",
-      "description": "{account_description}",
-      "data_structure": {data_structure_as_json}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "description": "List of accounts used in the program.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the account."
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of the account's purpose or role."
+          },
+          "data_structure": {
+            "type": "object",
+            "description": "JSON representation of the account's fields and types.",
+            "properties": {
+              "fields": {
+                "type": "array",
+                "description": "List of fields in the account structure.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field_name": {
+                      "type": "string",
+                      "description": "The name of the field."
+                    },
+                    "field_type": {
+                      "type": "string",
+                      "description": "The data type of the field (e.g., u64, String)."
+                    },
+                    "attributes": {
+                      "type": "array",
+                      "description": "Optional attributes for the field (e.g., mutability, serialization).",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": ["field_name", "field_type", "attributes"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["fields"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "description", "data_structure"],
+        "additionalProperties": false
+      }
+    },
+    "additional_context": {
+      "type": "string",
+      "description": "Any additional context, constants, or enums required for the state.rs file."
     }
-  ]
+  },
+  "required": ["accounts", "additional_context"],
+  "additionalProperties": false
 }
+
 
 ### Field Descriptions:
 1. "name": The account name as a string.

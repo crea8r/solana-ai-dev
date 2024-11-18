@@ -97,7 +97,8 @@ const generateProgramInstruction = (programName: string, programDescription: str
       - Do not include unnecessary explanations or comments in the output.
       - Ensure that the JSON object is strictly valid and adheres to the provided schema.
 
-    Structure Schema:
+    --- JSON Structure ---
+    Provide the output strictly as a JSON object in this exact format:
     ${JSON.stringify(structureSchema, null, 2)}
   `;
 };

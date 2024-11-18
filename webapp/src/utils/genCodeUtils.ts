@@ -217,7 +217,6 @@ export const sortFilesByPriority = (
   });
 };
 
-
 export const normalizeName = (name: string): string => {
   if (!name) {
     throw new Error('Name cannot be empty');

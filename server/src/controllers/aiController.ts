@@ -14,8 +14,15 @@ export const generateAIResponse = async (
 ) => {
   const { messages, model, _apiKey, _schema, _promptType } = req.body;
   OPENAI_API_KEY = _apiKey;
-  console.log('OPENAI_API_KEY:', OPENAI_API_KEY);
-
+  
+  if (model === 'gpt-4o') {
+    console.log('model:', model);
+    console.log('apiKey:', _apiKey);
+  } else if (model === 'codestral-latest') {
+    console.log('model:', model);
+    console.log('apiKey:', MISTRAL_API_KEY);
+  }
+  
   // preliminary checks
   if (!Array.isArray(messages) || messages.length === 0) return next(new AppError('Invalid messages format', 400));
   if (!model) return next(new AppError('Model is not provided', 400));

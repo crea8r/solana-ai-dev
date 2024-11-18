@@ -5,12 +5,16 @@ import { Instruction } from '../items/Instruction';
 import { genIns } from './genIns';
 import { genState } from './genState';
 import { genLib } from './genLib';
+import { genSdk } from './genSdk';
+import { genTests } from './genTests';
 
 const textGenerator = (
   program_name: string,
   program_description: string,
   account_text: string,
   instruction_text: string,
+  sdk_text: string,
+  tests_text: string,
   file_name: string,
   file_path: string,
   stateContent?: string,
@@ -60,7 +64,13 @@ The SDK should be TypeScript-friendly, properly typed, and adhere to Solana and 
   \n`;
   const additional_context = `${stateContent ? `--- Additional Context from state.rs ---\n${stateContent}\n\n` : ''}${additionalPrompt ? `--- Additional Context ---\n${additionalPrompt}\n\n` : ''}`;
   return (
-    general_instruction + program_insruction + additional_context + account_text + instruction_text
+    general_instruction +
+    program_insruction +
+    additional_context +
+    account_text +
+    instruction_text +
+    sdk_text +
+    tests_text
   );
 };
 
@@ -192,12 +202,21 @@ const genFile = (
           all_instruction_text += instruction_text + '\n';
         });
       }
+
+      let all_sdk_text = '';
+      all_sdk_text += genSdk();
+
+      let all_tests_text = '';
+      all_tests_text += genTests();
+
       all_text +=
         textGenerator(
           program_data.getName(),
           program_data.getDescription(),
           all_account_text,
           all_instruction_text,
+          all_sdk_text,
+          all_tests_text,
           fileName,
           filePath,
           stateContent
