@@ -15,7 +15,7 @@ import {
   Input,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, EditIcon } from '@chakra-ui/icons';
-import { Check, FolderOpen, Wallet, Plus, Code, Save, Sparkles } from 'lucide-react';
+import { Check, FolderOpen, Wallet, Plus, Code, Save } from 'lucide-react';
 import { HiOutlineSparkles } from "react-icons/hi";
 import { useProjectContext } from '../../contexts/ProjectContext';
 
@@ -92,9 +92,10 @@ const TopPanel: React.FC<TopPanelProps> = ({
           <MenuList>
             <MenuItem onClick={() => { onSelectModel('codestral-latest', ''); setSelectedModel('codestral-latest'); }}><Text fontSize="xs">codestral-latest</Text></MenuItem>
             <MenuItem onClick={() => { onSelectModel('gpt-4o', apiKey); setSelectedModel('gpt-4o'); }}><Text fontSize="xs">gpt-4o</Text></MenuItem>
+            <MenuItem onClick={() => { onSelectModel('claude-3.5-sonnet', apiKey); setSelectedModel('claude-3.5-sonnet'); }}><Text fontSize="xs">claude-3.5-sonnet</Text></MenuItem>
           </MenuList>
         </Menu>
-        {selectedModel === 'gpt-4o' && (
+        {(selectedModel === 'gpt-4o' || selectedModel === 'claude-3.5-sonnet') && (
           <Flex align="center" gap={1}>
             <Input
               placeholder="Enter API Key"

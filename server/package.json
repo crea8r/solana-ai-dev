@@ -17,6 +17,7 @@
   "author": "hieubt",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@bekzod/openai-helpers": "^1.1.1",
     "@solana/web3.js": "^1.95.4",
     "bcryptjs": "^2.4.3",

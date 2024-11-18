@@ -20,7 +20,10 @@ const textGenerator = (
   stateContent?: string,
   additionalPrompt?: string
 ) => {
-  const general_instruction = `I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
+  const general_instruction = `
+  !--- It is very important that you DO NOT return any other text than the JSON object in the response! no additonal explanations apart from the JSON object ---!
+
+  I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
 --- File structure for the Anchor program ---
 Please structure the project into multiple files for ease of management.
 Account-related code should be in state.rs
