@@ -14,6 +14,7 @@ import MainLayout from './components/MainLayout';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DocsProvider } from './contexts/DocsContext';
 import { CodeFileProvider } from './contexts/CodeFileContext';
+import UIPage from './pages/ui/UIPage';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
@@ -51,6 +52,22 @@ const AppContent: React.FC = () => {
                     <DocsProvider>
                       <MainLayout>
                         <CodePage />
+                      </MainLayout>
+                    </DocsProvider>
+                  </CodeFileProvider>
+                </ProjectProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ui"
+            element={
+              <ProtectedRoute>
+                <ProjectProvider>
+                  <CodeFileProvider>
+                    <DocsProvider>
+                      <MainLayout>
+                        <UIPage />
                       </MainLayout>
                     </DocsProvider>
                   </CodeFileProvider>

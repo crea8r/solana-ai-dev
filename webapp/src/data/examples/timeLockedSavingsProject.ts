@@ -45,7 +45,7 @@ const timeLockedSavingsProject: Project = {
             name: 'SavingsAccount',
             description:
               'Stores information about the locked funds, including the unlock time.',
-            json: '{owner: pubk, balance: u64, unlock_time: u64}',
+            json: '{owner: PubKey, balance: u64, unlock_time: u64}',
             ownerProgramId: 'program-45678',
           },
         },
@@ -66,7 +66,7 @@ const timeLockedSavingsProject: Project = {
             name: 'UserAccount',
             description:
               'Tracks the user’s total locked funds and their associated savings accounts.',
-            json: '{user_id: pubk, total_locked: u64}',
+            json: '{user_id: PubKey, total_locked: u64}',
             ownerProgramId: 'program-45678',
           },
         },

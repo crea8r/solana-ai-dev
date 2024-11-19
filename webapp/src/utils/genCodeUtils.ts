@@ -550,9 +550,9 @@ export const processAIInstructionOutput = async (
   const validate = ajv.compile(instructionSchema);
 
   try {
-    console.log("PPPPaiJson", aiJson);
+    //console.log("PPPPaiJson", aiJson);
     const jsonContent = extractJSON(aiJson);
-    console.log("PPPPjsonContent", jsonContent);
+    //console.log("PPPPjsonContent", jsonContent);
     const aiData: AIInstructionOutput = JSON.parse(jsonContent);
 
     const valid = validate(aiData);

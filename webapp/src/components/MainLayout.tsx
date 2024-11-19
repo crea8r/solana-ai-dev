@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box, VStack, Icon, Tooltip, Flex, Button } from '@chakra-ui/react';
 import { PiGraphLight } from "react-icons/pi";
-import { CiFileOn } from "react-icons/ci";
-import { IoBookOutline } from "react-icons/io5";
+import { PiTerminalWindowLight } from "react-icons/pi";
+import { PiBookOpenText } from "react-icons/pi";
 import { HiOutlineUserCircle } from "react-icons/hi2";
+import { PiAppWindowLight } from "react-icons/pi";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProjectContext } from '../contexts/ProjectContext';
@@ -20,8 +21,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const menuItems = [
     { icon: PiGraphLight, label: 'Design', path: '/design' },
-    { icon: CiFileOn, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
-    { icon: IoBookOutline, label: 'Docs', path: '/doc', disabled: true },
+    { icon: PiTerminalWindowLight, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
+    { icon: PiAppWindowLight, label: 'UI', path: '/ui', disabled: false },
+    { icon: PiBookOpenText, label: 'Docs', path: '/doc', disabled: true },
     { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
   ];
 

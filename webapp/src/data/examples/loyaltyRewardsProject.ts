@@ -45,7 +45,7 @@ const loyaltyRewardsProject: Project = {
             name: 'BusinessAccount',
             description:
               'Tracks the total loyalty points issued and redeemed by a business.',
-            json: '{business_id: pubk, total_points_issued: u64, total_points_redeemed: u64}',
+            json: '{business_id: PubKey, total_points_issued: u64, total_points_redeemed: u64}',
             ownerProgramId: 'program-34567',
           },
         },
@@ -66,7 +66,7 @@ const loyaltyRewardsProject: Project = {
             name: 'CustomerAccount',
             description:
               'Tracks loyalty points earned and redeemed by a specific customer.',
-            json: '{customer_id: pubk, points_balance: u64}',
+            json: '{customer_id: PubKey, points_balance: u64}',
             ownerProgramId: 'program-34567',
           },
         },

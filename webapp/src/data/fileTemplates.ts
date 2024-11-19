@@ -23,30 +23,29 @@ export const getLibRsTemplate = (
       const paramsStruct = params;
       return `
         pub fn ${functionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
-            instructions::${moduleName}::handler(ctx, params)
+            instructions::${moduleName}::${functionName}(ctx, params)
         }`;
     })
     .join('\n');
 
   return `
-use anchor_lang::prelude::*;
+  use anchor_lang::prelude::*;
 
-declare_id!("${programId}");
+  declare_id!("${programId}");
 
-pub mod instructions;
-pub mod state;
+  pub mod instructions;
+  pub mod state;
 
-${instructionImports}
+  ${instructionImports}
 
-#[program]
-pub mod ${programName} {
-    use super::*;
+  #[program]
+  pub mod ${programName} {
+      use super::*;
 
-    ${programFunctions}
-}
-`;
+      ${programFunctions}
+  }
+  `;
 };
-
 
 export const getModRsTemplate = (instructions: string[], additionalContext?: string): string => {
   const imports = instructions.map((name) => `pub mod ${name};`).join('\n');
@@ -69,7 +68,7 @@ export const getStateTemplate = (
     };
   }[]
 ): string => {
-  console.log("accountStructs", accountStructs);
+  //console.log("accountStructs", accountStructs);
 
   // Deduplicate accounts by `name`
   const uniqueAccounts = Array.from(
@@ -117,7 +116,8 @@ export const getInstructionTemplate = (
   paramsFields: { name: string; type: string }[],
   errorCodes: { name: string; msg: string }[]
 ): string => {
-  const errorEnumName = `${snakeToPascal(instructionName)}ErrorCode`;
+  const pascalName = snakeToPascal(instructionName);
+  const errorEnumName = pascalName.startsWith("Run") ? pascalName.slice(3) + "ErrorCode" : pascalName + "ErrorCode";
 
   const accountsStruct = accounts.map(
       ({ name, type, attributes }) =>
@@ -127,28 +127,28 @@ export const getInstructionTemplate = (
   const paramsStructFields = paramsFields.map(({ name, type }) => `    pub ${name}: ${type},`).join('\n');
 
   return `
-use anchor_lang::prelude::*;
-use crate::state::*;
+  use anchor_lang::prelude::*;
+  use crate::state::*;
 
-pub fn ${functionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
-    ${functionLogic}
-}
+  pub fn ${functionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
+      ${functionLogic}
+  }
 
-#[derive(Accounts)]
-pub struct ${contextStruct}<'info> {
-${accountsStruct}
-}
+  #[derive(Accounts)]
+  pub struct ${contextStruct}<'info> {
+  ${accountsStruct}
+  }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct ${paramsStruct} {
-${paramsStructFields}
-}
+  #[derive(AnchorSerialize, AnchorDeserialize)]
+  pub struct ${paramsStruct} {
+  ${paramsStructFields}
+  }
 
-#[error_code]
-pub enum ${errorEnumName} {
-${errorCodes.map(({ name, msg }) => `    #[msg("${msg}")] ${name},`).join('\n')}
-}
-`;
+  #[error_code]
+  pub enum ${errorEnumName} {
+  ${errorCodes.map(({ name, msg }) => `    #[msg("${msg}")] ${name},`).join('\n')}
+  }
+  `;
 };
 
 export const getSdkTemplate = (
