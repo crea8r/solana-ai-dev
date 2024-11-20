@@ -1,6 +1,6 @@
 // src/components/Canvas.tsx
 
-import React, { useCallback, useRef, useMemo, useState } from 'react';
+import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -43,6 +43,12 @@ const Canvas: React.FC<CanvasProps> = ({
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
+
+  useEffect(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.7 }); 
+    }
+  }, [reactFlowInstance, nodes, edges]);
 
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -119,6 +125,8 @@ const Canvas: React.FC<CanvasProps> = ({
         onDragOver={onDragOver}
         edgeTypes={edgeTypes}
         nodeTypes={nodeTypes}
+        minZoom={0.5} // Set minimum zoom level
+        maxZoom={2}   // Set maximum zoom level
       >
         <Controls />
       </ReactFlow>
