@@ -9,6 +9,42 @@ import { FaXTwitter } from "react-icons/fa6";
 import { IoSunnyOutline, IoMoonOutline, IoMoon } from "react-icons/io5"; 
 import solai_name from '../assets/brand/solai_name.png';
 
+const style: React.CSSProperties = {
+  position: "relative",
+  width: "100%",
+  height: "100%",
+  display: "block",
+  borderWidth: "2px",
+  borderColor: "white"
+};
+
+const iframeStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover"
+};
+
+// VideoEmbed Component
+const VideoEmbed = ({ videoId }: { videoId: string }) => {
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1`;
+
+  return (
+    <div style={style}>
+      <iframe
+        width="100%"
+        height="100%"
+        src={embedUrl}
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        title="YouTube video"
+      />
+    </div>
+  );
+};
 
 const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
   const [ init, setInit ] = useState(false);
@@ -224,8 +260,8 @@ export default function LandingPage() {
           </Flex>
         </Flex>
         <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
-          <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
-            <Text fontWeight="300" fontSize="md" color="gray.500">Video Placeholder</Text>
+          <Flex borderWidth="1px" borderColor="gray.200" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
+            <VideoEmbed videoId="NbO50Rm8u6Q" />
           </Flex>
         </Flex>
       </Flex>

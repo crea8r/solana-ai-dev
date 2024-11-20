@@ -1,5 +1,3 @@
-// src/components/Canvas.tsx
-
 import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Node,

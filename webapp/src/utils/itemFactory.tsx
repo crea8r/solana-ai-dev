@@ -106,6 +106,6 @@ export const getNodeTypes = (): NodeTypes => ({
     borderRadius: 5,
     //border: 'solid 2.5px #ff9494', // red
     border: '2px solid #a9b7ff',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.8)',
   }),
 });
