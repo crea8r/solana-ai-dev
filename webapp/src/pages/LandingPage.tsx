@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useState, memo } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Container, Engine } from "@tsparticles/engine";
-import { Input, Button, Flex, Box, Heading, Text, Link as ChakraLink } from "@chakra-ui/react";
+import { Input, Button, Flex, Box, Heading, Text, Link as ChakraLink, Img } from "@chakra-ui/react";
 //import logo from '../assets/brand/solai_logo_png.png';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaXTwitter } from "react-icons/fa6";
 import { IoSunnyOutline, IoMoonOutline, IoMoon } from "react-icons/io5"; 
+import solai_name from '../assets/brand/solai_name.png';
 
 
 const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
@@ -120,91 +121,111 @@ const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
   );
 });
 
-
-
 export default function LandingPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
   return (
     <div className={`${isDarkMode ? 'dark' : ''}`}>
-      <ParticlesContainer isDarkMode={isDarkMode} />
-      <Flex h="100vh" w="100vw" justifyContent="center" alignItems="center" p="4">
+      
+      <Flex h="100vh" w="100vw">
         <Flex
-          direction="column" justifyContent="space-between"
-          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.800" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10"
+          w="50%"
+          justifyContent="center"
+          alignItems="center"
+          p="4"
+          bg={isDarkMode ? "#232734" : "#aac9fc"}
         >
-          <Box textAlign="center" pt="6">
-            <Heading as="h1" size="xl" mb="2" color="#7aa0ff" fontFamily="Oxanium" fontWeight="200" letterSpacing="0.2em">SOLAI</Heading>
-            <Text color="gray.500">Solana development made easy</Text>
-          </Box>
-
-          <Flex w="full" direction="column" justifyContent="center" alignItems="center">
-            <Flex justifyContent="center" w="full">
-              <Button
-                fontSize="sm"
-                fontFamily="Oxanium"
-                variant={activeTab === 'login' ? 'solid' : 'outline'}
-                onClick={() => setActiveTab('login')}
-                w="50%"
-                bg={activeTab === 'login' ? "#ffffff" : "transparent"}
-                color="gray.700"
-                _hover={{ bg: "#ffffff" }}
-              >
-                Login
-              </Button>
-              <Button
-                fontSize="sm"
-                fontFamily="Oxanium"
-                variant={activeTab === 'register' ? 'solid' : 'outline'}
-                onClick={() => setActiveTab('register')}
-                w="50%"
-                bg={activeTab === 'register' ? "#ffffff" : "transparent"}
-                color="gray.700"
-                _hover={{ bg: "#ffffff" }}
-              >
-                Register
-              </Button>
+          <ParticlesContainer isDarkMode={isDarkMode} />
+          <Flex
+            direction="column"
+            justifyContent="space-evenly"
+            alignItems="center"
+            gap="4"
+            w="full"
+            maxW="lg"
+            h="lg"
+            mx="auto"
+            bg="whiteAlpha.900"
+            backdropFilter="blur(10px)"
+            rounded="lg"
+            shadow="2xl"
+            p="5"
+            zIndex="10"
+          >
+            <Flex direction="column" justifyContent="center" alignItems="center" gap="3">
+              <Img src={solai_name} alt="Solai" w="auto" h="4.6rem" pt="2" />
             </Flex>
-            <Box mt="2" textAlign="center" w="full">
-              {activeTab === 'login' ? (
-                <Button 
-                  w="full" size="md" fontSize="sm" fontFamily="Oxanium" fontWeight="300"
-                  bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }} alignItems="center"
-                  p="4" 
-                  as={RouterLink} to='/login'
+
+            <Flex w="80%" direction="column" justifyContent="center" alignItems="center">
+              <Flex justifyContent="space-between" alignItems="center" w="full" gap="2">
+                <Button
+                  fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                  borderColor="gray.200"
+                  borderWidth="1px"
+                  onClick={() => setActiveTab("login")}
+                  w="50%"
+                  bg={activeTab === "login" ? "#ffffff" : "transparent"}
+                  color="gray.700"
+                  _hover={{ bg: "#ffffff" }}
                 >
-                  Login to Continue
+                  Login
                 </Button>
-              ) : (
-                <Button 
-                  w="full" size="md" fontSize="sm" fontFamily="Oxanium" fontWeight="300"
-                  bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }} alignItems="center"
-                  p="4"
-                  as={RouterLink} to='/register'
+                <Button
+                  fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                  borderColor="gray.200"
+                  borderWidth="1px"
+                  onClick={() => setActiveTab("register")}
+                  w="50%"
+                  bg={activeTab === "register" ? "#ffffff" : "transparent"}
+                  color="gray.700"
+                  _hover={{ bg: "#ffffff" }}
                 >
-                  Create Account
+                  Register
                 </Button>
-              )}
-            </Box>
+              </Flex>
+              <Box mt="2" textAlign="center" w="full">
+                {activeTab === "login" ? (
+                  <Button 
+                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                    bg="blue.300" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
+                    py="5" mt="2"
+                    as={RouterLink} to='/login'
+                  >
+                    Login to Continue
+                  </Button>
+                ) : (
+                  <Button 
+                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                    bg="blue.300" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
+                    py="5" mt="2"
+                    as={RouterLink} to='/register'
+                  >
+                    Create Account
+                  </Button>
+                )}
+              </Box>
+            </Flex>
+            <Flex justifyContent="center" mt="4">
+              <ChakraLink
+                href="https://x.com/usesolai"
+                color="gray.500"
+                _hover={{ color: "#7292d3" }}
+                display="flex"
+                alignItems="center"
+                gap="1"
+              >
+                <FaXTwitter className="text-sm" />
+                <Text fontSize="sm" pb="1">@usesolai</Text>
+              </ChakraLink>
+            </Flex>
           </Flex>
-          <Flex justifyContent="center" mt="4">
-            <ChakraLink
-              href="https://x.com/usesolai"
-              color="gray.500"
-              _hover={{ color: "#7292d3" }}
-              display="flex"
-              alignItems="center"
-              gap="1"
-            >
-              <FaXTwitter className="text-sm" />
-              <Text fontSize="sm" pb="1">@usesolai</Text>
-            </ChakraLink>
+        </Flex>
+        <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
+          <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
+            <Text fontWeight="300" fontSize="md" color="gray.500">Video Placeholder</Text>
           </Flex>
         </Flex>
       </Flex>

@@ -151,24 +151,32 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className={`${isDarkMode ? 'dark' : ''}`}>
-      <ParticlesContainer isDarkMode={isDarkMode} />
-      <Flex h="100vh" w="100vw" justifyContent="center" alignItems="center" p="4">
+    <Flex h="100vh" w="100vw">
+    <Flex
+      w="50%"
+      justifyContent="center"
+      alignItems="center"
+      p="4"
+      bg={isDarkMode ? "#232734" : "#aac9fc"}
+      >
+        <ParticlesContainer isDarkMode={isDarkMode} />  
         <Card
-          w="full" maxW="lg" h="auto" mx="auto" bg="whiteAlpha.800" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10"
+          w="full" maxW="lg" h="auto" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
+          rounded="lg" shadow="2xl" p="5" zIndex="10" fontFamily="Red Hat Display"
         >
-          <CardHeader textAlign="center" pt="6" position="relative" fontFamily="Oxanium">
+          <CardHeader textAlign="center" pt="6" position="relative">
             <Link to="/" className="absolute left-0 top-0 p-5">
               <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
-            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">CREATE AN ACCOUNT</Heading>
-            <Text size="xs" color="gray.500">Enter your details to create an account</Text>
+            <Flex direction="column" justifyContent="center" alignItems="center" gap="2">
+              <Heading as="h1" size="md" color="gray.700" fontWeight="400">Create an account</Heading>
+              <Text size="md" color="gray.500">Enter your details to create an account</Text>
+            </Flex>
           </CardHeader>
-          <CardBody fontFamily="Oxanium" fontWeight="300" fontSize="xs">
+          <CardBody fontWeight="300">
             <form onSubmit={handleSubmit} className="space-y-4">
               <Box className="space-y-2">
-                <FormLabel htmlFor="username">Username</FormLabel>
+                <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
                 <Input 
                   id="username" 
                   type="text" 
@@ -179,7 +187,7 @@ const RegisterPage: React.FC = () => {
                 />
               </Box>
               <Box className="space-y-2">
-                <FormLabel htmlFor="orgName">Organization Name</FormLabel>
+                <FormLabel htmlFor="orgName" fontSize="md">Organization Name</FormLabel>
                 <Input 
                   id="orgName" 
                   type="text" 
@@ -190,7 +198,7 @@ const RegisterPage: React.FC = () => {
                 />
               </Box>
               <Box className="space-y-2">
-                <FormLabel htmlFor="password">Password</FormLabel>
+                <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
                 <Box className="relative flex flex-row items-center gap-2">
                   <Input 
                     id="password" 
@@ -202,20 +210,21 @@ const RegisterPage: React.FC = () => {
                   />
                   <Button
                     type="button"
+                    size="sm"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    fontFamily="Oxanium" fontWeight="300"
+                    fontWeight="300"
                   >
                     {showPassword ? (
-                      <ViewOffIcon className="h-5 w-5" />
+                      <ViewOffIcon className="h-8 w-8" color="blue.500"/>
                     ) : (
-                      <ViewIcon className="h-5 w-5" />
+                      <ViewIcon className="h-8 w-8" color="blue.500"/>
                     )}
                   </Button>
                 </Box>
               </Box>
               <Box className="space-y-2">
-                <FormLabel htmlFor="confirm-password">Confirm Password</FormLabel>
+                <FormLabel htmlFor="confirm-password" fontSize="md">Confirm Password</FormLabel>
                 <Input 
                   id="confirm-password" 
                   type="password" 
@@ -229,22 +238,28 @@ const RegisterPage: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
-                fontSize="sm"
-                bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }}
+                fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                py="5"
+                bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
               >
                 Create account
               </Button>
             </form>
           </CardBody>
           <CardFooter>
-            <Text className="text-sm text-center text-muted-foreground w-full">
-              Already have an account?{' '}
+            <Text className="text-center text-muted-foreground w-full" fontSize="sm" letterSpacing="0.05em">
+              Already have an account?{'   '}
               <Link to='/login' className="hover:text-primary underline underline-offset-4">Sign in</Link>
             </Text>
           </CardFooter>
         </Card>
       </Flex>
-    </div>
+      <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
+        <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
+        <Text fontWeight="300" fontSize="md" color="gray.500">Video Placeholder</Text>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 };
 
