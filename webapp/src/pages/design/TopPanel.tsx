@@ -118,7 +118,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </Tooltip>
           </Flex>
         )}
-        <Button leftIcon={<Code size={12} />} onClick={generatePrompt} size="xs" p={3}>
+        <Button leftIcon={<Code size={12} />} onClick={generatePrompt} size="xs" p={4}>
           Generate Code
         </Button>
       </Flex>

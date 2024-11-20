@@ -45,11 +45,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               label={item.label} 
               placement='right'
               hasArrow
-              bg='blue.300'
+              bg='#a9b7ff'
               color='white'
+              shadow='md'
               fontSize='xs' 
               borderRadius='md'
-              p={2}
+              p={3}
             >
               <Box
                 as={!item.disabled ? 'button' : 'text'}
