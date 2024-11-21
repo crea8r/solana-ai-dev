@@ -12,6 +12,12 @@ import Ajv from 'ajv';
 type CargoToml = {
   package?: { name?: string; };
   lib?: { name?: string; };
+  dependencies?: {
+    [key: string]: {
+      version?: string;
+      features?: string[];
+    };
+  };
 };
 
 type RootAnchorToml = {
@@ -124,46 +130,63 @@ export const amendConfigFile = async (
   projectId: string,
   fileName: string,
   filePath: string,
-  programName: string,
+  programDirName: string
 ): Promise<string> => {
-  //const filePath = await fileApi.getFilePath(projectId, fileName);
   console.log('amendConfigFile filePath', filePath);
-  let _pollDesc;
+
+  // Fetch existing file content
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
-  _pollDesc = `Getting ${fileName} content to amend content.`;
+  const _pollDesc = `Getting ${fileName} content to amend content.`;
   const oldContent = await pollTaskStatus(taskId, _pollDesc);
 
-  let parsedToml;
-  let updatedToml;
+  let updatedToml = oldContent;
 
   if (fileName === 'Cargo.toml') {
-    parsedToml = parse(oldContent) as CargoToml;
-    if (parsedToml.package) parsedToml.package.name = programName;
-    if (parsedToml.lib) parsedToml.lib.name = programName;
-  } 
-  else if (fileName === 'Anchor.toml') {
-    parsedToml = parse(oldContent) as RootAnchorToml;
+    // Split the file into lines for easier manipulation
+    const lines = oldContent.split('\n');
+    const dependenciesStartIndex = lines.findIndex((line) => line.trim() === '[dependencies]');
 
-    if (parsedToml.programs?.localnet) {
-      const localnet = parsedToml.programs.localnet;
-      
-      // Get the first key-value pair in localnet (assuming there’s only one entry)
-      const [oldKey, address] = Object.entries(localnet)[0];
+    if (dependenciesStartIndex !== -1) {
+      // Remove any existing anchor-lang line in the dependencies block
+      const updatedLines = lines.filter(
+        (line, index) =>
+          !(index > dependenciesStartIndex && line.trim().startsWith('anchor-lang'))
+      );
 
-      // Replace the old key with the new program name, keeping the address
-      delete localnet[oldKey];
-      localnet[programName] = address;
+      // Add the new anchor-lang dependency string
+      updatedLines.splice(dependenciesStartIndex + 1, 0, 'anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }');
+
+      // Join the lines back into a single TOML string
+      updatedToml = updatedLines.join('\n');
     }
   }
 
-  updatedToml = stringify(parsedToml);
+  if (fileName === 'Anchor.toml') {
+    const parsedToml = parse(oldContent) as Record<string, any>;
 
+    if (parsedToml.programs?.localnet) {
+      const localnet = parsedToml.programs.localnet;
+
+      const [oldKey, address] = Object.entries(localnet)[0]; 
+      console.log(`Old Key: ${oldKey}, Address: ${address}`);
+      delete localnet[oldKey];
+      localnet[programDirName] = address;
+
+      delete parsedToml.programs;
+      parsedToml['programs.localnet'] = localnet;
+
+      updatedToml = stringify(parsedToml);
+    } else {
+      throw new Error('[programs.localnet] section not found in Anchor.toml');
+    }
+  }
+
+  // Update the file with the modified content
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
-  _pollDesc = `Updating ${fileName} content.`;
-  const updatedFileContent = await pollTaskStatus(res.taskId, _pollDesc);
+  const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
   return updatedFileContent;
-}
+};
 
 export const ensureInstructionNaming = async (
   projectId: string,
@@ -251,7 +274,7 @@ export const snakeToPascal = (snakeStr: string): string => {
 export const extractProgramIdFromAnchorToml = async (
   projectId: string,
   anchorTomlPath: string,
-  programName: string
+  programDirName: string
 ): Promise<string> => {
   try {
     const anchorTomlContentResponse = await fileApi.getFileContent(projectId, anchorTomlPath);
@@ -259,13 +282,15 @@ export const extractProgramIdFromAnchorToml = async (
     const pollDesc = `Getting Anchor.toml content.`;
     const anchorTomlContent = await pollTaskStatus(anchorTomlContentTaskId, pollDesc);
 
-    const parsedToml = parse(anchorTomlContent) as RootAnchorToml;
+    const parsedToml = parse(anchorTomlContent) as Record<string, any>;
 
-    const programSection = parsedToml.programs?.localnet;
+    console.log("!!! parsedToml", parsedToml);
+
+    const programSection = parsedToml['programs.localnet'];
     if (!programSection)  throw new Error('No [programs.localnet] section found in Anchor.toml');
 
-    const programId = programSection[programName];
-    if (!programId) throw new Error(`Program ID for "${programName}" not found in Anchor.toml`);
+    const programId = programSection[programDirName];
+    if (!programId) throw new Error(`Program ID for "${programDirName}" not found in Anchor.toml`);
 
     return programId;
   } catch (error) {
@@ -543,16 +568,14 @@ export interface AIInstructionOutput {
 export const processAIInstructionOutput = async (
   projectId: string,
   normalizedProgramName: string,
-  instructionName: string, // Add this parameter
+  instructionName: string,
   aiJson: string,
 ): Promise<{ codeContent: string; aiData: AIInstructionOutput }> => {
   const ajv = new Ajv();
   const validate = ajv.compile(instructionSchema);
 
   try {
-    //console.log("PPPPaiJson", aiJson);
     const jsonContent = extractJSON(aiJson);
-    //console.log("PPPPjsonContent", jsonContent);
     const aiData: AIInstructionOutput = JSON.parse(jsonContent);
 
     const valid = validate(aiData);
@@ -562,7 +585,7 @@ export const processAIInstructionOutput = async (
     }
 
     const codeContent = getInstructionTemplate(
-      instructionName, // Use the instructionName from the parameter
+      instructionName,
       aiData.function_name,
       aiData.function_logic,
       aiData.context_struct,

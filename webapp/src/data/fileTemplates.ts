@@ -31,17 +31,16 @@ export const getLibRsTemplate = (
   return `
   use anchor_lang::prelude::*;
 
-  declare_id!("${programId}");
-
   pub mod instructions;
   pub mod state;
+  use instructions::*;
 
-  ${instructionImports}
+  declare_id!("${programId}");
 
   #[program]
   pub mod ${programName} {
       use super::*;
-
+      
       ${programFunctions}
   }
   `;
@@ -53,9 +52,9 @@ export const getModRsTemplate = (instructions: string[], additionalContext?: str
 
   return [
     additionalContext ? `// ${additionalContext}` : '',
-    imports,
+    exports,
     '',
-    exports
+    imports
   ].filter(Boolean).join('\n');
 };
 

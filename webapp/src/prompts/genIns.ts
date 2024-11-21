@@ -10,6 +10,10 @@ export const genIns = (instruction: Instruction) => {
 --- Instruction Template ---
 Here is the template for generating instruction files:
 
+!Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
+for example: pub system_program: Program<'info, System>
+
+
 \`\`\`rust
 use anchor_lang::prelude::*;
 use crate::state::*;
