@@ -160,18 +160,37 @@ const CodePage = () => {
         const taskResponse = await taskApi.getTask(taskId);
         const status = taskResponse.task.status;
 
-        if (status === 'finished' || status === 'succeed') {
+        if (status === 'finished' || status === 'succeed' || status === 'warning') {
+          // Clear the polling interval
           clearInterval(intervalId);
+
+          // Stop the loading indicator
           setIsPolling(false);
-          addLog(`Build complete: ${taskResponse.task.result}`, true);
+          setIsLoading(false);
+
+          // Log the results
+          if (status === 'warning') {
+            addLog(`Task completed with warnings: ${taskResponse.task.result}`, true);
+          } else {
+            addLog(`Task completed successfully: ${taskResponse.task.result}`, true);
+          }
         } else if (status === 'failed') {
+          // Clear the polling interval
           clearInterval(intervalId);
+
+          // Stop the loading indicator
           setIsPolling(false);
-          addLog(`Build failed: ${taskResponse.task.result}`, true);
+          setIsLoading(false);
+
+          // Log the failure
+          addLog(`Task failed: ${taskResponse.task.result}`, true);
         }
       } catch (error) {
+        // Handle errors during polling
         clearInterval(intervalId);
         setIsPolling(false);
+        setIsLoading(false);
+
         addLog(`Polling error: ${error}`, true);
       }
     }, 5000);

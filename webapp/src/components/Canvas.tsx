@@ -6,11 +6,13 @@ import ReactFlow, {
   Controls,
   NodeTypes,
   ReactFlowInstance,
+  applyNodeChanges,
 } from 'react-flow-renderer';
 import { Box } from '@chakra-ui/react';
 import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
 import { useProjectContext } from '../contexts/ProjectContext';
+import { Instruction } from '../items/Instruction';
 
 interface CanvasProps {
   nodes: Node[];
@@ -39,6 +41,7 @@ const Canvas: React.FC<CanvasProps> = ({
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const { setProjectContext } = useProjectContext();
 
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
@@ -47,6 +50,33 @@ const Canvas: React.FC<CanvasProps> = ({
       reactFlowInstance.fitView({ padding: 0.7 }); 
     }
   }, [reactFlowInstance, nodes, edges]);
+
+  const handleNodesChange = useCallback((changes: any) => {
+    setProjectContext((prevProjectContext) => {
+      const updatedNodes = applyNodeChanges(changes, prevProjectContext.details.nodes);
+
+      updatedNodes.forEach((node) => {
+        if (node.type === "instruction" && node.data.item) {
+          const instruction = node.data.item as Instruction;
+          instruction.setName(node.data.label);
+          if (node.data.description) {
+            instruction.setDescription(node.data.description);
+          }
+          if (node.data.parameters) {
+            instruction.setParameters(node.data.parameters);
+          }
+        }
+      });
+
+      return {
+        ...prevProjectContext,
+        details: {
+          ...prevProjectContext.details,
+          nodes: updatedNodes,
+        },
+      };
+    });
+  }, [setProjectContext]);
 
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -67,6 +97,13 @@ const Canvas: React.FC<CanvasProps> = ({
       const newItem = createItem(type);
       if (newItem) {
         const newNode = newItem.toNode(position);
+
+        if (newNode.type === "instruction" && newNode.data.item) {
+          const instruction = newNode.data.item as Instruction;
+          instruction.setDescription("New instruction description");
+          instruction.setParameters("parameter1, parameter2");
+        }
+
         onAddNode(newNode);
       }
     },
@@ -97,22 +134,23 @@ const Canvas: React.FC<CanvasProps> = ({
     onSelectEdge(null);
   }, [onSelectNode, onSelectEdge]);
 
-  /*
   useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      setProjectContext((prevProjectContext) => ({ 
-        ...prevProjectContext, 
-        details: { ...prevProjectContext.details, nodes, edges } }));
-    }
-  }, [nodes, edges]);
-  */
+    setProjectContext((prevProjectContext) => ({
+      ...prevProjectContext,
+      details: {
+        ...prevProjectContext.details,
+        nodes,
+        edges,
+      },
+    }));
+  }, [nodes, edges, setProjectContext]);
 
   return (
     <Box ref={reactFlowWrapper} flex={1} height='100%'>
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
@@ -123,8 +161,8 @@ const Canvas: React.FC<CanvasProps> = ({
         onDragOver={onDragOver}
         edgeTypes={edgeTypes}
         nodeTypes={nodeTypes}
-        minZoom={0.5} // Set minimum zoom level
-        maxZoom={2}   // Set maximum zoom level
+        minZoom={0.5}
+        maxZoom={2}
       >
         <Controls />
       </ReactFlow>

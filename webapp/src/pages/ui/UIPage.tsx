@@ -4,6 +4,7 @@ import TopPanel from "./TopPanel";
 import { useProjectContext } from "../../contexts/ProjectContext";
 import { logout } from "../../services/authApi";
 import { Wallet } from "../../components/Wallet";
+import UISpace from "../../components/UISpace";
 
 const UIPage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
@@ -80,20 +81,7 @@ const UIPage = () => {
           borderRight="1px solid"
           borderColor="gray.300"
         >
-          <Box
-            width="80%"
-            height="80%"
-            bg="gray.50"
-            border="2px dashed"
-            borderColor="gray.400"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text fontSize="lg" color="gray.400" fontWeight="light">
-              Runtime Interactor for the dApp's UI
-            </Text>
-          </Box>
+          <UISpace />
         </Flex>
 
         <Box flex={1} position="absolute" right={0} top={9}>

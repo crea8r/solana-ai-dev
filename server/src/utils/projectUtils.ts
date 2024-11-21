@@ -86,7 +86,13 @@ export const startAnchorBuildTask = async (
     try {
       const rootPath = await getProjectRootPath(projectId);
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
-      await runCommand('anchor build', projectPath, taskId);
+      await runCommand('anchor build', projectPath, taskId).catch(async (error) => {
+          await updateTaskStatus(
+            taskId,
+            'failed',
+            `Error: ${error.message || 'Unknown error occurred'}`
+          );
+        });
     } catch (error: any) {
       await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
     }
