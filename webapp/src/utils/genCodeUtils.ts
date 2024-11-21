@@ -532,7 +532,10 @@ export const processAIStateOutput = async (
   const validate = ajv.compile(stateSchema);
 
   try {
-    const aiData: AIStateOutput = JSON.parse(aiJson);
+    const jsonContent = extractJSON(aiJson);
+    let aiData: AIStateOutput = JSON.parse(jsonContent);
+
+    aiData = sanitizeAIOutput(aiData, stateSchema);
 
     const valid = validate(aiData);
     if (!valid) {
@@ -576,7 +579,9 @@ export const processAIInstructionOutput = async (
 
   try {
     const jsonContent = extractJSON(aiJson);
-    const aiData: AIInstructionOutput = JSON.parse(jsonContent);
+    let aiData: AIInstructionOutput = JSON.parse(jsonContent);
+
+    aiData = sanitizeAIOutput(aiData, instructionSchema);
 
     const valid = validate(aiData);
     if (!valid) {
@@ -613,7 +618,6 @@ export interface AIModRsOutput {
   instructions: string[];
   additional_context?: string;
 }
-
 export const processAIModRsOutput = async (
   projectId: string,
   normalizedProgramName: string,
@@ -760,7 +764,10 @@ export const processAISdkOutput = async (
   const validate = ajv.compile(sdkSchema);
 
   try {
-    const aiData: AISdkOutput = JSON.parse(aiJson);
+    const jsonContent = extractJSON(aiJson);
+    let aiData: AISdkOutput = JSON.parse(jsonContent);
+
+    aiData = sanitizeAIOutput(aiData, sdkSchema);
 
     const valid = validate(aiData);
     if (!valid) {
@@ -812,7 +819,10 @@ export const processAITestOutput = async (
   const validate = ajv.compile(testSchema); // Replace with the actual test schema JSON import
 
   try {
-    const aiData: AITestOutput = JSON.parse(aiJson);
+    const jsonContent = extractJSON(aiJson);
+    let aiData: AITestOutput = JSON.parse(jsonContent);
+
+    aiData = sanitizeAIOutput(aiData, testSchema);
 
     const valid = validate(aiData);
     if (!valid) {
@@ -838,5 +848,39 @@ export const processAITestOutput = async (
     throw error;
   }
 };
+
+const sanitizeAIOutput = (aiData: any, schema: any): any => {
+  const sanitized: Record<string, any> = {};
+
+  for (const key of Object.keys(schema.properties)) {
+    if (schema.required.includes(key)) {
+      sanitized[key] = aiData[key] ?? getDefaultForType(schema.properties[key]);
+    } else if (key in aiData) {
+      sanitized[key] = aiData[key];
+    }
+  }
+
+  for (const key of Object.keys(aiData)) {
+    if (!schema.properties[key]) {
+      console.warn(`Removing unexpected property: ${key}`);
+    }
+  }
+
+  return sanitized;
+};
+
+const getDefaultForType = (propertySchema: any): any => {
+  switch (propertySchema.type) {
+    case "string":
+      return "";
+    case "array":
+      return [];
+    case "object":
+      return {};
+    default:
+      return null;
+  }
+};
+
 
 

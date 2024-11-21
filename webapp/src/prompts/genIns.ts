@@ -13,6 +13,15 @@ Here is the template for generating instruction files:
 !Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
 for example: pub system_program: Program<'info, System>
 
+!If an account is specified as the \`payer\` in the \`#[account(init)]\` constraint, ensure it is declared as \`#[account(mut)]\` in the \`#[derive(Accounts)]\` struct. For example:
+
+- Input: \`#[account(init, payer = initializer, space = ...)]\`
+- Output: \`#[account(mut)] pub initializer: Signer<'info>,\`
+
+This ensures the \`payer\` account is mutable as required by Anchor's constraints.
+
+!Don't forget to add the Overflow variant to the error enum if applicable.!
+
 
 \`\`\`rust
 use anchor_lang::prelude::*;
@@ -64,6 +73,7 @@ ${JSON.stringify(instructionSchema, null, 2)}
 - The "function_name" should be "${instructionName}".
 - **Do not include any extraneous text, explanations, or code fences (\`\`\`json).**
 - **Provide only the JSON object as the response.**
+
 `;
 
   return templatePrompt;

@@ -1,5 +1,6 @@
 import { Edge, Node } from 'react-flow-renderer';
 import { Account } from '../items/Account';
+import stateSchema from '../data/ai_schema/state_schema.json';
 
 export const genState = (nodes: Node[], edges: Edge[]) => {
   // Filter all account nodes
@@ -37,73 +38,8 @@ Please provide the following in structured JSON format:
 2. Additional context, such as constants or enums, if required.
 
 --- JSON Structure ---
-Provide the output strictly as a JSON object in this exact format:
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "accounts": {
-      "type": "array",
-      "description": "List of accounts used in the program.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the account."
-          },
-          "description": {
-            "type": "string",
-            "description": "A brief description of the account's purpose or role."
-          },
-          "data_structure": {
-            "type": "object",
-            "description": "JSON representation of the account's fields and types.",
-            "properties": {
-              "fields": {
-                "type": "array",
-                "description": "List of fields in the account structure.",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "field_name": {
-                      "type": "string",
-                      "description": "The name of the field."
-                    },
-                    "field_type": {
-                      "type": "string",
-                      "description": "The data type of the field (e.g., u64, String)."
-                    },
-                    "attributes": {
-                      "type": "array",
-                      "description": "Optional attributes for the field (e.g., mutability, serialization).",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "required": ["field_name", "field_type", "attributes"],
-                  "additionalProperties": false
-                }
-              }
-            },
-            "required": ["fields"],
-            "additionalProperties": false
-          }
-        },
-        "required": ["name", "description", "data_structure"],
-        "additionalProperties": false
-      }
-    },
-    "additional_context": {
-      "type": "string",
-      "description": "Any additional context, constants, or enums required for the state.rs file."
-    }
-  },
-  "required": ["accounts", "additional_context"],
-  "additionalProperties": false
-}
-
+!Important: Provide the output strictly as a JSON object and strictly following this exact format:
+${stateSchema}
 
 ### Field Descriptions:
 1. "name": The account name as a string.
