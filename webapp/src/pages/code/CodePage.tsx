@@ -340,7 +340,7 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
             isPolling={isPolling}
           />  
         </Box>
-        <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">
+        <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.300" pb="2">
           <AIChat 
             selectedFile={selectedFile} 
             fileContent={fileContent} 

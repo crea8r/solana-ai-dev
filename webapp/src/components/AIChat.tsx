@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select, Tooltip, Divider } from '@chakra-ui/react';
+import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton, MenuList, MenuItem, useToast, Select, Tooltip, Divider, Portal } from '@chakra-ui/react';
 import { Copy } from 'lucide-react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
@@ -31,7 +31,7 @@ const CodeBlock = ({ children }: { children: string }) => {
   };
 
   return (
-    <Box position="relative" p={4} bg="gray.100" color="black" borderRadius="md" fontSize="sm" fontFamily="monospace">
+    <Flex direction="column" height="100% !important" zIndex={10} position="relative" p={4} bg="gray.100" color="black" borderRadius="md" fontSize="sm" fontFamily="Red Hat Display" border="1px" borderColor="red.200">
       <Button
         size="xs"
         position="absolute"
@@ -47,7 +47,7 @@ const CodeBlock = ({ children }: { children: string }) => {
       <Text as="pre" fontSize="xs" whiteSpace="pre-wrap" overflowWrap="break-word">
         {children}
       </Text>
-    </Box>
+    </Flex>
   );
 };
 
@@ -210,7 +210,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   };
 
   return (
-    <Flex direction="column" maxHeight="100%" w="100%" p={2} pt={4} gap={2} fontSize="xs" justifyContent="space-between">
+    <Flex direction="column" minHeight="100%" maxHeight="100%" w="100%" p={2} pt={4} gap={2} fontSize="xs" justifyContent="space-between">
       <Box
         flex="1"
         flexGrow={1}
@@ -332,45 +332,56 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
       <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" >
         <Flex direction="row" justifyContent="flex-start" alignItems="center" width="100%">
           <Box shadow="md">
-            <Menu placement="auto" isLazy>
-              <MenuButton as={Button} size="xs" leftIcon={<Plus size={13} />} variant="ghost"/>
-              <MenuList 
-                zIndex={10} 
-                maxHeight="70vh" 
-                overflowY="auto" 
-                shadow="2xl"
-                sx={{
-                  maxWidth: '70vw',
-                }}
-              >
-                <MenuItem 
-                  icon={<BsPaperclip />} 
-                  onClick={() => fileInputRef.current?.click()}
+            <Menu placement="auto">
+              <MenuButton
+                as={Button}
+                size="xs"
+                leftIcon={<Plus size={13} />}
+                variant="ghost"
+              />
+              <Portal>
+                <MenuList
+                  zIndex={9999}
+                  maxHeight="70vh"
+                  overflowY="auto"
+                  shadow="2xl"
                   sx={{
-                    _hover: {
-                      bg: 'blue.50',
-                    },
+                    maxWidth: '70vw',
                   }}
                 >
-                  Upload Custom File
-                </MenuItem>
-                {allFiles.map((file) => (
-                  <MenuItem 
-                    key={file.path} 
-                    onClick={() => handleFileSelect(file)}
+                  <MenuItem
+                    icon={<BsPaperclip />}
+                    onClick={() => fileInputRef.current?.click()}
                     sx={{
                       _hover: {
                         bg: 'blue.50',
                       },
                     }}
                   >
-                    <Flex justify="space-between" w="100%">
-                      <Text fontWeight="medium" fontSize="sm">{file.name}</Text>
-                      <Text fontSize="xs" color="gray.500">{file.path}</Text>
-                    </Flex>
+                    Upload Custom File
                   </MenuItem>
-                ))}
-              </MenuList>
+                  {allFiles.map((file) => (
+                    <MenuItem
+                      key={file.path}
+                      onClick={() => handleFileSelect(file)}
+                      sx={{
+                        _hover: {
+                          bg: 'blue.50',
+                        },
+                      }}
+                    >
+                      <Flex justify="space-between" w="100%">
+                        <Text fontWeight="medium" fontSize="sm">
+                          {file.name}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {file.path}
+                        </Text>
+                      </Flex>
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Portal>
             </Menu>
           </Box>
           <input
@@ -381,45 +392,66 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           />
           <Box shadow="md" ml={2}>
             <Menu placement="auto">
-              <MenuButton as={Button} size="xs" variant="ghost" leftIcon={<ChevronUp size={13} />}>
-                <Text fontSize="xs" fontWeight="400">{selectedModel}</Text>
+              <MenuButton
+                as={Button}
+                size="xs"
+                variant="ghost"
+                leftIcon={<ChevronUp size={13} />}
+              >
+                <Text fontSize="xs" fontWeight="400">
+                  {selectedModel}
+                </Text>
               </MenuButton>
-              <MenuList>
-                <MenuItem 
-                  onClick={() => setSelectedModel('Codestral')}
-                  sx={{
-                    _hover: {
-                      bg: 'blue.50',
-                    },
-                  }}
-                >
-                  codestral
-                </MenuItem>
-                
-                <Divider my={2} />
+              <Portal>
+                <MenuList zIndex={9999}>
+                  <MenuItem
+                    onClick={() => setSelectedModel('Codestral')}
+                    sx={{
+                      _hover: {
+                        bg: 'blue.50',
+                      },
+                    }}
+                  >
+                    codestral
+                  </MenuItem>
 
-                <Tooltip 
-                  label="Coming Soon" 
-                  fontSize="xs" 
-                  fontWeight="medium"
-                  placement="top" 
-                  sx={{
-                    bg: 'white',
-                    color: '#5688e8',
-                    mt: '4px',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                  }}
-                >
-                  <Box>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>gpt-4o</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>claude 3.5 sonnet</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>gpt-4o mini</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>o1 mini</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>o1 preview</MenuItem>
-                    <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>cursor small</MenuItem>
-                  </Box>
-                </Tooltip>
-              </MenuList>
+                  <Divider my={2} />
+
+                  <Tooltip
+                    label="Coming Soon"
+                    fontSize="xs"
+                    fontWeight="medium"
+                    placement="top"
+                    sx={{
+                      bg: 'white',
+                      color: '#5688e8',
+                      mt: '4px',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                    }}
+                  >
+                    <Box>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        gpt-4o
+                      </MenuItem>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        claude 3.5 sonnet
+                      </MenuItem>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        gpt-4o mini
+                      </MenuItem>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        o1 mini
+                      </MenuItem>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        o1 preview
+                      </MenuItem>
+                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
+                        cursor small
+                      </MenuItem>
+                    </Box>
+                  </Tooltip>
+                </MenuList>
+              </Portal>
             </Menu>
           </Box>
         </Flex>
