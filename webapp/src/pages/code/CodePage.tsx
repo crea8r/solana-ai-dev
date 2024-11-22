@@ -12,6 +12,9 @@ import { extractCodeBlock } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { taskApi } from '../../api/task';
 import { projectApi } from '../../api/project';
+import chalk from 'chalk';
+import { extractWarnings } from '../../utils/codePageUtils';
+//import { placeholder } from '../../utils/codePageUtils';
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -21,6 +24,11 @@ function getLanguage(fileName: string) {
   return 'md';
 }
 
+export type LogEntry = {
+  message: string;
+  type: 'start' | 'success' | 'warning' | 'error' | 'info'; // Add more types if needed
+};
+
 const CodePage = () => {
   const { projectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
@@ -28,15 +36,53 @@ const CodePage = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([{ message: '', type: 'start' }]);
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
-  const addLog = (message: string, isBuildLog = false) => {
-    if (isBuildLog) {
-      setTerminalLogs(prevLogs => [...prevLogs, message]);
+  const formatWarnings = (warnings: { message: string; file: string; line: string; help?: string }[]): string => {
+    return warnings
+      .map((warning, index) => {
+        return `Warning ${index + 1}:
+        Message: ${warning.message}
+        File: ${warning.file}
+        Line: ${warning.line}
+        ${warning.help ? `Help: ${warning.help}` : ''}
+        `;
+      })
+      .join('\n');
+  };
+
+  const addLog = (message: string, isBuildLog = false, type: LogEntry['type'] = 'info') => {
+    if (isBuildLog) setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
+
+    if (type === 'warning') {
+      const warnings = extractWarnings(message);
+      warnings.forEach((warning, index) => {
+        setTerminalLogs(prevLogs => [
+          ...prevLogs,
+          {
+            message: `Warning ${index + 1}: ${warning.message}\nFile: ${warning.file}\nLine: ${warning.line}\n${
+              warning.help ? `Help: ${warning.help}` : ''
+            }`,
+            type: 'warning',
+          },
+        ]);
+      });
+    } else {
+      // Add standard log entries
+      if (isBuildLog) setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
     }
-   // console.log(message);
+
+    if (type === 'start') {
+      console.log('%c🚀 Build Started:', 'color: blue; font-weight: bold;', message);
+    } else if (type === 'success') {
+      console.log('%c✅ Build Completed:', 'color: green; font-weight: bold;', message);
+    } else if (type === 'warning') {
+      console.log('%c⚠️ Warning:', 'color: orange; font-weight: bold;', message);
+    } else if (type === 'error') {
+      console.log('%c❌ Error:', 'color: red; font-weight: bold;', message);
+    }
   };
 
   const clearLogs = () => {
@@ -161,37 +207,30 @@ const CodePage = () => {
         const status = taskResponse.task.status;
 
         if (status === 'finished' || status === 'succeed' || status === 'warning') {
-          // Clear the polling interval
           clearInterval(intervalId);
 
-          // Stop the loading indicator
           setIsPolling(false);
           setIsLoading(false);
 
-          // Log the results
           if (status === 'warning') {
-            addLog(`Task completed with warnings: ${taskResponse.task.result}`, true);
+            addLog(`Task completed with warnings: ${taskResponse.task.result}`, true, 'warning');
           } else {
-            addLog(`Task completed successfully: ${taskResponse.task.result}`, true);
+            addLog(`Task completed successfully: ${taskResponse.task.result}`, true, 'success');
           }
         } else if (status === 'failed') {
-          // Clear the polling interval
           clearInterval(intervalId);
 
-          // Stop the loading indicator
           setIsPolling(false);
           setIsLoading(false);
 
-          // Log the failure
-          addLog(`Task failed: ${taskResponse.task.result}`, true);
+          addLog(`Task failed: ${taskResponse.task.result}`, true, 'error');
         }
       } catch (error) {
-        // Handle errors during polling
         clearInterval(intervalId);
         setIsPolling(false);
         setIsLoading(false);
 
-        addLog(`Polling error: ${error}`, true);
+        addLog(`Polling error: ${error}`, true, 'error');
       }
     }, 5000);
   };
@@ -200,18 +239,16 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting build for project ID: ${projectId}`, true);
-
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
-        addLog(`Build process initiated. Task ID: ${response.taskId}`, true);
+        addLog(`Building project...`, true, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Build initiation failed.', true);
+        addLog('Build initiation failed.', true, 'error');
       }
     } catch (error) {
-      addLog(`Error during project build: ${error}`, true);
+      addLog(`Error during project build: ${error}`, true, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +256,7 @@ const CodePage = () => {
 
   const handleSave = async () => {
     if (!selectedFile || !selectedFile.path || !projectContext.id) {
-      addLog("No file selected or project context missing", true);
+      addLog("No file selected or project context missing", true, 'error');
       return;
     }
   
@@ -231,9 +268,9 @@ const CodePage = () => {
     try {
       const response = await fileApi.updateFile(projectId, filePath, content);
       console.log('File saved successfully:', response);
-      addLog(`File saved successfully: ${filePath}`, true);
+      addLog(`File saved successfully: ${filePath}`, true, 'success');
     } catch (error) {
-      addLog(`Error saving file: ${error}`, true);
+      addLog(`Error saving file: ${error}`, true, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -248,18 +285,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting tests for project ID: ${projectId}`, true);
+      addLog(`Starting tests for project ID: ${projectId}`, true, 'start');
 
       const response = await projectApi.testProject(projectId);
 
       if (response.taskId) {
-        addLog(`Test process initiated. Task ID: ${response.taskId}`, true);
+        addLog(`Test process initiated. Task ID: ${response.taskId}`, true, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Test initiation failed.', true);
+        addLog('Test initiation failed.', true, 'error');
       }
     } catch (error) {
-      addLog(`Error during project test: ${error}`, true);
+      addLog(`Error during project test: ${error}`, true, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -274,18 +311,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Running command: ${commandType} for project ID: ${projectId}`, true);
+      addLog(`Running command: ${commandType} for project ID: ${projectId}`, true, 'start');
 
       const response = await projectApi.runProjectCommand(projectId, commandType);
 
       if (response.taskId) {
-        addLog(`Command process initiated. Task ID: ${response.taskId}`, true);
+        addLog(`Command process initiated. Task ID: ${response.taskId}`, true, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Command initiation failed.', true);
+        addLog('Command initiation failed.', true, 'error');
       }
     } catch (error) {
-      addLog(`Error running command: ${error}`, true);
+      addLog(`Error running command: ${error}`, true, 'error');
     } finally {
       setIsLoading(false);
     }

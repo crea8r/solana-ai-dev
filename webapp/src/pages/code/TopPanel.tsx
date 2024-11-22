@@ -19,11 +19,11 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest }) => {
   return (
     <Flex
       borderBottom="1px solid"
-      borderColor="gray.200"
+      borderColor="gray.300"
       justifyContent="space-between"
       alignItems="center"
       p={4}
-      shadow="sm"
+      shadow="md"
     >
       <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center">
         <Menu>

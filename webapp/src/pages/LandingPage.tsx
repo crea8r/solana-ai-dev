@@ -192,10 +192,10 @@ export default function LandingPage() {
             zIndex="10"
           >
             <Flex direction="row" justifyContent="center" alignItems="center" gap="0">
-            <Img src={solai_name} alt="Solai" w="auto" h="4.6rem" />
+            <Img src={solai_name} alt="Solai" w="auto" h="4rem" ml="2" />
             <Flex direction="column" justifyContent="flex-start" alignItems="center" textAlign="left" height="100%" pt="2">
                 <Box bg="gray.100" rounded="md" px="1">
-                  <Text fontSize="xs" fontWeight="300" letterSpacing="0.05em" fontFamily="Red Hat Display" color="gray.500" px="1" py="0">
+                  <Text fontSize="0.6rem" fontWeight="300" letterSpacing="0.09em" fontFamily="Red Hat Display" color="gray.670" px="1" py="0">
                     BETA 
                   </Text>
                 </Box>

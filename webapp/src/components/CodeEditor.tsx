@@ -4,11 +4,12 @@ import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from './FileTree';
 import Terminal from './Terminal';
+import { LogEntry } from '../pages/code/CodePage';
 
 type CodeEditorProps = {
   content: string; 
   selectedFile?: FileTreeItemType;
-  terminalLogs: string[]; 
+  terminalLogs: LogEntry[]; 
   clearLogs: () => void;
   onChange: (newContent: string) => void;
   onSave: () => void;
@@ -55,20 +56,20 @@ const CodeEditor = ({
         base: 'vs', // Use 'vs' for light mode
         inherit: true,
         rules: [
-          { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },  // Green for comments
-          { token: 'keyword', foreground: 'FF6188', fontStyle: 'bold' },     // Pink for keywords
-          { token: 'variable', foreground: 'FF9E64' },                      // Orange for variables
-          { token: 'string', foreground: 'A9DC76' },                        // Light green for strings
-          { token: 'number', foreground: 'FD9353' },                        // Orange for numbers
-          { token: 'type', foreground: '78DCE8' },                          // Cyan for types
-          { token: 'function', foreground: 'AB9DF2', fontStyle: 'bold' },   // Purple for functions
-          { token: 'identifier', foreground: '333333' },                    // Dark gray for identifiers
+          { token: 'comment', foreground: '#1cba70', fontStyle: 'italic' },  // Green for comments
+          { token: 'keyword', foreground: '#5688e8', fontStyle: 'normal' },     // Pink for keywords
+          { token: 'variable', foreground: '#FF9E64' },                      // Orange for variables
+          { token: 'string', foreground: '#A9DC76' },                        // Light green for strings
+          { token: 'number', foreground: '#FD9353' },                        // Orange for numbers
+          { token: 'type', foreground: '#78DCE8' },                          // Cyan for types
+          { token: 'function', foreground: '#AB9DF2', fontStyle: 'normal' },   // Purple for functions
+          { token: 'identifier', foreground: '#383838' },                    // Dark gray for identifiers
         ],
         colors: {
           'editor.foreground': '#333333',                  // Dark gray text
           'editor.background': '#FFFFFF',                  // Pure white background
           'editorCursor.foreground': '#333333',            // Dark gray cursor
-          'editor.lineHighlightBackground': '#F3F3F3',     // Very light gray for line highlight
+          'editor.lineHighlightBackground': '#f0f3ff',     // Very light gray for line highlight
           'editor.selectionBackground': '#ADD6FF',         // Light blue for selected text
           'editor.selectionHighlightBackground': '#DAECF7', // Slightly darker blue for highlights
           'editor.wordHighlightBackground': '#EAEAEA',     // Light gray for word highlights
@@ -85,7 +86,7 @@ const CodeEditor = ({
 
   const editorDidMount = (editor: any) => {
     editorRef.current = editor;
-    monaco.editor.setTheme('monokaiProLight');
+    monaco.editor.setTheme('wechatLightStyle');
   };
 
   const determineLanguage = (path: string): string => {
@@ -163,7 +164,7 @@ const CodeEditor = ({
   };
 
   useEffect(() => {
-    monaco.editor.setTheme('materialLighterHighContrast');
+    monaco.editor.setTheme('wechatLightStyle');
     editorRef.current?.layout();
   }, []);
 
@@ -203,25 +204,25 @@ const CodeEditor = ({
   return (
     <Flex direction="column" height="100%" overflowY="hidden">
       {selectedFile ? (
-        <Box py={1} px={2} borderBottom="1px solid #ccc">
+        <Box py={2} px={2} borderBottom="1px" borderColor="gray.300">
           {selectedFile.path}
         </Box>
       ) : null}
 
-      <Box flex="4" overflow="hidden">
+      <Box overflow="hidden" height="auto">
         <MonacoEditor
           height="75vh"
           width="100%"
           language={language}
           theme="materialLighterHighContrast"
           value={content}
-          options={options}  // Ensure options are correctly typed
+          options={options} 
           editorDidMount={editorDidMount}
           onChange={handleEditorChange}
         />
       </Box>
 
-      <Box flex="1" mb={2}>
+      <Box mb={0} maxHeight="50vh !important" minHeight="50vh !important">
         <Terminal 
           logs={terminalLogs} 
           clearLogs={clearLogs} 
