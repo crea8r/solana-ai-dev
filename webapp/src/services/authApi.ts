@@ -8,7 +8,7 @@ const authApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // withCredentials: true, ?
+  withCredentials: true,
 });
 
 export const login = async (username: string, password: string) => {

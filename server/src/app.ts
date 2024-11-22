@@ -8,14 +8,20 @@ import orgRoutes from './routes/orgRoutes';
 import taskRoutes from './routes/taskRoutes';
 import aiRoutes from './routes/aiRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 9999;
 
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
+
 
 // Routes
 app.use('/auth', authRoutes);

@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setFirstLoginAfterRegistration(
             data.user.walletCreated && !data.user.hasViewedWalletModal
           );
+          console.log('User:', data.user);
         } else {
           setUser(null); // Clear user if not authenticated
         }
