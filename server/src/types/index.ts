@@ -3,6 +3,8 @@ export interface JwtPayload {
   org_id: string;
   name: string;
   org_name: string;
+  wallet_created: boolean;
+  private_key_viewed: boolean;
 }
 
 // export interface Organisation {

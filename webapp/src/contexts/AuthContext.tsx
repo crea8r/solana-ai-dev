@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -25,6 +25,7 @@ interface AuthContextType {
   logout: () => void;
   firstLoginAfterRegistration: boolean;
   markWalletModalViewed: () => void;
+  loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -36,20 +37,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [firstLoginAfterRegistration, setFirstLoginAfterRegistration] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // You might want to add a verification step here to check if the token is still valid
-      // For now, we'll assume if there's a token, the user is logged in
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/user`, {
+          credentials: 'include',
+        });
 
-        setFirstLoginAfterRegistration(parsedUser.walletCreated && !parsedUser.hasViewedWalletModal);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setFirstLoginAfterRegistration(
+            data.user.walletCreated && !data.user.hasViewedWalletModal
+          );
+        } else {
+          setUser(null); // Clear user if not authenticated
+        }
+      } catch (error) {
+        console.error('Failed to fetch authenticated user:', error);
+        setUser(null);
+      } finally {
+        setLoading(false); // Ensure loading state is updated
       }
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const markWalletModalViewed = () => {
@@ -57,7 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user) {
       const updatedUser = { ...user, hasViewedWalletModal: true };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
@@ -66,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await apiLogin(username, password);
       setUser(response.user);
       setFirstLoginAfterRegistration(!response.user.walletCreated);
-      localStorage.setItem('user', JSON.stringify(response.user));
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -87,11 +100,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = () => {
-    apiLogout();
+  const logout = async () => {
+    await apiLogout();
     setUser(null);
     setFirstLoginAfterRegistration(false);
-    localStorage.removeItem('user');
   };
 
   return (
@@ -103,9 +115,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         firstLoginAfterRegistration,
         markWalletModalViewed,
+        loading,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within a AuthProvider');
+  }
+  return context;
 };

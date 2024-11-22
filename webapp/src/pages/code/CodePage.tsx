@@ -114,7 +114,7 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
       }
     };
     fetchDirectoryStructure();
-  }, [projectContext.name]);
+  }, [projectContext]);
 
   const findFirstFile = (files: FileTreeItemType[]): FileTreeItemType | undefined => {
     for (const file of files) {

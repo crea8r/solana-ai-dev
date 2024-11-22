@@ -29,28 +29,32 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  const [projectContext, setProjectContext] = useState<Project>({
-    id: '',
-    rootPath: '',
-    name: '',
-    description: '',
-    details: {
-      nodes: [],
-      edges: [],
-      files: { name: '', type: 'directory', children: [] },
-      codes: [],
-      docs: [],
-      isAnchorInit: false,
-      isCode: false,
-      aiFilePaths: [],
-      aiStructure: '',
-      stateContent: '',
-    },
-    aiModel: '',
-    apiKey: '',
+export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  let savedProject: Project | null = null;
+  const [projectContext, setProjectContext] = useState<Project>(() => {
+    const savedProject = localStorage.getItem('projectContext');
+    return savedProject
+      ? JSON.parse(savedProject)
+      : {
+        id: '',
+        rootPath: '',
+        name: '',
+        description: '',
+        details: {
+          nodes: [],
+          edges: [],
+          files: { name: '', type: 'directory', children: [] },
+          codes: [],
+          docs: [],
+          isAnchorInit: false,
+          isCode: false,
+          aiFilePaths: [],
+          aiStructure: '',
+          stateContent: '',
+        },
+        aiModel: '',
+        apiKey: '',
+      };
   });
 
   const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));

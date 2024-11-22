@@ -10,6 +10,7 @@ import path from 'path';
 import fs from 'fs';
 import { exec } from 'child_process';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const connection = new Connection("https://api.devnet.solana.com");
 
@@ -200,6 +201,8 @@ export const register = async (req: Request, res: Response) => {
         org_id: orgId,
         name: username,
         org_name: organisation,
+        wallet_created: false,
+        private_key_viewed: false,
       });
 
       res.status(201).json({
@@ -230,25 +233,26 @@ export const login = async (req: Request, res: Response) => {
       [username]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
+    if (result.rows.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
     const user = result.rows[0];
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
     const token = generateToken({
       id: user.id,
       org_id: user.org_id,
       name: user.username,
       org_name: user.org_name,
+      wallet_created: user.wallet_created,
+      private_key_viewed: user.private_key_viewed,
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.json({
@@ -260,10 +264,39 @@ export const login = async (req: Request, res: Response) => {
         org_id: user.org_id,
         role: user.role,
         wallet_created: user.wallet_created,
+        private_key_viewed: user.private_key_viewed,
       },
     });
   } catch (error) {
     console.error('Error in login:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logged out' });
+};
+
+export const getUser = (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: 'Unauthorized: No token provided' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+
+    res.status(200).json({
+      user: {
+        id: decoded.id,
+        username: decoded.name,
+        org_id: decoded.org_id,
+        org_name: decoded.org_name,
+        wallet_created: decoded.wallet_created,
+        private_key_viewed: decoded.private_key_viewed,
+      },
+    });
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return res.status(401).json({ message: 'Unauthorized: Invalid or expired token' });
   }
 };

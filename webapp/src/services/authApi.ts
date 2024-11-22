@@ -8,14 +8,14 @@ const authApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // withCredentials: true, ?
 });
 
 export const login = async (username: string, password: string) => {
   try {
     const response = await authApi.post('/auth/login', { username, password });
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      console.log('Token set:', localStorage.getItem('token'));
+      console.log('Token cookie set:', response.data.token);
     } else {
       console.error('No token received in response');
     }
@@ -46,8 +46,14 @@ export const register = async (
   }
 };
 
-export const logout = () => {
-  localStorage.removeItem('token');
+export const logout = async () => {
+  try {
+    const response = await authApi.post('/auth/logout');
+    console.log(response.data.message);
+  } catch (error: any) {
+    console.error('Error during logout:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export default authApi;
