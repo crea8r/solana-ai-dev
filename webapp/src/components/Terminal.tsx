@@ -47,16 +47,9 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
             </Flex>
           )}
         </Flex>
-        <Menu>
-          <MenuButton as={Button} size="xs" colorScheme="gray" variant="ghost">
-            <Text fontSize="xs" color="gray.700" fontWeight="normal">Commands</Text>
-          </MenuButton>
-          <MenuList fontSize="xs" p={0}>
-            <MenuItem onClick={clearLogs}>clear</MenuItem>
-            <MenuItem onClick={() => onRunCommand('cargo clean')}>cargo clean</MenuItem>
-            <MenuItem onClick={() => onRunCommand('anchor clean')}>anchor clean</MenuItem>
-          </MenuList>
-        </Menu>
+        <Button onClick={clearLogs} size="xs" colorScheme="gray" variant="ghost">
+          <Text fontSize="0.6rem" color="gray.600" fontWeight="normal" letterSpacing="0.05rem">clear logs</Text>
+        </Button>
       </Flex>
       <Box p={4} overflowY="auto">
         <Flex>
@@ -77,7 +70,7 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
                   width="100% !important"
                   mb={4}
                   whiteSpace="pre-wrap"
-                  fontSize="xs"
+                  fontSize="0.75rem"
                   fontWeight="bold"
                   color={
                     log.type === 'start'

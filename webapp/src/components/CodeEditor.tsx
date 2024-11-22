@@ -47,7 +47,8 @@ const CodeEditor = ({
     wordHighlightStrong: false,
     occurrencesHighlight: 'off' as const,
     selectionHighlight: false,
-    minimap: { enabled: false }
+    minimap: { enabled: false },
+    fontSize: 14,
   };
 
   useEffect(() => {

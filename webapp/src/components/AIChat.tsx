@@ -255,7 +255,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                         color="gray.600"
                         width="fit-content"
                         borderRadius="md" 
-                        fontSize="0.6rem"
+                        fontSize="0.75rem"
                         fontWeight="500"
                       >
                         {file.name}
