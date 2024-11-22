@@ -36,7 +36,7 @@ const CodePage = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
-  const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([{ message: '', type: 'start' }]);
+  const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([]);
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
@@ -53,36 +53,27 @@ const CodePage = () => {
       .join('\n');
   };
 
-  const addLog = (message: string, isBuildLog = false, type: LogEntry['type'] = 'info') => {
-    if (isBuildLog) setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
-
-    if (type === 'warning') {
+  const addLog = (message: string, type: LogEntry['type'] = 'info') => {
+    if (type !== 'warning') {
+      setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
+    } else {
+      setTerminalLogs(prevLogs => [...prevLogs, { message: 'Task completed with warnings', type: 'success' }]);
       const warnings = extractWarnings(message);
       warnings.forEach((warning, index) => {
         setTerminalLogs(prevLogs => [
           ...prevLogs,
           {
-            message: `Warning ${index + 1}: ${warning.message}\nFile: ${warning.file}\nLine: ${warning.line}\n${
-              warning.help ? `Help: ${warning.help}` : ''
-            }`,
+            message: `Warning ${index + 1}:
+Message: ${warning.message}
+File: ${warning.file}
+Line: ${warning.line}
+${warning.help ? `Help: ${warning.help}` : ''}`,
             type: 'warning',
           },
         ]);
       });
-    } else {
-      // Add standard log entries
-      if (isBuildLog) setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
     }
-
-    if (type === 'start') {
-      console.log('%c🚀 Build Started:', 'color: blue; font-weight: bold;', message);
-    } else if (type === 'success') {
-      console.log('%c✅ Build Completed:', 'color: green; font-weight: bold;', message);
-    } else if (type === 'warning') {
-      console.log('%c⚠️ Warning:', 'color: orange; font-weight: bold;', message);
-    } else if (type === 'error') {
-      console.log('%c❌ Error:', 'color: red; font-weight: bold;', message);
-    }
+    // Console logs for debugging...
   };
 
   const clearLogs = () => {
@@ -200,7 +191,6 @@ const CodePage = () => {
 
   const startPollingTaskStatus = (taskId: string) => {
     setIsPolling(true);
-
     const intervalId = setInterval(async () => {
       try {
         const taskResponse = await taskApi.getTask(taskId);
@@ -208,29 +198,25 @@ const CodePage = () => {
 
         if (status === 'finished' || status === 'succeed' || status === 'warning') {
           clearInterval(intervalId);
-
           setIsPolling(false);
           setIsLoading(false);
 
           if (status === 'warning') {
-            addLog(`Task completed with warnings: ${taskResponse.task.result}`, true, 'warning');
+            addLog(taskResponse.task.result || '', 'warning');
           } else {
-            addLog(`Task completed successfully: ${taskResponse.task.result}`, true, 'success');
+            addLog('Task completed successfully', 'success');
           }
         } else if (status === 'failed') {
           clearInterval(intervalId);
-
           setIsPolling(false);
           setIsLoading(false);
-
-          addLog(`Task failed: ${taskResponse.task.result}`, true, 'error');
+          addLog(`Task failed: ${taskResponse.task.result}`, 'error');
         }
       } catch (error) {
         clearInterval(intervalId);
         setIsPolling(false);
         setIsLoading(false);
-
-        addLog(`Polling error: ${error}`, true, 'error');
+        addLog(`Polling error: ${error}`, 'error');
       }
     }, 5000);
   };
@@ -242,13 +228,13 @@ const CodePage = () => {
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
-        addLog(`Building project...`, true, 'start');
+        addLog('Building project...', 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Build initiation failed.', true, 'error');
+        addLog('Build initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error during project build: ${error}`, true, 'error');
+      addLog(`Error during project build: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -256,7 +242,7 @@ const CodePage = () => {
 
   const handleSave = async () => {
     if (!selectedFile || !selectedFile.path || !projectContext.id) {
-      addLog("No file selected or project context missing", true, 'error');
+      addLog("No file selected or project context missing", 'error');
       return;
     }
   
@@ -268,9 +254,9 @@ const CodePage = () => {
     try {
       const response = await fileApi.updateFile(projectId, filePath, content);
       console.log('File saved successfully:', response);
-      addLog(`File saved successfully: ${filePath}`, true, 'success');
+      addLog(`File saved successfully: ${filePath}`, 'success');
     } catch (error) {
-      addLog(`Error saving file: ${error}`, true, 'error');
+      addLog(`Error saving file: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -285,18 +271,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting tests for project ID: ${projectId}`, true, 'start');
+      addLog(`Starting tests for project ID: ${projectId}`, 'start');
 
       const response = await projectApi.testProject(projectId);
 
       if (response.taskId) {
-        addLog(`Test process initiated. Task ID: ${response.taskId}`, true, 'start');
+        addLog(`Test process initiated. Task ID: ${response.taskId}`, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Test initiation failed.', true, 'error');
+        addLog('Test initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error during project test: ${error}`, true, 'error');
+      addLog(`Error during project test: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -311,18 +297,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Running command: ${commandType} for project ID: ${projectId}`, true, 'start');
+      addLog(`Running command: ${commandType} for project ID: ${projectId}`, 'start');
 
       const response = await projectApi.runProjectCommand(projectId, commandType);
 
       if (response.taskId) {
-        addLog(`Command process initiated. Task ID: ${response.taskId}`, true, 'start');
+        addLog(`Command process initiated. Task ID: ${response.taskId}`, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Command initiation failed.', true, 'error');
+        addLog('Command initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error running command: ${error}`, true, 'error');
+      addLog(`Error running command: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
