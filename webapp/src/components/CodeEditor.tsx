@@ -56,14 +56,14 @@ const CodeEditor = ({
         base: 'vs', // Use 'vs' for light mode
         inherit: true,
         rules: [
-          { token: 'comment', foreground: '#1cba70', fontStyle: 'italic' },  // Green for comments
-          { token: 'keyword', foreground: '#5688e8', fontStyle: 'normal' },     // Pink for keywords
-          { token: 'variable', foreground: '#FF9E64' },                      // Orange for variables
-          { token: 'string', foreground: '#A9DC76' },                        // Light green for strings
-          { token: 'number', foreground: '#FD9353' },                        // Orange for numbers
-          { token: 'type', foreground: '#78DCE8' },                          // Cyan for types
-          { token: 'function', foreground: '#AB9DF2', fontStyle: 'normal' },   // Purple for functions
-          { token: 'identifier', foreground: '#383838' },                    // Dark gray for identifiers
+          { token: 'comment', foreground: '#1cba70', fontStyle: 'italic' },  // Green
+          { token: 'keyword', foreground: '#5688e8', fontStyle: 'normal' },     // Pink
+          { token: 'variable', foreground: '#636674' },                      // Green
+          { token: 'string', foreground: '#7d94e8' },                        // Light blue
+          { token: 'number', foreground: '#FD9353' },                        // Orange
+          { token: 'type', foreground: '#9e72ca' },                          // Purple // anchor macros,
+          { token: 'function', foreground: '#AB9DF2', fontStyle: 'normal' },   // Purple
+          { token: 'identifier', foreground: '#383838' },                    // Dark gray
         ],
         colors: {
           'editor.foreground': '#333333',                  // Dark gray text
@@ -222,7 +222,7 @@ const CodeEditor = ({
         />
       </Box>
 
-      <Box mb={0} maxHeight="50vh !important" minHeight="50vh !important">
+      <Box mb={0} maxHeight="30vh !important" minHeight="30vh !important">
         <Terminal 
           logs={terminalLogs} 
           clearLogs={clearLogs} 

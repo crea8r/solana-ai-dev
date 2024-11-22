@@ -26,7 +26,7 @@ function getLanguage(fileName: string) {
 
 export type LogEntry = {
   message: string;
-  type: 'start' | 'success' | 'warning' | 'error' | 'info'; // Add more types if needed
+  type: 'start' | 'success' | 'warning' | 'error' | 'info';
 };
 
 const CodePage = () => {
@@ -328,7 +328,7 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
         <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
-        <Box flex={1} maxHeight="100%" boxSizing="border-box" overflow="auto">
+        <Box flex={1} minHeight="100%" maxHeight="100%" boxSizing="border-box" overflow="auto">
           <CodeEditor
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
