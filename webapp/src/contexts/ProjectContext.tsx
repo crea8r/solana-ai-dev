@@ -53,16 +53,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     apiKey: '',
   });
 
-  // State for projectInfoToSave, initially synchronized with projectContext
-  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(
-    transformToProjectInfoToSave(projectContext)
-  );
-
-  // State for stateContent
+  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
   const [stateContent, setStateContent] = useState<string>('');
 
-  // Synchronize projectInfoToSave whenever projectContext changes
   useEffect(() => {
+    if (projectContext) localStorage.setItem('projectContext', JSON.stringify(projectContext));
     setProjectInfoToSave(transformToProjectInfoToSave(projectContext));
   }, [projectContext]);
 
