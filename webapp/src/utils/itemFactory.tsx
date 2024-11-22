@@ -74,26 +74,38 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 export const getNodeTypes = (): NodeTypes => ({
   account: createNodeComponent({
     background: 'white',
-    color: '#51545c',
+    color: '#909de0',
+    fontWeight: '600',
+    letterSpacing: '0.05em',
+    fontFamily: 'Red Hat Display',
     padding: 10,
     borderRadius: 5,
-    border: 'solid 2.5px #decae2', // purple
+    //border: 'solid 2.5px #decae2', // purple
+    border: '2px solid #a9b7ff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   instruction: createNodeComponent({
     background: 'white',
-    color: '#51545c',
+    color: '#909de0',
+    fontWeight: '600',
+    letterSpacing: '0.05em',
+    fontFamily: 'Red Hat Display',
     padding: 10,
     borderRadius: 5,
-    border: 'solid 2.5px #9de19f', // green
+    //border: 'solid 2.5px #9de19f', // green
+    border: '2px solid #a9b7ff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
   program: createNodeComponent({
     background: 'white',
-    color: '#51545c',
+    color: '#909de0',
+    fontWeight: '600',
+    letterSpacing: '0.05em',
+    fontFamily: 'Red Hat Display',
     padding: 10,
     borderRadius: 5,
-    border: 'solid 2.5px #ff9494', // red
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    //border: 'solid 2.5px #ff9494', // red
+    border: '2px solid #a9b7ff',
+    boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.8)',
   }),
 });

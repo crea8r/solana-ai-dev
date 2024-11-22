@@ -1,4 +1,5 @@
 import { Instruction } from "../items/Instruction";
+import instructionSchema from "../data/ai_schema/instruction_schema.json";
 
 export const genIns = (instruction: Instruction) => {
   const instructionName = instruction.getName();
@@ -8,6 +9,19 @@ export const genIns = (instruction: Instruction) => {
   const templatePrompt = `
 --- Instruction Template ---
 Here is the template for generating instruction files:
+
+!Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
+for example: pub system_program: Program<'info, System>
+
+!If an account is specified as the \`payer\` in the \`#[account(init)]\` constraint, ensure it is declared as \`#[account(mut)]\` in the \`#[derive(Accounts)]\` struct. For example:
+
+- Input: \`#[account(init, payer = initializer, space = ...)]\`
+- Output: \`#[account(mut)] pub initializer: Signer<'info>,\`
+
+This ensures the \`payer\` account is mutable as required by Anchor's constraints.
+
+!Don't forget to add the Overflow variant to the error enum if applicable.!
+
 
 \`\`\`rust
 use anchor_lang::prelude::*;
@@ -34,29 +48,9 @@ pub enum ${instructionName}ErrorCode {
 }
 \`\`\`
 
---- Generate Content ---
-Please provide the following in structured JSON:
-1. Function logic (without the signature).
-2. Accounts (name, type, attributes).
-3. Parameters (name, type).
-4. Error codes and messages.
-
-Provide the required instruction details in the following strict JSON format:
-{
-  "function_name": "${instructionName}",
-  "context_struct": "${contextStruct}",
-  "params_struct": "${paramsStruct}",
-  "accounts": [
-    {"name": "{account_name}", "type": "{account_type}", "attributes": ["{attributes}"]}
-  ],
-  "params_fields": [
-    {"name": "{param_name}", "type": "{param_type}"}
-  ],
-  "error_codes": [
-    {"name": "{error_name}", "msg": "{error_message}"}
-  ],
-  "function_logic": "{function_logic}"
-}
+--- JSON Structure ---
+  Provide the output strictly as a JSON object in this exact format:
+${JSON.stringify(instructionSchema, null, 2)}
 
 ### Field Descriptions:
 1. "function_name": The name of the function, which should be "${instructionName}".
@@ -79,6 +73,7 @@ Provide the required instruction details in the following strict JSON format:
 - The "function_name" should be "${instructionName}".
 - **Do not include any extraneous text, explanations, or code fences (\`\`\`json).**
 - **Provide only the JSON object as the response.**
+
 `;
 
   return templatePrompt;

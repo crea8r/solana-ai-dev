@@ -3,9 +3,12 @@ import { AppError } from '../middleware/errorHandler';
 import { logMessages } from '../utils/aiLog';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-const MISTRAL_API_URL = 'https://codestral.mistral.ai/v1/chat/completions';
 let OPENAI_API_KEY = '';
+let ANTHROPIC_API_KEY = '';
+
+const MISTRAL_API_URL = 'https://codestral.mistral.ai/v1/chat/completions';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 export const generateAIResponse = async (
   req: Request,
@@ -13,92 +16,132 @@ export const generateAIResponse = async (
   next: NextFunction
 ) => {
   const { messages, model, _apiKey, _schema, _promptType } = req.body;
-  OPENAI_API_KEY = _apiKey;
-  console.log('OPENAI_API_KEY:', OPENAI_API_KEY);
+
+  if (model === 'gpt-4o') OPENAI_API_KEY = _apiKey;
+  if (model === 'claude-3.5-sonnet') ANTHROPIC_API_KEY = _apiKey;
+
+  if (model === 'gpt-4o') {
+    console.log('model:', model);
+    console.log('apiKey:', _apiKey);
+  } else if (model === 'codestral-latest') {
+    console.log('model:', model);
+    console.log('apiKey:', MISTRAL_API_KEY);
+  } else if (model === 'claude-3.5-sonnet') {
+    console.log('model:', model);
+    console.log('apiKey:', ANTHROPIC_API_KEY);
+  }
 
   // preliminary checks
   if (!Array.isArray(messages) || messages.length === 0) return next(new AppError('Invalid messages format', 400));
   if (!model) return next(new AppError('Model is not provided', 400));
-  if (!MISTRAL_API_KEY && model === 'Codestral') return next(new AppError('Mistral API key is not configured', 500));
-  if (!OPENAI_API_KEY && model === 'GPT-4o') return next(new AppError('OpenAI API key is not configured', 500));
+  if (!MISTRAL_API_KEY && model === 'Codestral' ||
+      !OPENAI_API_KEY && model === 'gpt-4o' ||
+      !ANTHROPIC_API_KEY && model === 'claude-3.5-sonnet') return next(new AppError('API key is not configured', 500));
 
-  const transformMessages = messages.map((message) => ({
-    role: 'user',
-    content: message,
-  }));
-
+  const transformMessages = messages.map((message) => ({ role: 'user', content: message, }));
   let apiKey, apiUrl, requestBody;
+  const systemPrompt = 'You are a very experienced blockchain developer on the Solana network. Specialised in Rust and typescript, and Solana best security practices.';
 
-  switch (model) {
-    case 'codestral-latest':
-      apiKey = MISTRAL_API_KEY;
-      apiUrl = MISTRAL_API_URL;
-      requestBody = {
-        model: 'codestral-latest',
-        temperature: 0.2,
-        messages: transformMessages,
-        response_format: {
+  try {
+    switch (model) {
+      case 'codestral-latest':
+        apiKey = MISTRAL_API_KEY;
+        apiUrl = MISTRAL_API_URL;
+        requestBody = {
+          model: 'codestral-latest',
+          temperature: 0.2,
+          messages: transformMessages,
+          response_format: {
           type: 'json_object',
         },
       };
       break;
-    case 'gpt-4o':
-      apiKey = OPENAI_API_KEY;
-      apiUrl = OPENAI_API_URL;
-      requestBody = {
-        model: 'gpt-4o',
-        messages: transformMessages,
-        max_tokens: 3000,
-        temperature: 0.2,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: `${_promptType}_schema`,
-            strict: true,
-            schema: _schema,
-          },
-        }
-      };
-      break;
-    default:
-      return next(new AppError(`Model ${model} is not supported`, 400));
+      case 'gpt-4o':
+        apiKey = OPENAI_API_KEY;
+        apiUrl = OPENAI_API_URL;
+        requestBody = {
+          model: 'gpt-4o',
+          messages: transformMessages,
+          max_tokens: 3000,
+          temperature: 0.2,
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: `${_promptType}_schema`,
+              strict: true,
+              schema: _schema,
+            },
+          }
+        };
+        break;
+      case 'claude-3.5-sonnet':
+        apiKey = ANTHROPIC_API_KEY;
+        apiUrl = ANTHROPIC_API_URL;
+        requestBody = {
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 3000,
+          temperature: 0.2,
+          system: systemPrompt,
+          messages: transformMessages.map((message) => ({
+            role: 'user',
+            content: message.content, 
+          })),
+        };
+        break;
+    }
+  } catch (error) {
+    console.error('Error generating AI response:', JSON.stringify(error, null, 2));
+    next(new AppError('Failed to generate AI response', 500));
   }
 
-  //console.log('apiKey', apiKey);
-
+  if (!apiKey || !apiUrl) return next(new AppError('API key or URL is not configured', 500));
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    let response;
+    if (model === 'claude-3.5-sonnet') {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey, 
+          'anthropic-version': '2023-06-01', 
+        },
+        body: JSON.stringify(requestBody),
+      });
+    } else {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+    }
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Error details:', JSON.stringify(errorData, null, 2));
-      throw new AppError(`AI API error: ${JSON.stringify(errorData, null, 2)}`, response.status);
+      throw new AppError(`AI API error: ${errorData.error || response.statusText}`, response.status);
     }
-    const data = await response.json();
+
+    let data = await response.json();
     await logMessages(messages, data);
 
-    //console.log('data', JSON.stringify(data.choices[0].message, null, 2));
+    if (model === 'claude-3.5-sonnet') {
+      data = data.content[0].text;
+    } else {
+      data = data.choices[0].message.content;
+    }
+
+    console.log('data', JSON.stringify(data, null, 2));
 
     res.status(200).json({
       message: 'AI response generated successfully',
       data: data,
     });
-
   } catch (error) {
     console.error('Error generating AI response:', error);
-    if (error instanceof AppError) {
-      next(error);
-    } else {
-      next(new AppError('Failed to generate AI response', 500));
-    }
+    next(new AppError('Failed to generate AI response', 500));
   }
 };
 

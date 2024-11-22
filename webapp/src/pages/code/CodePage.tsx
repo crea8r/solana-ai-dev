@@ -12,6 +12,9 @@ import { extractCodeBlock } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { taskApi } from '../../api/task';
 import { projectApi } from '../../api/project';
+import chalk from 'chalk';
+import { extractWarnings } from '../../utils/codePageUtils';
+//import { placeholder } from '../../utils/codePageUtils';
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -21,6 +24,11 @@ function getLanguage(fileName: string) {
   return 'md';
 }
 
+export type LogEntry = {
+  message: string;
+  type: 'start' | 'success' | 'warning' | 'error' | 'info';
+};
+
 const CodePage = () => {
   const { projectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
@@ -28,15 +36,44 @@ const CodePage = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>(''); 
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([]);
 
   const ignoreFiles = ['node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store', '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local', '.prettierignore', 'app'];
 
-  const addLog = (message: string, isBuildLog = false) => {
-    if (isBuildLog) {
-      setTerminalLogs(prevLogs => [...prevLogs, message]);
+  const formatWarnings = (warnings: { message: string; file: string; line: string; help?: string }[]): string => {
+    return warnings
+      .map((warning, index) => {
+        return `Warning ${index + 1}:
+        Message: ${warning.message}
+        File: ${warning.file}
+        Line: ${warning.line}
+        ${warning.help ? `Help: ${warning.help}` : ''}
+        `;
+      })
+      .join('\n');
+  };
+
+  const addLog = (message: string, type: LogEntry['type'] = 'info') => {
+    if (type !== 'warning') {
+      setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
+    } else {
+      setTerminalLogs(prevLogs => [...prevLogs, { message: 'Task completed with warnings', type: 'success' }]);
+      const warnings = extractWarnings(message);
+      warnings.forEach((warning, index) => {
+        setTerminalLogs(prevLogs => [
+          ...prevLogs,
+          {
+            message: `Warning ${index + 1}:
+Message: ${warning.message}
+File: ${warning.file}
+Line: ${warning.line}
+${warning.help ? `Help: ${warning.help}` : ''}`,
+            type: 'warning',
+          },
+        ]);
+      });
     }
-   // console.log(message);
+    // Console logs for debugging...
   };
 
   const clearLogs = () => {
@@ -154,25 +191,32 @@ const CodePage = () => {
 
   const startPollingTaskStatus = (taskId: string) => {
     setIsPolling(true);
-
     const intervalId = setInterval(async () => {
       try {
         const taskResponse = await taskApi.getTask(taskId);
         const status = taskResponse.task.status;
 
-        if (status === 'finished' || status === 'succeed') {
+        if (status === 'finished' || status === 'succeed' || status === 'warning') {
           clearInterval(intervalId);
           setIsPolling(false);
-          addLog(`Build complete: ${taskResponse.task.result}`, true);
+          setIsLoading(false);
+
+          if (status === 'warning') {
+            addLog(taskResponse.task.result || '', 'warning');
+          } else {
+            addLog('Task completed successfully', 'success');
+          }
         } else if (status === 'failed') {
           clearInterval(intervalId);
           setIsPolling(false);
-          addLog(`Build failed: ${taskResponse.task.result}`, true);
+          setIsLoading(false);
+          addLog(`Task failed: ${taskResponse.task.result}`, 'error');
         }
       } catch (error) {
         clearInterval(intervalId);
         setIsPolling(false);
-        addLog(`Polling error: ${error}`, true);
+        setIsLoading(false);
+        addLog(`Polling error: ${error}`, 'error');
       }
     }, 5000);
   };
@@ -181,18 +225,16 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting build for project ID: ${projectId}`, true);
-
       const response = await projectApi.buildProject(projectId);
 
       if (response.taskId) {
-        addLog(`Build process initiated. Task ID: ${response.taskId}`, true);
+        addLog('Building project...', 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Build initiation failed.', true);
+        addLog('Build initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error during project build: ${error}`, true);
+      addLog(`Error during project build: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -200,7 +242,7 @@ const CodePage = () => {
 
   const handleSave = async () => {
     if (!selectedFile || !selectedFile.path || !projectContext.id) {
-      addLog("No file selected or project context missing", true);
+      addLog("No file selected or project context missing", 'error');
       return;
     }
   
@@ -212,9 +254,9 @@ const CodePage = () => {
     try {
       const response = await fileApi.updateFile(projectId, filePath, content);
       console.log('File saved successfully:', response);
-      addLog(`File saved successfully: ${filePath}`, true);
+      addLog(`File saved successfully: ${filePath}`, 'success');
     } catch (error) {
-      addLog(`Error saving file: ${error}`, true);
+      addLog(`Error saving file: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -229,18 +271,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Starting tests for project ID: ${projectId}`, true);
+      addLog(`Starting tests for project ID: ${projectId}`, 'start');
 
       const response = await projectApi.testProject(projectId);
 
       if (response.taskId) {
-        addLog(`Test process initiated. Task ID: ${response.taskId}`, true);
+        addLog(`Test process initiated. Task ID: ${response.taskId}`, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Test initiation failed.', true);
+        addLog('Test initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error during project test: ${error}`, true);
+      addLog(`Error during project test: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -255,18 +297,18 @@ const CodePage = () => {
     setIsLoading(true);
     try {
       const projectId = projectContext.id || '';
-      addLog(`Running command: ${commandType} for project ID: ${projectId}`, true);
+      addLog(`Running command: ${commandType} for project ID: ${projectId}`, 'start');
 
       const response = await projectApi.runProjectCommand(projectId, commandType);
 
       if (response.taskId) {
-        addLog(`Command process initiated. Task ID: ${response.taskId}`, true);
+        addLog(`Command process initiated. Task ID: ${response.taskId}`, 'start');
         startPollingTaskStatus(response.taskId);
       } else {
-        addLog('Command initiation failed.', true);
+        addLog('Command initiation failed.', 'error');
       }
     } catch (error) {
-      addLog(`Error running command: ${error}`, true);
+      addLog(`Error running command: ${error}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -286,7 +328,7 @@ const CodePage = () => {
         <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
           <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
-        <Box flex={1} maxHeight="100%" boxSizing="border-box" overflow="auto">
+        <Box flex={1} minHeight="100%" maxHeight="100%" boxSizing="border-box" overflow="auto">
           <CodeEditor
             content={selectedFile ? fileContent : 'Empty file'}
             selectedFile={selectedFile}
@@ -298,7 +340,7 @@ const CodePage = () => {
             isPolling={isPolling}
           />  
         </Box>
-        <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.200">
+        <Box w="400px" maxHeight="100% !important" borderLeft="1px" borderColor="gray.300" pb="2">
           <AIChat 
             selectedFile={selectedFile} 
             fileContent={fileContent} 

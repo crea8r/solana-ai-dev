@@ -71,7 +71,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           ...selectedNode.data,
           label: localValues.name || selectedNode.data.label,
           localValues: {
-            ...selectedNode.data.localValues,
+            ...(selectedNode.data.item as ToolboxItem).getPropertyValues(),
             ...localValues,
           },
         },

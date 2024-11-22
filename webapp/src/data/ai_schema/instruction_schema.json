@@ -29,13 +29,14 @@
               "description": "Account type, e.g., 'Account<'info, StructName>', 'Signer<'info>', 'Program<'info>'."
             },
             "attributes": {
-              "type": "array",
-              "description": "A list of attributes for the account.",
-              "items": {
-                "type": "string"
-              },
-              "additionalProperties": false
-            }
+            "type": "array",
+            "description": "A list of constraint attributes for the account. If the account is being initialized (using the 'init' constraint), additional attributes must be provided to ensure proper initialization. These include:\n- 'seeds': A list of seeds (e.g., [b\"seed\", signer.key().as_ref()]) used for deriving the account's public key.\n- 'bump': A bump seed value for PDA creation.\n- 'payer': The account responsible for covering rent (e.g., 'payer = signer').\n- 'space': The amount of space to allocate for the account (e.g., 'space = 100'). !Important: If the account is being initialized, do not put the 'mut' keyword in the same macro!",
+            "items": {
+              "type": "string",
+              "description": "Each attribute is a constraint for the account. Examples include 'init', 'seeds', 'bump', 'payer', 'space', etc. For 'init', it is mandatory to provide additional constraints such as 'seeds', 'bump', 'payer', and 'space'."
+            },
+            "additionalProperties": false
+          }
           },
           "required": ["name", "type", "attributes"],
           "additionalProperties": false
@@ -62,7 +63,7 @@
       },
       "error_codes": {
         "type": "array",
-        "description": "A list of error codes for the instruction.",
+        "description": "A list of error codes for the instruction. !Important: ensure to add the Overflow variant to the error enum if required by the instruction logic.",
         "items": {
           "type": "object",
           "properties": {
@@ -81,7 +82,7 @@
       },
       "function_logic": {
         "type": "string",
-        "description": "The main function logic as a string. Ensure all error codes referenced here are defined in 'error_codes'."
+        "description": "The main function logic as a string. Ensure all error codes referenced here are defined in 'error_codes'. !Important: make sure to always return Ok(()) at the end of the function. Or if returning a type Ok(value)!"
       },
       "state_context": {
         "type": "string",

@@ -45,7 +45,7 @@ const crowdfundingProject: Project = {
             name: 'CampaignAccount',
             description:
               'Stores information about the crowdfunding campaign, such as target goal, creator, and current funds.',
-            json: '{creator: pubk, target: u64, current_funds: u64, deadline: u64, is_active: bool}',
+            json: '{creator: PubKey, target: u64, current_funds: u64, deadline: u64, is_active: bool}',
             ownerProgramId: 'program-67890',
           },
         },
@@ -66,7 +66,7 @@ const crowdfundingProject: Project = {
             name: 'ContributorAccount',
             description:
               'Tracks individual contributors to campaigns, including their contribution amounts.',
-            json: '{contributor: pubk, campaign_id: u64, amount: u64}',
+            json: '{contributor: PubKey, campaign_id: u64, amount: u64}',
             ownerProgramId: 'program-67890',
           },
         },
@@ -107,7 +107,7 @@ const crowdfundingProject: Project = {
             type: 'instruction',
             name: 'CreateCampaign',
             description: 'Allows a user to create a new crowdfunding campaign.',
-            parameters: 'creator: PublicKey, target: u64, deadline: u64',
+            parameters: 'creator: PubKey, target: u64, deadline: u64',
             aiInstruction:
               'Verify creator, initialize CampaignAccount with target, deadline, and set current funds to 0.',
             ownerProgramId: 'program-67890',
@@ -129,7 +129,7 @@ const crowdfundingProject: Project = {
             type: 'instruction',
             name: 'ContributeFunds',
             description: 'Allows a user to contribute funds to an active campaign.',
-            parameters: 'contributor: PublicKey, campaign_id: u64, amount: u64',
+            parameters: 'contributor: PubKey, campaign_id: u64, amount: u64',
             aiInstruction:
               'Verify campaign is active, add contribution to CampaignAccount, and update ContributorAccount.',
             ownerProgramId: 'program-67890',
@@ -151,7 +151,7 @@ const crowdfundingProject: Project = {
             type: 'instruction',
             name: 'CloseCampaign',
             description: 'Allows the creator to close the campaign when the goal is met or expired.',
-            parameters: 'campaign_id: u64, creator: PublicKey',
+            parameters: 'campaign_id: u64, creator: PubKey',
             aiInstruction:
               'Verify creator, check if goal is met or deadline passed, and deactivate CampaignAccount.',
             ownerProgramId: 'program-67890',
@@ -173,7 +173,7 @@ const crowdfundingProject: Project = {
             type: 'instruction',
             name: 'WithdrawFunds',
             description: 'Allows the creator to withdraw funds from a successful campaign.',
-            parameters: 'campaign_id: u64, creator: PublicKey',
+            parameters: 'campaign_id: u64, creator: PubKey',
             aiInstruction:
               'Verify creator, ensure campaign is successful, and transfer funds to creator.',
             ownerProgramId: 'program-67890',
@@ -195,7 +195,7 @@ const crowdfundingProject: Project = {
             type: 'instruction',
             name: 'WithdrawPlatformFees',
             description: 'Allows the platform owner to withdraw collected fees.',
-            parameters: 'platform_account: AccountInfo, owner: PublicKey',
+            parameters: 'platform_account: AccountInfo, owner: PubKey',
             aiInstruction:
               'Verify platform ownership and transfer fees from PlatformAccount to the owner.',
             ownerProgramId: 'program-67890',

@@ -224,32 +224,24 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
         const normalizedProgramName = normalizeName(projectContext.name);
       
-        // Generate the initial structure
+        // Generate the file paths
         const structurePrompt = genStructure(
           normalizedProgramName,
           projectContext.details.nodes,
           projectContext.details.edges
         );
-        const choices = await promptAI(
+        const content = await promptAI(
           structurePrompt,
           projectContext.aiModel,
           projectContext.apiKey,
           structureSchema,
           'structure'
         );
-        console.log('TASKMODAL ai response choices', choices);
+
+        console.log('TASKMODAL content', content);
       
         try {
-          if (choices && choices.length > 0) {
-            const content =
-              projectContext.aiModel === 'gpt-4o'
-                ? choices[0].message?.content
-                : choices[0]?.message?.content;
-            if (!content) {
-              throw new Error('No content in AI response');
-              return;
-            }
-      
+          if (content) {
             let files: FileTreeItemType;
             try {
               files = JSON.parse(content) as FileTreeItemType;
@@ -304,7 +296,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const cargoFilePath = `programs/${programDirName}/Cargo.toml`;
             const anchorFilePath = `Anchor.toml`;
       
-            await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, programDirName);
+            await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, programDirName,);
             await amendConfigFile(projectId, 'Anchor.toml', anchorFilePath, programDirName);
       
             console.log('TASKMODAL files', getFileList(files));
@@ -485,7 +477,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   throw new Error('No schema for file generation');
                 }
       
-                const fileChoices = await promptAI(
+                const content = await promptAI(
                   _promptContent,
                   _model,
                   _apiKey,
@@ -494,8 +486,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 );
       
                 let codeContent = '';
-                if (fileChoices && fileChoices.length > 0) {
-                  const aiContent = fileChoices[0].message?.content;
+                if (content) {
+                  const aiContent = content;
       
                   console.log('$$$ aiContent', JSON.stringify(aiContent));
       

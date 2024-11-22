@@ -20,25 +20,15 @@ import { HiOutlineSparkles } from "react-icons/hi";
 import { useProjectContext } from '../../contexts/ProjectContext';
 
 interface TopPanelProps {
-  generatePrompt: () => void;
-  onClickInput: () => void;
-  onClickOpen: () => void;
-  onClickSave: () => void;
-  onClickNew: () => void;
-  onLogout: () => void;
   onToggleWallet: () => void;
   onSelectModel: (model: string, apiKey: string) => void;
+  onLogout: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
-  generatePrompt,
-  onClickInput,
-  onClickOpen,
-  onClickSave,
-  onClickNew,
-  onLogout,
   onToggleWallet,
   onSelectModel,
+  onLogout,
 }) => {
   const { projectContext, setProjectContext } = useProjectContext();
   const [hover, setHover] = useState(false);
@@ -53,37 +43,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   }, [apiKey]);
 
   return (
-    <Flex as="header" h="14" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6}>
-      <Flex align="center" gap={4}>
-        <Tooltip label="Open Project" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
-          <IconButton 
-            aria-label="Open" 
-            icon={<FolderOpen size={14} />} 
-            variant="ghost" 
-            size="1rem" 
-            onClick={onClickOpen} 
-          />
-        </Tooltip>
-        <Tooltip label="Save Project" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
-          <IconButton 
-            aria-label="Save" 
-            icon={<Save size={14} />} 
-            variant="ghost" 
-            size="1rem" 
-            onClick={onClickSave} 
-          />
-        </Tooltip>
-        <Tooltip label="New Project" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
-          <IconButton 
-            aria-label="New" 
-            icon={<Plus size={14} />} 
-            variant="ghost" 
-            size="1rem" 
-            onClick={onClickNew} 
-          />
-        </Tooltip>
-      </Flex>
-      <Divider orientation="vertical" />
+    <Flex as="header" h="14" justify="space-between" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6}>
       <Flex align="center" gap={4}>
         <Menu>
           <MenuButton p={3} as={Button} leftIcon={<HiOutlineSparkles size={14} />} rightIcon={<ChevronDownIcon />} variant="outline" size="xs">
@@ -118,15 +78,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
             </Tooltip>
           </Flex>
         )}
-        <Button leftIcon={<Code size={12} />} onClick={generatePrompt} size="xs" p={4}>
-          Generate Code
-        </Button>
-      </Flex>
-      <Flex flex="1" justify="center" align="center">
-        <Button variant="ghost" size="xs" onClick={onClickInput}>
-          {projectContext.name || 'Untitled Project'}
-          <EditIcon ml={2} />
-        </Button>
       </Flex>
       <Flex align="center" gap={4}>
         <Button leftIcon={<Wallet size={12} />} variant="outline" size="xs" onClick={onToggleWallet}>

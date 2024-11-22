@@ -49,7 +49,7 @@ const todoproject: Project = {
           type: 'account',
           name: 'Task',
           description: 'Store the task content',
-          json: '{owner: pubk, content: string}',
+          json: '{owner: Pubkey, content: string}',
           ownerProgramId: 'program-1729506920961',
         },
       },

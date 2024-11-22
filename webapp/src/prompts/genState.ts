@@ -1,5 +1,6 @@
 import { Edge, Node } from 'react-flow-renderer';
 import { Account } from '../items/Account';
+import stateSchema from '../data/ai_schema/state_schema.json';
 
 export const genState = (nodes: Node[], edges: Edge[]) => {
   // Filter all account nodes
@@ -36,16 +37,9 @@ Please provide the following in structured JSON format:
 1. Accounts: List each account with its fields and types.
 2. Additional context, such as constants or enums, if required.
 
-Provide the required state details in the following strict JSON format:
-{
-  "accounts": [
-    {
-      "name": "{account_name}",
-      "description": "{account_description}",
-      "data_structure": {data_structure_as_json}
-    }
-  ]
-}
+--- JSON Structure ---
+!Important: Provide the output strictly as a JSON object and strictly following this exact format:
+${stateSchema}
 
 ### Field Descriptions:
 1. "name": The account name as a string.

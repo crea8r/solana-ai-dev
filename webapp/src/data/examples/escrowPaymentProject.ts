@@ -45,7 +45,7 @@ const escrowPaymentProject: Project = {
             name: 'EscrowAccount',
             description:
               'Holds the funds for a transaction until both parties approve the release.',
-            json: '{buyer: pubk, seller: pubk, amount: u64, is_released: bool}',
+            json: '{buyer: PubKey, seller: PubKey, amount: u64, is_released: bool}',
             ownerProgramId: 'program-56789',
           },
         },
@@ -66,10 +66,10 @@ const escrowPaymentProject: Project = {
             name: 'UserAccount',
             description:
               'Tracks user balance and participation in escrow transactions.',
-            json: '{user_id: pubk, balance: u64, escrow_transactions: Vec<u64>}',
+            json: '{user_id: PubKey, balance: u64, escrow_transactions: Vec<u64>}',
             ownerProgramId: 'program-56789',
           },
-        },
+        },  
         selected: false,
         positionAbsolute: { x: 300, y: 200 },
       },
@@ -86,7 +86,7 @@ const escrowPaymentProject: Project = {
             type: 'instruction',
             name: 'InitiateEscrow',
             description: 'Allows a buyer to deposit funds into an escrow account.',
-            parameters: 'buyer: PublicKey, seller: PublicKey, amount: u64',
+            parameters: 'buyer: PubKey, seller: PubKey, amount: u64',
             aiInstruction:
               'Verify buyer balance, create EscrowAccount with the specified amount, and lock the funds.',
             ownerProgramId: 'program-56789',
@@ -108,7 +108,7 @@ const escrowPaymentProject: Project = {
             type: 'instruction',
             name: 'ApproveEscrow',
             description: 'Allows the buyer or seller to approve releasing the funds.',
-            parameters: 'escrow_account: AccountInfo, user: PublicKey',
+            parameters: 'escrow_account: AccountInfo, user: PubKey',
             aiInstruction:
               'Verify the user is a participant (buyer or seller), record their approval, and release funds if both parties approve.',
             ownerProgramId: 'program-56789',
@@ -130,7 +130,7 @@ const escrowPaymentProject: Project = {
             type: 'instruction',
             name: 'CancelEscrow',
             description: 'Allows the buyer to cancel the escrow and retrieve their funds.',
-            parameters: 'escrow_account: AccountInfo, buyer: PublicKey',
+            parameters: 'escrow_account: AccountInfo, buyer: PubKey',
             aiInstruction:
               'Verify buyer ownership of the escrow account, return funds to the buyer, and mark the EscrowAccount as canceled.',
             ownerProgramId: 'program-56789',

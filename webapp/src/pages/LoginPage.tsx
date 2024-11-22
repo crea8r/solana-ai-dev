@@ -21,6 +21,33 @@ import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Container } from "@tsparticles/engine";
 
+const style: React.CSSProperties = {
+  position: "relative",
+  width: "100%",
+  height: "100%",
+  display: "block",
+  borderWidth: "2px",
+  borderColor: "white"
+};
+
+const VideoEmbed = ({ videoId }: { videoId: string }) => {
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1`;
+
+  return (
+    <div style={style}>
+      <iframe
+        width="100%"
+        height="100%"
+        src={embedUrl}
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        title="YouTube video"
+      />
+    </div>
+  );
+};
+
 // ParticlesContainer component
 const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
   const [init, setInit] = useState(false);
@@ -151,24 +178,30 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className={`${isDarkMode ? 'dark' : ''}`}>
-      <ParticlesContainer isDarkMode={isDarkMode} />
-      <Flex h="100vh" w="100vw" justifyContent="center" alignItems="center" p="4" fontFamily="Oxanium">
+    <Flex h="100vh" w="100vw">
+        <Flex
+          w="50%"
+          justifyContent="center"
+          alignItems="center"
+          p="4"
+          bg={isDarkMode ? "#232734" : "#aac9fc"}
+        >
+          <ParticlesContainer isDarkMode={isDarkMode} />
         <Card
-          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.800" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10"
+          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
+          rounded="lg" shadow="2xl" p="5" zIndex="10" fontFamily="Red Hat Display"
         >
           <CardHeader textAlign="center" pt="6" position="relative">
             <Link to="/" className="absolute left-0 top-0 p-5">
               <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
-            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">LOGIN</Heading>
-            <Text size="xs" color="gray.500">Enter your details to login to your account</Text>
+            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
+            <Text fontSize="md" color="gray.500" >Enter your details to login to your account</Text>
           </CardHeader>
           <CardBody fontWeight="300" fontSize="xs">
             <form onSubmit={handleSubmit} className="space-y-4">
               <Box className="space-y-2">
-                <FormLabel htmlFor="username">Username</FormLabel>
+                <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
                 <Input 
                   id="username" 
                   type="text" 
@@ -179,7 +212,7 @@ const LoginPage: React.FC = () => {
                 />
               </Box>
               <Box className="space-y-2">
-                <FormLabel htmlFor="password">Password</FormLabel>
+                <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
                 <Box className="relative flex flex-row gap-2 items-center">
                   <Input 
                     id="password" 
@@ -205,8 +238,9 @@ const LoginPage: React.FC = () => {
               <Button 
                 type="submit" 
                 className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
-                fontSize="sm"
-                bg="#7292d3" color="white" _hover={{ bg: "#6690ff" }}
+                fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
+                py="5"
+                bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
               >
                 Sign in
               </Button>
@@ -223,7 +257,12 @@ const LoginPage: React.FC = () => {
           </CardFooter>
         </Card>
       </Flex>
-    </div>
+      <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
+        <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
+          <VideoEmbed videoId="NbO50Rm8u6Q" />
+        </Flex>
+      </Flex>
+    </Flex>
   );
 };
 
