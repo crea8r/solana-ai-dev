@@ -4,7 +4,7 @@ import { RefreshCw, X, CornerDownRight } from 'lucide-react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
-import { FileTreeItemType } from "../../components/FileTree";
+import { FileTreeItemType } from "../../interfaces/file";
 import genStructure from "../../prompts/genStructure";
 import genFile from "../../prompts/genFile";
 import { promptAI } from "../../services/prompt";
@@ -23,7 +23,6 @@ import {
     processAITestOutput
 } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
-import { FileTreeNode } from '../../interfaces/file';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useToast } from '@chakra-ui/react'; 
@@ -132,24 +131,41 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
     useEffect(() => {
         if (genCodeTaskRun) {
-            const updateProjectInDatabase = async () => {
-                try {
-                    const projectInfoToSave = transformToProjectInfoToSave(projectContext);
-                    await projectApi.updateProject(projectContext.id, projectInfoToSave);
-                    console.log('Project updated successfully in the database.');
-                } catch (error) {
-                    console.error('Error updating project in the database:', error);
-                }
-            };
+          const updateProjectInDatabase = async () => {
+            try {
+              const { id: projectId, rootPath, name: projectName } = projectContext;
+              if (!projectId || !rootPath || !projectName) return;
 
-            updateProjectInDatabase();
+              const projectDirectory = await fileApi.getDirectoryStructure(projectName, rootPath);
+              if (!projectDirectory) return;
+
+              const rootDirectory: FileTreeItemType = {
+                name: projectName,
+                type: 'directory',
+                path: rootPath,
+                children: projectDirectory,
+              };
+
+              setProjectContext((prev) => ({
+                ...prev,
+                details: {
+                  ...prev.details,
+                  files: rootDirectory,
+                },
+              }));
+
+              const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+              await projectApi.updateProject(projectContext.id, projectInfoToSave);
+            } catch (error) { console.error('Error updating project in the database:', error); }
+          };
+          updateProjectInDatabase();
         }
     }, [genCodeTaskRun]);
 
     const runTasksSequentially = async () => {
         if (!projectContext) {
-            console.error("Project context not available.");
-            return;
+          console.error("Project context not available.");
+          return;
         }
 
         try {
@@ -170,7 +186,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             try {
                 const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
                 if (directory && directory.length > 0) {
-                    console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
+                    //console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
                     setProjectContext((prevProjectContext) => ({
                         ...prevProjectContext,
                         details: {
@@ -195,19 +211,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 console.error('Error checking directory existence:', error);
             }
 
-            // if anchor project is not initialized, initialize it
-            if (!projectContext.details.isAnchorInit) {
-                await handleAnchorInitTask(projectId, rootPath, projectName);
-            } else {
-                console.log('Anchor project is already initialized.');
-            }
+            if (!projectContext.details.isAnchorInit) await handleAnchorInitTask(projectId, rootPath, projectName);
+            // else console.log('Anchor project is already initialized.');
 
-            // if files and codes are not generated, generate them
             if (!genCodeTaskRun && !projectContext.details.isCode) {
                 await handleGenCodesTask(projectId, rootPath, projectName);
                 setGenCodeTaskRun(true);
-            } else {
-                console.log('Files and codes have already been generated or the task has already run.');
+              } else {
+                  //console.log('Files and codes have already been generated or the task has already run.');
             }
         } finally {
         }
@@ -238,7 +249,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           'structure'
         );
 
-        console.log('TASKMODAL content', content);
+        //console.log('content', content);
       
         try {
           if (content) {
@@ -252,8 +263,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               throw new Error('Failed to parse JSON from AI response');
             }
       
-            console.log('TASKMODAL files', files);
-            console.log('TASKMODAL files', getFileList(files));
+            //console.log('TASKMODAL files', files);
+            //console.log('TASKMODAL files', getFileList(files));
       
             setFileTreePaths(files);
       
@@ -282,8 +293,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 aiFilePaths: updatedFilePaths,
               },
             }));
-            console.log('updatedFilePaths', updatedFilePaths);
-            console.log('projectContext', projectContext);
+            //console.log('updatedFilePaths', updatedFilePaths);
+            //console.log('projectContext', projectContext);
       
             const programDirName = normalizedProgramName;
             if (!rootPath || !programDirName) return;
@@ -299,7 +310,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, programDirName,);
             await amendConfigFile(projectId, 'Anchor.toml', anchorFilePath, programDirName);
       
-            console.log('TASKMODAL files', getFileList(files));
+            //console.log('TASKMODAL files', getFileList(files));
       
             const updatedFileList = getFileList(files)
               .map((file) => {
@@ -380,7 +391,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             if (!existingFilesResponse) return;
       
             const existingFilePaths = new Set<string>();
-            const traverseFileTree = (_nodes: FileTreeNode[]) => {
+            const traverseFileTree = (_nodes: FileTreeItemType[]) => {
               for (const node of _nodes) {
                 if (node.type === 'file' && node.path) {
                   existingFilePaths.add(node.path);
@@ -489,7 +500,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 if (content) {
                   const aiContent = content;
       
-                  console.log('$$$ aiContent', JSON.stringify(aiContent));
+                  //console.log('aiContent', JSON.stringify(aiContent));
       
                   if (isInstructionFile) {
                     const instructionName = fileName.replace('.rs', '');
@@ -513,7 +524,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       },
                     }));
                   } else if (isSdkFile) {
-                    console.log('isSdkFile', isSdkFile);
+                    //console.log('isSdkFile', isSdkFile);
                     codeContent = await processAISdkOutput(projectId, programDirName, aiContent);
                   } else if (isTestFile) {
                     codeContent = await processAITestOutput(projectId, programDirName, aiContent);
@@ -521,7 +532,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     codeContent = aiContent;
                   }
       
-                  console.log('$$$ codeContent', fileTask.name, codeContent);
+                  //console.log('codeContent', fileTask.name, codeContent);
       
                   const updatedFilePath = filePath?.replace(
                     /\/programs\/[^/]+\//,
@@ -654,7 +665,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
             const response = await projectApi.initAnchorProject(projectId, rootPath, projectName);
             const { taskId } = response;
-            console.log('taskId', taskId);
+            //console.log('taskId', taskId);
             await pollTaskStatus(taskId);
 
         } catch (error) {
@@ -673,7 +684,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const interval = setInterval(async () => {
                 try {
                     const { task } = await taskApi.getTask(taskId);
-                    console.log('task', task);
+                    //console.log('task', task);
 
                     if (task.status === 'succeed' || task.status === 'warning') {
                         setTasks((prevTasks) =>

@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, Flex, useToast, Button, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
-import FileTree, { FileTreeItemType } from '../../components/FileTree';
-import genFile from '../../prompts/genFile';
-import { promptAI } from '../../services/prompt';
+import FileTree from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { useProjectContext } from '../../contexts/ProjectContext';
@@ -14,7 +13,7 @@ import { taskApi } from '../../api/task';
 import { projectApi } from '../../api/project';
 import chalk from 'chalk';
 import { extractWarnings } from '../../utils/codePageUtils';
-//import { placeholder } from '../../utils/codePageUtils';
+import { Project } from '../../interfaces/project';
 
 function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
@@ -30,7 +29,7 @@ export type LogEntry = {
 };
 
 const CodePage = () => {
-  const { projectContext } = useProjectContext();
+  const { projectContext, setProjectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
@@ -57,61 +56,75 @@ const CodePage = () => {
     if (type !== 'warning') {
       setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
     } else {
-      setTerminalLogs(prevLogs => [...prevLogs, { message: 'Task completed with warnings', type: 'success' }]);
+      setTerminalLogs(prevLogs => [...prevLogs, { message: 'Project build completed with warnings', type: 'success' }]);
       const warnings = extractWarnings(message);
       warnings.forEach((warning, index) => {
         setTerminalLogs(prevLogs => [
           ...prevLogs,
           {
             message: `Warning ${index + 1}:
-Message: ${warning.message}
-File: ${warning.file}
-Line: ${warning.line}
-${warning.help ? `Help: ${warning.help}` : ''}`,
+            Message: ${warning.message}
+            File: ${warning.file}
+            Line: ${warning.line}
+            ${warning.help ? `Help: ${warning.help}` : ''}`,
             type: 'warning',
           },
         ]);
       });
     }
-    // Console logs for debugging...
   };
 
   const clearLogs = () => {
     setTerminalLogs([]);
   };
 
-  /*
   useEffect(() => {
     console.log(projectContext);
   }, [projectContext]);
-  */
 
   useEffect(() => {
     const fetchDirectoryStructure = async () => {
-      if (projectContext.name) {
-        try {
-          const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
-          console.log('Directory Structure:', directoryStructure);
-          const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
-          const rootNode: FileTreeItemType = {
-            name: projectContext.name || '',
-            path: '',
-            type: 'directory',
-            children: mappedFiles,
-          };
-          setFiles(rootNode);
-          console.log('Mapped Files:', rootNode);
+      if (!projectContext.name) return;
+      if (!projectContext.details.files || 
+          !projectContext.details.files.children || 
+          projectContext.details.files.children.length === 0) return;
 
-          if (mappedFiles.length > 0) {
-            const firstFile = findFirstFile(mappedFiles);
-            if (firstFile) {
-              handleSelectFile(firstFile);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to fetch directory structure', error);
-        }
+      if (projectContext.details.files.children.length > 0) {
+        try {
+          //console.log('Using cached directory structure:', projectContext.details.files);
+          const mappedCachedFiles = mapFileTreeNodeToItemType(projectContext.details.files);
+          setFiles(mappedCachedFiles);
+          //console.log('***Files after setting from cache:', mappedCachedFiles);
+          return;
+        } catch (error) { console.error('Failed to use cached directory structure', error); }
       }
+
+      try {
+        const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
+
+        const mappedDirectoryStructure = directoryStructure.map(mapFileTreeNodeToItemType);
+
+        const rootNode: FileTreeItemType = {
+          name: projectContext.name || '',
+          path: '',
+          type: 'directory',
+          children: mappedDirectoryStructure,
+        };
+        setFiles(rootNode);
+        //console.log('Mapped Files:', rootNode);
+        setProjectContext((prev: Project) => ({
+          ...prev,
+          details: {
+            ...prev.details,
+            files: rootNode,
+          },
+        }));
+
+        if (mappedDirectoryStructure.length > 0) {
+          const firstFile = findFirstFile(mappedDirectoryStructure);
+          if (firstFile) handleSelectFile(firstFile);
+        }
+      } catch (error) { console.error('Failed to fetch directory structure', error); }
     };
     fetchDirectoryStructure();
   }, [projectContext]);
@@ -158,9 +171,19 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
     setIsLoading(true);
     
     try {
+      if (!projectContext.details.codes || projectContext.details.codes.length === 0) return;
+      const existingCode = projectContext.details.codes.find((code) => code.path === file.path);
+
+      if (existingCode) {
+        setFileContent(existingCode.content || '');
+        setIsLoading(false);
+        //console.log('Using cached file content:', existingCode);
+        return;
+      }
+
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-      console.log(`Fetching content for file: ${filePath}`);
+      //console.log(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
@@ -171,13 +194,29 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
           const task = taskResponse.task;
 
           if (task.status === 'finished' || task.status === 'succeed') {
-            setFileContent(task.result || '');
+            const content = task.result || '';
+            setFileContent(content);
+    
+            setProjectContext((prev) => ({
+              ...prev,
+              details: {
+                ...prev.details,
+                codes: [
+                  ...prev.details.codes,
+                  {
+                    path: file.path || '',
+                    content,
+                    name: file.name || 'unknown',
+                    type: 'file',
+                  },
+                ],
+              },
+            }));
+
             setIsLoading(false);
-          } else if (task.status === 'failed') {
-            setIsLoading(false);
-          } else {
-            setTimeout(() => pollTaskCompletion(taskId), 2000);
-          }
+          } else if (task.status === 'failed') setIsLoading(false);
+          else setTimeout(() => pollTaskCompletion(taskId), 2000);
+
         } catch (error) {
           setIsLoading(false);
         }
@@ -204,7 +243,7 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
           if (status === 'warning') {
             addLog(taskResponse.task.result || '', 'warning');
           } else {
-            addLog('Task completed successfully', 'success');
+            addLog('Project build completed successfully', 'success');
           }
         } else if (status === 'failed') {
           clearInterval(intervalId);
@@ -253,8 +292,18 @@ ${warning.help ? `Help: ${warning.help}` : ''}`,
   
     try {
       const response = await fileApi.updateFile(projectId, filePath, content);
-      console.log('File saved successfully:', response);
+      //console.log('File saved successfully:', response);
       addLog(`File saved successfully: ${filePath}`, 'success');
+
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          codes: prev.details.codes.map((code) =>
+            code.path === filePath ? { ...code, content } : code
+          ),
+        },
+      }));
     } catch (error) {
       addLog(`Error saving file: ${error}`, 'error');
     } finally {

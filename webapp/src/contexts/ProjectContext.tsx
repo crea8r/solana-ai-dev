@@ -40,6 +40,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         rootPath: '',
         name: '',
         description: '',
+        aiModel: 'codestral-latest',
+        apiKey: '',
         details: {
           nodes: [],
           edges: [],
@@ -52,8 +54,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           aiStructure: '',
           stateContent: '',
         },
-        aiModel: '',
-        apiKey: '',
       };
   });
 

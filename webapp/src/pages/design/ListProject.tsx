@@ -22,6 +22,8 @@ import {
 } from '../../interfaces/project';
 import { Trash2 } from 'lucide-react';
 import { shortenText } from '../../utils/text';
+import { useProjectContext } from '../../contexts/ProjectContext';
+import { useToast } from '@chakra-ui/react';
 
 interface ListProjectProps {
   isOpen: boolean;
@@ -34,12 +36,14 @@ const ListProject: React.FC<ListProjectProps> = ({
   onClose,
   onProjectClick,
 }) => {
+  const { projectContext, setProjectContext } = useProjectContext();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const toast = useToast();
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -71,8 +75,51 @@ const ListProject: React.FC<ListProjectProps> = ({
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    await projectApi.deleteProject(projectId);
-    fetchProjects();
+    try {
+      await projectApi.deleteProject(projectId);
+
+      if (projectContext.id === projectId) {
+        setProjectContext({
+          id: '',
+          rootPath: '',
+          name: '',
+          description: '',
+          aiModel: 'codestral-latest',
+          apiKey: '',
+          details: {
+            nodes: [],
+            edges: [],
+            files: { name: '', type: 'directory', children: [] },
+            codes: [],
+            docs: [],
+            isAnchorInit: false,
+            isCode: false,
+            aiFilePaths: [],
+            aiStructure: '',
+            stateContent: '',
+          },
+        });
+      }
+
+      fetchProjects();
+
+      toast({
+        title: 'Project Deleted',
+        description: `The project was successfully deleted.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: 'Error Deleting Project',
+        description: 'There was an error deleting the project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   return (

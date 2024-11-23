@@ -1,10 +1,6 @@
 import { api } from '../utils/apiHelper';
 import { TaskResponse } from '../interfaces/task';
-import { FileTreeNode } from '../interfaces/file';
-
-// interface FileContent {
-//   content: string;
-// }
+import { FileTreeItemType } from '../interfaces/file';
 
 export const fileApi = {
   getFilePath: async (projectId: string, fileName: string): Promise<string> => {
@@ -20,7 +16,7 @@ export const fileApi = {
   getDirectoryStructure: async (
     projectName: string,
     rootPath: string
-  ): Promise<FileTreeNode[]> => {
+  ): Promise<FileTreeItemType[]> => {
     try {
       const response = await api.get(`/files/directory/${projectName}/${rootPath}`);
       return response.data.fileStructure;
@@ -30,7 +26,7 @@ export const fileApi = {
     }
   },
 
-  getProjectFileTree: async (projectId: string): Promise<FileTreeNode[]> => {
+  getProjectFileTree: async (projectId: string): Promise<FileTreeItemType[]> => {
     try {
       const response = await api.get(`/files/tree/${projectId}`);
       return response.data.fileTree;

@@ -1,4 +1,4 @@
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 

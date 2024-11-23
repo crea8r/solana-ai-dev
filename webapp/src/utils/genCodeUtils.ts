@@ -1,6 +1,6 @@
 import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import { parse, stringify } from 'smol-toml'
 import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getSdkTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
 import instructionSchema from '../data/ai_schema/instruction_schema.json';

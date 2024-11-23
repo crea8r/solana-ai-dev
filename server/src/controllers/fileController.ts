@@ -23,6 +23,12 @@ interface FileStructure {
   children?: FileStructure[];
 }
 
+interface FileTreeItemType {
+  name: string;
+  type: 'directory' | 'file';
+  path: string;
+  children?: FileTreeItemType[];
+}
 
 export const getFilePath = async (req: Request, res: Response, next: NextFunction) => {
   const { projectId, fileName } = req.params;
@@ -52,14 +58,13 @@ export const getFilePath = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-
 const getFullDirectoryStructure = async (
   directoryPath: string,
   relativePath: string = ''
-): Promise<FileStructure[]> => {
+): Promise<FileTreeItemType[]> => {
   const files = await fs.readdir(directoryPath, { withFileTypes: true });
 
-  const fileStructure: FileStructure[] = await Promise.all(
+  const fileStructure: FileTreeItemType[] = await Promise.all(
     files.map(async (file) => {
       const fullPath = path.join(directoryPath, file.name);
       const fileRelativePath = path.join(relativePath, file.name); 
@@ -67,14 +72,14 @@ const getFullDirectoryStructure = async (
       if (file.isDirectory()) {
         return {
           name: file.name,
-          isDirectory: true,
+          type: 'directory',
           path: fileRelativePath,
           children: await getFullDirectoryStructure(fullPath, fileRelativePath),
         };
       } else {
         return {
           name: file.name,
-          isDirectory: false,
+          type: 'file',
           path: fileRelativePath,
         };
       }

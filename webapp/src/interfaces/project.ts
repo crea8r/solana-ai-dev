@@ -1,5 +1,5 @@
 import { Node, Edge } from 'react-flow-renderer';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from './file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
 import { counterProject } from '../data/examples/counterProject';

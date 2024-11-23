@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
-import { FileTreeItemType } from './FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import Terminal from './Terminal';
 import { LogEntry } from '../pages/code/CodePage';
 

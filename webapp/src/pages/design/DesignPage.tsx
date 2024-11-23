@@ -22,7 +22,7 @@ import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
 import { promptAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { saveProject } from '../../utils/projectUtils';
 
 import { todoproject } from '../../data/mock';
@@ -154,13 +154,11 @@ const DesignPage: React.FC = () => {
   };
 
   const handleUpdateNode = (updatedNode: Node) => {
-    // Check if ownerProgramId has changed
     const oldNode = projectContext.details.nodes.find((node) => node.id === updatedNode.id);
     const newOwnerProgramId = (updatedNode.data.localValues as any).ownerProgramId;
     const oldOwnerProgramId = oldNode && (oldNode.data.item as any).ownerProgramId;
     
     if (newOwnerProgramId !== oldOwnerProgramId) {
-      // Remove old edge if it exists
       if (oldOwnerProgramId) {
         setProjectContext((prevProjectContext) => ({
           ...prevProjectContext,
@@ -177,7 +175,6 @@ const DesignPage: React.FC = () => {
         }));
       }
 
-      // Add new edge if ownerProgramId is set
       if (newOwnerProgramId) {
         const newEdge: Edge = {
           id: uuidv4(),
@@ -192,7 +189,6 @@ const DesignPage: React.FC = () => {
             strokeWidth: 2,
           },
         };
-        //console.log(newEdge);
         setProjectContext((prevProjectContext) => ({
           ...prevProjectContext,
           details: {
@@ -300,6 +296,8 @@ const DesignPage: React.FC = () => {
         rootPath: '',
         name: '',
         description: '',
+        aiModel: 'codestral-latest',
+        apiKey: '',
         details: {
           ...prevProjectContext.details,
           nodes: [],
@@ -310,23 +308,14 @@ const DesignPage: React.FC = () => {
           isSaved: false,
           isAnchorInit: false,
           isCode: false,
+          aiFilePaths: [],
+          aiStructure: '',
+          stateContent: '',
         },
       }));
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        details: {
-          ...prevProjectContext.details,
-          nodes: [],
-          edges: [],
-        },
-      }));
-
-    } catch (error) {
-      console.error('Error creating new project:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    } 
+    catch (error) { console.error('Error creating new project:', error); } 
+    finally { setIsLoading(false); }
   };
 
   const handleLoadProject = async (projectId: string, projectName: string) => {
@@ -419,6 +408,7 @@ const DesignPage: React.FC = () => {
       setProjectContext({
         ...projectContext,
         ...selectedProject,
+        aiModel: projectContext.aiModel || 'codestral-latest',
       });
     }
   };

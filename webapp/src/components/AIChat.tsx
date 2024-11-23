@@ -5,7 +5,7 @@ import { ChevronUp, Plus, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import { chatAI } from '../services/prompt'; 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
