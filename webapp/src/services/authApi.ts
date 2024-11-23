@@ -37,7 +37,7 @@ export const register = async (
       password,
     });
 
-    localStorage.setItem('token', response.data.token);
+    sessionStorage.setItem('token', response.data.token);
     await createWallet(response.data.user.id);
 
     return response.data;

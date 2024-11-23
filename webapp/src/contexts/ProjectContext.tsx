@@ -32,7 +32,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   let savedProject: Project | null = null;
   const [projectContext, setProjectContext] = useState<Project>(() => {
-    const savedProject = localStorage.getItem('projectContext');
+    const savedProject = sessionStorage.getItem('projectContext');
     return savedProject
       ? JSON.parse(savedProject)
       : {
@@ -61,7 +61,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [stateContent, setStateContent] = useState<string>('');
 
   useEffect(() => {
-    if (projectContext) localStorage.setItem('projectContext', JSON.stringify(projectContext));
+    if (projectContext) sessionStorage.setItem('projectContext', JSON.stringify(projectContext));
     setProjectInfoToSave(transformToProjectInfoToSave(projectContext));
   }, [projectContext]);
 

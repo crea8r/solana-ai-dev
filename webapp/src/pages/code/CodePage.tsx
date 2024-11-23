@@ -54,25 +54,36 @@ const CodePage = () => {
 
   const addLog = (message: string, type: LogEntry['type'] = 'info') => {
     if (type !== 'warning') {
-      setTerminalLogs(prevLogs => [...prevLogs, { message, type }]);
+      setTerminalLogs((prevLogs) => {
+        const updatedLogs: LogEntry[] = [...prevLogs, { message, type }]; // Ensure the type matches LogEntry
+        sessionStorage.setItem('terminalLogs', JSON.stringify(updatedLogs));
+        return updatedLogs;
+      });
     } else {
-      setTerminalLogs(prevLogs => [...prevLogs, { message: 'Project build completed with warnings', type: 'success' }]);
-      const warnings = extractWarnings(message);
-      warnings.forEach((warning, index) => {
-        setTerminalLogs(prevLogs => [
+      setTerminalLogs((prevLogs) => {
+        const updatedLogs: LogEntry[] = [
           ...prevLogs,
-          {
+          { message: 'Project build completed with warnings', type: 'success' }, // Ensure type is "success"
+        ];
+  
+        const warnings = extractWarnings(message);
+        warnings.forEach((warning, index) => {
+          updatedLogs.push({
             message: `Warning ${index + 1}:
             Message: ${warning.message}
             File: ${warning.file}
             Line: ${warning.line}
             ${warning.help ? `Help: ${warning.help}` : ''}`,
-            type: 'warning',
-          },
-        ]);
+            type: 'warning', // Ensure type is "warning"
+          });
+        });
+  
+        sessionStorage.setItem('terminalLogs', JSON.stringify(updatedLogs));
+        return updatedLogs;
       });
     }
   };
+  
 
   const clearLogs = () => {
     setTerminalLogs([]);
@@ -149,7 +160,7 @@ const CodePage = () => {
   
       if (rootNode) {
         let fileToSelect: FileTreeItemType | undefined;
-        const selectedFilePath = localStorage.getItem('selectedFilePath');
+        const selectedFilePath = sessionStorage.getItem('selectedFilePath');
   
         if (selectedFilePath) {
           fileToSelect = findFileByPath(rootNode, selectedFilePath);
@@ -209,7 +220,7 @@ const CodePage = () => {
 
   const handleSelectFile = async (file: FileTreeItemType) => {
     setSelectedFile(file);
-    localStorage.setItem('selectedFilePath', file.path || '');
+    sessionStorage.setItem('selectedFilePath', file.path || '');
     setFileContent(''); 
     setIsLoading(true);
     
@@ -403,6 +414,13 @@ const CodePage = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const savedLogs = sessionStorage.getItem('terminalLogs');
+    if (savedLogs) {
+      setTerminalLogs(JSON.parse(savedLogs));
+    }
+  }, []);
 
   return (
     <Flex direction="column" maxHeight="100vh !important" overflow="auto" justifyContent="space-between">

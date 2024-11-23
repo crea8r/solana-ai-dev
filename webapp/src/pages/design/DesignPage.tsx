@@ -253,10 +253,10 @@ const DesignPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const hasSeenWalkthrough = localStorage.getItem('hasSeenWalkthrough');
+    const hasSeenWalkthrough = sessionStorage.getItem('hasSeenWalkthrough');
     if (!hasSeenWalkthrough) {
       setIsWalkthroughOpen(true);
-      localStorage.setItem('hasSeenWalkthrough', 'true');
+      sessionStorage.setItem('hasSeenWalkthrough', 'true');
     }
     if (isProduction) {
       initGA(GA_MEASUREMENT_ID);
