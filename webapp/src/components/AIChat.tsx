@@ -84,6 +84,15 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     setLocalSelectedFile(selectedFile);
   }, [selectedFile]);
 
+  useEffect(() => {
+    const savedMessages = sessionStorage.getItem('chatMessages');
+    if (savedMessages) setMessages(JSON.parse(savedMessages));
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) sessionStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
+
   const fetchFileContent = async (projectId: string, filePath: string): Promise<string> => {
     try {
       const data = await fileApi.getFileContent(projectId, filePath);

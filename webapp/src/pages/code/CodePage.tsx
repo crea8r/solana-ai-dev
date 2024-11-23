@@ -84,9 +84,9 @@ const CodePage = () => {
     }
   };
   
-
   const clearLogs = () => {
     setTerminalLogs([]);
+    sessionStorage.removeItem('terminalLogs');
   };
 
   useEffect(() => {
