@@ -25,6 +25,7 @@ interface FileStructure {
 
 interface FileTreeItemType {
   name: string;
+  isDirectory: boolean;
   type: 'directory' | 'file';
   path: string;
   children?: FileTreeItemType[];
@@ -72,6 +73,7 @@ const getFullDirectoryStructure = async (
       if (file.isDirectory()) {
         return {
           name: file.name,
+          isDirectory: true,
           type: 'directory',
           path: fileRelativePath,
           children: await getFullDirectoryStructure(fullPath, fileRelativePath),
@@ -79,6 +81,7 @@ const getFullDirectoryStructure = async (
       } else {
         return {
           name: file.name,
+          isDirectory: false,
           type: 'file',
           path: fileRelativePath,
         };

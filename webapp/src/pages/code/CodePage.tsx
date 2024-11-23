@@ -185,6 +185,8 @@ const CodePage = () => {
   };
 
   function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
+    const isDirectory = typeof node.isDirectory !== 'undefined' ? node.isDirectory : node.type === 'directory';
+
     const mappedChildren = node.children
       ? node.children.map(mapFileTreeNodeToItemType).filter(filterFiles) 
       : undefined;
@@ -192,7 +194,7 @@ const CodePage = () => {
     return {
       name: node.name,
       path: node.path,
-      type: node.isDirectory ? 'directory' : 'file',
+      type: isDirectory ? 'directory' : 'file',
       ext: node.isDirectory ? undefined : node.name.split('.').pop(),
       children: mappedChildren,
     };
