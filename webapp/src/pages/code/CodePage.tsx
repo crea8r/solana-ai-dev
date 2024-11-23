@@ -82,52 +82,92 @@ const CodePage = () => {
     console.log(projectContext);
   }, [projectContext]);
 
+  const findFileByPath = (file: FileTreeItemType, path: string): FileTreeItemType | undefined => {
+    if (file.path === path) {
+      return file;
+    }
+    if (file.children) {
+      for (const child of file.children) {
+        const result = findFileByPath(child, path);
+        if (result) return result;
+      }
+    }
+    return undefined;
+  };
+
   useEffect(() => {
     const fetchDirectoryStructure = async () => {
       if (!projectContext.name) return;
-      if (!projectContext.details.files || 
-          !projectContext.details.files.children || 
-          projectContext.details.files.children.length === 0) return;
-
-      if (projectContext.details.files.children.length > 0) {
+  
+      let rootNode: FileTreeItemType = {
+        name: '',
+        path: '',
+        type: 'directory',
+        children: [],
+      };
+  
+      if (
+        projectContext.details.files &&
+        projectContext.details.files.children &&
+        projectContext.details.files.children.length > 0
+      ) {
         try {
-          //console.log('Using cached directory structure:', projectContext.details.files);
           const mappedCachedFiles = mapFileTreeNodeToItemType(projectContext.details.files);
           setFiles(mappedCachedFiles);
-          //console.log('***Files after setting from cache:', mappedCachedFiles);
-          return;
-        } catch (error) { console.error('Failed to use cached directory structure', error); }
-      }
-
-      try {
-        const directoryStructure = await fileApi.getDirectoryStructure(projectContext.name || '', projectContext.rootPath || '');
-
-        const mappedDirectoryStructure = directoryStructure.map(mapFileTreeNodeToItemType);
-
-        const rootNode: FileTreeItemType = {
-          name: projectContext.name || '',
-          path: '',
-          type: 'directory',
-          children: mappedDirectoryStructure,
-        };
-        setFiles(rootNode);
-        //console.log('Mapped Files:', rootNode);
-        setProjectContext((prev: Project) => ({
-          ...prev,
-          details: {
-            ...prev.details,
-            files: rootNode,
-          },
-        }));
-
-        if (mappedDirectoryStructure.length > 0) {
-          const firstFile = findFirstFile(mappedDirectoryStructure);
-          if (firstFile) handleSelectFile(firstFile);
+          rootNode = mappedCachedFiles;
+        } catch (error) {
+          console.error('Failed to use cached directory structure', error);
+          throw error;
         }
-      } catch (error) { console.error('Failed to fetch directory structure', error); }
+      } else {
+        try {
+          const directoryStructure = await fileApi.getDirectoryStructure(
+            projectContext.name || '',
+            projectContext.rootPath || ''
+          );
+          const mappedDirectoryStructure = directoryStructure.map(mapFileTreeNodeToItemType);
+  
+          rootNode = {
+            name: projectContext.name || '',
+            path: '',
+            type: 'directory',
+            children: mappedDirectoryStructure,
+          };
+          setFiles(rootNode);
+  
+          setProjectContext((prev: Project) => ({
+            ...prev,
+            details: {
+              ...prev.details,
+              files: rootNode,
+            },
+          }));
+        } catch (error) {
+          console.error('Failed to fetch directory structure', error);
+        }
+      }
+  
+      if (rootNode) {
+        let fileToSelect: FileTreeItemType | undefined;
+        const selectedFilePath = localStorage.getItem('selectedFilePath');
+  
+        if (selectedFilePath) {
+          fileToSelect = findFileByPath(rootNode, selectedFilePath);
+        }
+  
+        if (!fileToSelect) {
+          fileToSelect = findFirstFile(rootNode.children || []);
+        }
+  
+        if (fileToSelect) {
+          handleSelectFile(fileToSelect);
+        }
+      }
     };
+  
     fetchDirectoryStructure();
-  }, [projectContext]);
+  }, []);
+  
 
   const findFirstFile = (files: FileTreeItemType[]): FileTreeItemType | undefined => {
     for (const file of files) {
@@ -167,23 +207,22 @@ const CodePage = () => {
 
   const handleSelectFile = async (file: FileTreeItemType) => {
     setSelectedFile(file);
+    localStorage.setItem('selectedFilePath', file.path || '');
     setFileContent(''); 
     setIsLoading(true);
     
     try {
-      if (!projectContext.details.codes || projectContext.details.codes.length === 0) return;
-      const existingCode = projectContext.details.codes.find((code) => code.path === file.path);
+      const codes = projectContext.details.codes || [];
+      const existingCode = codes.find((code) => code.path === file.path);
 
       if (existingCode) {
         setFileContent(existingCode.content || '');
         setIsLoading(false);
-        //console.log('Using cached file content:', existingCode);
         return;
       }
 
       const projectId = projectContext.id || '';
       const filePath = file.path || '';
-      //console.log(`Fetching content for file: ${filePath}`);
 
       const response = await fileApi.getFileContent(projectId, filePath);
       const taskId = response.taskId;
