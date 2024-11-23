@@ -3,7 +3,7 @@ import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Di
 import { ChevronRight, Check } from 'lucide-react';
 import { keyframes } from '@emotion/react';
 import { Spinner } from './Spinner';
-import { LogEntry } from '../pages/code/CodePage';
+import { LogEntry } from '../utils/codePageUtils';
 import { CloseIcon, WarningIcon } from '@chakra-ui/icons';
 
 type TerminalProps = {
@@ -100,4 +100,4 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
   );
 };
 
-export default Terminal;
+export default React.memo(Terminal);

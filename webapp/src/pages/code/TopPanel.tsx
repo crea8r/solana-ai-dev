@@ -49,4 +49,4 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest }) => {
   );
 };
 
-export default TopPanel;
+export default React.memo(TopPanel);

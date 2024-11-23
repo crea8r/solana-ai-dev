@@ -1,10 +1,10 @@
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from '../interfaces/file';
 import Terminal from './Terminal';
-import { LogEntry } from '../pages/code/CodePage';
+import { LogEntry } from '../utils/codePageUtils';
 
 type CodeEditorProps = {
   content: string; 
@@ -235,4 +235,4 @@ const CodeEditor = ({
   );
 };
 
-export default CodeEditor;
+export default React.memo(CodeEditor);

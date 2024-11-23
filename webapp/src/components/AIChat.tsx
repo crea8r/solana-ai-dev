@@ -2,7 +2,7 @@ import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton
 import { Copy } from 'lucide-react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
 import { FileTreeItemType } from '../interfaces/file';
@@ -469,4 +469,4 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   );
 };
 
-export default AIChat;
+export default React.memo(AIChat);

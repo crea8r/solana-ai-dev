@@ -1,5 +1,5 @@
 import { VStack, Text, Flex } from '@chakra-ui/react';
-import { useState, memo } from 'react';
+import React, { useState, memo } from 'react';
 import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 import { FileTreeItemType } from '../interfaces/file';
 
@@ -20,8 +20,8 @@ const FileTreeItem = memo(({
   //console.log('***FileTreeItem item:', JSON.stringify(item, null, 2));
 
   const toggleFolder = () => {
-    console.log('Toggling folder:', item.name);
-    console.log('Item type:', item.type);
+    //console.log('Toggling folder:', item.name);
+    //console.log('Item type:', item.type);
     if (item.type === 'directory') {
       setIsOpen(!isOpen);
     } else {
@@ -95,4 +95,4 @@ const FileTree = memo(({
   );
 });
 
-export default FileTree;
+export default React.memo(FileTree);

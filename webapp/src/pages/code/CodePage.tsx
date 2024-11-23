@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
@@ -7,294 +7,105 @@ import { FileTreeItemType } from '../../interfaces/file';
 import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { useProjectContext } from '../../contexts/ProjectContext';
-import { extractWarnings } from '../../utils/codePageUtils';
-import { debounce } from 'lodash';
-import { fileApi } from '../../api/file';
-import { taskApi } from '../../api/task';
-import { projectApi } from '../../api/project';
-
-function getLanguage(fileName: string) {
-  const ext = fileName.split('.').pop();
-  if (ext === 'ts') return 'typescript';
-  if (ext === 'js') return 'javascript';
-  if (ext === 'rs') return 'rust';
-  return 'md';
-}
-
-export type LogEntry = {
-  message: string;
-  type: 'start' | 'success' | 'warning' | 'error' | 'info';
-};
+import {
+  extractWarnings, 
+  ignoreFiles,
+  fetchDirectoryStructure, 
+  LogEntry, 
+  MAX_LOG_ENTRIES,
+  addLog,
+  clearLogs,
+  filterFiles,
+  mapFileTreeNodeToItemType,
+  startPollingTaskStatus,
+  handleBuildProject,
+  handleSave,
+  handleTestProject,
+  handleRunCommand,
+  createDebouncedFetchFileContent,
+  handleSelectFileUtil
+} from '../../utils/codePageUtils';
 
 const CodePage = () => {
-  const { projectContext } = useProjectContext();
+  const { projectContext, setProjectContext } = useProjectContext();
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPolling, setIsPolling] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);  
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
   const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([]);
+  const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
-  const ignoreFiles = [
-    'node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store',
-    '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local',
-    '.prettierignore', 'app'
-  ];
-
-  const MAX_LOG_ENTRIES = 100;
-
-  const addLog = (message: string, type: LogEntry['type'] = 'info') => {
-    setTerminalLogs(prevLogs => {
-      const newLogs = [...prevLogs, { message, type }];
-      if (newLogs.length > MAX_LOG_ENTRIES) {
-        newLogs.shift(); 
-      }
-      return newLogs;
-    });
-  };;
-
-  const clearLogs = () => {
-    setTerminalLogs([]);
-  };
-
-  const filterFiles = (item: FileTreeItemType): boolean => {
-    return (
-      !ignoreFiles.includes(item.name) &&
-      !(item.path && item.path.includes(`${projectContext?.rootPath}`))
-    );
-  };
-
-  function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
-    const mappedChildren = node.children
-      ? node.children.map(mapFileTreeNodeToItemType).filter(filterFiles)
-      : undefined;
-
-    return {
-      name: node.name,
-      path: node.path,
-      type: node.type === 'directory' ? 'directory' : 'file',
-      ext: node.type === 'directory' ? undefined : node.name.split('.').pop(),
-      children: mappedChildren,
-    };
-  }
-
-  const debouncedFetchFileContent = useCallback(
-    debounce(async (file: FileTreeItemType) => {
-      try {
-        const projectId = projectContext?.id || '';
-        const filePath = file.path || '';
-
-        const response = await fileApi.getFileContent(projectId, filePath);
-        const taskId = response.taskId;
-
-        const pollTaskCompletion = async (taskId: string) => {
-          try {
-            const taskResponse = await taskApi.getTask(taskId);
-            const task = taskResponse.task;
-
-            if (task.status === 'finished' || task.status === 'succeed') {
-              setFileContent(task.result || '');
-              setIsLoading(false);
-            } else if (task.status === 'failed') {
-              setIsLoading(false);
-            } else {
-              setTimeout(() => pollTaskCompletion(taskId), 2000);
-            }
-          } catch (error) {
-            setIsLoading(false);
-          }
-        };
-
-        pollTaskCompletion(taskId);
-      } catch (error) {
-        setIsLoading(false);
-      }
-    }, 300),
+  const handleFetchFileContent = useCallback(
+    createDebouncedFetchFileContent(
+      projectContext?.id || '',
+      setFileContent,
+      setIsLoading,
+      setIsPolling,
+      addLog,
+      setTerminalLogs,
+      setProjectContext
+    ),
     [projectContext?.id]
   );
 
-  useEffect(() => {
-    return () => {
-      debouncedFetchFileContent.cancel();
-    };
-  }, [debouncedFetchFileContent]);
+  useEffect(() => { return () => { handleFetchFileContent.cancel(); }; }, [handleFetchFileContent]);
 
   useEffect(() => {
-    const fetchDirectoryStructure = async () => {
-      if (!projectContext || !projectContext.name) {
-        return;
+    if (!projectContext || !projectContext.details.files.children) return;
+    try {
+      if (projectContext.details.files.children.length > 0) {
+        console.log("setting files from projectContext");
+        setFiles(projectContext.details.files);
       }
-      try {
-        const directoryStructure = await fileApi.getDirectoryStructure(
-          projectContext.name,
-          projectContext.rootPath || ''
+      else {
+        fetchDirectoryStructure(
+          projectContext?.name, 
+          projectContext?.rootPath, 
+          mapFileTreeNodeToItemType, 
+          filterFiles(projectContext?.rootPath), 
+          setFiles,
+          setProjectContext,
+          handleSelectFile,
         );
+      }
+    } catch (error) { throw error; }
+  }, [projectContext?.details.files.children]);
 
-        const mappedFiles = directoryStructure
-          .map(mapFileTreeNodeToItemType)
-          .filter(filterFiles);
-
-        const rootNode: FileTreeItemType = {
-          name: projectContext.name,
-          path: '',
-          type: 'directory',
-          children: mappedFiles,
-        };
-        setFiles(rootNode);
-
-        if (mappedFiles.length > 0) {
-          const firstFile = findFirstFile(mappedFiles);
-          if (firstFile) {
-            handleSelectFile(firstFile);
-          }
-        }
+  useEffect(() => {
+    if (savedFileRef.current) {
+      try {
+        const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
+        setSelectedFile(parsedFile);
+        setIsLoading(true);
+        handleFetchFileContent(parsedFile);
       } catch (error) {
-        console.error('Failed to fetch directory structure', error);
-      }
-    };
-    fetchDirectoryStructure();
-  }, [projectContext]);
-
-  function findFirstFile(files: FileTreeItemType[]): FileTreeItemType | undefined {
-    for (const file of files) {
-      if (file.type === 'file') {
-        return file;
-      }
-      if (file.children) {
-        const found = findFirstFile(file.children);
-        if (found) {
-          return found;
-        }
+        console.error('Failed to load saved file:', error);
       }
     }
-    return undefined;
-  }
+  }, [handleFetchFileContent]);
 
   const handleSelectFile = useCallback(
     (file: FileTreeItemType) => {
-      if (!file) return;
-      setSelectedFile(file);
-      setIsLoading(true);
-      debouncedFetchFileContent(file);
+      handleSelectFileUtil(
+        file,
+        projectContext,
+        setSelectedFile,
+        setFileContent,
+        setIsLoading,
+        handleFetchFileContent
+      );
     },
-    [debouncedFetchFileContent]
+    [projectContext, setSelectedFile, setFileContent, setIsLoading, handleFetchFileContent]
   );
 
-  const startPollingTaskStatus = (taskId: string) => {
-    setIsPolling(true);
-    const intervalId = setInterval(async () => {
-      try {
-        const taskResponse = await taskApi.getTask(taskId);
-        const status = taskResponse.task.status;
+  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setTerminalLogs, fileContent); };
+  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs); };
+  const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs); };
+  const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs, commandType); };
+  const handleContentChange = (newContent: string) => { setFileContent(newContent); };
 
-        if (status === 'finished' || status === 'succeed' || status === 'warning') {
-          clearInterval(intervalId);
-          setIsPolling(false);
-          setIsLoading(false);
-
-          if (status === 'warning') {
-            addLog(taskResponse.task.result || '', 'warning');
-          } else {
-            addLog('Task completed successfully', 'success');
-          }
-        } else if (status === 'failed') {
-          clearInterval(intervalId);
-          setIsPolling(false);
-          setIsLoading(false);
-          addLog(`Task failed: ${taskResponse.task.result}`, 'error');
-        }
-      } catch (error) {
-        clearInterval(intervalId);
-        setIsPolling(false);
-        setIsLoading(false);
-        addLog(`Polling error: ${error}`, 'error');
-      }
-    }, 5000);
-  };
-
-  const handleBuildProject = async () => {
-    //setIsLoading(true);
-    try {
-      const projectId = projectContext?.id || '';
-      const response = await projectApi.buildProject(projectId);
-
-      if (response.taskId) {
-        addLog('Building project...', 'start');
-        startPollingTaskStatus(response.taskId);
-      } else {
-        addLog('Build initiation failed.', 'error');
-      }
-    } catch (error) {
-      addLog(`Error during project build: ${error}`, 'error');
-    }
-  };
-
-  const handleSave = async () => {
-    if (!selectedFile || !selectedFile.path || !projectContext?.id) {
-      addLog('No file selected or project context missing', 'error');
-      return;
-    }
-
-    setIsLoading(true);
-    const projectId = projectContext.id;
-    const filePath = selectedFile.path;
-    const content = fileContent;
-
-    try {
-      await fileApi.updateFile(projectId, filePath, content);
-      addLog(`File saved successfully: ${filePath}`, 'success');
-    } catch (error) {
-      addLog(`Error saving file: ${error}`, 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleContentChange = (newContent: string) => {
-    setFileContent(newContent);
-  };
-
-  const handleTestProject = async () => {
-    setIsLoading(true);
-    try {
-      const projectId = projectContext?.id || '';
-      addLog(`Starting tests for project ID: ${projectId}`, 'start');
-
-      const response = await projectApi.testProject(projectId);
-
-      if (response.taskId) {
-        addLog(`Test process initiated. Task ID: ${response.taskId}`, 'start');
-        startPollingTaskStatus(response.taskId);
-      } else {
-        addLog('Test initiation failed.', 'error');
-      }
-    } catch (error) {
-      addLog(`Error during project test: ${error}`, 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRunCommand = async (commandType: 'anchor clean' | 'cargo clean') => {
-    setIsLoading(true);
-    try {
-      const projectId = projectContext?.id || '';
-      addLog(`Running command: ${commandType} for project ID: ${projectId}`, 'start');
-
-      const response = await projectApi.runProjectCommand(projectId, commandType);
-
-      if (response.taskId) {
-        addLog(`Command process initiated. Task ID: ${response.taskId}`, 'start');
-        startPollingTaskStatus(response.taskId);
-      } else {
-        addLog('Command initiation failed.', 'error');
-      }
-    } catch (error) {
-      addLog(`Error running command: ${error}`, 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const content = selectedFile ? fileContent : 'Empty file';
 
   return (
     <Flex
@@ -304,7 +115,7 @@ const CodePage = () => {
       justifyContent="space-between"
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
-        <TopPanel onBuild={handleBuildProject} onSave={handleSave} onTest={handleTestProject} />
+        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} />
       </Flex>
 
       <Flex flex="1" overflow="hidden">
@@ -319,13 +130,13 @@ const CodePage = () => {
           overflow="auto"
         >
           <CodeEditor
-            content={selectedFile ? fileContent : 'Empty file'}
+            content={fileContent}
             selectedFile={selectedFile}
             terminalLogs={terminalLogs}
-            clearLogs={clearLogs}
+            clearLogs={() => clearLogs(setTerminalLogs)}
             onChange={handleContentChange}
-            onSave={handleSave}
-            onRunCommand={handleRunCommand}
+            onSave={_handleSave}
+            onRunCommand={_handleRunCommand}
             isPolling={isPolling}
           />
         </Box>
