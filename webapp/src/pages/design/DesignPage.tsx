@@ -348,6 +348,9 @@ const DesignPage: React.FC = () => {
           isSaved: fetchedProject.details.isSaved,
           isAnchorInit: fetchedProject.details.isAnchorInit,
           isCode: fetchedProject.details.isCode,
+          files: { name: '', children: [] },
+          codes: [],
+          docs: [],
         },
       }));
 

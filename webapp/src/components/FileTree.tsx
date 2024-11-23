@@ -1,5 +1,5 @@
 import { VStack, Text, Flex } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 import { FileTreeItemType } from '../interfaces/file';
 
@@ -10,13 +10,14 @@ export interface FileTreeItemProps {
   level: number;
 }
 
-const FileTreeItem = ({
+const FileTreeItem = memo(({
   item,
   onSelectFile,
   selectedItem,
   level,
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(level === 0);
+  //console.log('***FileTreeItem item:', JSON.stringify(item, null, 2));
 
   const toggleFolder = () => {
     console.log('Toggling folder:', item.name);
@@ -65,7 +66,7 @@ const FileTreeItem = ({
         ))}
     </VStack>
   );
-};
+});
 
 type FileTreeProps = {
   onSelectFile: (item: FileTreeItemType) => void;
@@ -73,12 +74,12 @@ type FileTreeProps = {
   selectedItem?: FileTreeItemType;
 };
 
-const FileTree = ({
+const FileTree = memo(({
   onSelectFile,
   files,
   selectedItem,
 }: FileTreeProps) => {
-  console.log('***FileTreeComponent files:', files);
+  //console.log('***FileTreeComponent files:', JSON.stringify(files, null, 2));
   return (
     <VStack align='stretch' spacing={2} p={4}>
       <Text fontWeight='bold'>Project Files</Text>
@@ -92,6 +93,6 @@ const FileTree = ({
       )}
     </VStack>
   );
-};
+});
 
 export default FileTree;

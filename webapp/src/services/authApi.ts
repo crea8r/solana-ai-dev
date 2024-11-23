@@ -48,11 +48,13 @@ export const register = async (
 
 export const logout = async () => {
   try {
+    /*
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('projectContext');
     sessionStorage.removeItem('chatMessages');
     sessionStorage.removeItem('terminalLogs');
     sessionStorage.removeItem('selectedFilePath');
+    */
     const response = await authApi.post('/auth/logout');
     console.log(response.data.message);
   } catch (error: any) {

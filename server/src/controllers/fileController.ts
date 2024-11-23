@@ -25,9 +25,9 @@ interface FileStructure {
 
 interface FileTreeItemType {
   name: string;
-  isDirectory: boolean;
   type: 'directory' | 'file';
   path: string;
+  ext?: string;
   children?: FileTreeItemType[];
 }
 
@@ -63,33 +63,38 @@ const getFullDirectoryStructure = async (
   directoryPath: string,
   relativePath: string = ''
 ): Promise<FileTreeItemType[]> => {
-  const files = await fs.readdir(directoryPath, { withFileTypes: true });
+  try {
+    const files = await fs.readdir(directoryPath, { withFileTypes: true });
 
-  const fileStructure: FileTreeItemType[] = await Promise.all(
-    files.map(async (file) => {
-      const fullPath = path.join(directoryPath, file.name);
-      const fileRelativePath = path.join(relativePath, file.name); 
+    const fileStructure: FileTreeItemType[] = await Promise.all(
+      files.map(async (file) => {
+        const fullPath = path.join(directoryPath, file.name);
+        const fileRelativePath = path.join(relativePath, file.name); 
 
-      if (file.isDirectory()) {
-        return {
-          name: file.name,
-          isDirectory: true,
-          type: 'directory',
-          path: fileRelativePath,
-          children: await getFullDirectoryStructure(fullPath, fileRelativePath),
-        };
-      } else {
-        return {
-          name: file.name,
-          isDirectory: false,
-          type: 'file',
-          path: fileRelativePath,
-        };
-      }
-    })
-  );
-
-  return fileStructure;
+        if (file.isDirectory()) {
+          return {
+            name: file.name,
+            type: 'directory',
+            path: fileRelativePath,
+            ext: undefined,
+            children: await getFullDirectoryStructure(fullPath, fileRelativePath),
+          };
+        } else {
+          return {
+            name: file.name,
+            type: 'file',
+            path: fileRelativePath,
+            ext: file.name.split('.').pop(),
+            children: undefined,
+          };
+        }
+      })
+    );
+    return fileStructure;
+  } catch (error) {
+    console.error('Error in getFullDirectoryStructure:', error);
+    throw error;
+  }
 };
 
 export const getDirectoryStructure = async (

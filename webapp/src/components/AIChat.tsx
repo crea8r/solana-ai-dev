@@ -21,7 +21,7 @@ export interface AIMessageType {
 interface AIChatProps {
   selectedFile?: FileTreeItemType;
   fileContent: string;
-  onSelectFile: (file: FileTreeItemType) => Promise<void>;
+  onSelectFile: (file: FileTreeItemType) => void;
   files: FileTreeItemType[]; 
 }
 
