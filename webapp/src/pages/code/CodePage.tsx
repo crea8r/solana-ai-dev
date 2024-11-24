@@ -22,7 +22,6 @@ import {
   handleSave,
   handleTestProject,
   handleRunCommand,
-  createDebouncedFetchFileContent,
   handleSelectFileUtil
 } from '../../utils/codePageUtils';
 
@@ -36,20 +35,9 @@ const CodePage = () => {
   const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([]);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
-  const handleFetchFileContent = useCallback(
-    createDebouncedFetchFileContent(
-      projectContext?.id || '',
-      setFileContent,
-      setIsLoading,
-      setIsPolling,
-      addLog,
-      setTerminalLogs,
-      setProjectContext
-    ),
-    [projectContext?.id]
-  );
-
-  useEffect(() => { return () => { handleFetchFileContent.cancel(); }; }, [handleFetchFileContent]);
+  useEffect(() => {
+    console.log("projectContext", projectContext);
+  }, [projectContext]);
 
   useEffect(() => {
     if (!projectContext || !projectContext.details.files.children) return;
@@ -66,24 +54,32 @@ const CodePage = () => {
           filterFiles(projectContext?.rootPath), 
           setFiles,
           setProjectContext,
-          handleSelectFile,
+          setIsPolling,
+          setIsLoading,
+          addLog,
+          setTerminalLogs,
+          handleSelectFile
         );
       }
     } catch (error) { throw error; }
-  }, [projectContext?.details.files.children]);
+  }, []);
 
+  // selectedFile rehydration
   useEffect(() => {
-    if (savedFileRef.current) {
+    if (savedFileRef.current && projectContext?.details?.codes) {
       try {
         const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
         setSelectedFile(parsedFile);
-        setIsLoading(true);
-        handleFetchFileContent(parsedFile);
+  
+        const cachedContent = projectContext?.details?.codes?.find((code) => code.name === parsedFile.name);
+  
+        if (cachedContent?.content) setFileContent(cachedContent.content);
+        else console.warn(`File content for ${parsedFile.name} not found in context after mount.`);
       } catch (error) {
-        console.error('Failed to load saved file:', error);
+        console.error("Error rehydrating selected file:", error);
       }
     }
-  }, [handleFetchFileContent]);
+  }, []);
 
   const handleSelectFile = useCallback(
     (file: FileTreeItemType) => {
@@ -93,10 +89,9 @@ const CodePage = () => {
         setSelectedFile,
         setFileContent,
         setIsLoading,
-        handleFetchFileContent
       );
     },
-    [projectContext, setSelectedFile, setFileContent, setIsLoading, handleFetchFileContent]
+    [projectContext, setSelectedFile, setFileContent, setIsLoading]
   );
 
   const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setTerminalLogs, fileContent); };
@@ -104,8 +99,6 @@ const CodePage = () => {
   const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs); };
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
-
-  const content = selectedFile ? fileContent : 'Empty file';
 
   return (
     <Flex

@@ -4,10 +4,12 @@ import { taskApi } from "../api/task";
 import { FileTreeItemType } from "../interfaces/file";
 import { debounce } from "lodash";
 import { Project } from "../interfaces/project";
+import { CodeFile } from "../contexts/CodeFileContext";
 
-// -----------------------------------------------------------------
-
+// -------------------
 // Task Polling Utils
+// -------------------
+
 export const startPollingTaskStatus = (
   taskId: string, setIsPolling: React.Dispatch<React.SetStateAction<boolean>>, 
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>, 
@@ -48,7 +50,9 @@ export const startPollingTaskStatus = (
   }, 5000);
 };
 
+// -------------------
 // File Tree Utils  
+// -------------------
 export const ignoreFiles = [
   'node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store',
   '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local',
@@ -93,6 +97,68 @@ export function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
   };
 }
 
+export const prefetchFileContents = async (
+  mappedFiles: FileTreeItemType[],
+  projectContextName: string,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
+  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>
+) => {
+  try {
+    //console.log('Preloading file contents...');
+
+    const allFiles: FileTreeItemType[] = [];
+    const gatherFiles = (node: FileTreeItemType) => {
+      if (node.type === 'file') allFiles.push(node);
+      if (node.children) node.children.forEach(gatherFiles);
+    };
+    mappedFiles.forEach(gatherFiles);
+
+    const fileContents = await Promise.all(
+      allFiles.map(async (file) => {
+        try {
+          const response = await fileApi.getFileContent(projectContextName, file.path || '');
+
+          if (response.taskId) {
+            return new Promise((resolve) => {
+              startPollingTaskStatus(
+                response.taskId,
+                setIsPolling,
+                setIsLoading,
+                addLog,
+                setTerminalLogs,
+                (taskResult) => {
+                  resolve({
+                    name: file.name,
+                    path: file.path,
+                    content: taskResult,
+                  });
+                }
+              );
+            });
+          } else { console.error(`No task ID returned for file: ${file.name}`); return; }
+          
+        } catch (error) {
+          console.error(`Error fetching content for ${file.name}:`, error);
+          return { name: file.name, path: file.path, content: '' };
+        }
+      })
+    );
+
+    setProjectContext((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        codes: fileContents as CodeFile[],
+      },
+    }));
+
+    //console.log('Prefetching complete.');
+  } catch (error) { console.error('Error prefetching file contents:', error); }
+};
+
 export const fetchDirectoryStructure = async (
   projectContextName: string,
   projectContextRootPath: string,
@@ -100,6 +166,10 @@ export const fetchDirectoryStructure = async (
   filterFiles: (file: FileTreeItemType) => boolean,
   setFiles: (files: FileTreeItemType) => void,
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
+  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
   handleSelectFile: (file: FileTreeItemType) => void
 ) => {
   try {
@@ -126,6 +196,17 @@ export const fetchDirectoryStructure = async (
       },
     }));
 
+    console.log("prefetching file contents...");
+    await prefetchFileContents(
+      mappedFiles, 
+      projectContextName, 
+      setProjectContext, 
+      setIsPolling, 
+      setIsLoading, 
+      addLog, 
+      setTerminalLogs
+    );
+
     if (mappedFiles.length > 0) {
       const firstFile = findFirstFile(mappedFiles);
       if (firstFile) {
@@ -137,104 +218,28 @@ export const fetchDirectoryStructure = async (
   }
 };
 
-export const createDebouncedFetchFileContent = (
-  projectId: string,
-  setFileContent: React.Dispatch<React.SetStateAction<string>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
-  setProjectContext: React.Dispatch<React.SetStateAction<Project>>
-) => {
-  return debounce(async (file: FileTreeItemType) => {
-    try {
-      const filePath = file.path || '';
-
-      const response = await fileApi.getFileContent(projectId, filePath);
-      const taskId = response.taskId;
-
-      if (taskId) {
-        const onComplete = (taskResult: string) => {
-          setFileContent(taskResult);
-          setProjectContext((prev) => ({
-            ...prev,
-            details: {
-              ...prev.details,
-              codes: [...prev.details.codes, { 
-                name: file.name, 
-                content: taskResult,
-                path: file.path || ''
-              }],
-            },
-          }));
-        };
-
-        startPollingTaskStatus(
-          taskId,
-          setIsPolling,
-          setIsLoading,
-          addLog,
-          setTerminalLogs,
-          onComplete
-        );
-
-      } else {
-        setIsLoading(false);
-        addLog(setTerminalLogs, 'Failed to fetch file content. No task ID returned.', 'error');
-      }
-    } catch (error: unknown) {
-      setIsLoading(false);
-      if (error instanceof Error) {
-        addLog(setTerminalLogs, `Error fetching file content: ${error.message}`, 'error');
-      } else {
-        addLog(setTerminalLogs, 'An unknown error occurred while fetching file content.', 'error');
-      }
-    }
-  }, 300); // Debounce for 300ms
-};
-
 export const handleSelectFileUtil = async (
   file: FileTreeItemType,
   projectContext: any,
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTreeItemType | undefined>>,
   setFileContent: React.Dispatch<React.SetStateAction<string>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  handleFetchFileContent: (file: FileTreeItemType) => void
 ) => {
   try {
-    // Save selected file in sessionStorage
     sessionStorage.setItem('selectedFile', JSON.stringify(file));
     setSelectedFile(file);
 
-    // Check if the content exists in projectContext
     if (projectContext?.details?.codes) {
-      console.log("projectContext?.details?.codes", projectContext?.details?.codes);
-      const projectContextContent = projectContext?.details?.codes.find(
-        (child: any) => child.name === file.name
-      );
-      if (projectContextContent?.content) {
-        console.log("using file content from projectContext", projectContextContent?.content);
-        setFileContent(projectContextContent.content);
-      } else {
-        // Otherwise, fetch from the server
-        setIsLoading(true);
-        console.log("fetching file content from server", file.name);
-        handleFetchFileContent(file);
-      }
-    } else {
-      // If codes property is missing, fetch from the server
-      setIsLoading(true);
-      console.log("fetching file content from server", file.name);
-      handleFetchFileContent(file);
-    }
-  } catch (error) {
-    console.error('Error handling selected file:', error);
-  }
+      const projectContextContent = projectContext?.details?.codes.find((child: any) => child.name === file.name);
+      setFileContent(projectContextContent.content);
+
+    } else { console.error('No file content found in projectContext'); return; }
+  } catch (error) { console.error('Error handling selected file:', error); }
 };
 
-// -----------------------------------------------------------------
-
+// -------------------
 // Code Editor Utils  
+// -------------------
 export function getLanguage(fileName: string) {
   const ext = fileName.split('.').pop();
   if (ext === 'ts') return 'typescript';
@@ -243,9 +248,10 @@ export function getLanguage(fileName: string) {
   return 'md';
 }
 
-// -----------------------------------------------------------------
+// -------------------
+// Terminal Utils  
+// -------------------
 
-// Terminal Utils
 export const extractWarnings = (log: string): { message: string; file: string; line: string; help?: string }[] => {
   const warningRegex = /warning: (.+?)\n\s+--> (.+?):(\d+:\d+)\n\s+\|\n.+?\n\s+\|\s+(.+?)(?=\n\s+warning:|\Z)/gs;
   const matches = [];
@@ -288,8 +294,9 @@ export const clearLogs = (setTerminalLogs: React.Dispatch<React.SetStateAction<L
   setTerminalLogs([]);
 };
 
-// -----------------------------------------------------------------
-// Anchor Utils
+// -------------------
+// Anchor Task Utils
+// -------------------
 
 export const handleSave = async (
   selectedFile: FileTreeItemType,
