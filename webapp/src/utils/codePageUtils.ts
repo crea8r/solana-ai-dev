@@ -205,6 +205,8 @@ export const prefetchFileContents = async (
       details: {
         ...prev.details,
         codes: fileContents as CodeFile[],
+        isCode: true,
+        isSaved: true,
       },
     }));
 
@@ -242,6 +244,8 @@ export const fetchDirectoryStructure = async (
       details: {
         ...prev.details,
         files: rootNode,
+        isCode: true,
+        isSaved: true,
       },
     }));
 

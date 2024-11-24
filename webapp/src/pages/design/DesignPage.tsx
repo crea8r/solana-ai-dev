@@ -323,7 +323,6 @@ const DesignPage: React.FC = () => {
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
 
-      // recreate the toolbox item
       const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
         const restoredItem = createItem(node.data.item.type);
         return {

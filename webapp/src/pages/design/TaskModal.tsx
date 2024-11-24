@@ -159,7 +159,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   setIsLoading,
                   addLog,
                   (file) => {
-                    //console.log("Automatically selecting first generated file in Task Modal:", file.name);
                     setProjectContext((prev) => ({
                       ...prev,
                       selectedFile: file,
@@ -177,8 +176,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 setIsLoading(false);
               }
             };
-        
             fetchAndSetProjectData();
+            const updateProjectInDatabase = async () => {
+              try {
+                  const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+                  await projectApi.updateProject(projectContext.id, projectInfoToSave);
+                  //console.log('Project updated successfully in the database.');
+              } catch (error) { console.error('Error updating project in the database:', error); }
+          };
+
+          updateProjectInDatabase();
           }
         }
     }, [genCodeTaskRun]);
