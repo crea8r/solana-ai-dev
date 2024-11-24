@@ -15,7 +15,8 @@ export const startPollingTaskStatus = (
   taskId: string, setIsPolling: React.Dispatch<React.SetStateAction<boolean>>, 
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>, 
   addLog: (message: string, type: LogEntry['type']) => void, 
-  onComplete?: (taskResult: string) => void
+  onComplete?: (taskResult: string) => void,
+  silent?: boolean
 ) => {
   setIsPolling(true);
   const intervalId = setInterval(async () => {
@@ -29,22 +30,22 @@ export const startPollingTaskStatus = (
         setIsLoading(false);
 
         if (status === 'warning') {
-          addLog(taskResponse.task.result || '', 'warning');
+          if (!silent) addLog(taskResponse.task.result || '', 'warning');
         } else {
-          addLog('Task completed successfully', 'success');
+          if (!silent) addLog('Task completed successfully', 'success');
         }
         if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
       } else if (status === 'failed') {
         clearInterval(intervalId);
         setIsPolling(false);
         setIsLoading(false);
-        addLog(`Task failed: ${taskResponse.task.result}`, 'error');
+        if (!silent) addLog(`Task failed: ${taskResponse.task.result}`, 'error');
       }
     } catch (error) {
       clearInterval(intervalId);
       setIsPolling(false);
       setIsLoading(false);
-      addLog(`Polling error: ${error}`, 'error');
+      if (!silent) addLog(`Polling error: ${error}`, 'error');
     }
   }, 5000);
 };
@@ -156,7 +157,7 @@ export const prefetchFileContents = async (
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (message: string, type: LogEntry['type']) => void
+  addLog: (message: string, type: LogEntry['type']) => void,
 ) => {
   try {
     const allFiles: FileTreeItemType[] = [];
@@ -188,7 +189,8 @@ export const prefetchFileContents = async (
                     path: file.path,
                     content: taskResult,
                   });
-                }
+                },
+                true
               );
             });
           } else { console.error(`No task ID returned for file: ${file.name}`); return; }
