@@ -45,6 +45,9 @@ import insModSchema from '../../data/ai_schema/ins_mod_schema.json';
 import libSchema from '../../data/ai_schema/lib_schema.json';
 import sdkSchema from '../../data/ai_schema/sdk_schema.json';
 import testSchema from '../../data/ai_schema/test_schema.json';
+import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils';
+import { mapFileTreeNodeToItemType } from '../../utils/codePageUtils';
+import { LogEntry, useTerminalLogs } from "../../hooks/useTerminalLogs";
 
 interface genTaskProps {
     isOpen: boolean;
@@ -74,8 +77,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     const [existingDirectory, setExistingDirectory] = useState(false);
     const [stateTaskCompleted, setStateTaskCompleted] = useState(false);
     const [insTaskCompleted, setInsTaskCompleted] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
+    const [isPolling, setIsPolling] = useState(false);
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
+    const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
 
     useEffect(() => {
         if (projectContext) {
@@ -131,34 +136,50 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
     useEffect(() => {
         if (genCodeTaskRun) {
-          const updateProjectInDatabase = async () => {
-            try {
-              const { id: projectId, rootPath, name: projectName } = projectContext;
-              if (!projectId || !rootPath || !projectName) return;
-
-              const projectDirectory = await fileApi.getDirectoryStructure(projectName, rootPath);
-              if (!projectDirectory) return;
-
-              const rootDirectory: FileTreeItemType = {
-                name: projectName,
-                type: 'directory',
-                path: rootPath,
-                children: projectDirectory,
-              };
-
-              setProjectContext((prev) => ({
-                ...prev,
-                details: {
-                  ...prev.details,
-                  files: rootDirectory,
-                },
-              }));
-
-              const projectInfoToSave = transformToProjectInfoToSave(projectContext);
-              await projectApi.updateProject(projectContext.id, projectInfoToSave);
-            } catch (error) { console.error('Error updating project in the database:', error); }
-          };
-          updateProjectInDatabase();
+          if (genCodeTaskRun) {
+            const fetchAndSetProjectData = async () => {
+              try {
+                setIsLoading(true);
+        
+                const { id: projectId, rootPath } = projectContext;
+                if (!projectId || !rootPath) {
+                  console.error('Project context is missing essential data.');
+                  setIsLoading(false);
+                  return;
+                }
+        
+                await fetchDirectoryStructure(
+                  projectId,
+                  rootPath,
+                  mapFileTreeNodeToItemType,
+                  filterFiles(rootPath),
+                  () => {},
+                  setProjectContext,
+                  setIsPolling,
+                  setIsLoading,
+                  addLog,
+                  (file) => {
+                    //console.log("Automatically selecting first generated file in Task Modal:", file.name);
+                    setProjectContext((prev) => ({
+                      ...prev,
+                      selectedFile: file,
+                      details: {
+                        ...prev.details,
+                        isCode: true,
+                      },
+                    }));
+                  }
+                );
+        
+                setIsLoading(false);
+              } catch (error) {
+                console.error('Error updating project in Task Modal:', error);
+                setIsLoading(false);
+              }
+            };
+        
+            fetchAndSetProjectData();
+          }
         }
     }, [genCodeTaskRun]);
 
@@ -184,7 +205,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
             // Checking if the project directory already exists
             try {
-                const directory = await fileApi.getDirectoryStructure(projectName, rootPath);
+                const directory = await fileApi.getDirectoryStructure(rootPath);
                 if (directory && directory.length > 0) {
                     //console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
                     setProjectContext((prevProjectContext) => ({
@@ -299,7 +320,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const programDirName = normalizedProgramName;
             if (!rootPath || !programDirName) return;
       
-            const _existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
+            const _existingFilesResponse = await fileApi.getDirectoryStructure(rootPath);
             if (!_existingFilesResponse) return;
       
             const response = await fileApi.renameDirectory(rootPath, programDirName);
@@ -387,7 +408,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
             if (!projectName || !rootPath) return;
       
-            const existingFilesResponse = await fileApi.getDirectoryStructure(projectName, rootPath);
+            const existingFilesResponse = await fileApi.getDirectoryStructure(rootPath);
             if (!existingFilesResponse) return;
       
             const existingFilePaths = new Set<string>();

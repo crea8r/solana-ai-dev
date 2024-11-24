@@ -16,7 +16,7 @@ import { authMiddleware } from '../middleware/authMiddleware';
 const router = express.Router();
 
 router.get('/path/:projectId/:fileName', authMiddleware, getFilePath);
-router.get('/directory/:projectName/:rootPath', authMiddleware, getDirectoryStructure);
+router.get('/directory/:rootPath', authMiddleware, getDirectoryStructure);
 router.get('/tree/:id', authMiddleware, getProjectFileTree);
 router.get('/:projectId/:filePath(*)', authMiddleware, getFileContent);
 router.post('/:projectId/:filePath(*)', authMiddleware, createFile);

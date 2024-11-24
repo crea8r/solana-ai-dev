@@ -14,11 +14,10 @@ export const fileApi = {
   },
   
   getDirectoryStructure: async (
-    projectName: string,
     rootPath: string
   ): Promise<FileTreeItemType[]> => {
     try {
-      const response = await api.get(`/files/directory/${projectName}/${rootPath}`);
+      const response = await api.get(`/files/directory/${rootPath}`);
       return response.data.fileStructure;
     } catch (error) {
       console.error('Error getting directory structure:', error);

@@ -8,96 +8,134 @@ import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import {
-  extractWarnings, 
-  ignoreFiles,
   fetchDirectoryStructure, 
-  LogEntry, 
-  MAX_LOG_ENTRIES,
-  addLog,
-  clearLogs,
   filterFiles,
   mapFileTreeNodeToItemType,
-  startPollingTaskStatus,
   handleBuildProject,
   handleSave,
   handleTestProject,
   handleRunCommand,
-  handleSelectFileUtil
+  handleSelectFileUtil,
+  findFirstFile
 } from '../../utils/codePageUtils';
+import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 
 const CodePage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
+
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);  
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
-  const [terminalLogs, setTerminalLogs] = useState<LogEntry[]>([]);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
+
+  const _handleSelectFile = useCallback(
+    (file: FileTreeItemType) => { handleSelectFileUtil( file, projectContext, setSelectedFile, setFileContent, setIsLoading ); },
+    [projectContext, setSelectedFile, setFileContent, setIsLoading]
+  );
 
   useEffect(() => {
     console.log("projectContext", projectContext);
   }, [projectContext]);
 
   useEffect(() => {
-    if (!projectContext || !projectContext.details.files.children) return;
-    try {
-      if (projectContext.details.files.children.length > 0) {
-        console.log("setting files from projectContext");
-        setFiles(projectContext.details.files);
-      }
-      else {
-        fetchDirectoryStructure(
-          projectContext?.name, 
-          projectContext?.rootPath, 
-          mapFileTreeNodeToItemType, 
-          filterFiles(projectContext?.rootPath), 
-          setFiles,
-          setProjectContext,
-          setIsPolling,
-          setIsLoading,
-          addLog,
-          setTerminalLogs,
-          handleSelectFile
-        );
-      }
-    } catch (error) { throw error; }
-  }, []);
-
-  // selectedFile rehydration
-  useEffect(() => {
-    if (savedFileRef.current && projectContext?.details?.codes) {
+    const fetchFilesIfNeeded = async () => {
       try {
-        const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
-        setSelectedFile(parsedFile);
+        if (projectContext?.details?.files?.children?.length &&projectContext?.details?.files?.children?.length > 0) setFiles(projectContext.details.files);
+        else {
+          await fetchDirectoryStructure(
+            projectContext?.id,
+            projectContext?.rootPath,
+            mapFileTreeNodeToItemType,
+            filterFiles(projectContext?.rootPath),
+            setFiles,
+            setProjectContext,
+            setIsPolling,
+            setIsLoading,
+            addLog,
+            _handleSelectFile
+          );
+        }
+       
+      } catch (error) { console.error("Error fetching files or updating project context:", error); }
+    };
   
-        const cachedContent = projectContext?.details?.codes?.find((code) => code.name === parsedFile.name);
-  
-        if (cachedContent?.content) setFileContent(cachedContent.content);
-        else console.warn(`File content for ${parsedFile.name} not found in context after mount.`);
-      } catch (error) {
-        console.error("Error rehydrating selected file:", error);
-      }
+    if (projectContext) {
+      fetchFilesIfNeeded();
     }
-  }, []);
+  }, [
+    projectContext,          
+    setFiles, 
+    setSelectedFile,               
+    setProjectContext,       
+    setIsPolling,            
+    setIsLoading,            
+    addLog,                  
+    _handleSelectFile,       
+  ]);
+  
 
-  const handleSelectFile = useCallback(
-    (file: FileTreeItemType) => {
-      handleSelectFileUtil(
-        file,
-        projectContext,
-        setSelectedFile,
-        setFileContent,
-        setIsLoading,
-      );
-    },
-    [projectContext, setSelectedFile, setFileContent, setIsLoading]
-  );
+  useEffect(() => {
+    const selectFileAfterLoad = () => {
+      try {
+        // Check if there's a saved file in session storage
+        if (savedFileRef.current && projectContext?.details?.codes) {
+          const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
+          setSelectedFile(parsedFile);
+  
+          // Find the content of the saved file in the project context
+          const cachedContent = projectContext?.details?.codes?.find(
+            (code) => code.name === parsedFile.name
+          );
+  
+          if (cachedContent?.content) {
+            // Set the file content if found
+            setFileContent(cachedContent.content);
+            console.log(`Restored file content for ${parsedFile.name} from session storage.`);
+          } else {
+            console.warn(
+              `File content for ${parsedFile.name} not found in projectContext after mount.`
+            );
+          }
+        } else if (files?.children?.length && projectContext?.details?.codes?.length) {
+          // If no saved file exists, select the first file in the directory structure
+          const firstFile = findFirstFile(files.children);
+          if (firstFile) {
+            setSelectedFile(firstFile);
+  
+            // Find the content of the first file in the project context
+            const firstFileContent = projectContext.details.codes.find(
+              (code) => code.name === firstFile.name
+            )?.content;
+  
+            if (firstFileContent) {
+              setFileContent(firstFileContent);
+              console.log(`Loaded content for the first file: ${firstFile.name}.`);
+            } else {
+              console.warn(
+                `File content for ${firstFile.name} not found in projectContext after load.`
+              );
+            }
+          } else {
+            console.warn("No files found to select after load.");
+          }
+        }
+      } catch (error) {
+        console.error("Error selecting file after context update:", error);
+      }
+    };
+  
+    // Call the helper function
+    selectFileAfterLoad();
+  }, [files, projectContext?.details?.codes]);
+  
 
-  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setTerminalLogs, fileContent); };
-  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs); };
-  const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs); };
-  const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setTerminalLogs, commandType); };
+  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, addLog, fileContent); };
+  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
+  const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
+  const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
 
   return (
@@ -113,7 +151,7 @@ const CodePage = () => {
 
       <Flex flex="1" overflow="hidden">
         <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
-          <FileTree onSelectFile={handleSelectFile} files={files} selectedItem={selectedFile} />
+          <FileTree onSelectFile={_handleSelectFile} files={files} selectedItem={selectedFile} />
         </Box>
         <Box
           flex={1}
@@ -123,10 +161,10 @@ const CodePage = () => {
           overflow="auto"
         >
           <CodeEditor
-            content={fileContent}
+            content={fileContent || ''}
             selectedFile={selectedFile}
             terminalLogs={terminalLogs}
-            clearLogs={() => clearLogs(setTerminalLogs)}
+            clearLogs={clearLogs}
             onChange={handleContentChange}
             onSave={_handleSave}
             onRunCommand={_handleRunCommand}
@@ -143,7 +181,7 @@ const CodePage = () => {
           <AIChat
             selectedFile={selectedFile}
             fileContent={fileContent}
-            onSelectFile={handleSelectFile}
+            onSelectFile={_handleSelectFile}
             files={files?.children || []}
           />
         </Box>

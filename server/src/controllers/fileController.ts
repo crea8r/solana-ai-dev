@@ -105,17 +105,13 @@ export const getDirectoryStructure = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
-  const { projectName, rootPath } = req.params;
+  const { rootPath } = req.params;
   const directoryName = `${rootPath}`;
   const rootFolder = process.env.ROOT_FOLDER;
 
-  if (!rootFolder) {
-    return next(new AppError('Root folder not configured', 500));
-  }
+  if (!rootFolder) return next(new AppError('Root folder not configured', 500));
 
   const directoryPath = path.join(rootFolder, directoryName);
 
@@ -195,6 +191,7 @@ export const getFileContent = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
+  if (!projectId || !filePath) return next(new AppError('Missing required parameters', 400));
   if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
   try {
@@ -203,14 +200,8 @@ export const getFileContent = async (
       [projectId, orgId]
     );
 
-    if (projectCheck.rows.length === 0) {
-      next(
-        new AppError(
-          'Project not found or you do not have permission to access it',
-          404
-        )
-      );
-    } else {
+    if (projectCheck.rows.length === 0) next(new AppError('Project not found or you do not have permission to access it', 404));
+    else {
       const taskId = await startGetFileContentTask(projectId, filePath, userId);
 
       res.status(200).json({

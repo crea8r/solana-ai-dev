@@ -5,6 +5,7 @@ import { FileTreeItemType } from "../interfaces/file";
 import { debounce } from "lodash";
 import { Project } from "../interfaces/project";
 import { CodeFile } from "../contexts/CodeFileContext";
+import { LogEntry } from "../hooks/useTerminalLogs";
 
 // -------------------
 // Task Polling Utils
@@ -13,9 +14,7 @@ import { CodeFile } from "../contexts/CodeFileContext";
 export const startPollingTaskStatus = (
   taskId: string, setIsPolling: React.Dispatch<React.SetStateAction<boolean>>, 
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>, 
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, 
-  message: string, type: LogEntry['type']) => void, 
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
+  addLog: (message: string, type: LogEntry['type']) => void, 
   onComplete?: (taskResult: string) => void
 ) => {
   setIsPolling(true);
@@ -30,22 +29,22 @@ export const startPollingTaskStatus = (
         setIsLoading(false);
 
         if (status === 'warning') {
-          addLog(setTerminalLogs, taskResponse.task.result || '', 'warning');
+          addLog(taskResponse.task.result || '', 'warning');
         } else {
-          addLog(setTerminalLogs, 'Task completed successfully', 'success');
+          addLog('Task completed successfully', 'success');
         }
         if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
       } else if (status === 'failed') {
         clearInterval(intervalId);
         setIsPolling(false);
         setIsLoading(false);
-        addLog(setTerminalLogs, `Task failed: ${taskResponse.task.result}`, 'error');
+        addLog(`Task failed: ${taskResponse.task.result}`, 'error');
       }
     } catch (error) {
       clearInterval(intervalId);
       setIsPolling(false);
       setIsLoading(false);
-      addLog(setTerminalLogs, `Polling error: ${error}`, 'error');
+      addLog(`Polling error: ${error}`, 'error');
     }
   }, 5000);
 };
@@ -54,10 +53,73 @@ export const startPollingTaskStatus = (
 // File Tree Utils  
 // -------------------
 export const ignoreFiles = [
-  'node_modules', '.git', '.gitignore', 'yarn.lock', '.vscode', '.idea', '.DS_Store',
-  '.env', '.env.local', '.env.development.local', '.env.test.local', '.env.production.local',
-  '.prettierignore', 'app'
+  'node_modules',
+  '.git',
+  '.gitignore',
+  'yarn.lock',
+  '.vscode',
+  '.idea',
+  '.DS_Store',
+  '.env',
+  '.env.local',
+  '.env.development.local',
+  '.env.test.local',
+  '.env.production.local',
+  '.prettierignore',
+  'app',
+  'deploy',
+  'release',
+  '.fingerprint',
+  'build',
+  'deps',
+  'incremental',
+  'target',
+  '__pycache__',
+  '.cache',
+  '.log',
+  'Cargo.lock',
 ];
+const binaryExtensions = [
+  '.rlib',
+  '.so',
+  '.o',
+  '.exe',
+  '.dll',
+  '.a',
+  '.dylib',
+  '.class',
+  '.jar',
+  '.bin',
+  '.dat',
+  '.tar',
+  '.zip',
+  '.7z',
+  '.gz',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+];
+
+export const filterFiles = (projectContextRootPath: string) => (item: FileTreeItemType): boolean => {
+  const ignoredDirs = ignoreFiles.some((dir) => item?.path?.includes(dir));
+  const isBinaryFile = binaryExtensions.some((ext) => item.name.endsWith(ext));
+
+  if (ignoredDirs) console.warn(`Skipping directory: ${item.path}`);
+  else if (isBinaryFile) console.warn(`Skipping binary file: ${item.name}`);
+
+  if (item?.path?.includes('/target/') || item?.path?.includes('/deploy/')) {
+    console.warn(`Skipping directory: ${item.path}`);
+    return false;
+  }
+
+  return (
+    !ignoreFiles.includes(item.name) &&
+    !ignoredDirs &&
+    !isBinaryFile &&
+    !(item.path && item.path.includes(`${projectContextRootPath}`))
+  );
+};
 
 export function findFirstFile(files: FileTreeItemType[]): FileTreeItemType | undefined {
   for (const file of files) {
@@ -73,15 +135,6 @@ export function findFirstFile(files: FileTreeItemType[]): FileTreeItemType | und
   }
   return undefined;
 }
-
-export const filterFiles =
-  (projectContextRootPath: string) =>
-  (item: FileTreeItemType): boolean => {
-    return (
-      !ignoreFiles.includes(item.name) &&
-      !(item.path && item.path.includes(`${projectContextRootPath}`))
-    );
-  };
 
 export function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
   const mappedChildren = node.children
@@ -99,16 +152,13 @@ export function mapFileTreeNodeToItemType(node: any): FileTreeItemType {
 
 export const prefetchFileContents = async (
   mappedFiles: FileTreeItemType[],
-  projectContextName: string,
+  projectContextId: string,
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>
+  addLog: (message: string, type: LogEntry['type']) => void
 ) => {
   try {
-    //console.log('Preloading file contents...');
-
     const allFiles: FileTreeItemType[] = [];
     const gatherFiles = (node: FileTreeItemType) => {
       if (node.type === 'file') allFiles.push(node);
@@ -119,16 +169,19 @@ export const prefetchFileContents = async (
     const fileContents = await Promise.all(
       allFiles.map(async (file) => {
         try {
-          const response = await fileApi.getFileContent(projectContextName, file.path || '');
+          if (!projectContextId) { console.error('No project context ID found'); return; }
+          if (!file.path) { console.error('No file path found'); return; }
+          //console.log(`projectContextId: ${projectContextId} fetching file content for ${file.path}`);
+          const response = await fileApi.getFileContent(projectContextId, file.path);
 
           if (response.taskId) {
+            //console.log(`taskId: ${response.taskId} polling for file content for ${file.name}`);
             return new Promise((resolve) => {
               startPollingTaskStatus(
                 response.taskId,
                 setIsPolling,
                 setIsLoading,
                 addLog,
-                setTerminalLogs,
                 (taskResult) => {
                   resolve({
                     name: file.name,
@@ -155,12 +208,11 @@ export const prefetchFileContents = async (
       },
     }));
 
-    //console.log('Prefetching complete.');
   } catch (error) { console.error('Error prefetching file contents:', error); }
 };
 
 export const fetchDirectoryStructure = async (
-  projectContextName: string,
+  projectContextId: string,
   projectContextRootPath: string,
   mapFileTreeNodeToItemType: (node: any) => FileTreeItemType,
   filterFiles: (file: FileTreeItemType) => boolean,
@@ -168,25 +220,22 @@ export const fetchDirectoryStructure = async (
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
+  addLog: (message: string, type: LogEntry['type']) => void,
   handleSelectFile: (file: FileTreeItemType) => void
 ) => {
   try {
-    console.log("fetching directory structure...");
-    const directoryStructure = await fileApi.getDirectoryStructure(projectContextName,projectContextRootPath);
+    setIsLoading(true);
+    if (!projectContextRootPath) { console.error('No project context root path found'); return; }
+    const directoryStructure = await fileApi.getDirectoryStructure(projectContextRootPath);
     const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
-    console.log("mappedFiles", mappedFiles);
 
     const rootNode: FileTreeItemType = {
-      name: projectContextName,
+      name: projectContextId,
       path: '',
       type: 'directory',
       children: mappedFiles,
     };
     setFiles(rootNode);
-
-    console.log("rootNode", rootNode);
 
     setProjectContext((prev) => ({
       ...prev,
@@ -199,12 +248,11 @@ export const fetchDirectoryStructure = async (
     console.log("prefetching file contents...");
     await prefetchFileContents(
       mappedFiles, 
-      projectContextName, 
+      projectContextId, 
       setProjectContext, 
       setIsPolling, 
       setIsLoading, 
-      addLog, 
-      setTerminalLogs
+      addLog
     );
 
     if (mappedFiles.length > 0) {
@@ -213,6 +261,7 @@ export const fetchDirectoryStructure = async (
         handleSelectFile(firstFile);
       }
     }
+    setIsLoading(false);
   } catch (error) {
     console.error('Failed to fetch directory structure', error);
   }
@@ -226,15 +275,43 @@ export const handleSelectFileUtil = async (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   try {
+    setIsLoading(true);
     sessionStorage.setItem('selectedFile', JSON.stringify(file));
     setSelectedFile(file);
 
     if (projectContext?.details?.codes) {
       const projectContextContent = projectContext?.details?.codes.find((child: any) => child.name === file.name);
-      setFileContent(projectContextContent.content);
-
+      setFileContent(projectContextContent?.content);
+      setIsLoading(false);
     } else { console.error('No file content found in projectContext'); return; }
   } catch (error) { console.error('Error handling selected file:', error); }
+};
+
+export const handleSave = async (
+  selectedFile: FileTreeItemType,
+  projectContextId: string,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  addLog: (message: string, type: LogEntry['type']) => void,
+  fileContent: string
+) => {
+  if (!selectedFile || !selectedFile.path || !projectContextId) {
+    addLog( 'No file selected or project context missing', 'error');
+    return;
+  }
+
+  setIsLoading(true);
+  const projectId = projectContextId;
+  const filePath = selectedFile.path;
+  const content = fileContent;
+
+  try {
+    await fileApi.updateFile(projectId, filePath, content);
+    addLog(`File saved successfully: ${filePath}`, 'success');
+  } catch (error) {
+    addLog(`Error saving file: ${error}`, 'error');
+  } finally {
+    setIsLoading(false);
+  }
 };
 
 // -------------------
@@ -269,81 +346,28 @@ export const extractWarnings = (log: string): { message: string; file: string; l
   return matches;
 };
 
-export const MAX_LOG_ENTRIES = 100;
-
-export type LogEntry = {
-  message: string;
-  type: 'start' | 'success' | 'warning' | 'error' | 'info';
-};
-
-export const addLog = (
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, 
-  message: string, 
-  type: LogEntry['type'] = 'info'
-) => {
-  setTerminalLogs((prevLogs) => {
-    const newLogs = [...prevLogs, { message, type }]; 
-    if (newLogs.length > MAX_LOG_ENTRIES) {
-      newLogs.shift(); 
-    }
-    return newLogs; 
-  });
-};
-
-export const clearLogs = (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>) => {
-  setTerminalLogs([]);
-};
-
 // -------------------
 // Anchor Task Utils
 // -------------------
-
-export const handleSave = async (
-  selectedFile: FileTreeItemType,
-  projectContextId: string,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
-  fileContent: string
-) => {
-  if (!selectedFile || !selectedFile.path || !projectContextId) {
-    addLog(setTerminalLogs, 'No file selected or project context missing', 'error');
-    return;
-  }
-
-  setIsLoading(true);
-  const projectId = projectContextId;
-  const filePath = selectedFile.path;
-  const content = fileContent;
-
-  try {
-    await fileApi.updateFile(projectId, filePath, content);
-    addLog(setTerminalLogs, `File saved successfully: ${filePath}`, 'success');
-  } catch (error) {
-    addLog(setTerminalLogs, `Error saving file: ${error}`, 'error');
-  } finally {
-    setIsLoading(false);
-  }
-};
 
 export const handleBuildProject = async (
   projectContextId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>
+  addLog: (message: string, type: LogEntry['type']) => void
 ) => {
   try {
     const projectId = projectContextId;
     const response = await projectApi.buildProject(projectId);
 
     if (response.taskId) {
-      addLog(setTerminalLogs, 'Building project...', 'start');
-      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog, setTerminalLogs);
+      addLog('Building project...', 'start');
+      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
     } else {
-      addLog(setTerminalLogs, 'Build initiation failed.', 'error');
+      addLog('Build initiation failed.', 'error');
     }
   } catch (error) {
-    addLog(setTerminalLogs, `Error during project build: ${error}`, 'error');
+    addLog(`Error during project build: ${error}`, 'error');
   }
 };
 
@@ -351,23 +375,22 @@ export const handleTestProject = async (
   projectContextId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>
+  addLog: (message: string, type: LogEntry['type']) => void
 ) => {
   try {
     const projectId = projectContextId;
-    addLog(setTerminalLogs, `Starting tests for project ID: ${projectId}`, 'start');
+    addLog(`Starting tests for project ID: ${projectId}`, 'start');
 
     const response = await projectApi.testProject(projectId);
 
     if (response.taskId) {
-      addLog(setTerminalLogs, `Test process initiated. Task ID: ${response.taskId}`, 'start');
-      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog, setTerminalLogs);
+      addLog(`Test process initiated. Task ID: ${response.taskId}`, 'start');
+      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
     } else {
-      addLog(setTerminalLogs, 'Test initiation failed.', 'error');
+      addLog('Test initiation failed.', 'error');
     }
   } catch (error) {
-    addLog(setTerminalLogs, `Error during project test: ${error}`, 'error');
+    addLog(`Error during project test: ${error}`, 'error');
   } finally {
     setIsLoading(false);
   }
@@ -377,24 +400,23 @@ export const handleRunCommand = async (
   projectContextId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>, message: string, type: LogEntry['type']) => void,
-  setTerminalLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>,
+  addLog: (message: string, type: LogEntry['type']) => void,
   commandType: 'anchor clean' | 'cargo clean'
 ) => {
   try {
     const projectId = projectContextId;
-    addLog(setTerminalLogs, `Running command: ${commandType} for project ID: ${projectId}`, 'start');
+    addLog(`Running command: ${commandType} for project ID: ${projectId}`, 'start');
 
     const response = await projectApi.runProjectCommand(projectId, commandType);
 
     if (response.taskId) {
-      addLog(setTerminalLogs, `Command process initiated. Task ID: ${response.taskId}`, 'start');
-      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog, setTerminalLogs);
+      addLog(`Command process initiated. Task ID: ${response.taskId}`, 'start');
+      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
     } else {
-      addLog(setTerminalLogs, 'Command initiation failed.', 'error');
+      addLog('Command initiation failed.', 'error');
     }
   } catch (error) {
-    addLog(setTerminalLogs, `Error running command: ${error}`, 'error');
+    addLog(`Error running command: ${error}`, 'error');
   } finally {
     setIsLoading(false);
   }

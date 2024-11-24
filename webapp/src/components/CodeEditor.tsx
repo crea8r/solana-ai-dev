@@ -4,7 +4,7 @@ import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from '../interfaces/file';
 import Terminal from './Terminal';
-import { LogEntry } from '../utils/codePageUtils';
+import { LogEntry } from '../hooks/useTerminalLogs';
 
 type CodeEditorProps = {
   content: string; 

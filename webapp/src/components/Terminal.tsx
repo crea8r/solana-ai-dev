@@ -3,7 +3,7 @@ import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Di
 import { ChevronRight, Check } from 'lucide-react';
 import { keyframes } from '@emotion/react';
 import { Spinner } from './Spinner';
-import { LogEntry } from '../utils/codePageUtils';
+import { LogEntry } from '../hooks/useTerminalLogs';
 import { CloseIcon, WarningIcon } from '@chakra-ui/icons';
 
 type TerminalProps = {
