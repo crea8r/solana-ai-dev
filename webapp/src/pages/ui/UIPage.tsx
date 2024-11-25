@@ -4,7 +4,7 @@ import TopPanel from "./TopPanel";
 import { useProjectContext } from "../../contexts/ProjectContext";
 import { logout } from "../../services/authApi";
 import { Wallet } from "../../components/Wallet";
-import UISpace from "../../components/UISpace";
+import UISpace from "./UISpace";
 
 const UIPage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
@@ -80,6 +80,7 @@ const UIPage = () => {
           borderLeft="1px solid"
           borderRight="1px solid"
           borderColor="gray.300"
+          overflowY="auto"
         >
           <UISpace />
         </Flex>

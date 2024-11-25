@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useProjectContext } from "../contexts/ProjectContext";
+import { useProjectContext } from "../../contexts/ProjectContext";
 import { Box, VStack, Button, Input, Text, Flex } from "@chakra-ui/react";
 import { Edge, Node } from "react-flow-renderer";
 
