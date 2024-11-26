@@ -10,6 +10,8 @@ const loyaltyRewardsProject: Project = {
     'A Solana program that allows businesses to reward customers with loyalty points and manage point balances.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
+  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -17,7 +19,7 @@ const loyaltyRewardsProject: Project = {
         height: 44,
         id: 'program-34567',
         type: 'program',
-        position: { x: 50, y: 200 }, // Program node on the left
+        position: { x: 50, y: 200 },
         data: {
           label: 'Loyalty Rewards Program',
           item: {

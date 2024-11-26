@@ -31,7 +31,6 @@ export const generateAIResponse = async (
     console.log('apiKey:', ANTHROPIC_API_KEY);
   }
 
-  // preliminary checks
   if (!Array.isArray(messages) || messages.length === 0) return next(new AppError('Invalid messages format', 400));
   if (!model) return next(new AppError('Model is not provided', 400));
   if (!MISTRAL_API_KEY && model === 'Codestral' ||
@@ -140,7 +139,7 @@ export const generateAIResponse = async (
       data: data,
     });
   } catch (error) {
-    console.error('Error generating AI response:', error);
+    console.error('Error generating AI response:', JSON.stringify(error, null, 2));
     next(new AppError('Failed to generate AI response', 500));
   }
 };

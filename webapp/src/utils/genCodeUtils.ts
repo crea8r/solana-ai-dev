@@ -200,7 +200,9 @@ export const ensureInstructionNaming = async (
       const fileContentResponse = await fileApi.getFileContent(projectId, filePath);
       const taskId = fileContentResponse.taskId;
       const pollDesc = `Getting ${filePath} content to change function names.`;
+      console.log('pollDesc', pollDesc);
       const fileContent = await pollTaskStatus(taskId, pollDesc);
+      console.log('fileContent', fileContent);
 
       const updatedContent = fileContent.replace(
         /pub fn\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,

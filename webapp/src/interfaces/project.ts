@@ -14,6 +14,21 @@ export type ProjectInfoToSave = {
   details: ProjectDetailsToSave;
   aiModel: string;
   apiKey: string;
+  walletPublicKey: string;
+  aiInstructions: {
+    function_name: string;
+    params_fields: {
+      name: string;
+      type: string;
+      default_value?: string;
+      validation?: string;
+    }[];
+    accounts: {
+      name: string;
+      type: string;
+      attributes: string[];
+    }[];
+  }[];
 }
 
 export interface ProjectDetailsToSave {
@@ -46,6 +61,21 @@ export interface Project {
   details: ProjectDetails;
   aiModel: string;
   apiKey: string;
+  walletPublicKey: string;
+  aiInstructions: {
+    function_name: string;
+    params_fields: {
+      name: string;
+      type: string;
+      default_value?: string;
+      validation?: string;
+    }[];
+    accounts: {
+      name: string;
+      type: string;
+      attributes: string[];
+    }[];
+  }[];
 }
 
 export type ProjectExample = {

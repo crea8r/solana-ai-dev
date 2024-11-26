@@ -86,6 +86,8 @@ const ListProject: React.FC<ListProjectProps> = ({
           description: '',
           aiModel: 'codestral-latest',
           apiKey: '',
+          walletPublicKey: '',
+          aiInstructions: [],
           details: {
             nodes: [],
             edges: [],

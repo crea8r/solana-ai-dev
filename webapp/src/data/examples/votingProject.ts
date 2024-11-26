@@ -9,6 +9,8 @@ const votingProject: Project = {
   description: 'A Solana program that allows users to vote on a proposal. The program stores the votes and tracks which users have voted.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
+  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -16,7 +18,7 @@ const votingProject: Project = {
         height: 44,
         id: 'program-56789',
         type: 'program',
-        position: { x: 50, y: 200 }, // Left side
+        position: { x: 50, y: 200 },
         data: {
           label: 'Voting Program',
           item: {

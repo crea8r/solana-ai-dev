@@ -10,6 +10,8 @@ const crowdfundingProject: Project = {
     'A Solana program that enables users to create and participate in crowdfunding campaigns, track contributions, and manage fund distributions.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
+  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -17,7 +19,7 @@ const crowdfundingProject: Project = {
         height: 44,
         id: 'program-67890',
         type: 'program',
-        position: { x: 50, y: 300 }, // Program node on the left
+        position: { x: 50, y: 300 },
         data: {
           label: 'Crowdfunding Program',
           item: {

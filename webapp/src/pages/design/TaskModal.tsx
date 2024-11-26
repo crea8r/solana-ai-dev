@@ -42,7 +42,6 @@ import instructionSchema from '../../data/ai_schema/instruction_schema.json';
 import stateSchema from '../../data/ai_schema/state_schema.json';
 import structureSchema from '../../data/ai_schema/structure_schema.json';
 import insModSchema from '../../data/ai_schema/ins_mod_schema.json';
-import libSchema from '../../data/ai_schema/lib_schema.json';
 import sdkSchema from '../../data/ai_schema/sdk_schema.json';
 import testSchema from '../../data/ai_schema/test_schema.json';
 import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils';
@@ -263,7 +262,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
         const normalizedProgramName = normalizeName(projectContext.name);
       
-        // Generate the file paths
         const structurePrompt = genStructure(
           normalizedProgramName,
           projectContext.details.nodes,
@@ -276,8 +274,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           structureSchema,
           'structure'
         );
-
-        //console.log('content', content);
       
         try {
           if (content) {
@@ -290,9 +286,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               console.error('Error parsing JSON from AI response:', jsonError, 'Content:', content);
               throw new Error('Failed to parse JSON from AI response');
             }
-      
-            //console.log('TASKMODAL files', files);
-            //console.log('TASKMODAL files', getFileList(files));
       
             setFileTreePaths(files);
       
@@ -321,25 +314,21 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 aiFilePaths: updatedFilePaths,
               },
             }));
-            //console.log('updatedFilePaths', updatedFilePaths);
-            //console.log('projectContext', projectContext);
-      
+
             const programDirName = normalizedProgramName;
             if (!rootPath || !programDirName) return;
       
             const _existingFilesResponse = await fileApi.getDirectoryStructure(rootPath);
             if (!_existingFilesResponse) return;
       
-            const response = await fileApi.renameDirectory(rootPath, programDirName);
+            await fileApi.renameDirectory(rootPath, programDirName);
       
             const cargoFilePath = `programs/${programDirName}/Cargo.toml`;
             const anchorFilePath = `Anchor.toml`;
       
             await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, programDirName,);
             await amendConfigFile(projectId, 'Anchor.toml', anchorFilePath, programDirName);
-      
-            //console.log('TASKMODAL files', getFileList(files));
-      
+            
             const updatedFileList = getFileList(files)
               .map((file) => {
                 let updatedPath = file.path;
@@ -349,13 +338,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               })
               .filter((file) => file.path);
       
-            // Remove duplicate state.rs files, keep only the one in accounts directory
             const filteredFileList = updatedFileList.filter((file) => {
               if (
                 file.name === 'state.rs' &&
                 file.path !== `programs/${programDirName}/src/state.rs`
               ) {
-                return false; // Exclude duplicate state.rs
+                return false; 
               }
               return true;
             });
@@ -372,7 +360,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               projectContext.details.codes?.map((code) => code.path) || []
             );
       
-            // Separate instruction files and other files
             const instructionFileTasks: Task[] = [];
             const otherFileTasks: Task[] = [];
       
@@ -402,10 +389,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 } else if (!isLibFile) {
                   otherFileTasks.push(task);
                 }
-                // Skip lib.rs as we will generate it later
               });
       
-            // Combine the tasks, instruction files first
             const fileTasks = [...instructionFileTasks, ...otherFileTasks];
       
             setTasks((prevTasks) => {
@@ -445,10 +430,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 )
               );
       
-              const isStateFile =
-                fileTask.path?.includes(`state.rs`);
-              const isInstructionFile =
-                fileTask.path?.includes('/instructions/') && !fileTask.path.endsWith('mod.rs');
+              const isStateFile = fileTask.path?.includes(`state.rs`);
+              const isInstructionFile = fileTask.path?.includes('/instructions/') && !fileTask.path.endsWith('mod.rs');
               const isInstructionModFile = fileTask.path?.endsWith('/instructions/mod.rs');
               const isLibFile = fileTask.name === 'lib.rs';
               const isSdkFile = fileTask.path?.includes('sdk');
@@ -470,7 +453,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
                   const modRsFilePath = `programs/${programDirName}/src/instructions/mod.rs`;
                   await fileApi.updateFile(projectId, modRsFilePath, codeContent);
-      
       
                   setTasks((prevTasks) =>
                     prevTasks.map((task) =>
@@ -510,40 +492,39 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   : isTestFile ? 'test'
                   : '';
       
-                if (_schema === '') {
-                  //console.log('fileTask.name', fileTask.name);
-                  //console.log('fileTask.path', fileTask.path);
-                  throw new Error('No schema for file generation');
-                }
+                if (_schema === '') throw new Error('No schema for file generation');
       
-                const content = await promptAI(
-                  _promptContent,
-                  _model,
-                  _apiKey,
-                  _schema,
-                  _promptType
-                );
+                const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
       
                 let codeContent = '';
                 if (content) {
                   const aiContent = content;
       
-                  //console.log('aiContent', JSON.stringify(aiContent));
-      
                   if (isInstructionFile) {
                     const instructionName = fileName.replace('.rs', '');
-                    const { codeContent: instructionCode, aiData } =
-                      await processAIInstructionOutput(projectId, programDirName, instructionName, aiContent);
+                    const { codeContent: instructionCode, aiData } = await processAIInstructionOutput(projectId, programDirName, instructionName, aiContent);
                     codeContent = instructionCode;
                     instructionDetails.push({
                       instruction_name: instructionName, 
                       context: aiData.context_struct as string,
                       params: aiData.params_struct as string,
                     });
+
+                    setProjectContext((prevContext) => ({
+                      ...prevContext,
+                      aiInstructions: [
+                        ...prevContext.aiInstructions,
+                        {
+                          function_name: instructionName,
+                          params_fields: aiData.params_fields,
+                          accounts: aiData.accounts,
+                        },
+                      ],
+                    }));
+
                   } else if (isStateFile) {
                     codeContent = await processAIStateOutput(projectId, programDirName, aiContent);
       
-                    // Save stateContent for further use if needed
                     setProjectContext((prevContext) => ({
                       ...prevContext,
                       details: {
@@ -551,16 +532,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         stateContent: codeContent,
                       },
                     }));
-                  } else if (isSdkFile) {
-                    //console.log('isSdkFile', isSdkFile);
-                    codeContent = await processAISdkOutput(projectId, programDirName, aiContent);
-                  } else if (isTestFile) {
-                    codeContent = await processAITestOutput(projectId, programDirName, aiContent);
-                  } else {
-                    codeContent = aiContent;
-                  }
-      
-                  //console.log('codeContent', fileTask.name, codeContent);
+                  } else if (isSdkFile) { codeContent = await processAISdkOutput(projectId, programDirName, aiContent); } 
+                  else if (isTestFile) { codeContent = await processAITestOutput(projectId, programDirName, aiContent); } 
+                  else { codeContent = aiContent; }
       
                   const updatedFilePath = filePath?.replace(
                     /\/programs\/[^/]+\//,
@@ -601,7 +575,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               }
             }
       
-            // Generate lib.rs after processing instruction files
             const libRsPath = `programs/${programDirName}/src/lib.rs`;
             const anchorTomlPath = `Anchor.toml`;
             const programId = await extractProgramIdFromAnchorToml(
@@ -625,10 +598,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               },
             }));
       
-            // Update tasks status
-            setTasks((prevTasks) =>
-              prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'completed' } : task))
-            );
+            setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'completed' } : task)) );
       
             if (filteredFileList && filteredFileList.length > 0) {
               const instructionPaths = filteredFileList
@@ -666,8 +636,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'failed' } : task))
           );
         }
-      };
-      
+    };
 
     const handleAnchorInitTask = async (projectId: string, rootPath: string, projectName: string) => {
         try {

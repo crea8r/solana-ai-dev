@@ -28,14 +28,11 @@ import {
 } from "@chakra-ui/react";
 import { CheckIcon, CopyIcon, TimeIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 import { KeyRound, WalletIcon } from 'lucide-react';
-import { getPrivateKey, getWalletInfo } from '../api/wallet'; // Adjust import path if necessary
+import { getPrivateKey, getWalletInfo } from '../api/wallet';
 import { WalletPrivateKeyInfo, WalletInfo } from '../interfaces/wallet';
 import { AuthContext } from '../contexts/AuthContext';
 
-interface WalletCreationModalProps {
-  userId: string;
-  onClose: () => void;
-};
+interface WalletCreationModalProps { userId: string; onClose: () => void; };
 
 export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId, onClose }) => {
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);

@@ -1,5 +1,3 @@
-// src/items/Account.ts
-
 import React, { memo } from 'react';
 import { Node } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';

@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
 import { Project, ProjectInfoToSave } from '../interfaces/project';
+import { getWalletInfo } from '../api/wallet';
 
-// Define transformation function
 export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSave => ({
   id: project.id,
   name: project.name,
   description: project.description,
+  walletPublicKey: project.walletPublicKey,
+  aiInstructions: project.aiInstructions,
+  aiModel: project.aiModel,
+  apiKey: project.apiKey,
   details: {
     nodes: project.details.nodes,
     edges: project.details.edges,
@@ -14,8 +18,6 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     aiFilePaths: project.details.aiFilePaths,
     aiStructure: project.details.aiStructure,
   },
-  aiModel: project.aiModel,
-  apiKey: project.apiKey,
 });
 
 interface ProjectContextType {
@@ -25,6 +27,7 @@ interface ProjectContextType {
   setProjectInfoToSave: Dispatch<SetStateAction<ProjectInfoToSave>>;
   stateContent: string;
   setStateContent: Dispatch<SetStateAction<string>>;
+  updateInstructions: (instructions: Project['aiInstructions']) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -42,6 +45,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: '',
         aiModel: 'codestral-latest',
         apiKey: '',
+        walletPublicKey: '',
         details: {
           nodes: [],
           edges: [],
@@ -54,8 +58,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           aiStructure: '',
           stateContent: '',
         },
+        aiInstructions: [],
       };
   });
+
+  const updateInstructions = (instructions: Project['aiInstructions']) => {
+    setProjectContext((prev) => ({
+      ...prev,
+      aiInstructions: instructions,
+    }));
+  };
 
   const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
   const [stateContent, setStateContent] = useState<string>('');
@@ -64,6 +76,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (projectContext) sessionStorage.setItem('projectContext', JSON.stringify(projectContext));
     setProjectInfoToSave(transformToProjectInfoToSave(projectContext));
   }, [projectContext]);
+
+  useEffect(() => {
+    const fetchWalletInfo = async () => {
+      try {
+        const walletInfo = await getWalletInfo(projectContext.id);
+        setProjectContext((prev) => ({
+          ...prev,
+          walletPublicKey: walletInfo.publicKey,
+        }));
+      } catch (error) {
+        console.error('Failed to fetch wallet info:', error);
+      }
+    };
+
+    fetchWalletInfo();
+  }, [projectContext.id]);
 
   return (
     <ProjectContext.Provider
@@ -74,6 +102,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setProjectInfoToSave,
         stateContent,
         setStateContent,
+        updateInstructions,
       }}
     >
       {children}

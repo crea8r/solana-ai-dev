@@ -10,6 +10,8 @@ const escrowPaymentProject: Project = {
     'A Solana program that securely holds funds in escrow until both parties agree to release the payment.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
+  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -17,7 +19,7 @@ const escrowPaymentProject: Project = {
         height: 44,
         id: 'program-56789',
         type: 'program',
-        position: { x: 50, y: 200 }, // Program node on the left
+        position: { x: 50, y: 200 },
         data: {
           label: 'Escrow Payment Program',
           item: {

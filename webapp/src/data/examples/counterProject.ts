@@ -9,6 +9,8 @@ const counterProject: Project = {
   description: 'A Solana program to increment or reset a shared counter, with restricted reset permissions.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
+  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -16,7 +18,7 @@ const counterProject: Project = {
         height: 44,
         id: 'program-12345',
         type: 'program',
-        position: { x: 50, y: 200 }, // Left side
+        position: { x: 50, y: 200 },
         data: {
           label: 'Counter Program',
           item: {

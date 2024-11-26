@@ -22,7 +22,6 @@ This ensures the \`payer\` account is mutable as required by Anchor's constraint
 
 !Don't forget to add the Overflow variant to the error enum if applicable.!
 
-
 \`\`\`rust
 use anchor_lang::prelude::*;
 use crate::state::*;
@@ -63,6 +62,10 @@ ${JSON.stringify(instructionSchema, null, 2)}
 5. "params_fields": A list of parameter fields, each with:
    - "name": Parameter name as a string.
    - "type": Parameter type (e.g., "u64", "String").
+   - "expected_source": Indicates the expected source of the parameter value. Options include:
+      - "wallet": Indicates the value should come from the Solai user's wallet public key.
+      - "account": Indicates the value should come from another on-chain account.
+      - "none": Indicates no specific source is required (e.g., numeric or string input from the user).
 6. "error_codes": A list of error codes, each with:
    - "name": Error code name in PascalCase.
    - "msg": A human-readable error message.

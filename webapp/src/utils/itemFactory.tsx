@@ -1,5 +1,3 @@
-// src/utils/itemFactory.ts
-
 import { NodeTypes } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { Account } from '../items/Account';
@@ -10,11 +8,19 @@ import { Handle, Position, NodeProps } from 'react-flow-renderer';
 
 export function createItem(type: string, itemData?: Partial<ToolboxItem>): ToolboxItem | null {
   switch (type) {
-    case 'account':
-      return Object.assign(
-        new Account(itemData?.id || `account-${Date.now()}`, itemData?.name || 'Account', '', '', ''),
-        itemData
-      );    
+    case 'account': {
+      const accountData = itemData as Partial<Account>;
+      const account = new Account(
+        itemData?.id || `account-${Date.now()}`,
+        itemData?.name || 'Account',
+        itemData?.description || '',
+        accountData?.json || '',
+        accountData?.ownerProgramId || ''
+      );
+
+      Object.assign(account, itemData);
+      return account;
+    }  
     case 'instruction':
       const instructionData = itemData as Partial<Instruction>;
       return Object.assign(

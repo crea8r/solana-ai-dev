@@ -92,7 +92,6 @@ const genFile = (
   programs.forEach((program) => {
     const program_data = program.data.item as Program;
 
-    // Collect all instruction nodes connected to the program
     const instructionNodes = nodes.filter((node) => {
       return (
         node.type === 'instruction' &&

@@ -37,10 +37,16 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       const selectedProject = predefinedProjects[exampleName];
       if (!selectedProject) return;
 
-      const instantiatedNodes = selectedProject.details.nodes
-        .map((node): ReactFlowNode | null => {
-          if (!node.type || !node.data.item) return null;
+      console.log('Selected Project Nodes:', selectedProject.details.nodes);
+
+      const instantiatedNodes = selectedProject.details.nodes.map((node): ReactFlowNode | null => {
+          if (!node.type || !node.data.item) { console.error('Invalid node:', node); return null; }
           const item = loadItem(node.type, node.data.item);
+          if (!item) {
+            console.error('Failed to load item for node:', node);
+            return null;
+          }
+          console.log('Loaded Item:', item);
           return {
             ...node,
             data: {
@@ -50,6 +56,8 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           } as ReactFlowNode;
         })
         .filter((node): node is ReactFlowNode => node !== null);
+
+      console.log('Instantiated Nodes:', instantiatedNodes);
 
       setProjectContext((prev) => ({
         ...prev,
