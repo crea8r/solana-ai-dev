@@ -322,45 +322,38 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
+      console.log("fetchedProject", fetchedProject);
 
-      const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
-        const restoredItem = createItem(node.data.item.type);
-        return {
+      setProjectContext((prevProjectContext) => {
+        const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
           ...node,
           data: {
             ...node.data,
-            item: restoredItem,
+            item: createItem(node.data.item.type, node.data.item),
+          },
+        }));
+        console.log("nodesWithTypedItems", nodesWithTypedItems);
+      
+        return {
+          ...prevProjectContext,
+          id: fetchedProject.id,
+          rootPath: fetchedProject.root_path,
+          name: fetchedProject.name,
+          description: fetchedProject.description,
+          details: {
+            ...prevProjectContext.details,
+            nodes: nodesWithTypedItems || [],
+            edges: fetchedProject.details.edges || [],
+            isSaved: fetchedProject.details.isSaved,
+            isAnchorInit: fetchedProject.details.isAnchorInit,
+            isCode: fetchedProject.details.isCode,
+            files: { name: '', children: [] },
+            codes: [],
+            docs: [],
           },
         };
       });
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        id: fetchedProject.id,
-        rootPath: fetchedProject.root_path,
-        name: fetchedProject.name,
-        description: fetchedProject.description,
-        details: {
-          ...prevProjectContext.details,
-          nodes: fetchedProject.details.nodes,
-          edges: fetchedProject.details.edges,
-          isSaved: fetchedProject.details.isSaved,
-          isAnchorInit: fetchedProject.details.isAnchorInit,
-          isCode: fetchedProject.details.isCode,
-          files: { name: '', children: [] },
-          codes: [],
-          docs: [],
-        },
-      }));
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        details: {
-          ...prevProjectContext.details,
-          nodes: nodesWithTypedItems || [],
-          edges: fetchedProject.details.edges || [],
-        },
-      }));
+      
 
     } catch (e) {
       toast({

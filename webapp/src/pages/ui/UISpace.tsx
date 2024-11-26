@@ -8,6 +8,10 @@ const RuntimeInteractor = () => {
   const { nodes, edges } = projectContext.details;
 
   useEffect(() => {
+    console.log("projectContext", projectContext);
+  }, [projectContext]);
+
+  useEffect(() => {
     console.log("nodes", nodes);
     console.log("edges", edges);
   }, [nodes, edges]);
@@ -40,7 +44,7 @@ const RuntimeInteractor = () => {
 
   return (
     <Box>
-      <VStack spacing={6}>
+      <Flex gap={6} flexWrap="wrap">
         {instructionNodes.map((node, idx) => {
           const instructionName = node.data.item.name || "Unnamed Instruction";
           const description = node.data.item.description || "No description available.";
@@ -108,7 +112,7 @@ const RuntimeInteractor = () => {
             ))}
           </Box>
         ))}
-      </VStack>
+      </Flex>
     </Box>
   );
 };

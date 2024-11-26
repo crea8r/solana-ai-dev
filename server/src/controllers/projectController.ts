@@ -328,12 +328,9 @@ export const getProjectDetails = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
 
   try {
-    // Get project details
     const projectResult = await pool.query(
       `
       SELECT id, name, description, org_id, root_path, details, last_updated, created_at
@@ -343,18 +340,10 @@ export const getProjectDetails = async (
       [id, orgId]
     );
 
-    if (projectResult.rows.length === 0) {
-      return next(
-        new AppError(
-          'Project not found or you do not have permission to access it',
-          404
-        )
-      );
-    }
+    if (projectResult.rows.length === 0) return next( new AppError( 'Project not found or you do not have permission to access it', 404 ) );
 
     const project = projectResult.rows[0];
 
-    // Get recent tasks (e.g., last 5 tasks)
     const tasksResult = await pool.query(
       `
       SELECT id, name, status, created_at, last_updated
@@ -366,7 +355,6 @@ export const getProjectDetails = async (
       [id]
     );
 
-    // Get file tree (assuming you have a function to generate this)
     const fileTreeResult = await pool.query(
       `
       SELECT result
@@ -378,12 +366,8 @@ export const getProjectDetails = async (
       [id]
     );
 
-    const fileTree =
-      fileTreeResult.rows.length > 0
-        ? JSON.parse(fileTreeResult.rows[0].result)
-        : null;
+    const fileTree = fileTreeResult.rows.length > 0 ? JSON.parse(fileTreeResult.rows[0].result) : null;
 
-    // Combine all information
     const projectDetails = {
       ...project,
       recentTasks: tasksResult.rows,

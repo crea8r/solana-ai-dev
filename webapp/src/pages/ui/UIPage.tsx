@@ -80,6 +80,8 @@ const UIPage = () => {
           borderLeft="1px solid"
           borderRight="1px solid"
           borderColor="gray.300"
+          border="1px solid red !important"
+          boxSizing="border-box"
           overflowY="auto"
         >
           <UISpace />
