@@ -12,10 +12,11 @@ import {
 interface TopPanelProps {
   onBuild: () => void;
   onSave: () => void;
-  onTest: () => void; // New onTest prop
+  onTest: () => void;
+  onDeploy: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest }) => {
+const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest, onDeploy }) => {
   return (
     <Flex
       borderBottom="1px solid"
@@ -42,6 +43,7 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest }) => {
           </MenuList>
         </Menu>
         <Button variant="ghost" size="xs" mr={2} onClick={onBuild}>Build</Button>
+        <Button variant="ghost" size="xs" mr={2} onClick={onDeploy}>Deploy</Button>
         <Button variant="ghost" size="xs" onClick={onTest}>Test</Button>
       </Flex>
       <Avatar size="xs" src="/placeholder.svg" />

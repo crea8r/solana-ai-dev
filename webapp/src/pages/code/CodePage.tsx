@@ -16,8 +16,10 @@ import {
   handleTestProject,
   handleRunCommand,
   handleSelectFileUtil,
-  findFirstFile
+  findFirstFile,
+  handleDeployProject
 } from '../../utils/codePageUtils';
+import { saveProject } from '../../utils/projectUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 
 const CodePage = () => {
@@ -132,8 +134,9 @@ const CodePage = () => {
   }, [files, projectContext?.details?.codes]);
   
 
-  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, addLog, fileContent); };
+  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); };
   const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
+  const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
   const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
@@ -146,7 +149,7 @@ const CodePage = () => {
       justifyContent="space-between"
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
-        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} />
+        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} onDeploy={_handleDeployProject} />
       </Flex>
 
       <Flex flex="1" overflow="hidden">

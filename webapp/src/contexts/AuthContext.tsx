@@ -14,14 +14,22 @@ interface User {
   hasViewedWalletModal?: boolean;
 }
 
+interface RegisterResponse {
+  user: {
+    id: string;
+    username: string;
+  };
+}
+
 interface AuthContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   login: (username: string, password: string) => Promise<void>;
   register: (
     orgName: string,
     username: string,
     password: string
-  ) => Promise<void>;
+  ) => Promise<RegisterResponse>;
   logout: () => void;
   firstLoginAfterRegistration: boolean;
   markWalletModalViewed: () => void;
@@ -91,10 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     orgName: string,
     username: string,
     password: string
-  ) => {
+  ): Promise<RegisterResponse> => {
     try {
-      await apiRegister(orgName, username, password);
+      const response: RegisterResponse = await apiRegister(orgName, username, password);
       setFirstLoginAfterRegistration(true);
+      return response;
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -111,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         login,
         register,
         logout,

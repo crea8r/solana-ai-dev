@@ -8,6 +8,9 @@ import stateSchema from '../data/ai_schema/state_schema.json';
 import sdkSchema from '../data/ai_schema/sdk_schema.json';
 import testSchema from '../data/ai_schema/test_schema.json';
 import Ajv from 'ajv';
+import path from 'path-browserify';
+
+const walletsFolder = process.env.WALLETS_FOLDER || '/root/projects/solana-ai-dev/wallets';
 
 type CargoToml = {
   package?: { name?: string; };
@@ -124,6 +127,7 @@ export function extractCodeBlock(text: string): string {
 }
 
 export const amendConfigFile = async (
+  userId: string,
   projectId: string,
   fileName: string,
   filePath: string,
@@ -131,7 +135,6 @@ export const amendConfigFile = async (
 ): Promise<string> => {
   console.log('amendConfigFile filePath', filePath);
 
-  // Fetch existing file content
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
   const _pollDesc = `Getting ${fileName} content to amend content.`;
@@ -140,21 +143,17 @@ export const amendConfigFile = async (
   let updatedToml = oldContent;
 
   if (fileName === 'Cargo.toml') {
-    // Split the file into lines for easier manipulation
     const lines = oldContent.split('\n');
     const dependenciesStartIndex = lines.findIndex((line) => line.trim() === '[dependencies]');
 
     if (dependenciesStartIndex !== -1) {
-      // Remove any existing anchor-lang line in the dependencies block
       const updatedLines = lines.filter(
         (line, index) =>
           !(index > dependenciesStartIndex && line.trim().startsWith('anchor-lang'))
       );
 
-      // Add the new anchor-lang dependency string
       updatedLines.splice(dependenciesStartIndex + 1, 0, 'anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }');
 
-      // Join the lines back into a single TOML string
       updatedToml = updatedLines.join('\n');
     }
   }
@@ -173,13 +172,21 @@ export const amendConfigFile = async (
       delete parsedToml.programs;
       parsedToml['programs.localnet'] = localnet;
 
-      updatedToml = stringify(parsedToml);
+    } else  throw new Error('[programs.localnet] section not found in Anchor.toml');
+
+    if (parsedToml.provider) {
+      parsedToml.provider.cluster = 'Devnet';
+      if (walletsFolder === '') throw new Error('WALLETS_FOLDER environment variable is not set');
+      const userWalletPath = path.join(walletsFolder, `${userId}.json`);
+      parsedToml.provider.wallet = userWalletPath;
+
     } else {
-      throw new Error('[programs.localnet] section not found in Anchor.toml');
+      throw new Error('[provider] section not found in Anchor.toml');
     }
+
+    updatedToml = stringify(parsedToml);
   }
 
-  // Update the file with the modified content
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
   const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
   return updatedFileContent;

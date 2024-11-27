@@ -8,7 +8,7 @@ import { WalletInfo } from 'src/types';
 import { AppError } from 'src/middleware/errorHandler';
 import path from 'path';
 import fs from 'fs';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
@@ -54,6 +54,9 @@ export const createWallet = async (
       if (error) { console.error(`Error generating wallet: ${stderr}`); return next(new AppError(`Error generating wallet: ${stderr}`, 500)); }
 
       try {
+        execSync(`solana config set --keypair ${walletPath}`, { stdio: 'inherit' }); // set as default signer
+        execSync(`solana config set --url devnet`, { stdio: 'inherit' }); // set cluster to devnet
+
         const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
 
         const privateKeyArray = Uint8Array.from(walletData);
@@ -68,11 +71,9 @@ export const createWallet = async (
 
         try {
           await airdropTokens(publicKey, 2);
+          walletInfo.balance = 2;
           console.log("Wallet Balance:", walletInfo.balance);
-        } catch (airdropError) {
-          console.error(`Failed to airdrop tokens: ${airdropError}`);
-          return next(new AppError("Failed to airdrop test tokens", 500));
-        }
+        } catch (airdropError) { console.error(`Failed to airdrop tokens: ${airdropError}`);  return next(new AppError("Failed to airdrop test tokens", 500)); }
 
         try {
           await client.query('BEGIN');

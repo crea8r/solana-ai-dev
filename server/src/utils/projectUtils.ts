@@ -101,6 +101,34 @@ export const startAnchorBuildTask = async (
   return taskId;
 };
 
+export const startAnchorDeployTask = async (
+  projectId: string,
+  creatorId: string
+): Promise<string> => {
+  const taskId = await createTask('Anchor Deploy', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const rootPath = await getProjectRootPath(projectId);
+      const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
+
+      await runCommand(`solana config set --url https://api.devnet.solana.com`, projectPath, taskId);
+
+      await runCommand('anchor deploy', projectPath, taskId).catch(async (error) => {
+        await updateTaskStatus(
+          taskId,
+          'failed',
+          `Error: ${error.message || 'Unknown error occurred'}`
+        );
+      });
+    } catch (error: any) {
+      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+    }
+  });
+
+  return taskId;
+};
+
 export const startAnchorTestTask = async (
   projectId: string,
   creatorId: string

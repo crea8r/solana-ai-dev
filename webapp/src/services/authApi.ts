@@ -29,7 +29,7 @@ export const register = async (
   organisation: string,
   username: string,
   password: string
-) => {
+): Promise<any> => {
   try {
     const response = await authApi.post('/auth/register', {
       organisation,

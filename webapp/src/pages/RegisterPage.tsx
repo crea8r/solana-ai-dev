@@ -17,7 +17,7 @@ import {
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container } from "@tsparticles/engine";
+import { useAuthContext } from '../contexts/AuthContext';
 
 const style: React.CSSProperties = {
   position: "relative",
@@ -149,6 +149,8 @@ const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
 });
 
 const RegisterPage: React.FC = () => {
+  const { setUser } = useAuthContext();
+
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -169,7 +171,24 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      await register(orgName, username, password);
+      const response = await register(orgName, username, password);
+      setUser((prev) => {
+        if (!prev) {
+          return {
+            id: response.user.id,
+            username: response.user.username,
+            org_id: '',
+            orgName: orgName,
+            walletCreated: false,
+            hasViewedWalletModal: false,
+          };
+        }
+    
+        return {
+          ...prev,
+          id: response.user.id,
+        };
+      });
       navigate('/login');
     } catch (err) {
       console.error('Registration failed:', err);

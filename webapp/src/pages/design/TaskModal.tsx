@@ -326,8 +326,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const cargoFilePath = `programs/${programDirName}/Cargo.toml`;
             const anchorFilePath = `Anchor.toml`;
       
-            await amendConfigFile(projectId, 'Cargo.toml', cargoFilePath, programDirName,);
-            await amendConfigFile(projectId, 'Anchor.toml', anchorFilePath, programDirName);
+            await amendConfigFile(projectContext.id, projectId, 'Cargo.toml', cargoFilePath, programDirName);
+            await amendConfigFile(projectContext.id, projectId, 'Anchor.toml', anchorFilePath, programDirName);
             
             const updatedFileList = getFileList(files)
               .map((file) => {

@@ -29,11 +29,9 @@ export const startPollingTaskStatus = (
         setIsPolling(false);
         setIsLoading(false);
 
-        if (status === 'warning') {
-          if (!silent) addLog(taskResponse.task.result || '', 'warning');
-        } else {
-          if (!silent) addLog('Task completed successfully', 'success');
-        }
+        if (status === 'warning') if (!silent) addLog(taskResponse.task.result || '', 'warning');
+        else if (!silent) addLog('Task completed successfully', 'success');
+
         if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
       } else if (status === 'failed') {
         clearInterval(intervalId);
@@ -297,6 +295,7 @@ export const handleSave = async (
   selectedFile: FileTreeItemType,
   projectContextId: string,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   addLog: (message: string, type: LogEntry['type']) => void,
   fileContent: string
 ) => {
@@ -311,8 +310,9 @@ export const handleSave = async (
   const content = fileContent;
 
   try {
-    await fileApi.updateFile(projectId, filePath, content);
-    addLog(`File saved successfully: ${filePath}`, 'success');
+    const response = await fileApi.updateFile(projectId, filePath, content);
+    const taskId = response.taskId;
+    startPollingTaskStatus(taskId, setIsPolling, setIsLoading, addLog);
   } catch (error) {
     addLog(`Error saving file: ${error}`, 'error');
   } finally {
@@ -367,15 +367,34 @@ export const handleBuildProject = async (
     const response = await projectApi.buildProject(projectId);
 
     if (response.taskId) {
-      addLog('Building project...', 'start');
+      addLog('Building project. This may take a few minutes...', 'start');
       startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
-    } else {
-      addLog('Build initiation failed.', 'error');
-    }
+    } else addLog('Build initiation failed.', 'error');
+
   } catch (error) {
     addLog(`Error during project build: ${error}`, 'error');
   }
 };
+
+export const handleDeployProject = async (
+  projectId: string,
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  addLog: (log: string) => void
+): Promise<void> => {
+  try {
+    setIsLoading(true);
+    addLog('Starting deployment process...');
+    const response = await projectApi.deployProject(projectId);
+    startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+  } catch (error) {
+    console.error('Error during deployment:', error);
+    addLog('Failed to start deployment process.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
 export const handleTestProject = async (
   projectContextId: string,

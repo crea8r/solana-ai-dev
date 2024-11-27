@@ -6,6 +6,7 @@ import { getProjectRootPath, startDeleteProjectFolderTask } from '../utils/fileU
 import { normalizeProjectName } from '../utils/stringUtils';
 import {
   startAnchorBuildTask,
+  startAnchorDeployTask,
   startAnchorInitTask,
   startAnchorTestTask,
   startCustomCommandTask,
@@ -49,9 +50,7 @@ export const createProject = async (
   const org_id = req.user?.org_id;
   const userId = req.user?.id;
 
-  if (!org_id || !userId) {
-    return next(new AppError('User organization not found', 400));
-  }
+  if (!org_id || !userId) return next(new AppError('User organization not found', 400));
 
   const client = await pool.connect();
 
@@ -276,6 +275,46 @@ export const buildProject = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const deployProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
+
+  try {
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to deploy it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startAnchorDeployTask(id, userId);
+
+    res.status(200).json({
+      message: 'Anchor deploy process started',
+      taskId: taskId,
+    });
+  } catch (error) {
+    console.error('Error in deployProject:', error);
+    next(new AppError('Failed to start deployment process', 500));
   }
 };
 

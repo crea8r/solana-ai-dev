@@ -85,6 +85,16 @@ export const projectApi = {
     }
   },
 
+  deployProject: async (projectId: string): Promise<TaskResponse> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/deploy`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deploying project:', error);
+      throw error;
+    }
+  },
+
   buildProject: async (projectId: string): Promise<TaskResponse> => {
     try {
       const response = await api.post(`/projects/${projectId}/build`);
