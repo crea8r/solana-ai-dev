@@ -282,6 +282,7 @@ const crowdfundingProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 };
 

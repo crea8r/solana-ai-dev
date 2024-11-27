@@ -17,6 +17,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     isCode: project.details.isCode,
     aiFilePaths: project.details.aiFilePaths,
     aiStructure: project.details.aiStructure,
+    uiResults: project.details.uiResults,
   },
 });
 
@@ -57,6 +58,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           aiFilePaths: [],
           aiStructure: '',
           stateContent: '',
+          uiResults: [],
         },
         aiInstructions: [],
       };

@@ -158,6 +158,7 @@ const votingProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 };
 

@@ -14,6 +14,26 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const connection = new Connection("https://api.devnet.solana.com");
 
+export const airdropTokens = async (
+  publicKey: string,
+  amount: number = 1
+): Promise<void> => {
+  try {
+    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+    const walletPublicKey = new PublicKey(publicKey);
+    console.log(`Requesting airdrop of ${amount} SOL to wallet: ${walletPublicKey.toBase58()}`);
+
+    const airdropSignature = await connection.requestAirdrop(walletPublicKey, amount * 1e9); // 1 SOL = 10^9 lamports
+
+    await connection.confirmTransaction(airdropSignature, "confirmed");
+
+    console.log(`Successfully airdropped ${amount} SOL to ${walletPublicKey.toBase58()}`);
+  } catch (error: any) {
+    console.error(`Failed to airdrop tokens: ${error}`);
+    throw new AppError(`Failed to airdrop tokens: ${error.message}`, 500);
+  }
+};
+
 export const createWallet = async (
   req: Request,
   res: Response,
@@ -23,6 +43,7 @@ export const createWallet = async (
   if (!userId) return next(new AppError('User ID not found', 400));
 
   const client = await pool.connect();
+
   try {
     const result = await client.query('SELECT wallet_created FROM Creator WHERE id = $1', [userId]);
     const walletCreated = result.rows[0]?.wallet_created;
@@ -30,23 +51,14 @@ export const createWallet = async (
 
     const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${userId}.json`);
     exec(`solana-keygen new --outfile ${walletPath} --no-bip39-passphrase`, async (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error generating wallet: ${stderr}`);
-        return next(new AppError(`Error generating wallet: ${stderr}`, 500));
-      }
+      if (error) { console.error(`Error generating wallet: ${stderr}`); return next(new AppError(`Error generating wallet: ${stderr}`, 500)); }
 
       try {
         const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
-        console.log(walletData);
 
-        // Create a Uint8Array from the private key array
         const privateKeyArray = Uint8Array.from(walletData);
         const keypair = Keypair.fromSecretKey(privateKeyArray);
         const publicKey = keypair.publicKey.toBase58();
-        console.log("privateKeyArray", privateKeyArray);
-        console.log("keypair", keypair);
-        console.log("publicKey", publicKey);
-
 
         const walletInfo: WalletInfo = {
           publicKey,
@@ -54,8 +66,13 @@ export const createWallet = async (
           creationDate: new Date().toISOString(),
         };
 
-      // Optionally overwrite the wallet file to remove the private key after returning it
-      //fs.writeFileSync(walletPath, JSON.stringify([publicKey]), 'utf-8');
+        try {
+          await airdropTokens(publicKey, 2);
+          console.log("Wallet Balance:", walletInfo.balance);
+        } catch (airdropError) {
+          console.error(`Failed to airdrop tokens: ${airdropError}`);
+          return next(new AppError("Failed to airdrop test tokens", 500));
+        }
 
         try {
           await client.query('BEGIN');
@@ -205,6 +222,15 @@ export const register = async (req: Request, res: Response) => {
         private_key_viewed: false,
       });
 
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      //console.log("registration success, cookie set", token);
+
       res.status(201).json({
         message: 'User registered successfully',
         token,
@@ -227,7 +253,6 @@ export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   try {
-    // Get user from database
     const result = await pool.query(
       'SELECT Creator.*, Organisation.name as org_name FROM Creator JOIN Organisation ON Creator.org_id = Organisation.id WHERE Creator.username = $1',
       [username]

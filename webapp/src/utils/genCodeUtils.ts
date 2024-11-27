@@ -83,20 +83,17 @@ export function getFileList(
   item: FileTreeItemType,
   fileList: { name: string; path: string }[] = []
 ): { name: string; path: string }[] {
-  // Validate item and ensure it has a valid name
   if (!item || !item.name) {
     console.error('Invalid item encountered:', item);
-    return fileList; // Skip invalid items
+    return fileList;
   }
 
-  // If the item has children, recursively process them
   if (item.children && item.children.length > 0) {
     for (const child of item.children) {
       getFileList(child, fileList);
     }
   } else {
-    // Add item to the file list with a fallback for missing `path`
-    const path = item.path || item.name; // Fallback to `name` if `path` is missing
+    const path = item.path || item.name;
     fileList.push({ name: item.name, path });
   }
 
@@ -248,12 +245,12 @@ export const normalizeName = (name: string): string => {
   }
   return name
     .trim()
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')     // Insert underscore between lower-upper
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')   // Insert underscore between upper-upper-lower
-    .replace(/\s+/g, '_')                       // Replace spaces with underscores
-    .toLowerCase()                              // Convert to lowercase
-    .replace(/[^a-z0-9_]+/g, '')                // Remove non-alphanumeric except underscores
-    .replace(/^_+|_+$/g, '');                   // Remove leading/trailing underscores
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
+    .replace(/\s+/g, '_')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '')
+    .replace(/^_+|_+$/g, '');
 };
 
 export const getNormalizedInstructionNames = (

@@ -37,11 +37,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
 
   const handleMouseEnter = () => setHover(true);
   const handleMouseLeave = () => setHover(false);
-
-  useEffect(() => {
-    console.log('apiKey:', apiKey);
-  }, [apiKey]);
-
+  
   return (
     <Flex as="header" h="14" justify="flex-end" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6}>
       <Flex align="center" gap={4}>

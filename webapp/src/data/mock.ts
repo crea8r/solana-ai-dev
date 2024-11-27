@@ -226,6 +226,7 @@ const todoproject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 } as Project;
 export { todoproject };

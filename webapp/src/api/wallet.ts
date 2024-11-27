@@ -10,16 +10,16 @@ export const createWallet = async (userId: string): Promise<void> => {
     }
   };
   
-  export const getWalletInfo = async (userId: string): Promise<WalletInfo> => {
-    try {
-      const response = await api.get('/auth/wallet/info', {
-        params: { userId }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  };
+export const getWalletInfo = async (userId: string): Promise<WalletInfo> => {
+  try {
+    const response = await api.get('/auth/wallet/info', {
+      params: { userId }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
   
   export const getPrivateKey = async (userId: string): Promise<WalletPrivateKeyInfo> => {
     try {

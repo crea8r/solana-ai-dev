@@ -38,6 +38,7 @@ export interface ProjectDetailsToSave {
   aiFilePaths: string[];
   aiStructure: string;
   isCode: boolean;
+  uiResults: any[];
 }
 
 export interface ProjectDetails {
@@ -51,6 +52,7 @@ export interface ProjectDetails {
   aiFilePaths: string[];
   aiStructure: string;
   stateContent: string | undefined;
+  uiResults: any[];
 }
 
 export interface Project {

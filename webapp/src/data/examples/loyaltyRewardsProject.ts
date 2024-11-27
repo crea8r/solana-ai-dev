@@ -194,6 +194,7 @@ const loyaltyRewardsProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 };
 

@@ -515,9 +515,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       aiInstructions: [
                         ...prevContext.aiInstructions,
                         {
-                          function_name: instructionName,
+                          function_name: aiData.function_name,
+                          context_struct: aiData.context_struct,
                           params_fields: aiData.params_fields,
                           accounts: aiData.accounts,
+                          error_codes: aiData.error_codes,
+                          function_logic: aiData.function_logic,
+                          accounts_structure: aiData.accounts_structure,
                         },
                       ],
                     }));

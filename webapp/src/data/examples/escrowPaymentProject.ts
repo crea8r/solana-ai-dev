@@ -193,6 +193,7 @@ const escrowPaymentProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 };
 

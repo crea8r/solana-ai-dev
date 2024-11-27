@@ -2,15 +2,21 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useProjectContext } from "../../contexts/ProjectContext";
 import { Box, Button, Input, Text, Flex } from "@chakra-ui/react";
 import { Edge, Node } from "react-flow-renderer";
-import { matchInstruction, handleCallInstruction } from "../../utils/uiUtils";
+import { 
+  matchInstruction, 
+  handleCallInstruction, 
+  handleInputChange,
+  generateUI
+} from "../../utils/uiUtils";
 
 
 const UISpace = () => {
-  const { projectContext } = useProjectContext();
+  const { projectContext, setProjectContext } = useProjectContext();
   const { aiInstructions } = projectContext;
   const { nodes, edges } = projectContext.details;
 
   const [instructionInputs, setInstructionInputs] = useState<{ [key: string]: string[] }>({});
+  const [uiGenerated, setUiGenerated] = useState(false);
 
   useEffect(() => {
     console.log("AI Instructions:", aiInstructions);
@@ -28,17 +34,26 @@ const UISpace = () => {
     setInstructionInputs(initialInputs);
   }, [aiInstructions]);
 
-  const handleInputChange = (instructionKey: string, paramIdx: number, value: string) => {
-    setInstructionInputs((prev) => {
-      const prevInputs = prev[instructionKey] || [];
-      const newInputs = [...prevInputs];
-      newInputs[paramIdx] = value;
-      return {
-        ...prev,
-        [instructionKey]: newInputs,
-      };
-    });
-  };
+  /*
+  useEffect(() => {
+    console.log("ui generated:", uiGenerated);
+  }, [uiGenerated]);
+
+  useEffect(() => {
+    const uiResults = generateUI(
+      aiInstructions, 
+      projectContext.aiModel, 
+      projectContext.apiKey, 
+      projectContext.walletPublicKey
+    );
+    setUiGenerated(true);
+    setProjectContext((prevContext: any) => ({
+      ...prevContext,
+      uiResults: uiResults,
+    }));
+  }, [!uiGenerated]);
+*/
+  
 
   return (
     <Box width="100%" maxHeight="100%" overflowY="auto">
@@ -56,13 +71,10 @@ const UISpace = () => {
         shadow="md"
       >
         {instructionNodes.map((node, idx) => {
-          const instructionName = node.data.item.name || "Unnamed Instruction";
-          const description = node.data.item.description || "No description provided.";
+          const instructionName = node.data.item.name;
+          const description = node.data.item.description;
 
-          const aiInstruction = matchInstruction(instructionName, aiInstructions) || {
-            function_name: "run_instruction",
-            params_fields: [],
-          };
+          const aiInstruction = matchInstruction(instructionName, aiInstructions);
 
           return (
             <Flex
@@ -86,25 +98,19 @@ const UISpace = () => {
                 direction="column"
                 gap={2}
               >
-                <Text fontWeight="bold" fontSize="md" fontFamily="mono">
-                  {instructionName}
-                </Text>
+                <Text fontWeight="bold" fontSize="md" fontFamily="mono"> {instructionName} </Text>
                 <Text
                   fontSize="xs"
                   color="gray.600"
                   fontFamily="mono"
                   textAlign="center"
-                >
-                  {aiInstruction.function_name}
-                </Text>
+                > {aiInstruction.function_name} </Text>
                 <Text
                   fontSize="xs"
                   color="gray.500"
                   fontFamily="mono"
                   textAlign="center"
-                >
-                  {description}
-                </Text>
+                > {description} </Text>
               </Flex>
 
               {aiInstruction.params_fields.map((param: any, paramIdx: number) => (
@@ -123,7 +129,8 @@ const UISpace = () => {
                     handleInputChange(
                       aiInstruction.function_name,
                       paramIdx,
-                      e.target.value
+                      e.target.value,
+                      setInstructionInputs
                     )
                   }
                 />

@@ -193,6 +193,7 @@ const timeLockedSavingsProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
   } as ProjectDetails,
 };
 

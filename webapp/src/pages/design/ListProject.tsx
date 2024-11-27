@@ -99,6 +99,7 @@ const ListProject: React.FC<ListProjectProps> = ({
             aiFilePaths: [],
             aiStructure: '',
             stateContent: '',
+            uiResults: [],
           },
         });
       }
