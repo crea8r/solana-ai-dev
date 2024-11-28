@@ -23,8 +23,8 @@ import {
     processAITestOutput
 } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
-import { useProjectContext } from '../../contexts/ProjectContext';
-import { transformToProjectInfoToSave } from '../../contexts/ProjectContext';
+import { useProjectContext, transformToProjectInfoToSave } from '../../contexts/ProjectContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react'; 
 import { Link as RouterLink } from 'react-router-dom';
 import { 
@@ -47,6 +47,7 @@ import testSchema from '../../data/ai_schema/test_schema.json';
 import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils';
 import { mapFileTreeNodeToItemType } from '../../utils/codePageUtils';
 import { LogEntry, useTerminalLogs } from "../../hooks/useTerminalLogs";
+import authApi from '../../services/authApi';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -66,6 +67,7 @@ type Task = {
 
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose }) => {
     const { projectContext, setProjectContext, projectInfoToSave, setProjectInfoToSave } = useProjectContext();
+    const { user } = useAuthContext();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [contextReady, setContextReady] = useState(false);
     const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set()); 
@@ -190,13 +192,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     }, [genCodeTaskRun]);
 
     const runTasksSequentially = async () => {
-        if (!projectContext) {
-          console.error("Project context not available.");
-          return;
-        }
+        if (!projectContext) { console.error("Project context not available."); return; }
 
         try {
             const { id: projectId, rootPath, name: projectName } = projectContext;
+            if (!user) { throw new Error('User in auth context not found'); }
 
             if (!projectId || !rootPath || !projectName) {
                 toast({
@@ -209,11 +209,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 return;
             }
 
-            // Checking if the project directory already exists
             try {
                 const directory = await fileApi.getDirectoryStructure(rootPath);
                 if (directory && directory.length > 0) {
-                    //console.log(`Project directory at ${rootPath} already exists. Initialization task will be skipped.`);
                     setProjectContext((prevProjectContext) => ({
                         ...prevProjectContext,
                         details: {
@@ -231,34 +229,27 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         isClosable: true,
                     });
                     return; 
-                } else {
-                    setExistingDirectory(false);
-                }
-            } catch (error) {
-                console.error('Error checking directory existence:', error);
-            }
+                } else setExistingDirectory(false);
+
+              } catch (error) { console.error('Error checking directory existence:', error); }
 
             if (!projectContext.details.isAnchorInit) await handleAnchorInitTask(projectId, rootPath, projectName);
-            // else console.log('Anchor project is already initialized.');
 
             if (!genCodeTaskRun && !projectContext.details.isCode) {
-                await handleGenCodesTask(projectId, rootPath, projectName);
+                await handleGenCodesTask(user?.id, projectId, rootPath, projectName);
                 setGenCodeTaskRun(true);
-              } else {
-                  //console.log('Files and codes have already been generated or the task has already run.');
-            }
+              } 
         } finally {
         }
     };
 
-    const handleGenCodesTask = async (projectId: string, rootPath: string, projectName: string) => {
+    const handleGenCodesTask = async (userId: string, projectId: string, rootPath: string, projectName: string) => {
         if (projectContext.details.isCode) return;
         if (!projectId) return;
         if (projectContext.details.nodes.length === 0 || projectContext.details.edges.length === 0) return;
+        if (!userId) return;
       
-        setTasks((prevTasks) =>
-          prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'loading' } : task))
-        );
+        setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'loading' } : task)) );
       
         const normalizedProgramName = normalizeName(projectContext.name);
       
@@ -266,7 +257,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           normalizedProgramName,
           projectContext.details.nodes,
           projectContext.details.edges
-        );
+        ); 
+
         const content = await promptAI(
           structurePrompt,
           projectContext.aiModel,
@@ -326,8 +318,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const cargoFilePath = `programs/${programDirName}/Cargo.toml`;
             const anchorFilePath = `Anchor.toml`;
       
-            await amendConfigFile(projectContext.id, projectId, 'Cargo.toml', cargoFilePath, programDirName);
-            await amendConfigFile(projectContext.id, projectId, 'Anchor.toml', anchorFilePath, programDirName);
+            await amendConfigFile(userId, projectId, 'Cargo.toml', cargoFilePath, programDirName);
+            await amendConfigFile(userId, projectId, 'Anchor.toml', anchorFilePath, programDirName);
             
             const updatedFileList = getFileList(files)
               .map((file) => {
