@@ -100,6 +100,7 @@ const ListProject: React.FC<ListProjectProps> = ({
             stateContent: '',
             uiResults: [],
             aiInstructions: [],
+            sdkFunctions: [],
           },
         });
       }

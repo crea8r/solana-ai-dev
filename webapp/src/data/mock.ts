@@ -228,6 +228,7 @@ const todoproject: Project = {
     stateContent: '',
     uiResults: [],
     aiInstructions: [],
+    sdkFunctions: [],
   } as ProjectDetails,
 } as Project;
 export { todoproject };

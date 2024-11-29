@@ -2,10 +2,6 @@ import { Node, Edge } from 'react-flow-renderer';
 import { FileTreeItemType } from './file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
-import { counterProject } from '../data/examples/counterProject';
-import { votingProject } from '../data/examples/votingProject';
-import { crowdfundingProject } from '../data/examples/crowdfundingProject';
-import { loyaltyRewardsProject } from '../data/examples/loyaltyRewardsProject';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -39,7 +35,10 @@ export interface ProjectDetailsToSave {
       attributes: string[];
     }[];
   }[];
-
+  sdkFunctions: {
+    function_name: string;
+    params: { name: string; type: string }[];
+  }[];
 }
 
 export interface ProjectDetails {
@@ -67,6 +66,10 @@ export interface ProjectDetails {
       type: string;
       attributes: string[];
     }[];
+  }[];
+  sdkFunctions: {
+    function_name: string;
+    params: { name: string; type: string }[];
   }[];
 }
 

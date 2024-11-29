@@ -887,5 +887,40 @@ const getDefaultForType = (propertySchema: any): any => {
   }
 };
 
+export const parseSdkFunctions = (
+  sdkFileContent: string,
+  setProjectContext: React.Dispatch<React.SetStateAction<any>>
+) => {
+  const functionRegex = /async\s+(\w+)\s*\(([^)]*)\)/g;
+  const parsedFunctions: {
+    function_name: string;
+    params: { name: string; type: string }[];
+  }[] = [];
+
+  let match;
+  while ((match = functionRegex.exec(sdkFileContent)) !== null) {
+    const [_, functionName, paramsString] = match;
+    const params = paramsString
+      .split(',')
+      .map((param) => param.trim())
+      .filter((param) => param)
+      .map((param) => {
+        const [name, type] = param.split(':').map((p) => p.trim());
+        return { name, type: type || 'unknown' };
+      });
+
+    parsedFunctions.push({ function_name: functionName, params });
+  }
+
+  setProjectContext((prevContext: any) => ({
+    ...prevContext,
+    details: {
+      ...prevContext.details,
+      sdkFunctions: parsedFunctions,
+    },
+  }));
+
+  return parsedFunctions;
+};
 
 

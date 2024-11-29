@@ -283,6 +283,7 @@ const crowdfundingProject: Project = {
     stateContent: '',
     uiResults: [],
     aiInstructions: [],
+    sdkFunctions: [],
   } as ProjectDetails,
 };
 

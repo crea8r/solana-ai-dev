@@ -151,7 +151,7 @@ const UISpace = () => {
                 colorScheme="blue"
                 onClick={() =>
                   handleCallInstruction(
-                    node.data.item.sdkFunction,
+                    node.data.item.sdkFunction, // needs to come from project context instead of node data
                     instructionInputs[aiInstruction.function_name] || []
                   )
                 }
@@ -164,7 +164,7 @@ const UISpace = () => {
 
         {accountNodes.map((node, idx) => (
           <Flex
-            key={`account-${idx}`} // Improved key
+            key={`account-${idx}`}
             direction="column"
             alignItems="flex-start"
             p={4}

@@ -20,7 +20,8 @@ import {
     processAIStateOutput,
     processAILibOutput,
     processAISdkOutput,
-    processAITestOutput
+    processAITestOutput,
+    parseSdkFunctions
 } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { useProjectContext, transformToProjectInfoToSave } from '../../contexts/ProjectContext';
@@ -531,7 +532,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         stateContent: codeContent,
                       },
                     }));
-                  } else if (isSdkFile) { codeContent = await processAISdkOutput(projectId, programDirName, aiContent); } 
+                  } else if (isSdkFile) { 
+                    codeContent = await processAISdkOutput(projectId, programDirName, aiContent); 
+                    parseSdkFunctions(codeContent, setProjectContext);
+                  } 
                   else if (isTestFile) { codeContent = await processAITestOutput(projectId, programDirName, aiContent); } 
                   else { codeContent = aiContent; }
       
