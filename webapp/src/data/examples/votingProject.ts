@@ -10,7 +10,6 @@ const votingProject: Project = {
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
-  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -159,6 +158,7 @@ const votingProject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 };
 

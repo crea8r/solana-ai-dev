@@ -15,6 +15,16 @@ export type ProjectInfoToSave = {
   aiModel: string;
   apiKey: string;
   walletPublicKey: string;
+}
+
+export interface ProjectDetailsToSave {
+  nodes: Node[];
+  edges: Edge[];
+  isAnchorInit: boolean;
+  aiFilePaths: string[];
+  aiStructure: string;
+  isCode: boolean;
+  uiResults: any[];
   aiInstructions: {
     function_name: string;
     params_fields: {
@@ -29,16 +39,7 @@ export type ProjectInfoToSave = {
       attributes: string[];
     }[];
   }[];
-}
 
-export interface ProjectDetailsToSave {
-  nodes: Node[];
-  edges: Edge[];
-  isAnchorInit: boolean;
-  aiFilePaths: string[];
-  aiStructure: string;
-  isCode: boolean;
-  uiResults: any[];
 }
 
 export interface ProjectDetails {
@@ -53,17 +54,6 @@ export interface ProjectDetails {
   aiStructure: string;
   stateContent: string | undefined;
   uiResults: any[];
-}
-
-export interface Project {
-  id: string;
-  rootPath: string;
-  name: string;
-  description: string;
-  details: ProjectDetails;
-  aiModel: string;
-  apiKey: string;
-  walletPublicKey: string;
   aiInstructions: {
     function_name: string;
     params_fields: {
@@ -78,6 +68,17 @@ export interface Project {
       attributes: string[];
     }[];
   }[];
+}
+
+export interface Project {
+  id: string;
+  rootPath: string;
+  name: string;
+  description: string;
+  details: ProjectDetails;
+  aiModel: string;
+  apiKey: string;
+  walletPublicKey: string;
 }
 
 export type ProjectExample = {

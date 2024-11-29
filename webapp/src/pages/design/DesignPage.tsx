@@ -322,7 +322,7 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
-      console.log("fetchedProject", fetchedProject);
+      //console.log("fetchedProject", fetchedProject);
 
       setProjectContext((prevProjectContext) => {
         const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
@@ -332,7 +332,7 @@ const DesignPage: React.FC = () => {
             item: createItem(node.data.item.type, node.data.item),
           },
         }));
-        console.log("nodesWithTypedItems", nodesWithTypedItems);
+        //console.log("nodesWithTypedItems", nodesWithTypedItems);
       
         return {
           ...prevProjectContext,
@@ -350,6 +350,7 @@ const DesignPage: React.FC = () => {
             files: { name: '', children: [] },
             codes: [],
             docs: [],
+            aiInstructions: fetchedProject.details.aiInstructions,
           },
         };
       });

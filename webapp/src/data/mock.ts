@@ -227,6 +227,7 @@ const todoproject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 } as Project;
 export { todoproject };

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
-import { Project, ProjectInfoToSave } from '../interfaces/project';
+import { Project, ProjectDetails, ProjectInfoToSave } from '../interfaces/project';
 import { getWalletInfo } from '../api/wallet';
 
 export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSave => ({
@@ -7,7 +7,6 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
   name: project.name,
   description: project.description,
   walletPublicKey: project.walletPublicKey,
-  aiInstructions: project.aiInstructions,
   aiModel: project.aiModel,
   apiKey: project.apiKey,
   details: {
@@ -18,6 +17,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     aiFilePaths: project.details.aiFilePaths,
     aiStructure: project.details.aiStructure,
     uiResults: project.details.uiResults,
+    aiInstructions: project.details.aiInstructions,
   },
 });
 
@@ -28,7 +28,7 @@ interface ProjectContextType {
   setProjectInfoToSave: Dispatch<SetStateAction<ProjectInfoToSave>>;
   stateContent: string;
   setStateContent: Dispatch<SetStateAction<string>>;
-  updateInstructions: (instructions: Project['aiInstructions']) => void;
+  updateInstructions: (instructions: ProjectDetails['aiInstructions']) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -64,7 +64,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       };
   });
 
-  const updateInstructions = (instructions: Project['aiInstructions']) => {
+  const updateInstructions = (instructions: ProjectDetails['aiInstructions']) => {
     setProjectContext((prev) => ({
       ...prev,
       aiInstructions: instructions,

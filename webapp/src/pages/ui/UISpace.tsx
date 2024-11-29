@@ -12,7 +12,7 @@ import {
 
 const UISpace = () => {
   const { projectContext, setProjectContext } = useProjectContext();
-  const { aiInstructions } = projectContext;
+  const { aiInstructions } = projectContext.details;
   const { nodes, edges } = projectContext.details;
 
   const [instructionInputs, setInstructionInputs] = useState<{ [key: string]: string[] }>({});
@@ -20,7 +20,7 @@ const UISpace = () => {
 
   useEffect(() => {
     console.log("AI Instructions:", aiInstructions);
-    console.log("param fields:", aiInstructions.map((instruction) => instruction.params_fields));
+    console.log("param fields:", aiInstructions.map((instruction: any) => instruction.params_fields));
     console.log("Nodes:", nodes);
     console.log("Edges:", edges);
   }, [projectContext, aiInstructions, nodes, edges]);
@@ -30,8 +30,11 @@ const UISpace = () => {
 
   useEffect(() => {
     const initialInputs: { [key: string]: string[] } = {};
-    aiInstructions.forEach((instruction) => {initialInputs[instruction.function_name] = instruction.params_fields.map((param) => param.default_value || "");});
+    aiInstructions.forEach((instruction: any) => {initialInputs[instruction.function_name] = instruction.params_fields.map((param: any) => param.default_value || "");});
     setInstructionInputs(initialInputs);
+
+    console.log("instructionInputs:", instructionInputs);
+    console.log("aiInstructions:", aiInstructions);
   }, [aiInstructions]);
 
   /*
@@ -74,6 +77,10 @@ const UISpace = () => {
           const instructionName = node.data.item.name;
           const description = node.data.item.description;
 
+          if(!aiInstructions) {
+            console.error("No AI instructions found");
+            return null;
+          }
           const aiInstruction = matchInstruction(instructionName, aiInstructions);
 
           return (

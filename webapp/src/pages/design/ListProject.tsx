@@ -87,7 +87,6 @@ const ListProject: React.FC<ListProjectProps> = ({
           aiModel: 'codestral-latest',
           apiKey: '',
           walletPublicKey: '',
-          aiInstructions: [],
           details: {
             nodes: [],
             edges: [],
@@ -100,6 +99,7 @@ const ListProject: React.FC<ListProjectProps> = ({
             aiStructure: '',
             stateContent: '',
             uiResults: [],
+            aiInstructions: [],
           },
         });
       }

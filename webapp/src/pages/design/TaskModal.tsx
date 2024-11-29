@@ -504,10 +504,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
                     setProjectContext((prevContext) => ({
                       ...prevContext,
-                      aiInstructions: [
-                        ...prevContext.aiInstructions,
-                        {
-                          function_name: aiData.function_name,
+                      details: {
+                        ...prevContext.details,
+                        aiInstructions: [
+                          ...prevContext.details.aiInstructions,
+                          {
+                            function_name: aiData.function_name,
                           context_struct: aiData.context_struct,
                           params_fields: aiData.params_fields,
                           accounts: aiData.accounts,
@@ -516,7 +518,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                           accounts_structure: aiData.accounts_structure,
                         },
                       ],
-                    }));
+                    },
+                  }));
 
                   } else if (isStateFile) {
                     codeContent = await processAIStateOutput(projectId, programDirName, aiContent);

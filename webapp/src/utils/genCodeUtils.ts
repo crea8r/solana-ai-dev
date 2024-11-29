@@ -490,7 +490,6 @@ export function extractJSON(content: string): string {
   }
 }
 
-
 export function validateFileTree(tree: any): FileTreeItemType | null {
   if (!tree || typeof tree.name !== 'string' || typeof tree.type !== 'string') {
     console.error('Invalid file tree item:', tree);

@@ -11,7 +11,6 @@ const loyaltyRewardsProject: Project = {
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
-  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -195,6 +194,7 @@ const loyaltyRewardsProject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 };
 

@@ -11,7 +11,6 @@ const escrowPaymentProject: Project = {
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
-  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -194,6 +193,7 @@ const escrowPaymentProject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 };
 

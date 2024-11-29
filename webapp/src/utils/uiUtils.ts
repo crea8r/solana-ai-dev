@@ -2,6 +2,11 @@ import { uiPrompt } from "../prompts/genUI";
 import { promptAI } from "../services/prompt";
 import uiSchema from "../data/ai_schema/uiSchema.json";
 export const matchInstruction = (nodeName: string, aiInstructions: any[]): any | undefined => {
+  console.log("aiInstructions:", aiInstructions);
+  if(!aiInstructions) {
+    console.error("No AI instructions found");
+    return undefined;
+  }
   const normalizedNodeName = 'run_' + nodeName
     .trim()
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')

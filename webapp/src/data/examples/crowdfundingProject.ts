@@ -11,7 +11,6 @@ const crowdfundingProject: Project = {
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
-  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -283,6 +282,7 @@ const crowdfundingProject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 };
 

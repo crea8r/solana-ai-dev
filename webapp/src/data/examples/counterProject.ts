@@ -10,7 +10,6 @@ const counterProject: Project = {
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
-  aiInstructions: [],
   details: {
     nodes: [
       {
@@ -159,6 +158,7 @@ const counterProject: Project = {
     aiStructure: '',
     stateContent: '',
     uiResults: [],
+    aiInstructions: [],
   } as ProjectDetails,
 };
 
