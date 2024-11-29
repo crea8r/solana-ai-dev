@@ -751,13 +751,38 @@ export interface AISdkOutput {
   instructions: {
     name: string;
     description: string;
-    params: string[];
+    params: {
+      name: string;
+      type: string;
+      source: "userInput" | "wallet" | "derived";
+      default_value?: string;
+    }[];
+    accounts: {
+      name: string;
+      type: string;
+      is_mut: boolean;
+      is_signer: boolean;
+    }[];
+    return_type: string;
+    logic: string;
+    error_codes?: {
+      name: string;
+      message: string;
+    }[];
   }[];
   accounts: {
     name: string;
     description: string;
-    fields: { name: string; type: string }[];
+    fields: {
+      name: string;
+      type: string;
+    }[];
+    fetch_filters?: {
+      field: string;
+      value: string;
+    }[];
   }[];
+  imports: string[];
 }
 
 export const processAISdkOutput = async (
@@ -780,15 +805,31 @@ export const processAISdkOutput = async (
       throw new Error('Invalid AI JSON structure.');
     }
 
-    // Generate SDK code using the template
+    console.log('Validated AI Data:', JSON.stringify(aiData, null, 2));
+
+    aiData.instructions.forEach((instruction) => {
+      if (!instruction.logic) {
+        throw new Error(`Missing 'logic' for instruction ${instruction.name}`);
+      }
+      if (!instruction.return_type) {
+        instruction.return_type = "Promise<Transaction>";
+      }
+      instruction.params.forEach((param) => {
+        if (!param.default_value) {
+          param.default_value = "";
+        }
+      });
+    });
+
     const codeContent = getSdkTemplate(
       aiData.program_name,
-      aiData.program_id,
+      "PlaceholderProgramID",
       aiData.instructions,
       aiData.accounts
     );
 
     const filePath = `sdk/${normalizedProgramName}_sdk.ts`;
+
     await fileApi.updateFile(projectId, filePath, codeContent);
 
     console.log(`Successfully processed and updated SDK file: ${filePath}`);

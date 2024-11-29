@@ -487,6 +487,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
                 if (_schema === '') throw new Error('No schema for file generation');
       
+                if(isSdkFile) {
+                  console.log("_promptContent", _promptContent);
+                  console.log("fileName", fileName);
+                  console.log("filePath", filePath);
+                }
                 const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
       
                 let codeContent = '';

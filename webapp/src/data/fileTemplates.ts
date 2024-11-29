@@ -153,43 +153,94 @@ export const getInstructionTemplate = (
 export const getSdkTemplate = (
   programName: string,
   programId: string,
-  instructions: { name: string; description: string; params: string[] }[],
+  instructions: {
+    name: string;
+    description: string;
+    params: { name: string; type: string }[];
+    accounts: { name: string; type: string; is_mut: boolean; is_signer: boolean }[];
+  }[],
   accounts: { name: string; description: string; fields: { name: string; type: string }[] }[]
 ): string => {
-  // Generate functions for each instruction
   const instructionFunctions = instructions
-    .map(({ name, description, params }) => {
-      const paramsList = params.map((param) => `${param}: any`).join(", ");
+    .map(({ name, description, params, accounts }) => {
+      const paramsList = params.map(({ name, type }) => `${name}: ${type}`).join(", ");
+      const paramNames = params.map(({ name }) => name).join(", ");
+      const accountMappings = accounts
+        .map(({ name, is_mut, is_signer }) => {
+          const mutable = is_mut ? "mut: true" : "";
+          const signer = is_signer ? "signer: true" : "";
+          const attributes = [mutable, signer].filter(Boolean).join(", ");
+          return `${name}: { pubkey: ${name}, ${attributes} }`;
+        })
+        .join(",\n        ");
+
       return `
   /**
    * ${description}
    */
   async ${name}(${paramsList}): Promise<Transaction> {
-    // TODO: Implement the instruction logic
-    const ix = await this.program.methods.${name}(${params.join(", ")}).accounts({
-      // Add account mappings here
-    }).instruction();
-    return ix;
+    try {
+      const ix = await this.program.methods.${name}(${paramNames}).accounts({
+        ${accountMappings}
+      }).instruction();
+      return ix;
+    } catch (error) {
+      console.error("Error executing instruction '${name}':", error);
+      throw error;
+    }
   }`;
     })
     .join("\n");
 
-  // Generate functions for fetching accounts
   const accountFetchers = accounts
     .map(({ name, description, fields }) => {
+      const typeName = name.charAt(0).toUpperCase() + name.slice(1);
+
       return `
   /**
-   * Fetch all ${name} accounts.
+   * Fetch all ${typeName} accounts.
    * ${description}
    */
-  async fetch${name}Accounts(): Promise<${name}[]> {
-    const accounts = await this.program.account.${name.toLowerCase()}.all();
-    return accounts.map(account => ({
-      ${fields.map(({ name }) => `${name}: account.account.data.${name}`).join(",\n      ")}
-    }));
+  async fetch${typeName}Accounts(): Promise<${typeName}[]> {
+    try {
+      const accounts = await this.program.account.${name.toLowerCase()}.all();
+      return accounts.map(account => ({
+        ${fields.map(({ name }) => `${name}: account.account.data.${name}`).join(",\n        ")}
+      }));
+    } catch (error) {
+      console.error("Error fetching ${typeName} accounts:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch a single ${typeName} account by public key.
+   */
+  async fetch${typeName}Account(publicKey: web3.PublicKey): Promise<${typeName} | null> {
+    try {
+      const account = await this.program.account.${name.toLowerCase()}.fetchNullable(publicKey);
+      if (!account) return null;
+      return {
+        ${fields.map(({ name }) => `${name}: account.${name}`).join(",\n        ")}
+      };
+    } catch (error) {
+      console.error("Error fetching ${typeName} account:", error);
+      throw error;
+    }
   }`;
     })
     .join("\n");
+
+  const accountTypes = accounts
+    .map(({ name, fields }) => {
+      const typeName = name.charAt(0).toUpperCase() + name.slice(1);
+      const fieldsStr = fields.map(({ name, type }) => `  ${name}: ${type};`).join("\n");
+
+      return `export interface ${typeName} {
+${fieldsStr}
+}`;
+    })
+    .join("\n\n");
 
   return `
 import { Program, AnchorProvider, Idl, web3, Transaction } from '@coral-xyz/anchor';
@@ -204,6 +255,27 @@ export class ${programName}SDK {
     this.program = new Program(idl, programId, provider);
   }
 
+  /**
+   * Sends a transaction to the Solana blockchain.
+   */
+  async sendTransaction(tx: Transaction, signers: web3.Signer[] = []): Promise<string> {
+    try {
+      const connection = this.program.provider.connection;
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
+      tx.lastValidBlockHeight = lastValidBlockHeight;
+      tx.feePayer = this.program.provider.wallet.publicKey;
+
+      const signedTx = await this.program.provider.wallet.signTransaction(tx);
+      signers.forEach((signer) => signedTx.partialSign(signer));
+      const serializedTx = signedTx.serialize();
+      return await connection.sendRawTransaction(serializedTx, { skipPreflight: false });
+    } catch (error) {
+      console.error("Error sending transaction:", error);
+      throw error;
+    }
+  }
+
   ${instructionFunctions}
 
   ${accountFetchers}
@@ -212,14 +284,7 @@ export class ${programName}SDK {
 /**
  * Types for program accounts.
  */
-${accounts
-  .map(({ name, fields }) => {
-    const fieldsStr = fields.map(({ name, type }) => `  ${name}: ${type};`).join("\n");
-    return `export interface ${name} {
-${fieldsStr}
-}`;
-  })
-  .join("\n\n")}
+${accountTypes}
 `;
 };
 

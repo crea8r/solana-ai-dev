@@ -61,7 +61,7 @@ export const generateAIResponse = async (
         requestBody = {
           model: 'gpt-4o',
           messages: transformMessages,
-          max_tokens: 3000,
+          max_tokens: 10000,
           temperature: 0.2,
           response_format: {
             type: 'json_schema',
@@ -138,8 +138,19 @@ export const generateAIResponse = async (
       message: 'AI response generated successfully',
       data: data,
     });
-  } catch (error) {
-    console.error('Error generating AI response:', JSON.stringify(error, null, 2));
+  } catch (error: any) {
+    if (error.response) {
+      console.error('AI API Response Error:', {
+        status: JSON.stringify(error.response.status),
+        statusText: JSON.stringify(error.response.statusText),
+        headers: JSON.stringify(error.response.headers),
+        data: JSON.stringify(error.response.data),
+      });
+    } else if (error.request) {
+      console.error('No response received from AI API:', JSON.stringify(error.request, null, 2));
+    } else {
+      console.error('Error setting up AI API request:', JSON.stringify(error, null, 2));
+    }
     next(new AppError('Failed to generate AI response', 500));
   }
 };
