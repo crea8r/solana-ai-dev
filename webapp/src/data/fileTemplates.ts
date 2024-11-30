@@ -91,7 +91,7 @@ export const getStateTemplate = (
 
       return `
 ${descriptionStr}#[account]
-pub struct ${name} {
+pub struct ${name}<'info> {
 ${fieldsStr}
 }
 `;

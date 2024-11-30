@@ -297,7 +297,8 @@ export const handleSave = async (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   addLog: (message: string, type: LogEntry['type']) => void,
-  fileContent: string
+  fileContent: string,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ) => {
   if (!selectedFile || !selectedFile.path || !projectContextId) {
     addLog( 'No file selected or project context missing', 'error');
@@ -312,7 +313,27 @@ export const handleSave = async (
   try {
     const response = await fileApi.updateFile(projectId, filePath, content);
     const taskId = response.taskId;
-    startPollingTaskStatus(taskId, setIsPolling, setIsLoading, addLog);
+    startPollingTaskStatus(taskId, setIsPolling, setIsLoading, addLog, () => {
+
+      setProjectContext(prev => {
+        const updatedCodes = prev.details.codes.map(code => {
+          if (code.name === selectedFile.name) {
+            return {
+              ...code,
+              content: content
+            };
+          }
+          return code;
+        });
+        return {
+          ...prev,
+          details: {
+            ...prev.details,
+            codes: updatedCodes
+          }
+        };
+      });
+    });
   } catch (error) {
     addLog(`Error saving file: ${error}`, 'error');
   } finally {

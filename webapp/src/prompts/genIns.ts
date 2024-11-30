@@ -1,14 +1,121 @@
-import { Instruction } from "../items/Instruction";
-import instructionSchema from "../data/ai_schema/instruction_schema.json";
+import instructionSchema from '../data/ai_schema/instruction_schema.json';
+import { getInstructionTemplate } from '../data/fileTemplates';
 
-export const genIns = (instruction: Instruction) => {
-  const instructionName = instruction.getName();
-  const contextStruct = `${instructionName}Context`;
-  const paramsStruct = `${instructionName}Params`;
+export const genInstructionPrompt = (
+  programName: string,
+  programDescription: string,
+  instruction: {
+    name: string;
+    description: string;
+    parameters: string;
+    logic: string;
+  },
+  accounts: {
+    name: string;
+    description: string;
+    dataStructure: string;
+  }[],
+  stateContent: string,
+  generalInstruction: string
+): string => {
+  
+  const instructionSchemaString = `${JSON.stringify(instructionSchema)}`;
+  const instructionTemplate = `
+    use anchor_lang::prelude::*;
+    use crate::state::*;
 
-  const templatePrompt = `
---- Instruction Template ---
-Here is the template for generating instruction files:
+    // Generic function for an instruction
+    pub fn function_one(ctx: Context<FunctionOneContext>, params: FunctionOneParams) -> Result<()> {
+        // Logic for function_one
+        Ok(())
+    }
+
+    // Context structure for the instruction
+    #[derive(Accounts)]
+    pub struct FunctionOneContext<'info> {
+        #[account(init, payer = user_account)]
+        pub user_account: Signer<'info>,
+        #[account(mut)]
+        pub data_account: Account<'info, DataAccount>,
+    }
+
+    // Parameters structure for the instruction
+    #[derive(AnchorSerialize, AnchorDeserialize)]
+    pub struct FunctionOneParams {
+        pub parameter_one: String,
+        pub parameter_two: u64,
+    }
+
+    // Error codes related to the instruction
+    #[error_code]
+    pub enum FunctionOneErrorCode {
+        #[msg("Error one description")]
+        ErrorOne,
+        #[msg("Error two description")]
+        ErrorTwo,
+    }
+  `;
+
+  const accountsInfo = accounts.map(account => `
+- **Name**: ${account.name}
+  - **Description**: ${account.description}
+  - **Data Structure**:
+    \`\`\`json
+    ${account.dataStructure}
+    \`\`\`
+  `).join('\n');
+
+  const prompt = `
+${generalInstruction}
+
+--- File to Generate ---
+- **File Name**: ${instruction.name}.rs
+- **Purpose**: Implement the instruction "${instruction.name}".
+
+--- Instruction Details ---
+- **Name**: ${instruction.name}
+- **Description**: ${instruction.description}
+- **Parameters**:
+  \`\`\`
+  ${instruction.parameters}
+  \`\`\`
+- **Logic**:
+  \`\`\`
+  ${instruction.logic}
+  \`\`\`
+
+--- Accounts ---
+${accountsInfo}
+
+--- State Content ---
+Include the following state definitions in your context:
+\`\`\`rust
+${stateContent}
+\`\`\`
+
+--- Instructions ---
+You will generate the instruction file \`${instruction.name}.rs\` implementing the logic as specified.
+
+--- Output Requirements ---
+- **ONLY PROVIDE THE JSON OBJECT**: Do not include any additional text or explanations.
+- **JSON Schema**: Your output must strictly conform to the following JSON schema: ${instructionSchemaString}.
+- **Template**: After your response, your json output will be inserted into the following template: ${instructionTemplate}.
+
+### Json Field Descriptions:
+1. "function_name": The name of the function, which should be "${instruction.name}".
+2. "context_struct": The struct name for context 
+3. "params_struct": The struct name for parameters 
+4. "accounts": A list of accounts used by the instruction, each with:
+   - "name": Account name as a string.
+   - "type": Account type (e.g., "Account<'info, StructName'>", "Signer<'info'>").
+   - "attributes": A list of attributes (e.g., ["init", "mut", "signer"]).
+5. "params_fields": A list of parameter fields, each with:
+   - "name": Parameter name as a string.
+   - "type": Parameter type (e.g., "u64", "String").
+6. "error_codes": A list of error codes, each with:
+   - "name": Error code name in PascalCase.
+   - "msg": A human-readable error message.
+7. "function_logic": A string containing the main function logic.
 
 !Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
 for example: pub system_program: Program<'info, System>
@@ -20,65 +127,13 @@ for example: pub system_program: Program<'info, System>
 
 This ensures the \`payer\` account is mutable as required by Anchor's constraints.
 
-!Don't forget to add the Overflow variant to the error enum if applicable.!
-
-\`\`\`rust
-use anchor_lang::prelude::*;
-use crate::state::*;
-
-pub fn ${instructionName}(ctx: Context<${contextStruct}>, params: ${paramsStruct}) -> Result<()> {
-    // Instruction logic here
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct ${contextStruct}<'info> {
-    // List of accounts involved
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct ${paramsStruct} {
-    // List of parameters
-}
-
-#[error_code]
-pub enum ${instructionName}ErrorCode {
-    // Error codes
-}
-\`\`\`
-
---- JSON Structure ---
-  Provide the output strictly as a JSON object in this exact format:
-${JSON.stringify(instructionSchema, null, 2)}
-
-### Field Descriptions:
-1. "function_name": The name of the function, which should be "${instructionName}".
-2. "context_struct": The struct name for context (e.g., ${contextStruct}).
-3. "params_struct": The struct name for parameters (e.g., ${paramsStruct}).
-4. "accounts": A list of accounts used by the instruction, each with:
-   - "name": Account name as a string.
-   - "type": Account type (e.g., "Account<'info, StructName'>", "Signer<'info'>").
-   - "attributes": A list of attributes (e.g., ["init", "mut", "signer"]).
-5. "params_fields": A list of parameter fields, each with:
-   - "name": Parameter name as a string.
-   - "type": Parameter type (e.g., "u64", "String").
-   - "expected_source": Indicates the expected source of the parameter value. Options include:
-      - "wallet": Indicates the value should come from the Solai user's wallet public key.
-      - "account": Indicates the value should come from another on-chain account.
-      - "none": Indicates no specific source is required (e.g., numeric or string input from the user).
-6. "error_codes": A list of error codes, each with:
-   - "name": Error code name in PascalCase.
-   - "msg": A human-readable error message.
-7. "function_logic": A string containing the main function logic.
+!It is very important that you add the Overflow variant to the error enum if applicable!
 
 ### Additional Instructions:
 - Always follow this JSON structure. All fields must be present, even if empty (use empty strings or empty arrays as placeholders).
-- The "function_name" should be "${instructionName}".
+- The "function_name" should be "${instruction.name}".
 - **Do not include any extraneous text, explanations, or code fences (\`\`\`json).**
 - **Provide only the JSON object as the response.**
-
 `;
-
-  return templatePrompt;
+  return prompt;
 };
-

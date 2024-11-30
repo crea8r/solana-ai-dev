@@ -2,26 +2,138 @@ import { Edge, Node } from 'react-flow-renderer';
 import { Program } from '../items/Program';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
-import { genIns } from './genIns';
-import { genState } from './genState';
-import { genLib } from './genLib';
-import { genSdk } from './genSdk';
-import { genTests } from './genTests';
+import { genStatePrompt } from './genState';
+import { genInstructionPrompt } from './genIns';
+import { genSdkPrompt } from './genSdk';
+import { genTestsPrompt } from './genTests';
+import { snakeToPascal } from '../utils/genCodeUtils';
 
-const textGenerator = (
-  program_name: string,
-  program_description: string,
-  account_text: string,
-  instruction_text: string,
-  sdk_text: string,
-  tests_text: string,
-  file_name: string,
-  file_path: string,
-  stateContent?: string,
+const lifetimePrompt = `
+**Important Guidelines for Lifetime Annotations and Struct Definitions in Anchor Programs:**
+
+1. **Lifetime Annotations (\`<'info>\`):**  
+   Always include the \`<'info>\` lifetime annotation on all accounts and Anchor-specific types such as \`Account\`, \`AccountInfo\`, and \`Program\`. For example:  
+   \`\`\`rust
+   pub struct ExampleContext<'info> {
+       pub example_account: Account<'info, ExampleStruct<'info>>,
+       pub info_account: AccountInfo<'info>,
+   }
+   \`\`\`
+
+2. **Using \`Pubkey\`:**  
+   Always use \`Pubkey\` (capitalized correctly) as the type for public keys. Do not use \`PubKey\` or other incorrect variations.
+
+3. **Consistent Struct Usage:**  
+   Ensure \`<'info>\` is consistently applied to both \`AccountInfo<'info>\` and associated structs referenced in context definitions. Example:  
+   \`\`\`rust
+   pub struct IncrementContext<'info> {
+       pub counter_account: Account<'info, CounterAccount<'info>>,
+       pub system_program: Program<'info, System>,
+   }
+   \`\`\`
+
+4. **PhantomData for Lifetimes:**  
+   Include \`PhantomData\` in structs like \`CounterAccount\` to satisfy the lifetime requirement if no explicit references exist. Example:  
+   \`\`\`rust
+   pub struct CounterAccount<'info> {
+       pub field: u64,
+       pub _phantom: PhantomData<&'info ()>,
+   }
+   \`\`\`
+
+Follow these instructions exactly to ensure that all accounts and structs include the required lifetime annotations, avoiding errors during compilation.
+`;
+
+
+const getConnectedNodes = (
+  nodes: Node[],
+  edges: Edge[],
+  programId: string,
+  nodeType: string
+): Node[] => {
+  return nodes.filter(node => {
+    return (
+      node.type === nodeType &&
+      edges.some(edge => edge.target === node.id && edge.source === programId)
+    );
+  });
+};
+
+const extractProgramInfo = (nodes: Node[]) => {
+  const programNode = nodes.find(node => node.type === 'program');
+  const programData = programNode?.data.item as Program;
+  return {
+    programName: programData?.getName() || '',
+    programDescription: programData?.getDescription() || '',
+    programNodeId: programNode?.id || '',
+  };
+};
+
+const extractAccountsInfo = (nodes: Node[], edges: Edge[], programId: string) => {
+  const accountNodes = getConnectedNodes(nodes, edges, programId, 'account');
+  return accountNodes.map(node => {
+    const accountData = node.data.item as Account;
+    return {
+      name: accountData.getName(),
+      description: accountData.getDescription(),
+      dataStructure: accountData.getJson(),
+    };
+  });
+};
+
+const extractInstructionsInfo = (nodes: Node[], edges: Edge[], programId: string) => {
+  const instructionNodes = getConnectedNodes(nodes, edges, programId, 'instruction');
+  return instructionNodes.map(node => {
+    const instructionData = node.data.item as Instruction;
+    return {
+      name: instructionData.getName(),
+      description: instructionData.getDescription(),
+      parameters: instructionData.getParameters(),
+      logic: instructionData.getAiInstruction(),
+    };
+  });
+};
+
+export const genFile = (
+  nodes: Node[],
+  edges: Edge[],
+  fileName: string,
+  filePath: string,
+  stateContent: string,
   additionalPrompt?: string
-) => {
-  const general_instruction = `
-  !--- It is very important that you DO NOT return any other text than the JSON object in the response! no additonal explanations apart from the JSON object ---!
+): string => {
+  // Extract program information
+  const { programName, programDescription, programNodeId } = extractProgramInfo(nodes);
+
+  // Extract accounts and instructions
+  const accounts = extractAccountsInfo(nodes, edges, programNodeId);
+  const instructions = extractInstructionsInfo(nodes, edges, programNodeId);
+
+  // General instruction applicable to all files
+  const generalInstruction = `
+You are an AI assistant tasked with generating code for a Solana program using the Anchor framework.
+
+--- Important Guidelines ---
+- **STRICTLY FOLLOW THE INSTRUCTIONS**: Do not deviate from the instructions provided.
+- **NO ADDITIONAL TEXT**: Only provide the code requested, without any explanations or additional text.
+- **LANGUAGE**: Use Rust for \`*.rs\` files and TypeScript for \`*.ts\` files.
+- **FRAMEWORKS**: Use \`@coral-xyz/anchor\` for TypeScript code.
+- **BEST PRACTICES**: Follow Solana and Anchor best practices.
+- **CODE STRUCTURE**: Structure the project into multiple files for ease of management.
+
+--- Project Information ---
+- **Program Name**: ${programName}
+- **Program Description**: ${programDescription}
+
+--- Project Structure ---
+- Account-related code should be in \`state.rs\`.
+- Each instruction should be in its own file.
+- The function inside each instruction file should be named \`run_[instruction_name]\`.
+- Include \`mod.rs\` files in folders with proper exports.
+
+${additionalPrompt ? `--- Additional Instructions ---\n${additionalPrompt}` : ''}
+
+!--- It is very important that you DO NOT return any other text than the JSON object in the response! no additonal explanations apart from the JSON object ---!
 
   I want to develop a Solana program using Anchor framework, test cases using typescript and a typescript SDK to interact with the program.
 --- File structure for the Anchor program ---
@@ -41,7 +153,7 @@ Use @coral-xyz/anchor for typescript test code
 Write test cases using typescript for each of the functions. The test-case should use the SDK.
 
 --- The TypeScript SDK ---
-The SDK should provide a high-level interface for interacting with the ${program_name} Solana program.
+The SDK should provide a high-level interface for interacting with the ${programName} Solana program.
 It should include:
 1. Functions for each instruction:
    - Each function should be named after the instruction in camelCase format.
@@ -58,174 +170,84 @@ It should include:
    - Create a main SDK class that initializes with the 'AnchorProvider', 'Idl', and program ID.
    - Include helper methods for interacting with program instructions and fetching account data.
 
-The SDK should be TypeScript-friendly, properly typed, and adhere to Solana and Anchor development best practices.\n`;
+Important Rules for Struct Definitions and Contexts in Solana Anchor Programs:
 
+Lifetime Annotations (<'info>):
+Always include the <'info> lifetime annotation in all struct definitions where accounts or Anchor-specific types (e.g., Account, Program, or Signer) are used. For example:
 
-  const program_insruction = `--- The app ---
-  This is a ${program_name} for ${program_description}.
-  Give me the code for the ${file_name} at this path ${file_path} related to the root folder. The code should be text, friendly to display in browser. Omit any additional instruction, I just need the code.
-  \n`;
-  const additional_context = `${stateContent ? `--- Additional Context from state.rs ---\n${stateContent}\n\n` : ''}${additionalPrompt ? `--- Additional Context ---\n${additionalPrompt}\n\n` : ''}`;
-  return (
-    general_instruction +
-    program_insruction +
-    additional_context +
-    account_text +
-    instruction_text +
-    sdk_text +
-    tests_text
-  );
-};
+pub struct ExampleContext<'info> {
+    pub example_account: Account<'info, ExampleStruct<'info>>,
+}
+Using Pubkey:
+Always use Pubkey (capitalized correctly) as the type for public keys. Do not use PubKey or other variations.
 
-const genFile = (
-  nodes: Node[],
-  edges: Edge[],
-  fileName: string,
-  filePath: string,
-  stateContent: string,
-  instructionContents?: string[],
-) => {
-  const programs = nodes.filter((node) => node.type === 'program');
+PhantomData for Lifetimes:
+For account structs like CounterAccount, include PhantomData to satisfy the 'info lifetime requirement when no references are explicitly used. For example:
 
-  let all_text = '';
+pub struct CounterAccount<'info> {
+    pub field: u64,
+    pub _phantom: PhantomData<&'info ()>,
+}
+Params Structs:
+Avoid including accounts (like Account or Signer) in the Params struct. These structs should only include additional parameters passed as input.
 
-  programs.forEach((program) => {
-    const program_data = program.data.item as Program;
+Consistent Struct Usage:
+Ensure <'info> is consistently added to both Account and associated structs like CounterAccount within contexts. 
+Example:
+pub counter_account: Account<'info, CounterAccount<'info>>,
+pub counter_account: AccountInfo<'info>, (in state.rs)
+Follow these rules to ensure the program builds successfully without lifetime-related or type mismatch errors.
 
-    const instructionNodes = nodes.filter((node) => {
-      return (
-        node.type === 'instruction' &&
-        edges.some(
-          (edge) =>
-            edge.target === node.id &&
-            programs.some((program) => program.id === edge.source)
-        )
-      );
-    });
+The SDK should be TypeScript-friendly, properly typed, and adhere to Solana and Anchor development best practices.\n
 
-    if (fileName === 'lib.rs') {
-      const libPrompt = `
-      I need to generate a \`lib.rs\` file for a Solana Anchor program. Follow the template below and generate only the sections marked for JSON output.
+In all instruction files, make sure to include <'info> after any Account type that references a program account. For example, instead of writing Account<'info, CounterAccount>, it should be Account<'info, CounterAccount<'info>> to properly include the lifetime annotation. This ensures the lifetime is specified and adheres to Anchor's requirements.
 
-      --- Template ---
-      use anchor_lang::prelude::*;
+Additionally, use Pubkey (with a lowercase "k") as the correct type for public keys in Solana. Replace any occurrences of PubKey or other variations with Pubkey to align with the Solana SDK's conventions.
 
-      declare_id!("program_id"); // no info required here
+${lifetimePrompt}
+`;
 
-      pub mod instructions;
-      pub mod state;
+  let promptContent = '';
 
-      {{instructionImports}}
+  if (fileName === 'state.rs') {
+    promptContent = genStatePrompt(programName, programDescription, accounts, instructions, generalInstruction);
+  } else if (fileName.endsWith('.rs')) {
+    let instructionName = snakeToPascal(fileName.replace('.rs', ''));
+    if (instructionName.startsWith('Run')) instructionName = instructionName.replace(/^Run/, '');
 
-      #[program]
-      pub mod ${program_data.getName()} {
-          use super::*;
+    console.log(`Instruction Name: ${instructionName}`);
+    const instruction = instructions.find(instr => instr.name === instructionName);
+    console.log(`Instruction: ${instruction}`);
+    promptContent = genInstructionPrompt(
+      programName,
+      programDescription,
+      instruction!,
+      accounts,
+      stateContent,
+      generalInstruction
+    );
+  } else if (fileName === 'index.ts' && filePath.includes('sdk')) {
+    promptContent = genSdkPrompt(
+      programName,
+      programDescription,
+      accounts,
+      instructions,
+      stateContent,
+      generalInstruction
+    );
+  } else if (fileName.endsWith('.test.ts')) {
+    promptContent = genTestsPrompt(
+      programName,
+      programDescription,
+      accounts,
+      instructions,
+      stateContent,
+      generalInstruction
+    );
+  }
+  // Handle other file types if necessary
 
-          {{programFunctions}}
-      }
-
-      --- Required Information ---
-      1. \`instructionImports\`: Use the instruction context mapping to generate imports in the format: \`use instructions::module_name::{ContextName, ParamsName};\`
-      2. \`programFunctions\`: Generate functions for each instruction, reusing their context and parameters.
-      3. Strictly follow the structure in the template. Return the data as a JSON object with \`instructionImports\` and \`programFunctions\` keys.
-      !Return the required information only, do not include any other text in the json response.
-      `;
-    } else {
-      // find all account nodes that connected to a program node
-      const accountNodes = nodes.filter((node) => {
-        return (
-          node.type === 'account' &&
-          edges.some(
-            (edge) =>
-              edge.target === node.id &&
-              programs.some((program) => program.id === edge.source)
-          )
-        );
-      });
-      
-      // find all instruction nodes that connected to a program node
-      const instructionNodes = nodes.filter((node) => {
-        return (
-          node.type === 'instruction' &&
-          edges.some(
-            (edge) =>
-              edge.target === node.id &&
-              programs.some((program) => program.id === edge.source)
-          )
-        );
-      });
-
-      // find all edges that connected from the program node to the account nodes
-      const accountEdges = edges.filter(
-        (edge) =>
-          edge.source === program.id &&
-          accountNodes.some((node) => node.id === edge.target)
-      );
-
-      let all_account_text = '';
-
-      if (accountNodes.length) {
-        all_account_text += `There are ${accountNodes.length} accounts in this program.\n`;
-        accountNodes.forEach((account) => {
-          const account_data = account.data.item as Account;
-          const account_name = account_data.getName();
-          const account_desc = account_data.getDescription();
-          const account_json = account_data.getJson();
-          let account_text = account_name + ' is ' + account_desc +
-            '; with data structure as ' +
-            account_json;
-
-          const edge = accountEdges.find((edge) => edge.target === account.id);
-          if (edge) account_text += '; the seed is ' + edge.data?.label;
-
-          all_account_text += account_text + '\n' + genState(nodes, edges) + '\n';
-        });
-      }
-
-      let all_instruction_text = '';
-      if (instructionNodes.length) {
-        all_instruction_text += `There are ${instructionNodes.length} instructions in this program.\n`;
-
-        instructionNodes.forEach((instruction) => {
-          const instruction_data = instruction.data.item as Instruction;
-          
-          const instruction_prompt = genIns(instruction_data);
-          const instruction_name = instruction_data.getName();
-          const instruction_desc = instruction_data.getDescription();
-          const instruction_params = instruction_data.getParameters();
-          const instruction_ai = instruction_data.getAiInstruction();
-          let instruction_text = `
-          ${instruction_name} is an instruction, ${instruction_desc} with parameters:
-          ${instruction_params}, and logic as follows:
-          ${instruction_ai}
-          ${stateContent ? `--- Additional Context from state.rs ---\n${stateContent}\n\n` : ''}
-          ${instruction_prompt}
-          `;
-          all_instruction_text += instruction_text + '\n';
-        });
-      }
-
-      let all_sdk_text = '';
-      all_sdk_text += genSdk();
-
-      let all_tests_text = '';
-      all_tests_text += genTests();
-
-      all_text +=
-        textGenerator(
-          program_data.getName(),
-          program_data.getDescription(),
-          all_account_text,
-          all_instruction_text,
-          all_sdk_text,
-          all_tests_text,
-          fileName,
-          filePath,
-          stateContent
-        ) + '\n';
-    }
-  });
-  return all_text;
+  return promptContent;
 };
 
 export default genFile;
