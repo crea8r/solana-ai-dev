@@ -29,9 +29,13 @@ import {
 } from "@chakra-ui/react";
 import { CheckIcon, CopyIcon, TimeIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 import { KeyRound, Plus, RefreshCcw, WalletIcon } from 'lucide-react';
-import { getPrivateKey, getWalletInfo } from '../api/wallet';
+import { airdropTokens, getPrivateKey, getWalletInfo } from '../api/wallet';
 import { WalletPrivateKeyInfo, WalletInfo } from '../interfaces/wallet';
 import { AuthContext } from '../contexts/AuthContext';
+import { 
+  handleAirdrop,
+  handleBalanceRefresh
+ } from '../utils/walletUtils';
 
 interface WalletCreationModalProps { userId: string; onClose: () => void; };
 
@@ -142,6 +146,7 @@ export const Wallet: React.FC = () => {
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [amountSectionOpen, setAmountSectionOpen] = useState(false);
   const { onCopy } = useClipboard(walletInfo?.publicKey || '');
 
   const bgColor = useColorModeValue("gray.100", "gray.700");
@@ -322,7 +327,7 @@ export const Wallet: React.FC = () => {
                     <IconButton
                       aria-label="Refresh balance"
                       icon={<RefreshCcw size={14} />}
-                      onClick={() => {}}
+                      onClick={() => handleBalanceRefresh(user?.id || '', setWalletInfo, setIsLoading)}
                       variant="outline"
                       border="1px solid"
                       borderColor="gray.300"
@@ -342,7 +347,7 @@ export const Wallet: React.FC = () => {
                     <IconButton
                       aria-label="Add SOL"
                       icon={<Plus size={14} />}
-                      onClick={() => {}}
+                      onClick={() => handleAirdrop(isLoading, setIsLoading, walletInfo?.publicKey || '', () => handleBalanceRefresh(user?.id || '', setWalletInfo, setIsLoading), () => setAmountSectionOpen(false))}
                       variant="outline"
                       size="sm"
                       shadow="sm"
@@ -351,6 +356,11 @@ export const Wallet: React.FC = () => {
                     />
                   </Tooltip>
                 </Flex>
+                {walletInfo?.publicKey && amountSectionOpen && (
+                  <Tooltip label="Airdrop SOL" hasArrow bg='#a9b7ff' color='white' shadow='md' fontSize='xs' borderRadius='md'>
+                    <IconButton aria-label="Airdrop SOL" icon={<Plus size={14} />} onClick={() => {}} variant="outline" size="sm" shadow="sm" border="1px solid" borderColor="gray.300" />
+                  </Tooltip>
+                )}
               </Flex>
             </Box>
           </VStack>

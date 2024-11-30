@@ -20,6 +20,17 @@ export const getWalletInfo = async (userId: string): Promise<WalletInfo> => {
     throw error;
   }
 };
+
+export const airdropTokens = async (publicKey: string, amount: number = 1): Promise<string> => {
+  try {
+    const response = await api.post('/auth/wallet/airdrop', { publicKey, amount });
+    console.log(response.data.message);
+    return response.data.message;
+  } catch (error: any) {
+    console.error('Error during token airdrop:', error.response?.data || error.message);
+    throw error;
+  }
+};
   
   export const getPrivateKey = async (userId: string): Promise<WalletPrivateKeyInfo> => {
     try {
