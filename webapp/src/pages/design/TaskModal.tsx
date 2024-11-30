@@ -488,6 +488,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 if (_schema === '') throw new Error('No schema for file generation');
       
                 const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
+
+                const anchorTomlPath = `Anchor.toml`;
+                const programId = await extractProgramIdFromAnchorToml(
+                  projectId,
+                  anchorTomlPath,
+                  programDirName
+                );
       
                 let codeContent = '';
                 if (content) {
@@ -533,7 +540,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       },
                     }));
                   } else if (isSdkFile) { 
-                    codeContent = await processAISdkOutput(projectId, programDirName, aiContent); 
+                    codeContent = await processAISdkOutput(projectId, programId, programDirName, aiContent); 
                     parseSdkFunctions(codeContent, setProjectContext);
                   } 
                   else if (isTestFile) { codeContent = await processAITestOutput(projectId, programDirName, aiContent); } 

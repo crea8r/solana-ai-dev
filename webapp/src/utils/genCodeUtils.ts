@@ -747,11 +747,17 @@ export const processAILibOutput = async (
 // sdk
 export interface AISdkOutput {
   program_name: string;
-  program_id: string;
   instructions: {
     name: string;
     description: string;
     params: string[];
+    context: {
+      accounts: {
+        name: string;
+        isSigner: boolean;
+        isWritable: boolean;
+      }[];
+    };
   }[];
   accounts: {
     name: string;
@@ -762,6 +768,7 @@ export interface AISdkOutput {
 
 export const processAISdkOutput = async (
   projectId: string,
+  programId: string,
   normalizedProgramName: string,
   aiJson: string
 ): Promise<string> => {
@@ -771,7 +778,6 @@ export const processAISdkOutput = async (
   try {
     const jsonContent = extractJSON(aiJson);
     let aiData: AISdkOutput = JSON.parse(jsonContent);
-
     aiData = sanitizeAIOutput(aiData, sdkSchema);
 
     const valid = validate(aiData);
@@ -780,10 +786,9 @@ export const processAISdkOutput = async (
       throw new Error('Invalid AI JSON structure.');
     }
 
-    // Generate SDK code using the template
     const codeContent = getSdkTemplate(
       aiData.program_name,
-      aiData.program_id,
+      programId,
       aiData.instructions,
       aiData.accounts
     );
