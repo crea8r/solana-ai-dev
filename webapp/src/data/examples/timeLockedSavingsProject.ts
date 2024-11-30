@@ -195,6 +195,8 @@ const timeLockedSavingsProject: Project = {
     uiResults: [],
     aiInstructions: [],
     sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
   } as ProjectDetails,
 };
 

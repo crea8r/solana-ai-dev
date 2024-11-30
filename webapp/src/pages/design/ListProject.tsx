@@ -101,6 +101,8 @@ const ListProject: React.FC<ListProjectProps> = ({
             uiResults: [],
             aiInstructions: [],
             sdkFunctions: [],
+            buildStatus: false,
+            deployStatus: false,
           },
         });
       }

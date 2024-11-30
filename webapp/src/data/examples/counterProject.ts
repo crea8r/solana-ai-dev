@@ -160,6 +160,8 @@ const counterProject: Project = {
     uiResults: [],
     aiInstructions: [],
     sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
   } as ProjectDetails,
 };
 

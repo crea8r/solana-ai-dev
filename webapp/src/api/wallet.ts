@@ -21,7 +21,7 @@ export const getWalletInfo = async (userId: string): Promise<WalletInfo> => {
   }
 };
 
-export const airdropTokens = async (publicKey: string, amount: number = 1): Promise<string> => {
+export const airdropTokens = async (publicKey: string, amount: number = 2): Promise<string> => {
   try {
     const response = await api.post('/auth/wallet/airdrop', { publicKey, amount });
     console.log(response.data.message);

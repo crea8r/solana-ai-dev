@@ -39,6 +39,8 @@ export interface ProjectDetailsToSave {
     function_name: string;
     params: { name: string; type: string }[];
   }[];
+  buildStatus: boolean;
+  deployStatus: boolean;
 }
 
 export interface ProjectDetails {
@@ -71,6 +73,8 @@ export interface ProjectDetails {
     function_name: string;
     params: { name: string; type: string }[];
   }[];
+  buildStatus: boolean;
+  deployStatus: boolean;
 }
 
 export interface Project {

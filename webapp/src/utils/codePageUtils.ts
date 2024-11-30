@@ -17,35 +17,42 @@ export const startPollingTaskStatus = (
   addLog: (message: string, type: LogEntry['type']) => void, 
   onComplete?: (taskResult: string) => void,
   silent?: boolean
-) => {
-  setIsPolling(true);
-  const intervalId = setInterval(async () => {
-    try {
-      const taskResponse = await taskApi.getTask(taskId);
-      const status = taskResponse.task.status;
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    setIsPolling(true);
+    const intervalId = setInterval(async () => {
+      try {
+        const taskResponse = await taskApi.getTask(taskId);
+        const status = taskResponse.task.status;
 
-      if (status === 'finished' || status === 'succeed' || status === 'warning') {
+        if (status === 'finished' || status === 'succeed' || status === 'warning') {
+          clearInterval(intervalId);
+          setIsPolling(false);
+          setIsLoading(false);
+
+          if (status === 'warning') if (!silent) addLog(taskResponse.task.result || '', 'warning');
+          else if (!silent) addLog('Task completed successfully', 'success');
+
+          if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
+          resolve(status);
+        } else if (status === 'failed') {
+          clearInterval(intervalId);
+          setIsPolling(false);
+          setIsLoading(false);
+
+          if (!silent) addLog(`Task failed: ${taskResponse.task.result}`, 'error');
+          reject(new Error('Task failed'));
+        }
+      } catch (error) {
         clearInterval(intervalId);
         setIsPolling(false);
         setIsLoading(false);
 
-        if (status === 'warning') if (!silent) addLog(taskResponse.task.result || '', 'warning');
-        else if (!silent) addLog('Task completed successfully', 'success');
-
-        if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
-      } else if (status === 'failed') {
-        clearInterval(intervalId);
-        setIsPolling(false);
-        setIsLoading(false);
-        if (!silent) addLog(`Task failed: ${taskResponse.task.result}`, 'error');
+        if (!silent) addLog(`Polling error: ${error}`, 'error');
+        reject(error);
       }
-    } catch (error) {
-      clearInterval(intervalId);
-      setIsPolling(false);
-      setIsLoading(false);
-      if (!silent) addLog(`Polling error: ${error}`, 'error');
-    }
-  }, 5000);
+    }, 5000);
+  });
 };
 
 // -------------------
@@ -360,7 +367,8 @@ export const handleBuildProject = async (
   projectContextId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (message: string, type: LogEntry['type']) => void
+  addLog: (message: string, type: LogEntry['type']) => void,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ) => {
   try {
     const projectId = projectContextId;
@@ -368,7 +376,16 @@ export const handleBuildProject = async (
 
     if (response.taskId) {
       addLog('Building project. This may take a few minutes...', 'start');
-      startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+      const status = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+      if (status === 'finished' || status === 'succeed' || status === 'warning') {
+        setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          buildStatus: true,
+          },
+        }));
+      } else addLog('Build initiation failed.', 'error');
     } else addLog('Build initiation failed.', 'error');
 
   } catch (error) {
@@ -380,13 +397,23 @@ export const handleDeployProject = async (
   projectId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (log: string) => void
+  addLog: (log: string) => void,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ): Promise<void> => {
   try {
     setIsLoading(true);
     addLog('Starting deployment process...');
     const response = await projectApi.deployProject(projectId);
-    startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+    const status = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+    if (status === 'finished' || status === 'succeed' || status === 'warning') {
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          deployStatus: true,
+        },
+      }));
+    }
   } catch (error) {
     console.error('Error during deployment:', error);
     addLog('Failed to start deployment process.');

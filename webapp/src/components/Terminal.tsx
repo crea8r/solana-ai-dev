@@ -59,11 +59,11 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
                 <Icon as={ChevronRight} w={3} h={3} mr={2} mt={1} color="gray.500" />
 
                 {log.type === 'success' ? (
-                  <Icon as={Check} w={3} h={3} mr={2} mt={1} color="green.500" />
+                  <Icon as={Check} w={2} h={2} mr={2} mt={1} color="#1cba70" />
                 ) : log.type === 'error' ? (
-                  <Icon as={CloseIcon} w={3} h={3} mr={2} mt={1} color="red.500" />
+                  <Icon as={CloseIcon} w={2} h={2} mr={2} mt={1} color="#ec3232" />
                 ) : log.type === 'warning' ? (
-                  <Icon as={WarningIcon} w={3} h={3} mr={2} mt={1} color="yellow.500" />
+                  <Icon as={WarningIcon} w={2} h={2} mr={2} mt={1} color="#ddbf27" />
                 ) : null}
 
                 <Text

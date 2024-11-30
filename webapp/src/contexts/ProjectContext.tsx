@@ -19,6 +19,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     uiResults: project.details.uiResults,
     aiInstructions: project.details.aiInstructions,
     sdkFunctions: project.details.sdkFunctions,
+    buildStatus: project.details.buildStatus,
+    deployStatus: project.details.deployStatus,
   },
 });
 
@@ -62,6 +64,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           uiResults: [],
           aiInstructions: [],
           sdkFunctions: [],
+          buildStatus: false,
+          deployStatus: false,
         },
         
       };

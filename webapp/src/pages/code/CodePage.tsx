@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Button, Flex } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree from '../../components/FileTree';
@@ -22,6 +22,7 @@ import {
 import { saveProject } from '../../utils/projectUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
+import ProjectStatus from './projectStatus';
 
 const CodePage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
@@ -33,6 +34,7 @@ const CodePage = () => {
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
   const [showWallet, setShowWallet] = useState(false);
+  const [showProjectStatus, setShowProjectStatus] = useState(false);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
   const _handleSelectFile = useCallback(
@@ -137,8 +139,8 @@ const CodePage = () => {
   
 
   const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); };
-  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
-  const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
+  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setProjectContext); };
+  const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, setProjectContext); };
   const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
@@ -155,10 +157,27 @@ const CodePage = () => {
         <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} onDeploy={_handleDeployProject} onToggleWallet={handleToggleWallet} />
       </Flex>
 
-      <Flex flex="1" overflow="hidden">
-        <Box w="auto" borderRight="1px" borderColor="gray.200" overflowY="auto">
-          <FileTree onSelectFile={_handleSelectFile} files={files} selectedItem={selectedFile} />
-        </Box>
+      <Flex flex="1" overflow="hidden" borderLeft="1px" borderColor="gray.200">
+        <Flex flexDirection="column" py={2} >
+          <Button 
+            onClick={() => setShowProjectStatus((prev) => !prev)}
+            variant="outline"
+            size="xs"
+            width="50%"
+            mx={0}
+            mb={2}
+          >
+            {showProjectStatus ? 'Hide Project Status' : 'Show Project Status'}
+          </Button>
+          {showProjectStatus && (
+            <Box flex="1">  
+              <ProjectStatus />
+            </Box>
+          )}
+          <Box flex="5" borderRight="1px" borderColor="gray.200" overflowY="auto">
+            <FileTree onSelectFile={_handleSelectFile} files={files} selectedItem={selectedFile} />
+          </Box>
+        </Flex> 
         <Box
           flex={1}
           minHeight="100%"

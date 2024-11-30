@@ -229,6 +229,8 @@ const todoproject: Project = {
     uiResults: [],
     aiInstructions: [],
     sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
   } as ProjectDetails,
 } as Project;
 export { todoproject };
