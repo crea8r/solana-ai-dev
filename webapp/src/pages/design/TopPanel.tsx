@@ -86,7 +86,19 @@ const TopPanel: React.FC<TopPanelProps> = ({
       <Divider orientation="vertical" />
       <Flex align="center" gap={4}>
         <Menu>
-          <MenuButton p={3} as={Button} leftIcon={<HiOutlineSparkles size={14} />} rightIcon={<ChevronDownIcon />} variant="outline" size="xs">
+          <MenuButton 
+            p={3} 
+            as={Button} 
+            leftIcon={<HiOutlineSparkles size={14} />} 
+            rightIcon={<ChevronDownIcon />} 
+            variant="outline" 
+            size="xs"
+            border="1px solid"
+            borderColor="gray.300"
+            borderRadius="md"
+            bg="white"
+            shadow="sm"
+          >
             <Text fontSize="xs">Select AI Model</Text>
           </MenuButton>
           <MenuList>
@@ -97,39 +109,79 @@ const TopPanel: React.FC<TopPanelProps> = ({
         </Menu>
         {(selectedModel === 'gpt-4o' || selectedModel === 'claude-3.5-sonnet') && (
           <Flex align="center" gap={1}>
-            <Input
-              placeholder="Enter API Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              size="xs"
-              width="200px"
-            />
-            <Tooltip label="Save API Key" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
-              <Button
-                variant="ghost"
+            <Flex
+              bg="white"
+              shadow="sm"
+              border="1px solid"
+              borderColor="gray.300"
+              borderRadius="md"
+            >
+              <Input
+                placeholder="Enter API Key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
                 size="xs"
-                colorScheme="blue"
-                onClick={() => {
-                  setProjectContext({ ...projectContext, apiKey });
-              }}
-              leftIcon={<Check size={14} />}
-              >
-              </Button>
-            </Tooltip>
+                width="150px"
+                border="none"
+                borderRadius="md"
+                _focus={{ border: 'none !important' }}
+              />
+              <Tooltip label="Save API Key" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  colorScheme="blue"
+                  onClick={() => {
+                    setProjectContext({ ...projectContext, apiKey });
+                }}
+                leftIcon={<Check size={14} />}
+                >
+                </Button>
+              </Tooltip>
+            </Flex>
           </Flex>
         )}
-        <Button leftIcon={<Code size={12} />} onClick={generatePrompt} size="xs" p={4}>
-          Generate Code
-        </Button>
+        <Button 
+          leftIcon={<Code size={12} />} 
+          onClick={generatePrompt} 
+          size="xs" 
+          px={3}
+          py={3}
+          bg="white" 
+          border="1px solid" 
+          borderColor="gray.300"
+          shadow="sm"
+        > Generate Code </Button>
       </Flex>
       <Flex flex="1" justify="center" align="center">
-        <Button variant="ghost" size="xs" onClick={onClickInput}>
+        <Button 
+          variant="ghost" 
+          size="xs" 
+          onClick={onClickInput}
+          px={3}
+          py={3}
+          bg="white"
+          border="1px solid"
+          borderColor="gray.300"
+          borderRadius="md"
+          shadow="sm"
+        >
           {projectContext.name || 'Untitled Project'}
           <EditIcon ml={2} />
         </Button>
       </Flex>
       <Flex align="center" gap={4}>
-        <Button leftIcon={<Wallet size={12} />} variant="outline" size="xs" onClick={onToggleWallet}>
+        <Button 
+          leftIcon={<Wallet size={12} />} 
+          variant="outline" 
+          size="xs" 
+          onClick={onToggleWallet}
+          bg="white"
+          border="1px solid"
+          borderColor="gray.300"
+          borderRadius="md"
+          shadow="sm"
+        >
           <Text fontSize="xs">Wallet</Text>
         </Button>
         <Menu>

@@ -186,7 +186,7 @@ export const Wallet: React.FC = () => {
         p={4}
         zIndex="1000"
       >
-        <Card width="full" p={4}>
+        <Card width="full" p={4} bg="white" border="1px solid" borderColor="gray.300" shadow="sm">
           <CardHeader>
             <Flex align="center" gap={2}>
               <WalletIcon size={20} />
@@ -217,11 +217,11 @@ export const Wallet: React.FC = () => {
       zIndex="1000"
       overflowY="auto"
     >
-      <Card width="full" boxShadow="lg" px={6} py={2}>
+      <Card width="full" bg="white" border="1px solid" borderColor="gray.200" shadow="lg" px={6} py={2}>
         <CardHeader>
           <Flex align="center" gap={2} mb={2}>
-            <WalletIcon size={18} />
-            <Heading fontSize="lg">Wallet Information</Heading>
+            <WalletIcon size={18} color="#7f7de8" />
+            <Heading fontSize="lg" color="#7f7de8">Wallet</Heading>
           </Flex>
           <Text fontSize="xs" color="gray.500">
             View and manage your wallet details
@@ -278,7 +278,7 @@ export const Wallet: React.FC = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  <Text fontSize="2xl" fontWeight="bold">
+                  <Text fontSize="2xl" fontWeight="bold" color="#909de0">
                     {walletInfo?.balance || 0}
                   </Text>
                   <Text ml={2} fontSize="sm" color="gray.500">

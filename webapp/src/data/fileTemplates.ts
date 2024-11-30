@@ -162,71 +162,118 @@ export const getSdkTemplate = (
   accounts: { name: string; description: string; fields: { name: string; type: string }[] }[]
 ): string => {
   const instructionFunctions = instructions.map(({ name, description, params, context }) => {
-    const paramsList = [
-      ...params.map(param => `${param}: any`),
-      ...context.accounts.map(account => `${account.name}: ${account.isSigner ? 'web3.Keypair' : 'web3.PublicKey'}`)
-    ].join(", ");
+    // Create a map to track unique parameter names to avoid duplication
+    const uniqueParams = new Map<string, string>();
 
+    // Add instruction parameters to the map
+    params.forEach(param => {
+      if (!uniqueParams.has(param)) {
+        uniqueParams.set(param, `${param}: any`);
+      }
+    });
+
+    // Add account parameters to the map, ensuring no duplicates
+    context.accounts.forEach(account => {
+      if (!uniqueParams.has(account.name)) {
+        uniqueParams.set(account.name, `${account.name}: ${account.isSigner ? 'web3.Keypair' : 'web3.PublicKey'}`);
+      }
+    });
+
+    // Convert map values to array and join them with commas to form the parameter list
+    const paramsList = Array.from(uniqueParams.values()).join(", ");
+
+    // Generate the list of account mappings for the .accounts() method
     const accountMappings = context.accounts
       .map(account => `${account.name}: ${account.name}${account.isSigner ? '.publicKey' : ''}`).join(",\n          ");
 
+    // Generate signing logic if there are any signers
     const signersList = context.accounts.filter(account => account.isSigner).map(account => account.name).join(", ");
 
     return `
       // ${description}
       async ${name}(${paramsList}): Promise<Transaction> {
-        // Create the transaction instruction
-        const ix = await this.program.methods.${name}(${params.join(", ")}).accounts({
-            ${accountMappings}
-        }).instruction();
+        try {
+          // Create the transaction instruction
+          const ix = await this.program.methods.${name}(${params.join(", ")}).accounts({
+              ${accountMappings}
+          }).instruction();
 
-        // Construct the transaction
-        const transaction = new web3.Transaction().add(ix);
-        transaction.recentBlockhash = (await this.program.provider.connection.getLatestBlockhash()).blockhash;
+          // Construct the transaction
+          const transaction = new web3.Transaction().add(ix);
+          transaction.recentBlockhash = (await this.program.provider.connection.getLatestBlockhash()).blockhash;
 
-        // Sign the transaction if there are any signers
-        ${signersList ? `transaction.sign(${signersList});` : ''}
+          // Sign the transaction if there are any signers
+          ${signersList ? `transaction.sign(${signersList});` : ''}
 
-        return transaction;
+          return transaction;
+        } catch (error) {
+          console.error('Error executing ${name}:', error);
+          throw error;
+        }
       }`;
   }).join("\n");
 
   const accountFetchers = accounts.map(({ name, description, fields }) => {
+    // Map fields to correctly extract from account without using `.data`
+    const fieldMappings = fields.map(({ name, type }) => {
+      const typeConversion = type === 'u64' ? '.toNumber()' : '';
+      return `${name}: account.account.${name}${typeConversion}`;
+    }).join(",\n          ");
+
     return `
       // ${description}
       async fetch${name}Accounts(): Promise<${name}[]> {
-        const accounts = await this.program.account.${name.toLowerCase()}.all();
-        return accounts.map(account => ({
-          ${fields.map(({ name }) => `${name}: account.account.data.${name}`).join(",\n      ")}
-        }));
+        try {
+          const accounts = await this.program.account.${name.toLowerCase()}.all();
+          return accounts.map(account => ({
+            ${fieldMappings}
+          }));
+        } catch (error) {
+          console.error('Error fetching ${name} accounts:', error);
+          throw error;
+        }
       }`;
-    }).join("\n");
+  }).join("\n");
 
+  // Update the TypeScript types for program accounts
+  const typeMapping = (type: string): string => {
+    switch (type) {
+      case 'u64':
+        return 'number';
+      case 'Pubkey':
+      case 'PubKey':
+        return 'web3.PublicKey';
+      default:
+        return type;
+    }
+  };
 
-    return `
-      import { Program, AnchorProvider, Idl, web3, Transaction } from '@coral-xyz/anchor';
+  return `
+    import { Program, AnchorProvider, Idl, web3, Transaction } from '@coral-xyz/anchor';
 
-      // SDK for interacting with the ${programName} program.
-      export class ${programName}SDK {
-        private program: Program;
+    // SDK for interacting with the ${programName} program.
+    export class ${programName}SDK {
+      private program: Program;
 
-        constructor(provider: AnchorProvider, idl: Idl, programId: string = "${programId}") {
-          this.program = new Program(idl, programId, provider);
-        }
+      constructor(provider: AnchorProvider, idl: Idl, programId: string = "${programId}") {
+        this.program = new Program(idl, programId, provider);
+      }
 
-        ${instructionFunctions}
+      ${instructionFunctions}
 
-        ${accountFetchers}
-        }
+      ${accountFetchers}
+    }
 
-        // Types for program accounts.
-        ${accounts.map(({ name, fields }) => {
-          const fieldsStr = fields.map(({ name, type }) => `  ${name}: ${type};`).join("\n");
-          return `export interface ${name} {
-            ${fieldsStr}
-          }`;
-        }).join("\n\n")}
-    `;
+    // Types for program accounts.
+    ${accounts.map(({ name, fields }) => {
+      const fieldsStr = fields
+        .map(({ name, type }) => `  ${name}: ${typeMapping(type)};`)
+        .join("\n");
+      return `export interface ${name} {
+        ${fieldsStr}
+      }`;
+    }).join("\n\n")}
+  `;
 };
 
 export const getTestTemplate = (

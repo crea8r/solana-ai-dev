@@ -511,12 +511,19 @@ const DesignPage: React.FC = () => {
         </Flex>
         <Button
           position='fixed'
+          boxSizing='border-box'
           bottom='4'
           right='4'
-          colorScheme='blue'
+          bg="white"
+          border="2.5px solid"
+          borderColor="#a9b7ff"
+          shadow="lg"
+          color="#a9b7ff"
+          cursor="pointer !important"
           onClick={handleOpenWalkthrough}
           leftIcon={<FaQuestion />}
           style={{ zIndex: 100 }}
+          _hover={{ bg: '#a9b7ff', color: 'white', border: '2.5px solid transparent' }}
         >
           Help
         </Button>
