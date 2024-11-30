@@ -76,28 +76,27 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
   return (
     <Box
       width="20%"
-      bg="white"
+      bg="gray.50"
       py={4}
       px={6}      
       borderRight="1px solid"
-      borderColor="gray.200"
+      borderColor="gray.100"
       shadow="lg"
       fontFamily="Red Hat Display"
       letterSpacing="0.05em"
     >
       <VStack spacing={2} align="stretch">
         <Flex direction="column" alignItems="stretch" gap={4} mb={6} mt={4} ml={2} mr={2}>
-          <Text fontWeight="300" textAlign="left" fontSize="sm" color="gray.400" >Select Example</Text>
-          <Divider/>
           <Select
             placeholder="Select Example"
             value={selectedExample}
             onChange={handleExampleChange}
             size="sm"
-            fontWeight="600"
+            fontWeight="normal"
             letterSpacing="0.05em"
             fontFamily="Red Hat Display"
-            color="gray.600"
+            bg="white"
+            color="gray.700"
             mb={3}
           >
               <option value="Counter"><Text>Counter Program</Text></option>
@@ -108,8 +107,8 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
               <option value="EscrowPayment"><Text>Escrow Payment Program</Text></option>
           </Select>
         </Flex>
-        <Text fontWeight="300" textAlign="left" fontSize="sm" color="gray.400">Drag items onto canvas</Text>
-        <Divider mb={3}/>
+        <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>
+        <Divider mb={3} borderColor="gray.500"/>
         <SimpleGrid columns={2} spacing={4}>
           {toolboxItems.map((item) => (
             <Tooltip key={item.id} label={item.getName()} placement="right"
@@ -130,6 +129,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 fontFamily="Red Hat Display"
                 borderRadius="md"
                 border= '2px solid #a9b7ff'
+                bg="white"
                 _hover={{ shadow: 'md' }}
                 display="flex"
                 flexDirection="column"

@@ -23,8 +23,8 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest, onDeploy }
       borderColor="gray.300"
       justifyContent="space-between"
       alignItems="center"
+      bg="gray.50"
       p={4}
-      shadow="md"
     >
       <Flex flexDirection="row" justifyContent="space-evenly" alignItems="center">
         <Menu>

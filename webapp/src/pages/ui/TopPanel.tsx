@@ -41,7 +41,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   return (
     <Flex as="header" h="14" justify="flex-end" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6}>
       <Flex align="center" gap={4}>
-        <Button leftIcon={<Wallet size={12} />} variant="outline" size="xs" onClick={onToggleWallet}>
+        <Button leftIcon={<Wallet size={12} />} variant="outline" size="xs" bg="white" onClick={onToggleWallet}>
           <Text fontSize="xs">Wallet</Text>
         </Button>
         <Menu>

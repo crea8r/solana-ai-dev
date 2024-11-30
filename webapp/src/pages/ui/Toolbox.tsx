@@ -4,7 +4,7 @@ const Toolbox = () => {
   return (
     <Flex
       width={{ base: "100%", md: "20%" }}
-      bg="gray.50"
+      bg="gray.100"
       p={4}
       gap={4}
       direction="column"

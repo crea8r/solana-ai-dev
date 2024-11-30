@@ -105,17 +105,17 @@ const UISpace = () => {
                 direction="column"
                 gap={2}
               >
-                <Text fontWeight="bold" fontSize="md" fontFamily="mono"> {instructionName} </Text>
+                <Text fontWeight="bold" fontSize="md" fontFamily="Open Sans" color="#898ce1"> {instructionName} </Text>
                 <Text
                   fontSize="xs"
                   color="gray.600"
-                  fontFamily="mono"
+                  fontFamily="Open Sans"
                   textAlign="center"
                 > {aiInstruction.function_name} </Text>
                 <Text
                   fontSize="xs"
                   color="gray.500"
-                  fontFamily="mono"
+                  fontFamily="Open Sans"
                   textAlign="center"
                 > {description} </Text>
               </Flex>
@@ -125,7 +125,7 @@ const UISpace = () => {
                   key={param.name} 
                   placeholder={`Enter ${param.name}`}
                   size="xs"
-                  fontFamily="mono"
+                  fontFamily="Open Sans"
                   mb={2}
                   value={
                     instructionInputs[aiInstruction.function_name]?.[paramIdx] ||
@@ -146,9 +146,20 @@ const UISpace = () => {
                 size="xs"
                 boxSizing="border-box"
                 overflow="hidden"
-                fontFamily="mono"
+                fontFamily="Open Sans"
                 fontWeight="normal"
-                colorScheme="blue"
+                borderRadius="md"
+                shadow="md"
+                border="3px solid"
+                borderColor="#a9b7ff"
+                bg="white"
+                color="#898ce1"
+                px={2}
+                py={4}
+                _hover={{
+                  bg: "#a9b7ff",
+                  color: "white",
+                }}
                 onClick={() =>
                   handleCallInstruction(
                     node.data.item.sdkFunction, // needs to come from project context instead of node data
@@ -156,7 +167,7 @@ const UISpace = () => {
                   )
                 }
               >
-                <Text>Call {instructionName}</Text>
+                <Text fontWeight="bold">Call {instructionName}</Text>
               </Button>
             </Flex>
           );
@@ -182,13 +193,13 @@ const UISpace = () => {
               direction="column"
               gap={2}
             >
-              <Text fontWeight="bold" fontSize="md" fontFamily="mono">
+              <Text fontWeight="bold" fontSize="md" fontFamily="Open Sans" color="#898ce1">
                 {node.data.item.name || "Unnamed Account"}
               </Text>
               <Text
                 fontSize="xs"
                 color="gray.500"
-                fontFamily="mono"
+                fontFamily="Open Sans"
                 textAlign="center"
               >
                 {node.data.item.description || "No description available."}
