@@ -119,6 +119,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     name: 'Generate Files',
                     status: projectContext?.details.isCode ? 'completed' : 'loading',
                     type: 'main' as 'main',
+                },
+                {
+                    id: 3,
+                    name: 'Install NPM Packages',
+                    status: 'loading',
+                    type: 'main' as 'main',
                 }
             ];
 
@@ -237,11 +243,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             if (!projectContext.details.isAnchorInit) await handleAnchorInitTask(projectId, rootPath, projectName);
 
             if (!genCodeTaskRun && !projectContext.details.isCode) {
-                await handleGenCodesTask(user?.id, projectId, rootPath, projectName);
-                setGenCodeTaskRun(true);
-              } 
-        } finally {
-        }
+              await handleGenCodesTask(user?.id, projectId, rootPath, projectName);
+              setGenCodeTaskRun(true);
+            } 
+
+            await projectApi.installPackages(projectId);
+
+        } catch (error) { console.error('Error running tasks:', error); }
     };
 
     const handleGenCodesTask = async (userId: string, projectId: string, rootPath: string, projectName: string) => {

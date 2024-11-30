@@ -167,3 +167,29 @@ export const startCustomCommandTask = async (
 
   return taskId;
 };
+
+export const startInstallPackagesTask = async (
+  projectId: string,
+  creatorId: string,
+  _packages?: string[]
+): Promise<string> => {
+  const taskId = await createTask('Install NPM Packages', creatorId, projectId);
+
+  setImmediate(async () => {
+    try {
+      const rootPath = await getProjectRootPath(projectId);
+      const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
+
+      await runCommand('npm install @coral-xyz/anchor', projectPath, taskId);
+      if (_packages) {
+        _packages.forEach(async (_package: string) => {
+          await runCommand(`npm install ${_package}`, projectPath, taskId);
+        });
+      }
+    } catch (error: any) {
+      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+    }
+  });
+
+  return taskId;
+};

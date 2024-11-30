@@ -80,8 +80,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       py={4}
       px={6}      
       borderRight="1px solid"
-      borderColor="gray.100"
-      shadow="lg"
+      borderColor="gray.200"
       fontFamily="Red Hat Display"
       letterSpacing="0.05em"
     >

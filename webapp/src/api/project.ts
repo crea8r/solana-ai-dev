@@ -129,4 +129,14 @@ export const projectApi = {
       throw error;
     }
   },
+
+  installPackages: async (projectId: string): Promise<TaskResponse> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/install-packages`);
+      return response.data;
+    } catch (error) {
+      console.error('Error installing npm packages:', error);
+      throw error;
+    }
+  },
 };

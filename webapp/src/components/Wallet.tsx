@@ -25,9 +25,10 @@ import {
   Heading,
   Skeleton,
   useColorModeValue,
+  Tooltip,
 } from "@chakra-ui/react";
 import { CheckIcon, CopyIcon, TimeIcon, ExternalLinkIcon } from "@chakra-ui/icons";
-import { KeyRound, WalletIcon } from 'lucide-react';
+import { KeyRound, Plus, RefreshCcw, WalletIcon } from 'lucide-react';
 import { getPrivateKey, getWalletInfo } from '../api/wallet';
 import { WalletPrivateKeyInfo, WalletInfo } from '../interfaces/wallet';
 import { AuthContext } from '../contexts/AuthContext';
@@ -84,11 +85,13 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
                 </FormLabel>
                 <HStack>
                   <Input value={walletInfo?.publicKey} isReadOnly fontFamily="mono" size="sm" />
-                  <IconButton
-                    aria-label="Copy Public Key"
-                    icon={publicKeyCopied ? <CheckIcon color="green.500" /> : <CopyIcon />}
-                    onClick={onCopyPublicKey}
-                  />
+                  <Tooltip label="Copy Public Key">
+                    <IconButton
+                      aria-label="Copy Public Key"
+                      icon={publicKeyCopied ? <CheckIcon color="green.500" /> : <CopyIcon />}
+                      onClick={onCopyPublicKey}
+                    />
+                  </Tooltip>
                 </HStack>
               </FormControl>
             </Box>
@@ -221,7 +224,7 @@ export const Wallet: React.FC = () => {
         <CardHeader>
           <Flex align="center" gap={2} mb={2}>
             <WalletIcon size={18} color="#7f7de8" />
-            <Heading fontSize="lg" color="#7f7de8">Wallet</Heading>
+            <Heading fontSize="xl" color="#7f7de8">Wallet</Heading>
           </Flex>
           <Text fontSize="xs" color="gray.500">
             View and manage your wallet details
@@ -230,9 +233,7 @@ export const Wallet: React.FC = () => {
         <CardBody>
           <VStack align="start" spacing={4}>
             <Box width="full">
-              <Text fontWeight="semibold" fontSize="sm">
-                Address
-              </Text>
+              <Text fontWeight="semibold" fontSize="sm" color="gray.600"> Address </Text>
               <Flex align="center" gap={2} mt={1}>
                 <Box
                   flex="1"
@@ -246,45 +247,110 @@ export const Wallet: React.FC = () => {
                 >
                   {formatAddress(walletInfo?.publicKey || '')}
                 </Box>
-                <IconButton
-                  aria-label="Copy address"
-                  icon={copied ? <CheckIcon color="green.500" /> : <CopyIcon />}
-                  onClick={handleCopy}
-                  variant="outline"
-                  size="sm"
-                />
-                <IconButton
-                  aria-label="View on explorer"
-                  icon={<ExternalLinkIcon />}
-                  onClick={viewOnExplorer}
-                  variant="outline"
-                  size="sm"
-                />
+                <Tooltip 
+                  label="Copy address"
+                  hasArrow
+                  bg='#a9b7ff'
+                  color='white'
+                  shadow='md'
+                  fontSize='xs' 
+                  fontWeight='semibold'
+                  borderRadius='md'
+                >
+                  <IconButton
+                    aria-label="Copy address"
+                    icon={copied ? <CheckIcon color="green.500" /> : <CopyIcon />}
+                    onClick={handleCopy}
+                    variant="outline"
+                    border="1px solid"
+                    borderColor="gray.300"
+                    size="sm"
+                    shadow="sm"
+                  />
+                </Tooltip>
+                <Tooltip 
+                  label="View on explorer"
+                  hasArrow
+                  bg='#a9b7ff'
+                  color='white'
+                  fontWeight='semibold'
+                  shadow='md'
+                  fontSize='xs' 
+                  borderRadius='md'
+                >
+                  <IconButton
+                    aria-label="View on explorer"
+                    icon={<ExternalLinkIcon />}
+                    onClick={viewOnExplorer}
+                    variant="outline"
+                    border="1px solid"
+                    borderColor="gray.300"
+                    size="sm"
+                    shadow="sm"
+                  />
+                </Tooltip>
               </Flex>
             </Box>
 
             <Box width="full">
-              <Text fontWeight="semibold" fontSize="sm">
-                Balance
-              </Text>
+              <Text fontWeight="semibold" fontSize="sm" color="gray.600"> Balance </Text>
               <Flex align="center" gap={2} mt={1}>
                 <Box
                   flex="1"
-                  p={2}
+                  py={1}
+                  px={2}
                   bg={bgColor}
                   borderRadius="md"
                   border="1px solid"
-                  borderColor="gray.300"
+                  borderColor="gray.400"
                   display="flex"
                   alignItems="center"
                 >
-                  <Text fontSize="2xl" fontWeight="bold" color="#909de0">
-                    {walletInfo?.balance || 0}
-                  </Text>
-                  <Text ml={2} fontSize="sm" color="gray.500">
-                    SOL
-                  </Text>
+                  <Text fontSize="xl" fontWeight="bold" color="#909de0"> {walletInfo?.balance || 0} </Text>
+                  <Text ml={2} fontSize="sm" color="gray.500"> SOL </Text>
                 </Box>
+                <Flex flexDirection="row" align="center" gap={2}>
+                  <Tooltip 
+                    label="Refresh balance"
+                    hasArrow
+                    bg='#a9b7ff'
+                    color='white'
+                    shadow='md'
+                    fontSize='xs' 
+                    borderRadius='md'
+                  >
+                    <IconButton
+                      aria-label="Refresh balance"
+                      icon={<RefreshCcw size={14} />}
+                      onClick={() => {}}
+                      variant="outline"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      size="sm"
+                      shadow="sm"
+                    />
+                  </Tooltip>
+                  <Tooltip 
+                    label="Add SOL"
+                    hasArrow
+                    bg='#a9b7ff'
+                    color='white'
+                    shadow='md'
+                    fontSize='xs' 
+                    borderRadius='md'
+                  >
+                    <IconButton
+                      aria-label="Add SOL"
+                      icon={<Plus size={14} />}
+                      onClick={() => {}}
+                      variant="outline"
+                      size="sm"
+                      shadow="sm"
+                      border="1px solid"
+                      borderColor="gray.300"
+                    />
+                  </Tooltip>
+                </Flex>
               </Flex>
             </Box>
           </VStack>

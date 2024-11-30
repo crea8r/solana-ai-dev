@@ -21,6 +21,7 @@ import {
 } from '../../utils/codePageUtils';
 import { saveProject } from '../../utils/projectUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
+import { Wallet } from '../../components/Wallet';
 
 const CodePage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
@@ -31,6 +32,7 @@ const CodePage = () => {
   const [isPolling, setIsPolling] = useState(false);  
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
+  const [showWallet, setShowWallet] = useState(false);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
   const _handleSelectFile = useCallback(
@@ -140,6 +142,7 @@ const CodePage = () => {
   const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
+  const handleToggleWallet = () => { setShowWallet((prev) => !prev); };
 
   return (
     <Flex
@@ -149,7 +152,7 @@ const CodePage = () => {
       justifyContent="space-between"
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
-        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} onDeploy={_handleDeployProject} />
+        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} onDeploy={_handleDeployProject} onToggleWallet={handleToggleWallet} />
       </Flex>
 
       <Flex flex="1" overflow="hidden">
@@ -162,6 +165,7 @@ const CodePage = () => {
           maxHeight="100%"
           boxSizing="border-box"
           overflow="auto"
+          zIndex={100}
         >
           <CodeEditor
             content={fileContent || ''}
@@ -174,6 +178,9 @@ const CodePage = () => {
             isPolling={isPolling}
           />
         </Box>
+        <Box flex={1} position="absolute" top={12} right={0}>
+          {showWallet && <Wallet />}
+        </Box>
         <Box
           w="400px"
           maxHeight="100% !important"
@@ -181,6 +188,7 @@ const CodePage = () => {
           borderColor="gray.300"
           pb="2"
         >
+          
           <AIChat
             selectedFile={selectedFile}
             fileContent={fileContent}
