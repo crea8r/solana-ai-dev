@@ -6,6 +6,15 @@ import { debounce } from "lodash";
 import { Project } from "../interfaces/project";
 import { CodeFile } from "../contexts/CodeFileContext";
 import { LogEntry } from "../hooks/useTerminalLogs";
+import { transformToProjectInfoToSave } from "../contexts/ProjectContext";
+
+const updateProjectInDatabase = async (projectContext: Project) => {
+  try {
+      const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+      await projectApi.updateProject(projectContext.id, projectInfoToSave);
+      console.log('Project updated successfully in the database.');
+  } catch (error) { console.error('Error updating project in the database:', error); }
+};
 
 // -------------------
 // Task Polling Utils
@@ -368,6 +377,7 @@ export const handleBuildProject = async (
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   addLog: (message: string, type: LogEntry['type']) => void,
+  projectContext: Project,
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ) => {
   try {
@@ -385,6 +395,7 @@ export const handleBuildProject = async (
           buildStatus: true,
           },
         }));
+        updateProjectInDatabase(projectContext);
       } else addLog('Build initiation failed.', 'error');
     } else addLog('Build initiation failed.', 'error');
 
@@ -398,6 +409,7 @@ export const handleDeployProject = async (
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   addLog: (log: string) => void,
+  projectContext: Project,
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ): Promise<void> => {
   try {
@@ -413,6 +425,7 @@ export const handleDeployProject = async (
           deployStatus: true,
         },
       }));
+      updateProjectInDatabase(projectContext);
     }
   } catch (error) {
     console.error('Error during deployment:', error);

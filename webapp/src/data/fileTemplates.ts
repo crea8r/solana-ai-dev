@@ -248,8 +248,30 @@ export const getSdkTemplate = (
     }
   };
 
+  const setupFunction = `
+    export const setup${programName} = () => {
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      
+      // Replace this with the wallet you're using
+      const wallet = new Wallet(/* Add your wallet instance here */);
+
+      // Initialize provider
+      const provider = new AnchorProvider(connection, wallet, {
+        preflightCommitment: 'processed',
+      });
+
+      // Create and return the SDK instance
+      return new ${programName}SDK(provider, idl);
+    };
+  `;
+
   return `
-    import { Program, AnchorProvider, Idl, web3, Transaction } from '@coral-xyz/anchor';
+    import { Connection, PublicKey } from '@solana/web3.js';
+    import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
+    import { Program, Idl, web3, Transaction } from '@coral-xyz/anchor';
+
+    // Replace with the path to your IDL file
+    import idl from './path-to-idl.json'; 
 
     // SDK for interacting with the ${programName} program.
     export class ${programName}SDK {
@@ -263,6 +285,8 @@ export const getSdkTemplate = (
 
       ${accountFetchers}
     }
+
+    ${setupFunction}
 
     // Types for program accounts.
     ${accounts.map(({ name, fields }) => {

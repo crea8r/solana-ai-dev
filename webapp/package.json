@@ -5,6 +5,7 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.10.1",
+    "@coral-xyz/anchor": "^0.30.1",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@ltd/j-toml": "^1.38.0",

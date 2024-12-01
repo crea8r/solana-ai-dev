@@ -191,7 +191,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   await projectApi.updateProject(projectContext.id, projectInfoToSave);
                   //console.log('Project updated successfully in the database.');
               } catch (error) { console.error('Error updating project in the database:', error); }
-          };
+            };
 
           updateProjectInDatabase();
           }

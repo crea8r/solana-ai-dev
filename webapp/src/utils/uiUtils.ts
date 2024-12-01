@@ -1,6 +1,9 @@
 import { uiPrompt } from "../prompts/genUI";
 import { promptAI } from "../services/prompt";
 import uiSchema from "../data/ai_schema/uiSchema.json";
+import { Idl } from '@coral-xyz/anchor';
+
+
 export const matchInstruction = (nodeName: string, aiInstructions: any[]): any | undefined => {
   console.log("aiInstructions:", aiInstructions);
   if(!aiInstructions) {
@@ -122,4 +125,30 @@ export const generateUI = async (
 
   console.log("Processed AI Instructions:", processedResults);
   return processedResults;
+};
+
+export const parseIdl = (idl: Idl) => {
+  const instructions = idl.instructions.map((inst: any) => ({
+    name: inst.name,
+    description: inst.docs?.join(' ') || 'No description available',
+    params: inst.args.map((arg: any) => arg.name),
+    context: {
+      accounts: inst.accounts.map((acc: any) => ({
+        name: acc.name,
+        isSigner: acc.isSigner || false,
+        isWritable: acc.isMut || false,
+      })),
+    },
+  }));
+
+  const accounts = idl.accounts?.map((acc: any) => ({
+    name: acc.name,
+    description: acc.docs?.join(' ') || 'No description available',
+    fields: acc.type.fields.map((field: any) => ({
+      name: field.name,
+      type: typeof field.type === 'string' ? field.type : 'unknown',
+    })),
+  })) || [];
+
+  return { instructions, accounts };
 };

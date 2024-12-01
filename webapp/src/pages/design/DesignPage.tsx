@@ -351,6 +351,8 @@ const DesignPage: React.FC = () => {
             codes: [],
             docs: [],
             aiInstructions: fetchedProject.details.aiInstructions,
+            buildStatus: fetchedProject.details.buildStatus,
+            deployStatus: fetchedProject.details.deployStatus,
           },
         };
       });
