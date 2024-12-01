@@ -162,31 +162,16 @@ export const getSdkTemplate = (
   accounts: { name: string; description: string; fields: { name: string; type: string }[] }[]
 ): string => {
   const instructionFunctions = instructions.map(({ name, description, params, context }) => {
-    // Create a map to track unique parameter names to avoid duplication
     const uniqueParams = new Map<string, string>();
 
-    // Add instruction parameters to the map
-    params.forEach(param => {
-      if (!uniqueParams.has(param)) {
-        uniqueParams.set(param, `${param}: any`);
-      }
-    });
-
-    // Add account parameters to the map, ensuring no duplicates
-    context.accounts.forEach(account => {
-      if (!uniqueParams.has(account.name)) {
-        uniqueParams.set(account.name, `${account.name}: ${account.isSigner ? 'web3.Keypair' : 'web3.PublicKey'}`);
-      }
-    });
-
-    // Convert map values to array and join them with commas to form the parameter list
+    params.forEach(param => { if (!uniqueParams.has(param)) uniqueParams.set(param, `${param}: any`); });
+    
+    context.accounts.forEach(account => { if (!uniqueParams.has(account.name)) uniqueParams.set(account.name, `${account.name}: ${account.isSigner ? 'web3.Keypair' : 'web3.PublicKey'}`); });
+    
     const paramsList = Array.from(uniqueParams.values()).join(", ");
-
-    // Generate the list of account mappings for the .accounts() method
-    const accountMappings = context.accounts
-      .map(account => `${account.name}: ${account.name}${account.isSigner ? '.publicKey' : ''}`).join(",\n          ");
-
-    // Generate signing logic if there are any signers
+    
+    const accountMappings = context.accounts .map(account => `${account.name}: ${account.name}${account.isSigner ? '.publicKey' : ''}`).join(",\n          ");
+    
     const signersList = context.accounts.filter(account => account.isSigner).map(account => account.name).join(", ");
 
     return `

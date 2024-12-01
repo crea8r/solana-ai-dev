@@ -7,11 +7,17 @@ import { Wallet } from "../../components/Wallet";
 import UISpace from "./UISpace";
 import Toolbox from "./Toolbox";
 import PropertyPanel from "./PropertyPanel";
-
+import { useTerminalLogs } from "../../hooks/useTerminalLogs";
+import { TaskModal } from "./TaskModal";
+import { generateUISpace, handleGenerateUI } from "../../utils/uiUtils";
 const UIPage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { addLog } = useTerminalLogs();
   const [aiModel, setAiModel] = useState('Codestral');
   const [showWallet, setShowWallet] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const toast = useToast();
 
   const handleSelectModel = (model: string, apiKey: string) => {
@@ -37,10 +43,13 @@ const UIPage = () => {
   return (
     <Flex direction="column" height="100vh" overflow="hidden">
       <TopPanel 
-          onSelectModel={handleSelectModel} 
-          onToggleWallet={handleToggleWallet} 
-          onLogout={handleLogout} 
-        />
+        onToggleWallet={handleToggleWallet} 
+        onLogout={handleLogout} 
+        setIsPolling={setIsPolling}
+        setIsLoading={setIsLoading}
+        addLog={addLog} 
+        setIsTaskModalOpen={setIsTaskModalOpen}
+      />
       <Flex flex={1} overflow="hidden">
         <Toolbox />
 
@@ -63,8 +72,17 @@ const UIPage = () => {
         </Box>
 
         <PropertyPanel />
-      
       </Flex>
+
+      {isTaskModalOpen && (
+        <TaskModal
+          isOpen={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
+          setIsPolling={setIsPolling}
+          setIsLoading={setIsLoading}
+          addLog={addLog}
+        />
+      )}
     </Flex>
   );
 };

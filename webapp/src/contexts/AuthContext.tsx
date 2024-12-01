@@ -5,7 +5,7 @@ import {
   logout as apiLogout,
 } from '../services/authApi';
 
-interface User {
+export interface User {
   id: string;
   username: string;
   org_id: string;

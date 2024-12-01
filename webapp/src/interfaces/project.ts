@@ -2,6 +2,7 @@ import { Node, Edge } from 'react-flow-renderer';
 import { FileTreeItemType } from './file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
+import { Account, Instruction } from '../types/uiTypes';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -35,12 +36,13 @@ export interface ProjectDetailsToSave {
       attributes: string[];
     }[];
   }[];
-  sdkFunctions: {
-    function_name: string;
-    params: { name: string; type: string }[];
-  }[];
+  sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
   buildStatus: boolean;
   deployStatus: boolean;
+  isSdk: boolean;
+  isUi: boolean;
+  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  sdk: { fileName: string; content: string; };
 }
 
 export interface ProjectDetails {
@@ -69,12 +71,13 @@ export interface ProjectDetails {
       attributes: string[];
     }[];
   }[];
-  sdkFunctions: {
-    function_name: string;
-    params: { name: string; type: string }[];
-  }[];
+  sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
   buildStatus: boolean;
   deployStatus: boolean;
+  isSdk: boolean;
+  isUi: boolean;
+  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  sdk: { fileName: string; content: string; };
 }
 
 export interface Project {

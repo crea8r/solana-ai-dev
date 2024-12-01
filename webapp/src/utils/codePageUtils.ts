@@ -26,7 +26,7 @@ export const startPollingTaskStatus = (
   addLog: (message: string, type: LogEntry['type']) => void, 
   onComplete?: (taskResult: string) => void,
   silent?: boolean
-): Promise<string> => {
+): Promise<{ status: string; fileContent?: string }> => {
   return new Promise((resolve, reject) => {
     setIsPolling(true);
     const intervalId = setInterval(async () => {
@@ -43,7 +43,8 @@ export const startPollingTaskStatus = (
           else if (!silent) addLog('Task completed successfully', 'success');
 
           if (onComplete && taskResponse.task.result) onComplete(taskResponse.task.result);
-          resolve(status);
+          
+          resolve({ status, fileContent: taskResponse.task.result });
         } else if (status === 'failed') {
           clearInterval(intervalId);
           setIsPolling(false);
@@ -386,7 +387,7 @@ export const handleBuildProject = async (
 
     if (response.taskId) {
       addLog('Building project. This may take a few minutes...', 'start');
-      const status = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+      const { status } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
       if (status === 'finished' || status === 'succeed' || status === 'warning') {
         setProjectContext((prev) => ({
         ...prev,
@@ -416,7 +417,7 @@ export const handleDeployProject = async (
     setIsLoading(true);
     addLog('Starting deployment process...');
     const response = await projectApi.deployProject(projectId);
-    const status = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+    const { status, fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
     if (status === 'finished' || status === 'succeed' || status === 'warning') {
       setProjectContext((prev) => ({
         ...prev,

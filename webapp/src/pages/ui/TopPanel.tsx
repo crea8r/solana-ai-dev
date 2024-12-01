@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   Flex,
   Button,
@@ -18,33 +18,53 @@ import { ChevronDownIcon, EditIcon } from '@chakra-ui/icons';
 import { Check, FolderOpen, Wallet, Plus, Code, Save } from 'lucide-react';
 import { HiOutlineSparkles } from "react-icons/hi";
 import { useProjectContext } from '../../contexts/ProjectContext';
-import { generateUI } from '../../utils/uiUtils';
+import { useAuthContext, User } from '../../contexts/AuthContext';
+import { handleGenerateUI } from '../../utils/uiUtils';
+import { LogEntry } from '../../hooks/useTerminalLogs';
+import { Project } from '../../interfaces/project';
 
 interface TopPanelProps {
   onToggleWallet: () => void;
-  onSelectModel: (model: string, apiKey: string) => void;
   onLogout: () => void;
+  setIsPolling: Dispatch<SetStateAction<boolean>>;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
+  addLog: (message: string, type: LogEntry['type']) => void;
+  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
   onToggleWallet,
-  onSelectModel,
   onLogout,
+  setIsPolling,
+  setIsLoading,
+  addLog,
+  setIsTaskModalOpen,
 }) => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { user } = useAuthContext();
   const [hover, setHover] = useState(false);
   const [selectedModel, setSelectedModel] = useState('Codestral');
   const [apiKey, setApiKey] = useState('');
 
   const handleMouseEnter = () => setHover(true);
   const handleMouseLeave = () => setHover(false);
+
   
   return (
     <Flex direction="row" justify="space-between" align="center" bg="gray.50" borderBottomWidth="1px" borderColor="gray.300">
       <Flex flex={1} direction="row" justify="flex-start" pl={12}>
         <Button
           size="xs"
-          onClick={() => {/*generateUI(projectContext.idl, projectContext.aiInstructions, projectContext.programName, projectContext.programId)*/}}
+          onClick={() => {if (user) handleGenerateUI(
+            projectContext.id, 
+            projectContext, 
+            setProjectContext, 
+            setIsPolling, 
+            setIsLoading, 
+            addLog, 
+            setIsTaskModalOpen, 
+            user
+          )}}
           bg="white"
           border="1px solid"
           borderColor="gray.300"

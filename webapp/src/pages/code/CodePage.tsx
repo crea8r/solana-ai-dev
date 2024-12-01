@@ -86,18 +86,15 @@ const CodePage = () => {
   useEffect(() => {
     const selectFileAfterLoad = () => {
       try {
-        // Check if there's a saved file in session storage
         if (savedFileRef.current && projectContext?.details?.codes) {
           const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
           setSelectedFile(parsedFile);
   
-          // Find the content of the saved file in the project context
           const cachedContent = projectContext?.details?.codes?.find(
             (code) => code.name === parsedFile.name
           );
   
           if (cachedContent?.content) {
-            // Set the file content if found
             setFileContent(cachedContent.content);
             console.log(`Restored file content for ${parsedFile.name} from session storage.`);
           } else {
@@ -106,12 +103,10 @@ const CodePage = () => {
             );
           }
         } else if (files?.children?.length && projectContext?.details?.codes?.length) {
-          // If no saved file exists, select the first file in the directory structure
           const firstFile = findFirstFile(files.children);
           if (firstFile) {
             setSelectedFile(firstFile);
   
-            // Find the content of the first file in the project context
             const firstFileContent = projectContext.details.codes.find(
               (code) => code.name === firstFile.name
             )?.content;
@@ -133,7 +128,6 @@ const CodePage = () => {
       }
     };
   
-    // Call the helper function
     selectFileAfterLoad();
   }, [files, projectContext?.details?.codes]);
   

@@ -162,6 +162,10 @@ const votingProject: Project = {
     sdkFunctions: [],
     buildStatus: false,
     deployStatus: false,
+    isSdk: false,
+    isUi: false,
+    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    sdk: { fileName: '', content: '' },
   } as ProjectDetails,
 };
 

@@ -21,6 +21,10 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     sdkFunctions: project.details.sdkFunctions,
     buildStatus: project.details.buildStatus,
     deployStatus: project.details.deployStatus,
+    isSdk: project.details.isSdk,
+    isUi: project.details.isUi,
+    idl: project.details.idl,
+    sdk: project.details.sdk,
   },
 });
 
@@ -66,8 +70,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           sdkFunctions: [],
           buildStatus: false,
           deployStatus: false,
+          isSdk: false,
+          isUi: false,
+          idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+          sdk: { fileName: '', content: '' },
         },
-        
       };
   });
 
