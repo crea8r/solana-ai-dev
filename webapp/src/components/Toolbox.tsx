@@ -135,6 +135,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 alignItems="center"
                 justifyContent="center"
                 height="auto"
+                shadow="md"
               >
                 <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getName()}</Text>
               </Box>

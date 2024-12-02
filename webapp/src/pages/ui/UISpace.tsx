@@ -1,31 +1,45 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useProjectContext } from "../../contexts/ProjectContext";
-import { Box, Button, Input, Text, Flex } from "@chakra-ui/react";
-import { Edge, Node } from "react-flow-renderer";
-import { 
-  handleCallInstruction, 
-  handleInputChange,
-} from "../../utils/uiUtils";
+import { Box, Flex } from "@chakra-ui/react";
 import InstructionCard from "./InstructionCard";
 import AccountCard from "./AccountCard";
 import { Account, Instruction } from "../../types/uiTypes";
-
+import { processInstructions } from "../../utils/uiUtils";
+import { userInfo } from "os";
 
 const UISpace = () => {
   const { projectContext, setProjectContext } = useProjectContext();
-  const [instructions, setInstructions] = useState<Instruction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [instructionInputs, setInstructionInputs] = useState<{ [key: string]: string[] }>({});
-  const [uiGenerated, setUiGenerated] = useState(false);
+  const { nodes } = projectContext.details;
 
-  useEffect(() => {
-    const initialInputs: { [key: string]: string[] } = {};
-    instructions.forEach((instruction: any) => {initialInputs[instruction.function_name] = instruction.params_fields.map((param: any) => param.default_value || "");});
-    setInstructionInputs(initialInputs);
+  // Memoized instruction and account nodes
+  const instructionNodes = useMemo(
+    () => nodes.filter((node) => node.type === "instruction"),
+    [nodes]
+  );
+  const accountNodes = useMemo(
+    () => nodes.filter((node) => node.type === "account"),
+    [nodes]
+  );
 
-    console.log("instructionInputs:", instructionInputs);
-    console.log("instructions:", instructions);
-  }, [instructions]);
+  const instructions = useMemo(() => {
+    const parsedInstructions = projectContext.details.idl?.parsed?.instructions;
+  
+    if (!parsedInstructions || parsedInstructions.length === 0) {
+      return [];
+    }
+  
+    console.log("instructions:", parsedInstructions);
+  
+    if (parsedInstructions[0]?.description) return parsedInstructions;
+  
+    return [];
+  }, [projectContext.details.idl.parsed.instructions]);
+
+
+  const accounts = useMemo(() => {
+    console.log(" idl.parsed.accounts:", projectContext.details.idl.parsed.accounts);
+    return projectContext.details.idl.parsed.accounts;
+  }, []);
 
   return (
     <Box width="100%" maxHeight="100%" overflowY="auto">
@@ -42,8 +56,14 @@ const UISpace = () => {
         bg="gray.50"
         shadow="md"
       >
-        <InstructionCard instructions={instructions} />
-        <AccountCard accounts={accounts} />
+        {instructions.length > 0 && instructions[0].description &&
+          instructions.map((instruction) => (
+            <InstructionCard key={instruction.name} instruction={instruction} />
+          ))}
+        {accounts.length > 0 &&
+          accounts.map((account) => (
+            <AccountCard key={account.name} account={account} />
+          ))}
       </Flex>
     </Box>
   );

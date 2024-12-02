@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
-import { getIdlContents, parseIdl, generateSdk, generateUISpace } from '../../utils/uiUtils';
+import { getIdlContents, parseIdl, generateSdk } from '../../utils/uiUtils';
 import { LogEntry } from '../../hooks/useTerminalLogs';
 import { flushSync } from 'react-dom';
 
@@ -97,7 +97,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 throw new Error('Failed to fetch IDL file');
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
@@ -119,7 +119,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 throw new Error('Failed to parse IDL file');
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
@@ -132,7 +132,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 projectContext,
                 setProjectContext,
                 parsedIdl.instructions,
-                parsedIdl.accounts
+                parsedIdl.accounts,
+                setIsPolling,
+                setIsLoading,
+                addLog
             );
 
             setTasks((prevTasks) =>
@@ -142,7 +145,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
             );
             await new Promise((resolve) => setTimeout(resolve, 0));
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
@@ -150,8 +153,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 )
             );
             await new Promise((resolve) => setTimeout(resolve, 0)); 
-
-            await generateUISpace();
 
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>

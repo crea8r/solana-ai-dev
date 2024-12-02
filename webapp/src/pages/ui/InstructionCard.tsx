@@ -1,46 +1,76 @@
-import React from "react";
-import { Box, Flex, Text, Input, Button } from "@chakra-ui/react";
-import { InstructionCardParamField } from "../../types/uiTypes";
+import React, { useEffect, useState } from "react";
+import { Box, Text, Input, Button } from "@chakra-ui/react";
+import { Instruction } from "../../types/uiTypes";
+import { useProjectContext } from "../../contexts/ProjectContext";
 
-const InstructionCard = ({ instructions }: { instructions: any[] }) => {
+interface InstructionCardProps {
+  instruction: Instruction;
+}
+
+const InstructionCard: React.FC<InstructionCardProps> = ({ instruction }) => {
+  const { projectContext } = useProjectContext();
+  const [params, setParams] = useState<{ [key: string]: string }>({});
+  const [CounterProgramSDK, setCounterProgramSDK] = useState<any>(null);
+
+  const handleInputChange = (paramName: string, value: string) => {
+    setParams((prev) => ({
+      ...prev,
+      [paramName]: value,
+    }));
+  };
+
+  useEffect(() => {
+    console.log("instruction:", instruction);
+  }, []);
+
+  /*
+  useEffect(() => {
+    const importSDK = async () => {
+      const sdk = await import(`../../../../projects/${projectContext.rootPath}/sdk`);
+      setCounterProgramSDK(sdk.CounterProgramSDK);
+    };
+
+    importSDK().catch((error) => console.error("Error loading SDK:", error));
+  }, [projectContext.details.sdk.content]);
+  */
+
   return (
-    <Flex wrap="wrap" gap={4}>
-      {instructions.map((instruction, idx) => (
-        <Box
-          key={idx}
-          borderWidth="1px"
-          borderRadius="md"
-          p={4}
-          bg="white"
-          shadow="md"
-          minWidth="300px"
-          maxWidth="350px"
-        >
-          <Text fontWeight="bold" fontSize="lg" color="purple.500">
-            {instruction.name}
-          </Text>
-          <Text fontSize="sm" color="gray.600">
-            {instruction.description}
-          </Text>
-          {instruction.params.map((param: InstructionCardParamField, idx: number) => (
+    <Box p={4} borderWidth="1px" borderRadius="md" width="300px" bg="white" shadow="md">
+      <Text fontSize="lg" fontWeight="bold" color="#7f7de8">
+        {instruction.name}
+      </Text>
+      <Text mt={2} fontSize="sm" color="gray.600">
+        {instruction.description}
+      </Text>
+      {instruction.params.map((param, idx) => {
+        //console.log("param:", param);
+        const paramType = 
+          typeof param.type === "object" && "name" in param.type 
+            ? param.type.name 
+            : String(param.type);
+        return (
+          <Box key={idx} mt={2}>
+            <Text fontSize="sm" fontWeight="medium" color="#7f7de8">
+              {param.name} ({paramType})
+            </Text>
             <Input
-              key={idx}
-              placeholder={`Enter ${param.name} (${param.type})`}
+              placeholder={`Enter ${param.name} (${paramType})`}
               size="sm"
-              mt={2}
+              mt={1}
             />
-          ))}
-          <Button
-            mt={4}
-            colorScheme="purple"
-            size="sm"
-            onClick={() => console.log(`Calling ${instruction.name}`)}
-          >
-            Call {instruction.name}
-          </Button>
-        </Box>
-      ))}
-    </Flex>
+          </Box>
+        );
+      })}
+      <Button
+        mt={4}
+        bg="#a9b7ff"
+        color="white"
+        size="sm"
+        onClick={() => console.log(`Calling ${instruction.name}`)}
+      >
+        Call {instruction.name}
+      </Button>
+    </Box>
   );
 };
 

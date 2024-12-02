@@ -10,7 +10,6 @@ import genFile from "../../prompts/genFile";
 import { promptAI } from "../../services/prompt";
 import { 
     ensureInstructionNaming, 
-    extractCodeBlock, 
     extractProgramIdFromAnchorToml, 
     getFileList, 
     normalizeName, 
@@ -18,10 +17,7 @@ import {
     setFileTreePaths,
     processAIInstructionOutput,
     processAIStateOutput,
-    processAILibOutput,
-    processAISdkOutput,
     processAITestOutput,
-    parseSdkFunctions
 } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
 import { useProjectContext, transformToProjectInfoToSave } from '../../contexts/ProjectContext';
@@ -367,6 +363,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             uniqueFileList
               .filter(({ name, path }) => {
                 if (configFiles.includes(name)) return false;
+                if (name === 'sdk.rs') return false;
                 if (processedFilesSet.has(path || '')) return false;
                 return true;
               })
@@ -526,12 +523,13 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                           ...prevContext.details.aiInstructions,
                           {
                             function_name: aiData.function_name,
-                          context_struct: aiData.context_struct,
-                          params_fields: aiData.params_fields,
-                          accounts: aiData.accounts,
-                          error_codes: aiData.error_codes,
-                          function_logic: aiData.function_logic,
-                          accounts_structure: aiData.accounts_structure,
+                            description: aiData.description,
+                            context_struct: aiData.context_struct,
+                            params_fields: aiData.params_fields,
+                            accounts: aiData.accounts,
+                            error_codes: aiData.error_codes,
+                            function_logic: aiData.function_logic,
+                            accounts_structure: aiData.accounts_structure,
                         },
                       ],
                     },
@@ -547,9 +545,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         stateContent: codeContent,
                       },
                     }));
-                  } else if (isSdkFile) { 
-                    codeContent = await processAISdkOutput(projectId, programId, programDirName, aiContent); 
-                    parseSdkFunctions(codeContent, setProjectContext);
                   } 
                   else if (isTestFile) { codeContent = await processAITestOutput(projectId, programDirName, aiContent); } 
                   else { codeContent = aiContent; }

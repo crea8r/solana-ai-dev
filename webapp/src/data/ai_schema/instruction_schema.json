@@ -6,6 +6,10 @@
       "type": "string",
       "description": "The name of the function in snake_case format prefixed with 'run_'."
     },
+    "description": {
+      "type": "string",
+      "description": "A concise description of the function logic."
+    },
     "context_struct": {
       "type": "string",
       "description": "The struct name for the context, e.g., InstructionNameContext."
@@ -136,6 +140,7 @@
   },
   "required": [
     "function_name",
+    "description",
     "context_struct",
     "params_struct",
     "accounts",

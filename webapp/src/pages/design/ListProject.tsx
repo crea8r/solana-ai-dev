@@ -144,6 +144,8 @@ const ListProject: React.FC<ListProjectProps> = ({
               placeholder='Search projects...'
               value={search}
               onChange={handleSearchChange}
+              bg="white"
+              shadow="sm"
             />
             {loading && <Spinner />}
             {error && <Text color='red.500'>{error}</Text>}
@@ -156,11 +158,14 @@ const ListProject: React.FC<ListProjectProps> = ({
                 p={2}              
                 borderWidth={1}
                 borderRadius='md'
->
+                shadow="sm"
+                border="2px solid gray.200"
+                boxSizing='border-box'
+                _hover={{ shadow: 'lg', cursor: 'pointer' }}
+              >
               <Box
                 key={project.id}
                 p={3}
-                _hover={{ bg: 'gray.100', cursor: 'pointer' }}
                 onClick={() => handleProjectClick(project.id, project.name)}
                 width="100%"
               >

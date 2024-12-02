@@ -5,11 +5,18 @@ export interface InstructionContextAccount {
     isSigner: boolean;
     isWritable: boolean;
 }
+
+export interface InstructionParam {
+  name: string;
+  type: string | { name: string; [key: string]: any };
+  defaultValue?: string | null;
+  description?: string;
+}
   
 export interface Instruction {
     name: string;
     description: string;
-    params: string[];
+    params: InstructionParam[];
     context: {
       accounts: InstructionContextAccount[];
     };

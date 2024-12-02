@@ -79,7 +79,8 @@ const CodePage = () => {
     setIsPolling,            
     setIsLoading,            
     addLog,                  
-    _handleSelectFile,       
+    _handleSelectFile,  
+    projectContext?.details?.sdk?.content     
   ]);
   
 

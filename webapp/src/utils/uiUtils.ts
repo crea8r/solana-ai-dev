@@ -8,7 +8,7 @@ import { Dispatch, SetStateAction } from "react";
 import { User } from "../contexts/AuthContext"; 
 import { fileApi } from "../api/file";
 import { projectApi } from "../api/project";
-import { getSdkTemplate } from "../data/fileTemplates";
+import { getSdkTemplate } from "../data/templates/sdkTemplate";
 import { 
   Instruction, 
   InstructionContextAccount, 
@@ -19,8 +19,26 @@ import {
 import path from "path-browserify";
 import { startPollingTaskStatus } from "./codePageUtils";
 import { LogEntry } from "../hooks/useTerminalLogs";
+import { InstructionParam } from "../types/uiTypes";
 
 
+// String Manipulation Utilities
+// -----------------------------
+export const pascalToSnake = (pascalStr: string): string => {
+  return pascalStr
+    .replace(/([A-Z])/g, '_$1') 
+    .toLowerCase()             
+    .replace(/^_/, '');        
+};
+export const toLowerCaseFirstLetter = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toLowerCase() + str.slice(1);
+};
+export const removeSpaces = (str: string): string => { return str.replace(/\s+/g, ''); };
+export const removeRunPrefix = (str: string): string => { return str.startsWith("Run") ? str.slice(3) : str; };
+
+// Instruction Utilities
+// -----------------------------
 export const handleCallInstruction = async (sdkFunction: any, inputs: any) => {
   try {
     const result = await sdkFunction(...inputs);
@@ -29,7 +47,6 @@ export const handleCallInstruction = async (sdkFunction: any, inputs: any) => {
     console.error("Error calling instruction:", error);
   }
 };
-
 export const handleInputChange = (
   instructionKey: string,
   paramIdx: number,
@@ -47,29 +64,110 @@ export const handleInputChange = (
   });
 };
 
+// Generate UI/SDK Utilities
 // -----------------------------
-// Generate UI
-// -----------------------------
+export const amendTsConfigFile = async (
+  projectContext: Project,
+  setIsPolling: Dispatch<SetStateAction<boolean>>,
+  setIsLoading: Dispatch<SetStateAction<boolean>>,
+  addLog: (message: string, type: LogEntry['type']) => void
+) => {
+  const tsConfigPath = '/tsconfig.json';
 
-export const generateUISpace = async () => {
-  
+  try {
+    const response = await fileApi.getFileContent(projectContext.id, tsConfigPath);
+    const { fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+    if (!fileContent) throw new Error('No tsconfig.json content found');
+    const tsConfig = JSON.parse(fileContent);
+    tsConfig.compilerOptions = {
+      ...tsConfig.compilerOptions,
+      resolveJsonModule: true,
+    };
+    const updatedContent = JSON.stringify(tsConfig, null, 2);
+    const res = await fileApi.updateFile(projectContext.id, tsConfigPath, updatedContent);
+    const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
+    if (status !== 'success') throw new Error('Failed to update tsconfig.json');
+  } catch (error) { console.error('Error amending tsconfig.json:', error); }  
+};
+
+export const processInstructions = (
+  instructions: Instruction[],
+  instructionNodes: { data: { label: string; item?: { description?: string } } }[],
+  aiInstructions: { function_name: string; description?: string; params_fields: InstructionParam[] }[]
+): Instruction[] => {
+  return instructions.map((instruction) => {
+    const matchingNode = instructionNodes.find(
+      (node) => node.data.label === instruction.name
+    );
+
+    const matchingAIInstruction = aiInstructions.find( (aiInstruction) => aiInstruction.function_name === instruction.name );
+
+    return {
+      ...instruction,
+      description:
+        matchingAIInstruction?.description ||
+        matchingNode?.data?.item?.description ||
+        instruction.description ||
+        'No description available',
+      params: matchingAIInstruction?.params_fields || instruction.params || [],
+    };
+  });
 };
 
 export const generateSdk = async (
   projectContext: Project,
   setProjectContext: Dispatch<SetStateAction<Project>>,
   instructions: Instruction[],
-  accounts: Account[]
+  accounts: Account[],
+  setIsPolling: Dispatch<SetStateAction<boolean>>,
+  setIsLoading: Dispatch<SetStateAction<boolean>>,
+  addLog: (message: string, type: LogEntry['type']) => void
 ) => {
-  const sdkTemplate = getSdkTemplate(projectContext.name, projectContext.id, instructions, accounts);
+  try {
+    const _rootPath = projectContext.rootPath;
+    const _projectClassName = removeSpaces(projectContext.name);
+    const _projectFieldName = toLowerCaseFirstLetter(_projectClassName);
+    let _idlPath = pascalToSnake(_projectClassName);
+    _idlPath = `/target/idl/${_idlPath}.json`;
+    const _walletPublicKey = projectContext.walletPublicKey;
+
+    console.log('instructions', instructions);
+    console.log('param names', instructions.map(inst => inst.params.map(param => param.name)));
+
+    const instructionNodes = projectContext.details.nodes;
+    const aiInstructions = projectContext.details.aiInstructions;
+
+    const sdkTemplate = await getSdkTemplate(
+      _projectClassName, 
+      _projectFieldName, 
+      projectContext.id, 
+      instructions, 
+      accounts, 
+      instructionNodes,
+      aiInstructions,
+      _rootPath, 
+      _idlPath, 
+      _walletPublicKey,
+      projectContext,
+      setProjectContext,
+      setIsPolling,
+      setIsLoading,
+      addLog
+    );
     
     setProjectContext((prev) => ({
       ...prev,
       details: {
         ...prev.details,
-        sdk: { fileName: 'sdk.rs', content: sdkTemplate },
+        sdk: { fileName: 'index.ts', content: sdkTemplate },
       },
     }));
+
+    const filePath = `/sdk/index.ts`;
+    const res = await fileApi.updateFile(projectContext.id, filePath, sdkTemplate);
+    const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
+    if (status !== 'success') throw new Error('Failed to update SDK');
+  } catch (error) { console.error('Error generating SDK:', error); }
 } 
 
 export const parseIdl = (
@@ -85,7 +183,14 @@ export const parseIdl = (
     const instructions = idlObject.instructions.map((inst: any) => ({
       name: inst.name,
       description: inst.docs?.join(' ') || 'No description available',
-      params: inst.args.map((arg: any) => arg.name),
+      params: inst.args.map((arg: any) => ({
+        name: arg.name,
+        type: typeof arg.type === 'string'
+          ? arg.type
+          : arg.type?.defined || 'unknown',
+        defaultValue: arg.default || null,
+        description: arg.docs?.join(' ') || 'No description available',
+      })),
       context: {
         accounts: inst.accounts.map((acc: any) => ({
           name: acc.name,
@@ -100,7 +205,9 @@ export const parseIdl = (
       description: acc.docs?.join(' ') || 'No description available',
       fields: acc.type?.fields?.map((field: any) => ({
         name: field.name,
-        type: typeof field.type === 'string' ? field.type : 'unknown',
+        type: typeof field.type === 'string'
+          ? field.type
+          : field.type?.defined || 'unknown',
       })) || [],
     })) || [];
 
@@ -108,14 +215,17 @@ export const parseIdl = (
       ...prev,
       details: {
         ...prev.details,
-        parsed: { instructions, accounts },
+        idl: {
+          ...prev.details.idl,
+          parsed: { instructions, accounts },
+        },
       },
     }));
 
     return { instructions, accounts };
-  } catch (error) { 
-    console.error('Error parsing IDL:', error); 
-    return undefined; 
+  } catch (error) {
+    console.error('Error parsing IDL:', error);
+    return undefined;
   }
 };
 
@@ -151,7 +261,6 @@ export const handleGenerateUI = async (
   if (!user) throw new Error('User in auth context not found');
   try {
     const idlContent = await getIdlContents(projectId, projectContext, setIsPolling, setIsLoading, addLog);
-    //console.log('idlContent', idlContent);
     if (!idlContent) throw new Error('No IDL content found');
     const parsedIdl = parseIdl(idlContent, setProjectContext);
     if (!parsedIdl) throw new Error('Error parsing IDL');
@@ -159,13 +268,42 @@ export const handleGenerateUI = async (
     console.log('instructions', instructions);
     console.log('accounts', accounts);
 
-    await generateSdk(projectContext, setProjectContext, instructions, accounts);
-    const generatedUi = await generateUISpace();
-    // install packages
-      
+    await generateSdk(projectContext, setProjectContext, instructions, accounts, setIsPolling, setIsLoading, addLog);
 
   } catch (error) { console.error('Error checking directory existence:', error); }
+};
 
+// UI Utilities
+// -----------------------------
+export const callInstruction = async (
+  instruction: Instruction,
+  params: { [key: string]: string },
+  sdk: any
+) => {
+  try {
+    console.log(`Calling ${instruction.name} with params:`, params);
 
+    // Convert the parameters if necessary (e.g., to PublicKey or other types)
+    const convertedParams = Object.entries(params).reduce((acc, [key, value]) => {
+      acc[key] = key === "user" || key === "initializer" ? new sdk.web3.PublicKey(value) : value; // Example conversion
+      return acc;
+    }, {} as any);
 
+    // Call the appropriate SDK method dynamically
+    switch (instruction.name) {
+      case "run_initialize_counter":
+        await sdk.run_initialize_counter(convertedParams.initializer, sdk.web3.SystemProgram.programId);
+        break;
+      case "run_increment_counter":
+        await sdk.run_increment_counter(convertedParams.user, convertedParams.counterAccount);
+        break;
+      case "run_reset_counter":
+        await sdk.run_reset_counter(convertedParams.counterAccount, convertedParams.initializer);
+        break;
+      default:
+        console.error(`Unsupported instruction: ${instruction.name}`);
+    }
+  } catch (error) {
+    console.error("Error calling instruction:", error);
+  }
 };

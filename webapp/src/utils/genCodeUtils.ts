@@ -2,7 +2,7 @@ import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../interfaces/file';
 import { parse, stringify } from 'smol-toml'
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getSdkTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
+import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
 import instructionSchema from '../data/ai_schema/instruction_schema.json';
 import stateSchema from '../data/ai_schema/state_schema.json';
 import sdkSchema from '../data/ai_schema/sdk_schema.json';
@@ -565,6 +565,7 @@ export const processAIStateOutput = async (
 // instructions
 export interface AIInstructionOutput {
   function_name: string;
+  description: string;
   context_struct: string;
   params_struct: string;
   accounts: { name: string; type: string; attributes: string[] }[];
@@ -589,10 +590,7 @@ export const processAIInstructionOutput = async (
     aiData = sanitizeAIOutput(aiData, instructionSchema);
 
     const valid = validate(aiData);
-    if (!valid) {
-      console.error('AI JSON does not conform to schema:', validate.errors);
-      throw new Error('Invalid AI JSON structure.');
-    }
+    if (!valid) { console.error('AI JSON does not conform to schema:', validate.errors); throw new Error('Invalid AI JSON structure.'); }
 
     const codeContent = getInstructionTemplate(
       instructionName,
@@ -765,44 +763,6 @@ export interface AISdkOutput {
     fields: { name: string; type: string }[];
   }[];
 }
-
-export const processAISdkOutput = async (
-  projectId: string,
-  programId: string,
-  normalizedProgramName: string,
-  aiJson: string
-): Promise<string> => {
-  const ajv = new Ajv();
-  const validate = ajv.compile(sdkSchema);
-
-  try {
-    const jsonContent = extractJSON(aiJson);
-    let aiData: AISdkOutput = JSON.parse(jsonContent);
-    aiData = sanitizeAIOutput(aiData, sdkSchema);
-
-    const valid = validate(aiData);
-    if (!valid) {
-      console.error('AI JSON does not conform to schema:', validate.errors);
-      throw new Error('Invalid AI JSON structure.');
-    }
-
-    const codeContent = getSdkTemplate(
-      aiData.program_name,
-      programId,
-      aiData.instructions,
-      aiData.accounts
-    );
-
-    const filePath = `sdk/${normalizedProgramName}_sdk.ts`;
-    await fileApi.updateFile(projectId, filePath, codeContent);
-
-    console.log(`Successfully processed and updated SDK file: ${filePath}`);
-    return codeContent;
-  } catch (error) {
-    console.error('Error processing AI SDK output:', error);
-    throw error;
-  }
-};
 
 // test
 export interface AITestOutput {

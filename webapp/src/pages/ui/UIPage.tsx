@@ -9,7 +9,6 @@ import Toolbox from "./Toolbox";
 import PropertyPanel from "./PropertyPanel";
 import { useTerminalLogs } from "../../hooks/useTerminalLogs";
 import { TaskModal } from "./TaskModal";
-import { generateUISpace, handleGenerateUI } from "../../utils/uiUtils";
 const UIPage = () => {
   const { projectContext, setProjectContext } = useProjectContext();
   const { addLog } = useTerminalLogs();

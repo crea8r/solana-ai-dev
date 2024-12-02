@@ -24,6 +24,7 @@ export interface ProjectDetailsToSave {
   uiResults: any[];
   aiInstructions: {
     function_name: string;
+    description?: string;
     params_fields: {
       name: string;
       type: string;
@@ -59,6 +60,7 @@ export interface ProjectDetails {
   uiResults: any[];
   aiInstructions: {
     function_name: string;
+    description?: string;
     params_fields: {
       name: string;
       type: string;
