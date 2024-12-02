@@ -26,12 +26,13 @@ import {
   Skeleton,
   useColorModeValue,
   Tooltip,
+  Spinner,
 } from "@chakra-ui/react";
 import { CheckIcon, CopyIcon, TimeIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 import { KeyRound, Plus, RefreshCcw, WalletIcon } from 'lucide-react';
 import { airdropTokens, getPrivateKey, getWalletInfo } from '../api/wallet';
 import { WalletPrivateKeyInfo, WalletInfo } from '../interfaces/wallet';
-import { AuthContext } from '../contexts/AuthContext';
+import { useAuthContext } from '../contexts/AuthContext';
 import { 
   handleAirdrop,
   handleBalanceRefresh
@@ -142,9 +143,13 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
 };
 
 export const Wallet: React.FC = () => {
-  const { user } = useContext(AuthContext)!;
+  const { user } = useAuthContext();
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAirdropLoading, setIsAirdropLoading] = useState(false);
+  const [isBalanceRefreshing, setIsBalanceRefreshing] = useState(false);
+  const [previousBalance, setPreviousBalance] = useState<number | null>(null);
+
   const [copied, setCopied] = useState(false);
   const [amountSectionOpen, setAmountSectionOpen] = useState(false);
   const { onCopy } = useClipboard(walletInfo?.publicKey || '');
@@ -167,6 +172,25 @@ export const Wallet: React.FC = () => {
     };
     fetchWalletInfo();
   }, [user]);
+
+  const handleAirdropClick = async () => {
+    if (walletInfo?.publicKey) {
+      setIsAirdropLoading(true);
+
+      await handleAirdrop(
+        setIsAirdropLoading,
+        walletInfo.publicKey,
+        async () => await handleBalanceRefresh(user?.id || '', setWalletInfo, setIsBalanceRefreshing),
+        () => setIsAirdropLoading(false)
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (previousBalance !== null && walletInfo?.balance && walletInfo.balance > previousBalance) {
+      console.log("Airdrop successfully completed.");
+    }
+  }, [walletInfo?.balance, previousBalance]);
 
   const handleCopy = () => {
     onCopy();
@@ -311,7 +335,9 @@ export const Wallet: React.FC = () => {
                   display="flex"
                   alignItems="center"
                 >
-                  <Text fontSize="xl" fontWeight="bold" color="#909de0"> {walletInfo?.balance || 0} </Text>
+                  <Text fontSize="xl" fontWeight="bold" color="#909de0">
+                    {walletInfo?.balance || 0}
+                  </Text>
                   <Text ml={2} fontSize="sm" color="gray.500"> SOL </Text>
                 </Box>
                 <Flex flexDirection="row" align="center" gap={2}>
@@ -326,13 +352,14 @@ export const Wallet: React.FC = () => {
                   >
                     <IconButton
                       aria-label="Refresh balance"
-                      icon={<RefreshCcw size={14} />}
-                      onClick={() => handleBalanceRefresh(user?.id || '', setWalletInfo, setIsLoading)}
+                      icon={isBalanceRefreshing ? <Spinner size="sm" /> : <RefreshCcw size={14} />}
+                      onClick={() => handleBalanceRefresh(user?.id || '', setWalletInfo, setIsBalanceRefreshing)}
                       variant="outline"
                       border="1px solid"
                       borderColor="gray.300"
                       size="sm"
                       shadow="sm"
+                      isDisabled={isBalanceRefreshing}
                     />
                   </Tooltip>
                   <Tooltip 
@@ -346,13 +373,14 @@ export const Wallet: React.FC = () => {
                   >
                     <IconButton
                       aria-label="Add SOL"
-                      icon={<Plus size={14} />}
-                      onClick={() => handleAirdrop(isLoading, setIsLoading, walletInfo?.publicKey || '', () => handleBalanceRefresh(user?.id || '', setWalletInfo, setIsLoading), () => setAmountSectionOpen(false))}
+                      icon={isAirdropLoading ? <Spinner size="sm" color="blue.500" /> : <Plus size={14} />}
+                      onClick={handleAirdropClick}
                       variant="outline"
                       size="sm"
                       shadow="sm"
                       border="1px solid"
                       borderColor="gray.300"
+                      isDisabled={isAirdropLoading}
                     />
                   </Tooltip>
                 </Flex>
