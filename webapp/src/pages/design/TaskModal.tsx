@@ -31,7 +31,7 @@ import {
     extractInstructionContext, 
     extractStateStructs, 
     extractJSON, 
-    validateFileTree,
+    //validateFileTree,
     processAIModRsOutput
  } from '../../utils/genCodeUtils';
 import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../../data/fileTemplates'; 
@@ -45,6 +45,8 @@ import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils'
 import { mapFileTreeNodeToItemType } from '../../utils/codePageUtils';
 import { LogEntry, useTerminalLogs } from "../../hooks/useTerminalLogs";
 import authApi from '../../services/authApi';
+import { predefinedFileStructure } from '../../data/schemas/predefinedFileStructure';
+import { pascalToSnake } from '../../utils/uiUtils';
 
 interface genTaskProps {
     isOpen: boolean;
@@ -257,34 +259,31 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'loading' } : task)) );
       
         const normalizedProgramName = normalizeName(projectContext.name);
-      
-        const structurePrompt = genStructure(
-          normalizedProgramName,
-          projectContext.details.nodes,
-          projectContext.details.edges
-        ); 
+        console.log('normalizedProgramName', normalizedProgramName);
 
-        const content = await promptAI(
-          structurePrompt,
-          projectContext.aiModel,
-          projectContext.apiKey,
-          structureSchema,
-          'structure'
-        );
-      
+        const instructionNodes = projectContext.details.nodes
+          .filter((node) => node.type === "instruction")
+          .map((node) => {
+            const name = node.data?.item?.getName?.();
+            if (!name) console.error("Instruction node is missing a name:", node);
+            return { name: name || "default_instruction_name" };
+        });
+
+        const fileTree = predefinedFileStructure(normalizedProgramName, instructionNodes);
+        console.log('fileTree', fileTree);
         try {
-          if (content) {
+          if (fileTree) {
             let files: FileTreeItemType;
             try {
-              files = JSON.parse(content) as FileTreeItemType;
-              const validatedFiles = validateFileTree(files);
-              if (!validatedFiles) throw new Error('Invalid file structure returned by AI.');
+              if (!fileTree) throw new Error('Invalid file structure returned by AI.');
+              files = fileTree;
             } catch (jsonError) {
-              console.error('Error parsing JSON from AI response:', jsonError, 'Content:', content);
+              console.error('Error parsing JSON from AI response:', jsonError);
               throw new Error('Failed to parse JSON from AI response');
             }
       
             setFileTreePaths(files);
+            console.log('files', files);
       
             let aiFilePaths = getFileList(files)
               .map((file) => file.path)
@@ -297,7 +296,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 const fileName = pathParts.pop();
                 if (fileName) {
                   const directoryPath = pathParts.join('/');
-                  const newFileName = `run_${fileName}`;
+                  const newFileName = `run_${pascalToSnake(fileName)}`;
+                  console.log('newFileName', newFileName);
                   return `${directoryPath}/${newFileName}`;
                 }
               }
@@ -327,23 +327,22 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             await amendConfigFile(userId, projectId, 'Anchor.toml', anchorFilePath, programDirName);
             
             const updatedFileList = getFileList(files)
-              .map((file) => {
-                let updatedPath = file.path;
-                updatedPath = updatedPath.replace(/\/programs\/[^/]+\//, `/programs/${programDirName}/`);
-                updatedPath = updatedPath.split('/').slice(1).join('/');
-                return { ...file, path: updatedPath, name: file.name };
-              })
-              .filter((file) => file.path);
+            .map((file) => {
+              let updatedPath = file.path;
+              updatedPath = updatedPath.replace(/\/programs\/[^/]+\//, `programs/${programDirName}/`);
+              //updatedPath = updatedPath.replace(/\/programs\/[^/]+\//, `programs/${programDirName}/`);
+              return { ...file, path: updatedPath, name: file.name };
+            })
+            .filter((file) => file.path);
+
+            console.log('updatedFileList', updatedFileList);
       
             const filteredFileList = updatedFileList.filter((file) => {
-              if (
-                file.name === 'state.rs' &&
-                file.path !== `programs/${programDirName}/src/state.rs`
-              ) {
-                return false; 
-              }
+              if (file.path?.includes('sdk/index.ts')) return false;
+
               return true;
             });
+            console.log('filteredFileList', filteredFileList);
       
             const sortedFilesToProcess = sortFilesByPriority(filteredFileList, programDirName);
       
@@ -352,10 +351,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const uniqueFileMap = new Map(sortedFilesToProcess.map((file) => [file.path, file]));
             const uniqueFileList = Array.from(uniqueFileMap.values());
             let nextId = 3;
+            console.log('uniqueFileList', uniqueFileList);
       
-            const processedFilesSet = new Set(
-              projectContext.details.codes?.map((code) => code.path) || []
-            );
+            const processedFilesSet = new Set( projectContext.details.codes?.map((code) => code.path) || [] );
+            console.log('processedFilesSet', processedFilesSet);
       
             const instructionFileTasks: Task[] = [];
             const otherFileTasks: Task[] = [];
@@ -380,17 +379,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   type: 'file',
                 } as Task;
       
-                if (isInstructionFile) {
-                  instructionFileTasks.push(task);
-                } else if (isInstructionModFile) {
-                  otherFileTasks.push(task);
-                } else if (!isLibFile) {
-                  otherFileTasks.push(task);
-                }
+                if (isInstructionFile) instructionFileTasks.push(task);
+                else if (isInstructionModFile) otherFileTasks.push(task);
+                else if (!isLibFile) otherFileTasks.push(task);
               });
       
             const fileTasks = [...instructionFileTasks, ...otherFileTasks];
-      
+            console.log('fileTasks', fileTasks);
+            console.log('instructionFileTasks', instructionFileTasks);
+            console.log('otherFileTasks', otherFileTasks);
+
             setTasks((prevTasks) => {
               const mainTasks = prevTasks.filter((task) => task.type !== 'file');
               return [...mainTasks, ...fileTasks];
@@ -553,9 +551,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     /\/programs\/[^/]+\//,
                     `/programs/${programDirName}/`
                   );
+
+                  console.log('updatedFilePath', updatedFilePath);
       
-                  if (existingFilePaths.has(updatedFilePath || ''))
-                    await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
+                  if (existingFilePaths.has(updatedFilePath || '')) await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
                   else await fileApi.createFile(projectId, updatedFilePath || '', codeContent);
       
                   setProjectContext((prevProjectContext) => ({
@@ -615,13 +614,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
             if (filteredFileList && filteredFileList.length > 0) {
               const instructionPaths = filteredFileList
-                .filter((file) => file.path.includes('/instructions/'))
+                .filter((file) => file.path.includes('src/instructions/'))
                 .map((file) => file.path)
                 .map((path) =>
-                  path.replace(/\/programs\/[^/]+\//, `/programs/${programDirName}/`)
-                );
+                path.replace(
+                  new RegExp(`^programs/${programDirName}/`),
+                  `programs/${programDirName}/`
+                )
+              );
       
               await ensureInstructionNaming(projectId, instructionPaths, programDirName);
+
+              console.log('instructionPaths', instructionPaths);
+              console.log('filteredFileList', filteredFileList);
             }
       
             setProjectContext((prevProjectContext) => ({

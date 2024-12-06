@@ -168,6 +168,7 @@ const genFile = (
         all_account_text += `There are ${accountNodes.length} accounts in this program.\n`;
         accountNodes.forEach((account) => {
           const account_data = account.data.item as Account;
+          console.log('account_data', account_data);
           const account_name = account_data.getName();
           const account_desc = account_data.getDescription();
           const account_json = account_data.getJson();

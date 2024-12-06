@@ -145,7 +145,7 @@ export const generateSdk = async (
     }));
 
     const filePath = `/sdk/index.ts`;
-    const res = await fileApi.updateFile(projectContext.id, filePath, sdkTemplate); // change to createFile
+    const res = await fileApi.createFile(projectContext.id, filePath, sdkTemplate);
     const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
     console.log('status', status);
     if (status !== 'success') throw new Error('Failed to update SDK');

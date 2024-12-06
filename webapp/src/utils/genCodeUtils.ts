@@ -134,11 +134,15 @@ export const amendConfigFile = async (
   programDirName: string
 ): Promise<string> => {
   console.log('amendConfigFile filePath', filePath);
+  console.log('Program Directory:', programDirName);
+  console.log('Cargo.toml Path:', filePath);
+  console.log('Anchor.toml Path:', filePath);
 
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
   const _pollDesc = `Getting ${fileName} content to amend content.`;
   const oldContent = await pollTaskStatus(taskId, _pollDesc);
+  console.log('oldContent', oldContent);
 
   let updatedToml = oldContent;
 
@@ -185,10 +189,12 @@ export const amendConfigFile = async (
     }
 
     updatedToml = stringify(parsedToml);
+    console.log('updatedToml', updatedToml);
   }
 
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
   const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
+  console.log('updatedFileContent', updatedFileContent);
   return updatedFileContent;
 };
 
@@ -490,7 +496,8 @@ export function extractJSON(content: string): string {
   }
 }
 
-export function validateFileTree(tree: any): FileTreeItemType | null {
+// Depreciated 
+function validateFileTree(tree: any): FileTreeItemType | null {
   if (!tree || typeof tree.name !== 'string' || typeof tree.type !== 'string') {
     console.error('Invalid file tree item:', tree);
     return null;
