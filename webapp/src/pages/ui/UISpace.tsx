@@ -1,70 +1,83 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useProjectContext } from "../../contexts/ProjectContext";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, Text, Switch, HStack } from "@chakra-ui/react";
 import InstructionCard from "./InstructionCard";
 import AccountCard from "./AccountCard";
-import { Account, Instruction } from "../../types/uiTypes";
-import { processInstructions } from "../../utils/uiUtils";
-import { userInfo } from "os";
 
-const UISpace = () => {
-  const { projectContext, setProjectContext } = useProjectContext();
-  const { nodes } = projectContext.details;
-
-  // Memoized instruction and account nodes
-  const instructionNodes = useMemo(
-    () => nodes.filter((node) => node.type === "instruction"),
-    [nodes]
-  );
-  const accountNodes = useMemo(
-    () => nodes.filter((node) => node.type === "account"),
-    [nodes]
-  );
+const UISpace = ({
+  toggleState,
+  onToggleChange,
+}: {
+  toggleState: boolean;
+  onToggleChange: (checked: boolean) => void;
+}) => {
+  const { projectContext } = useProjectContext();
 
   const instructions = useMemo(() => {
-    const parsedInstructions = projectContext.details.idl?.parsed?.instructions;
-  
-    if (!parsedInstructions || parsedInstructions.length === 0) {
-      return [];
-    }
-  
-    console.log("instructions:", parsedInstructions);
-  
-    if (parsedInstructions[0]?.description) return parsedInstructions;
-  
-    return [];
-  }, [projectContext.details.idl.parsed.instructions]);
-
+    const parsedInstructions =
+      projectContext.details.idl?.parsed?.instructions || [];
+    return parsedInstructions;
+  }, [projectContext.details.idl.parsed]);
 
   const accounts = useMemo(() => {
-    console.log(" idl.parsed.accounts:", projectContext.details.idl.parsed.accounts);
-    return projectContext.details.idl.parsed.accounts;
-  }, []);
+    const parsedAccounts = projectContext.details.idl?.parsed?.accounts || [];
+    return parsedAccounts;
+  }, [projectContext.details.idl.parsed]);
+
+  const isUIGenerated = instructions.length > 0;
 
   return (
     <Box width="100%" maxHeight="100%" overflowY="auto">
-      <Flex
-        direction="row"
-        flexWrap="wrap"
-        justifyContent="space-evenly"
-        alignItems="flex-start"
-        gap={4}
-        p={4}
-        width="100%"
-        maxHeight="100%"
-        overflowY="auto"
-        bg="gray.50"
-        shadow="md"
-      >
-        {instructions.length > 0 && instructions[0].description &&
-          instructions.map((instruction) => (
-            <InstructionCard key={instruction.name} instruction={instruction} />
+      <HStack justifyContent="center" mt={4} mb={4} spacing={6}>
+        <Text fontSize="lg" fontWeight="medium" color="gray.600">
+          Simple
+        </Text>
+        <Switch
+          size="lg"
+          isChecked={toggleState}
+          onChange={(e) => onToggleChange(e.target.checked)}
+          sx={{
+            ".chakra-switch__track": {
+              backgroundColor: toggleState ? "#a9b7ff" : "gray.200",
+            },
+            ".chakra-switch__thumb": {
+              backgroundColor: "white",
+            },
+          }}
+        />
+        <Text fontSize="lg" fontWeight="medium" color="gray.600">
+          Advanced
+        </Text>
+      </HStack>
+
+      {isUIGenerated && (
+        <Flex
+          direction="row"
+          flexWrap="wrap"
+          justifyContent="space-evenly"
+          alignItems="flex-start"
+          gap={4}
+          p={4}
+          width="100%"
+          maxHeight="100%"
+          overflowY="auto"
+          bg="gray.50"
+          shadow="md"
+        >
+          {instructions.map((instruction) => (
+            <InstructionCard
+              key={instruction.name}
+              instruction={instruction}
+              isSimpleMode={!toggleState}
+            />
           ))}
-        {accounts.length > 0 &&
-          accounts.map((account) => (
-            <AccountCard key={account.name} account={account} />
-          ))}
-      </Flex>
+          <AccountCard
+            key={accounts[0].name}
+            account={accounts[0]}
+            isSimpleMode={!toggleState}
+          />
+        </Flex>
+      )}
     </Box>
   );
 };

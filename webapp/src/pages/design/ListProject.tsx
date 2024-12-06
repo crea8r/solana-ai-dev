@@ -107,6 +107,8 @@ const ListProject: React.FC<ListProjectProps> = ({
             isUi: false,
             idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
             sdk: { fileName: '', content: '' },
+            walletPublicKey: '',
+            walletSecretKey: '',
           },
         });
       }

@@ -1,5 +1,5 @@
-import React, { useCallback, useState }   from "react";
-import { Box, Flex, Text, useToast, Divider } from "@chakra-ui/react";
+import React, { useCallback, useEffect, useState }   from "react";
+import { Box, Flex, Text, useToast, Divider, Button } from "@chakra-ui/react";
 import TopPanel from "./TopPanel";
 import { useProjectContext } from "../../contexts/ProjectContext";
 import { logout } from "../../services/authApi";
@@ -18,6 +18,7 @@ const UIPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const toast = useToast();
+  const [toggleState, setToggleState] = useState(true);
 
   const handleSelectModel = (model: string, apiKey: string) => {
     setAiModel(model);
@@ -39,6 +40,14 @@ const UIPage = () => {
     window.location.href = '/';
   }, [toast]);
 
+  const handleToggleUI = () => {
+    setToggleState((prev) => !prev);
+  };
+
+  useEffect(() => {
+    console.log("projectContext", projectContext);
+  }, [projectContext]);
+
   return (
     <Flex direction="column" height="100vh" overflow="hidden">
       <TopPanel 
@@ -49,28 +58,34 @@ const UIPage = () => {
         addLog={addLog} 
         setIsTaskModalOpen={setIsTaskModalOpen}
       />
-      <Flex flex={1} overflow="hidden">
-        <Toolbox />
+      <Flex flex={1} overflow="hidden" direction="column">
 
-        <Flex
-          flex={1}
-          bg="white"
-          p={4}
-          justifyContent="center"
-          alignItems="flex-start"
-          borderLeft="1px solid"
-          borderRight="1px solid"
-          borderColor="gray.300"
-          overflowY="auto"
-        >
-          <UISpace />
+        <Flex flex={1} overflow="hidden">
+          <Toolbox />
+
+          <Flex
+            flex={1}
+            bg="white"
+            p={4}
+            justifyContent="center"
+            alignItems="flex-start"
+            borderLeft="1px solid"
+            borderRight="1px solid"
+            borderColor="gray.300"
+            overflowY="auto"
+          >
+            <UISpace
+              toggleState={toggleState}
+              onToggleChange={handleToggleUI}
+            />
+          </Flex>
+
+          <Box flex={1} position="absolute" right={0} top={9}>
+            {showWallet && <Wallet />}
+          </Box>
+
+          <PropertyPanel />
         </Flex>
-
-        <Box flex={1} position="absolute" right={0} top={9}>
-          {showWallet && <Wallet />}
-        </Box>
-
-        <PropertyPanel />
       </Flex>
 
       {isTaskModalOpen && (

@@ -16,9 +16,7 @@ export const getWalletInfo = async (userId: string): Promise<WalletInfo> => {
       params: { userId }
     });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) {  throw error; }
 };
 
 export const airdropTokens = async (publicKey: string, amount: number = 2): Promise<string> => {

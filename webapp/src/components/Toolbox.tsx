@@ -97,6 +97,10 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             bg="white"
             color="gray.700"
             mb={3}
+            shadow="sm"
+            borderRadius="md"
+            border="1px solid"
+            borderColor="gray.300"
           >
               <option value="Counter"><Text>Counter Program</Text></option>
               <option value="Voting"><Text>Voting Program</Text></option>
@@ -113,7 +117,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             <Tooltip key={item.id} label={item.getName()} placement="right"
               bg='#a9b7ff'
               color='white'
-              shadow='md'
+              shadow='sm'
               fontSize='xs' 
               hasArrow
               borderRadius='md'
@@ -135,7 +139,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 alignItems="center"
                 justifyContent="center"
                 height="auto"
-                shadow="md"
+                shadow="sm"
               >
                 <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getName()}</Text>
               </Box>

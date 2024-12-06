@@ -8,7 +8,7 @@ import { getProjectRootPath } from './fileUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeProjectName } from './stringUtils';
 
-const runCommand = async (
+export const runCommand = async (
   command: string,
   cwd: string,
   taskId: string

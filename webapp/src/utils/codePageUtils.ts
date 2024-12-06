@@ -487,3 +487,92 @@ export const handleRunCommand = async (
     setIsLoading(false);
   }
 };
+
+
+// -------------------
+// UseEffect Utils
+// -------------------
+
+export const selectFileAfterLoad = (
+  projectContext: Project,
+  selectedFile: FileTreeItemType,
+  setSelectedFile: React.Dispatch<React.SetStateAction<FileTreeItemType | undefined>>,
+  setFileContent: React.Dispatch<React.SetStateAction<string>>,
+  files: FileTreeItemType
+) => {
+  try {
+    if (selectedFile && projectContext?.details?.codes) {
+      setSelectedFile(selectedFile);
+
+      const cachedContent = projectContext.details.codes.find(
+        (code) => code.name === selectedFile.name
+      );
+
+      if (cachedContent?.content) {
+        setFileContent(cachedContent.content);
+        //console.log(`Restored file content for ${selectedFile.name} from session storage.`);
+      } else {
+        console.warn(
+          `File content for ${selectedFile.name} not found in projectContext after mount.`
+        );
+      }
+    } else if (files?.children?.length && projectContext?.details?.codes?.length) {
+      const firstFile = findFirstFile(files.children);
+      if (firstFile) {
+        setSelectedFile(firstFile);
+
+        const firstFileContent = projectContext.details.codes.find(
+          (code) => code.name === firstFile.name
+        )?.content;
+
+        if (firstFileContent) {
+          setFileContent(firstFileContent);
+          console.log(`Loaded content for the first file: ${firstFile.name}.`);
+        } else {
+          console.warn(
+            `File content for ${firstFile.name} not found in projectContext after load.`
+          );
+        }
+
+        setSelectedFile(firstFile);
+      } else {
+        console.warn("No files found to select after load.");
+      }
+    }
+  } catch (error) {
+    console.error("Error selecting file after context update:", error);
+  }
+};
+
+export const fetchFilesIfNeeded = async (
+  projectContext: Project,
+  setFiles: React.Dispatch<React.SetStateAction<FileTreeItemType>>,
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  addLog: (message: string, type: LogEntry['type']) => void,
+  handleSelectFile: (file: FileTreeItemType) => void
+) => {
+  try {
+    if (!projectContext?.details?.files?.children) throw new Error('No files found in project context');
+    if (projectContext?.details?.files?.children?.length > 0) {
+      setFiles(projectContext.details.files);
+    } else {
+      await fetchDirectoryStructure(
+        projectContext?.id,
+        projectContext?.rootPath,
+        mapFileTreeNodeToItemType,
+        filterFiles(projectContext?.rootPath),
+        setFiles,
+        setProjectContext,
+        setIsPolling,
+        setIsLoading,
+        addLog,
+        handleSelectFile
+      );
+    }
+  } catch (error: any) { 
+    console.error("Error fetching files or updating project context:", error); 
+    addLog(`Error fetching files: ${error.message}`, 'error');
+  }
+};

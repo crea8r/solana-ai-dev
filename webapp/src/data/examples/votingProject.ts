@@ -166,6 +166,8 @@ const votingProject: Project = {
     isUi: false,
     idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
     sdk: { fileName: '', content: '' },
+    walletPublicKey: '',
+    walletSecretKey: '',
   } as ProjectDetails,
 };
 

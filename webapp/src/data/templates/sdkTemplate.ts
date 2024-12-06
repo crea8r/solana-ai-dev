@@ -1,9 +1,10 @@
-import { amendTsConfigFile, processInstructions } from '../../utils/uiUtils';
+import { processInstructions, amendTsConfigFile } from '../../utils/sdkUtils';
 import { Instruction, InstructionParam, Account } from '../../types/uiTypes';
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
 import { Project } from '../../interfaces/project';
 import { LogEntry } from '../../hooks/useTerminalLogs';
+import { Wallet } from '@coral-xyz/anchor';
 
 const typeMapping = (type: string): string => {
     switch (type) {
@@ -35,7 +36,10 @@ export const getSdkTemplate = async (
     addLog: (message: string, type: LogEntry['type']) => void
 ): Promise<string> => {
 
-    const updatedInstructions = processInstructions( _instructions, instructionNodes, aiInstructions );
+    const updatedInstructions = processInstructions( 
+        _instructions, 
+        instructionNodes, 
+        aiInstructions );
 
     setProjectContext((prevContext) => ({
     ...prevContext,
@@ -73,22 +77,19 @@ export const getSdkTemplate = async (
         // ${description}
         async ${name}(${paramsList}): Promise<web3.Transaction> {
             try {
-            // Create the transaction instruction
-            const ix = await this.${_programFieldName}.methods.${name}(${params.map(param => param.name).join(", ")}).accounts({
-                ${accountMappings}
-            }).instruction();
+                const ix = await this.${_programFieldName}.methods.${name}(${params.map(param => param.name).join(", ")}).accounts({
+                    ${accountMappings}
+                }).instruction();
 
-            // Construct the transaction
-            const transaction = new web3.Transaction().add(ix);
-            transaction.recentBlockhash = (await this.${_programFieldName}.provider.connection.getLatestBlockhash()).blockhash;
+                const transaction = new web3.Transaction().add(ix);
+                transaction.recentBlockhash = (await this.${_programFieldName}.provider.connection.getLatestBlockhash()).blockhash;
 
-            // Sign the transaction if there are any signers
-            ${signersList ? `transaction.sign(${signersList});` : ''}
+                ${signersList ? `transaction.sign(${signersList});` : ''}
 
-            return transaction;
+                return transaction;
             } catch (error) {
-            console.error('Error executing ${name}:', error);
-            throw error;
+                console.error('Error executing ${name}:', error);
+                throw error;
             }
         }`;
     }).join("\n");
@@ -115,42 +116,70 @@ export const getSdkTemplate = async (
     }).join("\n");
 
     const setupFunction = `
-        export const setup${_programClassName} = () => {
+    export const setup${_programClassName} = () => {
         const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         
-        // Replace this with the wallet you're using
-        const wallet = new Wallet("${_walletPublicKey}");
-
-        // Initialize provider
+        const secretKey = [${JSON.parse(projectContext.details.walletSecretKey)}]TEST;
+        const wallet = new Wallet(Keypair.fromSecretKey(new Uint8Array(secretKey)));
+    
         const provider = new AnchorProvider(connection, wallet, {
             preflightCommitment: 'processed',
         });
-
-        // Create and return the SDK instance
+    
         return new ${_programClassName}SDK(provider, idl);
-        };
+    };
     `;
+
+    const getPdaFunction = () => {
+       return `
+            async get${_programClassName}Pda(initializer: web3.PublicKey): Promise<web3.PublicKey> {
+                try {
+                    const seeds = [
+                        Buffer.from("counter"),
+                        initializer.toBuffer(),
+                    ];
+            
+                    const counterAccountPda = web3.PublicKey.createProgramAddressSync(
+                        seeds,
+                        this.${_programFieldName}.programId
+                    );
+            
+                    return counterAccountPda;
+                } catch (error) {
+                    console.error("Error deriving PDA:", error);
+                    throw error;
+                }
+            }
+        `;
+    }
 
     await amendTsConfigFile(projectContext, setIsPolling, setIsLoading, addLog);
 
     return `
-        import { Connection, PublicKey } from '@solana/web3.js';
+        import { Connection, PublicKey, Keypair } from '@solana/web3.js';
         import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
-        import { Program, Idl, web3, TransactionFn } from '@coral-xyz/anchor';
-
-        import idl from '..${_idlPath}'; 
+        import { Program, Idl, web3 } from '@coral-xyz/anchor';
+        import idlJson from '../target/idl/counter_program.json'; 
+        import { CounterProgram } from '../target/types/counter_program';
+        const idl = idlJson as CounterProgram;
 
         export class ${_programClassName}SDK {
-        private ${_programFieldName}: Program;
+            private ${_programFieldName}: Program<CounterProgram>;
 
-        constructor(provider: AnchorProvider, idl: Idl, programId: string = "${programId}") {
-            this.${_programFieldName} = new Program(idl, new PublicKey("${programId}"), provider);
-        }
+            constructor(
+                provider: AnchorProvider, 
+                idl: CounterProgram, 
+                programId: string = "${programId}"
+            ) {
+                this.${_programFieldName} = new Program<${_programClassName}>(idl, provider);
+            }
 
-        ${instructionFunctions}
+            ${getPdaFunction()}
 
-        ${accountFetchers}
-        }
+            ${instructionFunctions}
+
+            ${accountFetchers}
+            }
 
         ${setupFunction}
 

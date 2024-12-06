@@ -133,7 +133,27 @@ const CodePage = () => {
   }, [files, projectContext?.details?.codes]);
   
 
-  const _handleSave = async () => { if (selectedFile) handleSave(selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); };
+  const _handleSave = async () => { 
+    if (selectedFile) {
+      handleSave(selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); 
+
+      const updatedFile = { ...selectedFile, content: fileContent };
+      sessionStorage.setItem('selectedFile', JSON.stringify(updatedFile));
+      savedFileRef.current = JSON.stringify(updatedFile);
+
+      setSelectedFile(updatedFile);
+      setProjectContext((prev) => {
+        if (!prev) return prev;
+        const updatedCodes = prev.details.codes.map((code) => {
+          if (code.name === updatedFile.name) {
+            return { ...code, content: fileContent };
+          }
+          return code;
+        });
+        return { ...prev, details: { ...prev.details, codes: updatedCodes } };
+      });
+    } else console.warn("No selected file to save.");
+  };
   const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
   const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
   const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };

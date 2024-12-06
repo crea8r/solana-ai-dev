@@ -37,10 +37,12 @@ import {
   handleAirdrop,
   handleBalanceRefresh
  } from '../utils/walletUtils';
+import { useProjectContext } from '../contexts/ProjectContext';
 
 interface WalletCreationModalProps { userId: string; onClose: () => void; };
 
 export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId, onClose }) => {
+  const { projectContext, setProjectContext } = useProjectContext();
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [privateKey, setPrivateKey] = useState<string | null>(null);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
@@ -54,6 +56,14 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
         setWalletInfo(info);
         const privateKeyInfo = await getPrivateKey(userId);
         setPrivateKey(privateKeyInfo.privateKey);
+        setProjectContext({
+          ...projectContext,
+          details: {
+            ...projectContext.details,
+            walletPublicKey: info.publicKey,
+            walletSecretKey: privateKeyInfo.privateKey
+          }
+        });
       } catch (error) {
         console.error('Failed to fetch wallet info:', error);
       }
@@ -252,12 +262,10 @@ export const Wallet: React.FC = () => {
       <Card width="full" bg="white" border="1px solid" borderColor="gray.200" shadow="lg" px={6} py={2}>
         <CardHeader>
           <Flex align="center" gap={2} mb={2}>
-            <WalletIcon size={18} color="#7f7de8" />
-            <Heading fontSize="xl" color="#7f7de8">Wallet</Heading>
+            <WalletIcon size={18} color="#383838" />
+            <Heading fontSize="xl" color="gray.700">Wallet</Heading>
           </Flex>
-          <Text fontSize="xs" color="gray.500">
-            View and manage your wallet details
-          </Text>
+          <Text fontSize="xs" color="gray.500"> View and manage your wallet details </Text>
         </CardHeader>
         <CardBody>
           <VStack align="start" spacing={4}>

@@ -1,34 +1,46 @@
 import React from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, VStack, HStack, Divider } from "@chakra-ui/react";
 import { Account } from "../../types/uiTypes";
 
-interface AccountCardProps {
-  account: Account;
-}
-
-const placeholderAccount: Account = {
+const placeholderAccount = {
   name: "Placeholder Account",
-  description: "This is a placeholder account for demonstration purposes.",
+  description: "This is a placeholder account.",
   fields: [
     { name: "field1", type: "string" },
     { name: "field2", type: "number" },
   ],
 };
 
-const AccountCard: React.FC<AccountCardProps> = ({ account = placeholderAccount }) => {
+interface AccountCardProps {
+  account: Account;
+  isSimpleMode: boolean;
+}
+
+const AccountCard: React.FC<AccountCardProps> = ({ account, isSimpleMode }) => {
+  const accountData = account;
+
   return (
-    <Box p={4} borderWidth="1px" borderRadius="md" width="300px" bg="white" shadow="md">
-      <Text fontSize="lg" fontWeight="bold" color="#7f7de8">
-        {account.name}
-      </Text>
-      <Text mt={2} fontSize="sm" color="gray.600">
-        {account.description}
-      </Text>
-      {account.fields.map((field, idx) => (
-        <Text key={idx} fontSize="sm" color="gray.500">
-          {field.name}: {field.type}
+    <Box
+      p={6}
+      borderWidth="1px"
+      borderRadius="md"
+      bg="white"
+      shadow="md"
+      width="320px"
+    >
+      <VStack align="stretch" spacing={4}>
+        <Text fontSize="lg" fontWeight="bold" color="gray.800">
+          {accountData.name}
         </Text>
-      ))}
+        {!isSimpleMode &&
+          accountData.fields.map((field, idx) => (
+            <Box key={idx}>
+              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                {field.name} ({field.type})
+              </Text>
+            </Box>
+          ))}
+      </VStack>
     </Box>
   );
 };

@@ -20,6 +20,7 @@ import path from "path-browserify";
 import { startPollingTaskStatus } from "./codePageUtils";
 import { LogEntry } from "../hooks/useTerminalLogs";
 import { InstructionParam } from "../types/uiTypes";
+import { uiApi } from "../api/ui";
 
 
 // String Manipulation Utilities
@@ -66,29 +67,6 @@ export const handleInputChange = (
 
 // Generate UI/SDK Utilities
 // -----------------------------
-export const amendTsConfigFile = async (
-  projectContext: Project,
-  setIsPolling: Dispatch<SetStateAction<boolean>>,
-  setIsLoading: Dispatch<SetStateAction<boolean>>,
-  addLog: (message: string, type: LogEntry['type']) => void
-) => {
-  const tsConfigPath = '/tsconfig.json';
-
-  try {
-    const response = await fileApi.getFileContent(projectContext.id, tsConfigPath);
-    const { fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
-    if (!fileContent) throw new Error('No tsconfig.json content found');
-    const tsConfig = JSON.parse(fileContent);
-    tsConfig.compilerOptions = {
-      ...tsConfig.compilerOptions,
-      resolveJsonModule: true,
-    };
-    const updatedContent = JSON.stringify(tsConfig, null, 2);
-    const res = await fileApi.updateFile(projectContext.id, tsConfigPath, updatedContent);
-    const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
-    if (status !== 'success') throw new Error('Failed to update tsconfig.json');
-  } catch (error) { console.error('Error amending tsconfig.json:', error); }  
-};
 
 export const processInstructions = (
   instructions: Instruction[],
@@ -264,11 +242,13 @@ export const handleGenerateUI = async (
     if (!idlContent) throw new Error('No IDL content found');
     const parsedIdl = parseIdl(idlContent, setProjectContext);
     if (!parsedIdl) throw new Error('Error parsing IDL');
+
     const { instructions, accounts } = parsedIdl;
     console.log('instructions', instructions);
     console.log('accounts', accounts);
 
     await generateSdk(projectContext, setProjectContext, instructions, accounts, setIsPolling, setIsLoading, addLog);
+    await uiApi.compileTsFile(projectId, user.id);
 
   } catch (error) { console.error('Error checking directory existence:', error); }
 };

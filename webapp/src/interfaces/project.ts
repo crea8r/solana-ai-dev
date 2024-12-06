@@ -44,6 +44,8 @@ export interface ProjectDetailsToSave {
   isUi: boolean;
   idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
   sdk: { fileName: string; content: string; };
+  walletPublicKey: string;
+  walletSecretKey: string;
 }
 
 export interface ProjectDetails {
@@ -80,6 +82,8 @@ export interface ProjectDetails {
   isUi: boolean;
   idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
   sdk: { fileName: string; content: string; };
+  walletPublicKey: string;
+  walletSecretKey: string;
 }
 
 export interface Project {

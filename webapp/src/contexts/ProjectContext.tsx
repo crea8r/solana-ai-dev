@@ -25,6 +25,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     isUi: project.details.isUi,
     idl: project.details.idl,
     sdk: project.details.sdk,
+    walletPublicKey: project.details.walletPublicKey,
+    walletSecretKey: project.details.walletSecretKey
   },
 });
 
@@ -74,6 +76,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           isUi: false,
           idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
           sdk: { fileName: '', content: '' },
+          walletPublicKey: '',
+          walletSecretKey: '',
         },
       };
   });
