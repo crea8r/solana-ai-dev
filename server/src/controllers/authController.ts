@@ -70,11 +70,13 @@ export const createWallet = async (
           creationDate: new Date().toISOString(),
         };
 
+        /*
         try {
           await airdropTokens(publicKey, 2);
           walletInfo.balance = 2;
           console.log("Wallet Balance:", walletInfo.balance);
         } catch (airdropError) { console.error(`Failed to airdrop tokens: ${airdropError}`);  return next(new AppError("Failed to airdrop test tokens", 500)); }
+        */
 
         try {
           await client.query('BEGIN');

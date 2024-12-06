@@ -48,7 +48,6 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
   );
 };
 
-// ParticlesContainer component
 const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
   const [init, setInit] = useState(false);
 

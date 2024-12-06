@@ -9,9 +9,13 @@ import Toolbox from "./Toolbox";
 import PropertyPanel from "./PropertyPanel";
 import { useTerminalLogs } from "../../hooks/useTerminalLogs";
 import { TaskModal } from "./TaskModal";
+import { useAuthContext } from '../../contexts/AuthContext';
+
 const UIPage = () => {
-  const { projectContext, setProjectContext } = useProjectContext();
+  const { projectContext, setProjectContext } = useProjectContext();  
+  const { user } = useAuthContext();
   const { addLog } = useTerminalLogs();
+  
   const [aiModel, setAiModel] = useState('Codestral');
   const [showWallet, setShowWallet] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
@@ -47,6 +51,10 @@ const UIPage = () => {
   useEffect(() => {
     console.log("projectContext", projectContext);
   }, [projectContext]);
+
+  useEffect(() => {
+    console.log('user:', user);
+  }, [user]);
 
   return (
     <Flex direction="column" height="100vh" overflow="hidden">

@@ -43,9 +43,12 @@ interface WalletCreationModalProps { userId: string; onClose: () => void; };
 
 export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId, onClose }) => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { user, setUser } = useAuthContext();
+
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [privateKey, setPrivateKey] = useState<string | null>(null);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
+  
   const { hasCopied: publicKeyCopied, onCopy: onCopyPublicKey } = useClipboard(walletInfo?.publicKey || '');
   const { hasCopied: privateKeyCopied, onCopy: onCopyPrivateKey } = useClipboard(privateKey || '');
 
@@ -56,6 +59,7 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
         setWalletInfo(info);
         const privateKeyInfo = await getPrivateKey(userId);
         setPrivateKey(privateKeyInfo.privateKey);
+
         setProjectContext({
           ...projectContext,
           details: {
@@ -64,6 +68,14 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
             walletSecretKey: privateKeyInfo.privateKey
           }
         });
+
+        if (user) {
+          setUser({
+            ...user,
+            walletPublicKey: info.publicKey,
+            walletPrivateKey: privateKeyInfo.privateKey,
+          });
+        } else throw new Error('User not found');
       } catch (error) {
         console.error('Failed to fetch wallet info:', error);
       }

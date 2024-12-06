@@ -458,6 +458,10 @@ const DesignPage: React.FC = () => {
     console.log('projectContext:', projectContext);
   }, [projectContext.details.nodes, projectContext.details.edges, setProjectContext, loadingExample]);
 
+  useEffect(() => {
+    console.log('user:', user);
+  }, [user]);
+
   return (
     <>
       <PromptModal

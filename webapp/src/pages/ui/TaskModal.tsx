@@ -29,6 +29,7 @@ type Task = {
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPolling, setIsLoading, addLog }) => {
     const { projectContext, setProjectContext } = useProjectContext();
     const { user } = useAuthContext();
+    
     const [tasks, setTasks] = useState<Task[]>([]);
     const [contextReady, setContextReady] = useState(false);
     const tasksInitializedRef = useRef(false);
@@ -135,7 +136,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 parsedIdl.accounts,
                 setIsPolling,
                 setIsLoading,
-                addLog
+                addLog,
+                user
             );
 
             setTasks((prevTasks) =>

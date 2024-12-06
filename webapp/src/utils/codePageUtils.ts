@@ -297,13 +297,19 @@ export const handleSelectFileUtil = async (
 ) => {
   try {
     setIsLoading(true);
-    sessionStorage.setItem('selectedFile', JSON.stringify(file));
     setSelectedFile(file);
+    sessionStorage.setItem('selectedFile', JSON.stringify(file));
+    
 
     if (projectContext?.details?.codes) {
       const projectContextContent = projectContext?.details?.codes.find((child: any) => child.name === file.name);
-      setFileContent(projectContextContent?.content);
-      setIsLoading(false);
+      if (projectContextContent?.content) {
+        setFileContent(projectContextContent?.content);
+        setIsLoading(false);
+      } else { 
+        console.warn(`No content found for file: ${file.name}`);
+        setFileContent('');
+      }
     } else { console.error('No file content found in projectContext'); return; }
   } catch (error) { console.error('Error handling selected file:', error); }
 };

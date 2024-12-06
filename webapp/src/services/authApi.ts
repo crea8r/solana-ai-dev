@@ -40,8 +40,8 @@ export const register = async (
     //sessionStorage.setItem('token', response.data.token);
     if(response.data.user) console.log("user created!", response.data.user.username)
     await createWallet(response.data.user.id);
-    const walletInfo = await getWalletInfo(response.data.user.id);
-    console.log("walletInfo", walletInfo);
+    //const walletInfo = await getWalletInfo(response.data.user.id);
+    //console.log("walletInfo", walletInfo);
 
     return response.data;
   } catch (error) {

@@ -12,6 +12,8 @@ export interface User {
   orgName: string;
   walletCreated: boolean;
   hasViewedWalletModal?: boolean;
+  walletPublicKey?: string;
+  walletPrivateKey?: string;
 }
 
 interface RegisterResponse {
@@ -63,13 +65,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           );
           console.log('User:', data.user);
         } else {
-          setUser(null); // Clear user if not authenticated
+          setUser(null);
         }
       } catch (error) {
         console.error('Failed to fetch authenticated user:', error);
         setUser(null);
       } finally {
-        setLoading(false); // Ensure loading state is updated
+        setLoading(false);
       }
     };
 

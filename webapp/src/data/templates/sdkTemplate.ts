@@ -5,6 +5,7 @@ import { SetStateAction } from 'react';
 import { Project } from '../../interfaces/project';
 import { LogEntry } from '../../hooks/useTerminalLogs';
 import { Wallet } from '@coral-xyz/anchor';
+import { User } from '../../contexts/AuthContext';
 
 const typeMapping = (type: string): string => {
     switch (type) {
@@ -33,8 +34,12 @@ export const getSdkTemplate = async (
     setProjectContext: Dispatch<SetStateAction<Project>>,
     setIsPolling: Dispatch<SetStateAction<boolean>>,
     setIsLoading: Dispatch<SetStateAction<boolean>>,
-    addLog: (message: string, type: LogEntry['type']) => void
+    addLog: (message: string, type: LogEntry['type']) => void,
+    user: User | null
 ): Promise<string> => {
+    if (!user) throw new Error('User not found');
+    const walletPrivateKey = user.walletPrivateKey;
+    if (!walletPrivateKey) throw new Error('Wallet private key not found');
 
     const updatedInstructions = processInstructions( 
         _instructions, 
@@ -119,7 +124,7 @@ export const getSdkTemplate = async (
     export const setup${_programClassName} = () => {
         const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         
-        const secretKey = [${JSON.parse(projectContext.details.walletSecretKey)}]TEST;
+        const secretKey = [${JSON.parse(walletPrivateKey)}];
         const wallet = new Wallet(Keypair.fromSecretKey(new Uint8Array(secretKey)));
     
         const provider = new AnchorProvider(connection, wallet, {

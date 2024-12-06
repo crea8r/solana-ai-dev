@@ -99,7 +99,8 @@ export const generateSdk = async (
   accounts: Account[],
   setIsPolling: Dispatch<SetStateAction<boolean>>,
   setIsLoading: Dispatch<SetStateAction<boolean>>,
-  addLog: (message: string, type: LogEntry['type']) => void
+  addLog: (message: string, type: LogEntry['type']) => void,
+  user: User | null
 ) => {
   try {
     const _rootPath = projectContext.rootPath;
@@ -130,8 +131,10 @@ export const generateSdk = async (
       setProjectContext,
       setIsPolling,
       setIsLoading,
-      addLog
+      addLog,
+      user
     );
+    console.log('sdkTemplate', sdkTemplate);
     
     setProjectContext((prev) => ({
       ...prev,
@@ -247,7 +250,7 @@ export const handleGenerateUI = async (
     console.log('instructions', instructions);
     console.log('accounts', accounts);
 
-    await generateSdk(projectContext, setProjectContext, instructions, accounts, setIsPolling, setIsLoading, addLog);
+    await generateSdk(projectContext, setProjectContext, instructions, accounts, setIsPolling, setIsLoading, addLog, user);
     await uiApi.compileTsFile(projectId, user.id);
 
   } catch (error) { console.error('Error checking directory existence:', error); }
