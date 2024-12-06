@@ -55,17 +55,19 @@ export const createWallet = async (
       if (error) { console.error(`Error generating wallet: ${stderr}`); return next(new AppError(`Error generating wallet: ${stderr}`, 500)); }
 
       try {
-        execSync(`solana config set --keypair ${walletPath}`, { stdio: 'inherit' }); // set as default signer
-        execSync(`solana config set --url devnet`, { stdio: 'inherit' }); // set cluster to devnet
+        execSync(`solana config set --keypair ${walletPath}`, { stdio: 'inherit' });
+        execSync(`solana config set --url devnet`, { stdio: 'inherit' });
 
         const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
 
         const privateKeyArray = Uint8Array.from(walletData);
         const keypair = Keypair.fromSecretKey(privateKeyArray);
         const publicKey = keypair.publicKey.toBase58();
+        const privateKey = JSON.stringify(privateKeyArray);
 
         const walletInfo: WalletInfo = {
           publicKey,
+          privateKey,
           balance: 0,
           creationDate: new Date().toISOString(),
         };
@@ -80,7 +82,10 @@ export const createWallet = async (
 
         try {
           await client.query('BEGIN');
-          await client.query('UPDATE Creator SET wallet_created = $1 WHERE id = $2', [true, userId]);
+          await client.query(
+            'UPDATE Creator SET wallet_created = $1, wallet_public_key = $2, wallet_private_key = $3 WHERE id = $4', 
+            [true, publicKey, privateKey, userId]
+          );
           await client.query('COMMIT');
           console.log(`Wallet creation recorded for user ${userId}`);
 
@@ -224,6 +229,8 @@ export const register = async (req: Request, res: Response) => {
         org_name: organisation,
         wallet_created: false,
         private_key_viewed: false,
+        wallet_public_key: '',
+        wallet_private_key: '',
       });
 
       res.cookie('token', token, {
@@ -239,7 +246,14 @@ export const register = async (req: Request, res: Response) => {
         message: 'User registered successfully',
         token,
         wallet_created: false,
-        user: { id: userId, username, org_id: orgId, role: 'admin' },
+        user: { 
+          id: userId, 
+          username, 
+          org_id: orgId, 
+          role: 'admin',
+          wallet_public_key: '',
+          wallet_private_key: '',
+        },
       });
     } catch (error) {
       await client.query('ROLLBACK');
@@ -275,6 +289,8 @@ export const login = async (req: Request, res: Response) => {
       org_name: user.org_name,
       wallet_created: user.wallet_created,
       private_key_viewed: user.private_key_viewed,
+      wallet_public_key: user.wallet_public_key,
+      wallet_private_key: user.wallet_private_key,
     });
 
     res.cookie('token', token, {
@@ -294,6 +310,8 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
         wallet_created: user.wallet_created,
         private_key_viewed: user.private_key_viewed,
+        wallet_public_key: user.wallet_public_key,
+        wallet_private_key: user.wallet_private_key,
       },
     });
   } catch (error) {
@@ -327,6 +345,8 @@ export const getUser = (req: Request, res: Response) => {
         org_name: decoded.org_name,
         wallet_created: decoded.wallet_created,
         private_key_viewed: decoded.private_key_viewed,
+        wallet_public_key: decoded.wallet_public_key,
+        wallet_private_key: decoded.wallet_private_key,
       },
     });
   } catch (error) {

@@ -155,7 +155,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {

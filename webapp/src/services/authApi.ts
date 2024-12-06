@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { createWallet, getWalletInfo } from '../api/wallet';
+import { User } from '../contexts/AuthContext';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -11,14 +12,17 @@ const authApi = axios.create({
   withCredentials: true,
 });
 
-export const login = async (username: string, password: string) => {
+export const login = async (
+  username: string, 
+  password: string,
+) => {
   try {
     const response = await authApi.post('/auth/login', { username, password });
-    if (response.data.token) {
+    if (response.data.token && response.data.user) {
       console.log('Token cookie set:', response.data.token);
-    } else {
-      console.error('No token received in response');
-    }
+      console.log('User data received:', response.data.user);
+    } else console.error('No token or user data received in response');
+
     return response.data;
   } catch (error) {
     throw error;
