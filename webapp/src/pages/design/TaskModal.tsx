@@ -7,7 +7,7 @@ import { taskApi } from '../../api/task';
 import { FileTreeItemType } from "../../interfaces/file";
 import genStructure from "../../prompts/genStructure";
 import genFile from "../../prompts/genFile";
-import { promptAI } from "../../services/prompt";
+import { promptAI, promptAI_v2 } from "../../services/prompt";
 import { 
     ensureInstructionNaming, 
     extractProgramIdFromAnchorToml, 
@@ -157,6 +157,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 await fetchDirectoryStructure(
                   projectId,
                   rootPath,
+                  projectContext.name,
                   mapFileTreeNodeToItemType,
                   filterFiles(rootPath),
                   () => {},
@@ -418,6 +419,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             }[] = [];
       
             for (const fileTask of fileTasks) {
+              console.log('fileTask', fileTask);
               if (processedFilesSet.has(fileTask.path || '')) continue;
       
               setTasks((prevTasks) =>
@@ -490,7 +492,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
                 if (_schema === '') throw new Error('No schema for file generation');
       
-                const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
+                const content = await promptAI_v2(_promptContent, _model, _apiKey, _schema, _promptType);
 
                 const anchorTomlPath = `Anchor.toml`;
                 const programId = await extractProgramIdFromAnchorToml(

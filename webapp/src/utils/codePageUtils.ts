@@ -233,6 +233,7 @@ export const prefetchFileContents = async (
 export const fetchDirectoryStructure = async (
   projectContextId: string,
   projectContextRootPath: string,
+  projectContextName: string,
   mapFileTreeNodeToItemType: (node: any) => FileTreeItemType,
   filterFiles: (file: FileTreeItemType) => boolean,
   setFiles: (files: FileTreeItemType) => void,
@@ -245,11 +246,12 @@ export const fetchDirectoryStructure = async (
   try {
     setIsLoading(true);
     if (!projectContextRootPath) { console.error('No project context root path found'); return; }
+    if (!projectContextId) { console.error('No project context ID found'); return; }
     const directoryStructure = await fileApi.getDirectoryStructure(projectContextRootPath);
     const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
 
     const rootNode: FileTreeItemType = {
-      name: projectContextId,
+      name: projectContextName,
       path: '',
       type: 'directory',
       children: mappedFiles,
@@ -567,6 +569,7 @@ export const fetchFilesIfNeeded = async (
       await fetchDirectoryStructure(
         projectContext?.id,
         projectContext?.rootPath,
+        projectContext?.name,
         mapFileTreeNodeToItemType,
         filterFiles(projectContext?.rootPath),
         setFiles,

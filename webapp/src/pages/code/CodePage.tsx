@@ -54,6 +54,7 @@ const CodePage = () => {
           await fetchDirectoryStructure(
             projectContext?.id,
             projectContext?.rootPath,
+            projectContext?.name,
             mapFileTreeNodeToItemType,
             filterFiles(projectContext?.rootPath),
             setFiles,
