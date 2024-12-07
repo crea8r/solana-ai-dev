@@ -169,7 +169,7 @@ export const amendConfigFile = async (
       const localnet = parsedToml.programs.localnet;
 
       const [oldKey, address] = Object.entries(localnet)[0]; 
-      console.log(`Old Key: ${oldKey}, Address: ${address}`);
+      //console.log(`Old Key: ${oldKey}, Address: ${address}`);
       delete localnet[oldKey];
       localnet[programDirName] = address;
 
@@ -189,12 +189,12 @@ export const amendConfigFile = async (
     }
 
     updatedToml = stringify(parsedToml);
-    console.log('updatedToml', updatedToml);
+    //console.log('updatedToml', updatedToml);
   }
 
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
   const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
-  console.log('updatedFileContent', updatedFileContent);
+  //console.log('updatedFileContent', updatedFileContent);
   return updatedFileContent;
 };
 
@@ -210,16 +210,16 @@ export const ensureInstructionNaming = async (
       const fileContentResponse = await fileApi.getFileContent(projectId, filePath);
       const taskId = fileContentResponse.taskId;
       const pollDesc = `Getting ${filePath} content to change function names.`;
-      console.log('pollDesc', pollDesc);
+      //console.log('pollDesc', pollDesc);
       const fileContent = await pollTaskStatus(taskId, pollDesc);
-      console.log('fileContent', fileContent);
+      //console.log('fileContent', fileContent);
 
       const updatedContent = fileContent.replace(
         /pub fn\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
         (match, functionName) => {
           if (!functionName.startsWith('run_')) {
             const newFunctionName = `run_${functionName}`;
-            console.log(`Renaming function: ${functionName} to ${newFunctionName}`);
+            //console.log(`Renaming function: ${functionName} to ${newFunctionName}`);
             return `pub fn ${newFunctionName}`;
           }
           return match;
@@ -228,7 +228,7 @@ export const ensureInstructionNaming = async (
 
       if (updatedContent !== fileContent) {
         await fileApi.updateFile(projectId, filePath, updatedContent);
-        console.log(`Updated function names in ${filePath}`);
+        // console.log(`Updated function names in ${filePath}`);
       }
     } catch (error) {
       console.error(`Error processing file ${filePath}:`, error);
@@ -296,7 +296,7 @@ export const extractProgramIdFromAnchorToml = async (
 
     const parsedToml = parse(anchorTomlContent) as Record<string, any>;
 
-    console.log("!!! parsedToml", parsedToml);
+    //console.log("parsedToml", parsedToml);
 
     const programSection = parsedToml['programs.localnet'];
     if (!programSection)  throw new Error('No [programs.localnet] section found in Anchor.toml');
@@ -333,11 +333,11 @@ export const extractInstructionContext = async (
         continue;
       }
 
-      console.log(`Instruction Content for ${instructionName}:\n`, content);
+      //console.log(`Instruction Content for ${instructionName}:\n`, content);
 
       // Extract function signature
       const funcRegex = /\bfn\s+(\w+)\s*\(\s*ctx:\s*Context<([^>]+)>(?:,\s*params:\s*([^,)]+))?\s*\)/;
-      console.log("funcRegex", funcRegex);
+      //console.log("funcRegex", funcRegex);
 
       const funcMatch = content.match(funcRegex);
       if (!funcMatch) {
@@ -459,7 +459,7 @@ export const extractStateStructs = async (
       structs.push({ name, fields });
     }
 
-    console.log("structs", structs);
+    //console.log("structs", structs);
     return structs;
   } catch (error) {
     console.error(`Error extracting state structs:`, error);
@@ -560,7 +560,7 @@ export const processAIStateOutput = async (
     const filePath = `programs/${normalizedProgramName}/src/state.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
 
-    console.log(`Successfully processed and updated file: ${filePath}`);
+   // console.log(`Successfully processed and updated file: ${filePath}`);
     return codeContent;
 
   } catch (error) {
@@ -613,7 +613,7 @@ export const processAIInstructionOutput = async (
     const filePath = `programs/${normalizedProgramName}/src/instructions/${instructionName}.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
 
-    console.log(`Successfully processed and updated file: ${filePath}`);
+    //console.log(`Successfully processed and updated file: ${filePath}`);
     return { codeContent, aiData };
 
   } catch (error) {

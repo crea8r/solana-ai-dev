@@ -21,8 +21,8 @@ export const promptAI_v2 = async (
   apiKey: string,
   schema: any,
   promptType: string,
-  maxRetries = 5,
-  delay = 1000 
+  maxRetries = 1,
+  delay = 5000 
 ): Promise<any> => {
   let retries = 0;
 

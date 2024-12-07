@@ -419,7 +419,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             }[] = [];
       
             for (const fileTask of fileTasks) {
+
               console.log('fileTask', fileTask);
+              if(fileTask != fileTasks[0]) continue;
               if (processedFilesSet.has(fileTask.path || '')) continue;
       
               setTasks((prevTasks) =>
@@ -435,6 +437,12 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               const isSdkFile = fileTask.path?.includes('sdk');
               const isTestFile = fileTask.path?.includes('.test.ts');
               if (isLibFile) continue;
+
+              console.log('isInstructionFile', isInstructionFile);
+              console.log('isInstructionModFile', isInstructionModFile);
+              console.log('isStateFile', isStateFile);
+              console.log('isSdkFile', isSdkFile);
+              console.log('isTestFile', isTestFile);
 
               try {
                 const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
@@ -491,8 +499,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   : '';
       
                 if (_schema === '') throw new Error('No schema for file generation');
+
+                console.log('prompt content', _promptContent);
+                console.log('model', _model);
+                console.log('apiKey', _apiKey);
+                console.log('schema', _schema);
+                console.log('promptType', _promptType);
       
-                const content = await promptAI_v2(_promptContent, _model, _apiKey, _schema, _promptType);
+                const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
 
                 const anchorTomlPath = `Anchor.toml`;
                 const programId = await extractProgramIdFromAnchorToml(
