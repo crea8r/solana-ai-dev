@@ -385,7 +385,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 else if (!isLibFile) otherFileTasks.push(task);
               });
       
-            const fileTasks = [...instructionFileTasks, ...otherFileTasks];
+            const fileTasks = [...instructionFileTasks, ...otherFileTasks].filter((fileTask) => !fileTask.path?.endsWith('/mod.rs')); // changed 
             console.log('fileTasks', fileTasks);
             console.log('instructionFileTasks', instructionFileTasks);
             console.log('otherFileTasks', otherFileTasks);
@@ -420,8 +420,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
             for (const fileTask of fileTasks) {
 
-              console.log('fileTask', fileTask);
-              if(fileTask != fileTasks[0]) continue;
+              //console.log('fileTask', fileTask);
+              //if(fileTask != fileTasks[0]) continue;
               if (processedFilesSet.has(fileTask.path || '')) continue;
       
               setTasks((prevTasks) =>
