@@ -25,7 +25,7 @@ export const handleAirdrop = async (
 ) => {
   try {
     setIsAirdropLoading(true);
-    await airdropTokens(publicKey, 2);
+    await airdropTokens(publicKey, 5);
     await onBalanceRefresh();
   } catch (error) {
     console.error("Airdrop failed:", error);

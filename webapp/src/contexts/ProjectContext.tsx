@@ -23,6 +23,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     deployStatus: project.details.deployStatus,
     isSdk: project.details.isSdk,
     isUi: project.details.isUi,
+    genUiClicked: project.details.genUiClicked,
     idl: project.details.idl,
     sdk: project.details.sdk,
     walletPublicKey: project.details.walletPublicKey,
@@ -75,10 +76,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           deployStatus: false,
           isSdk: false,
           isUi: false,
+          genUiClicked: false,
           idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
           sdk: { fileName: '', content: '' },
           walletPublicKey: '',
           walletSecretKey: '',
+          programId: '',
         },
       };
   });

@@ -23,7 +23,7 @@ export const airdropTokens = async (
     const walletPublicKey = new PublicKey(publicKey);
     console.log(`Requesting airdrop of ${amount} SOL to wallet: ${walletPublicKey.toBase58()}`);
 
-    const airdropSignature = await connection.requestAirdrop(walletPublicKey, amount * 1e9); // 1 SOL = 10^9 lamports
+    const airdropSignature = await connection.requestAirdrop(walletPublicKey, amount * 1e9);
     console.log(`Airdrop signature: ${airdropSignature}`);
 
     await connection.confirmTransaction(airdropSignature, "confirmed");

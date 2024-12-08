@@ -154,6 +154,7 @@ const counterProject: Project = {
     isSaved: false,
     isAnchorInit: false,
     isCode: false,
+    genUiClicked: false,
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',

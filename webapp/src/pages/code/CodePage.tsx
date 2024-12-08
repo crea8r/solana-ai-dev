@@ -24,19 +24,24 @@ import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
 import ProjectStatus from './projectStatus';
 import { logout } from '../../services/authApi';
+import { handleGenerateUI } from '../../utils/uiUtils';
+import { useAuthContext } from '../../contexts/AuthContext';
+import { TaskModal } from '../ui/TaskModal';
+
 
 const CodePage = () => {
   const toast = useToast();
   const { projectContext, setProjectContext } = useProjectContext();
+  const { user } = useAuthContext();
   const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
 
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);  
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
   const [showWallet, setShowWallet] = useState(false);
-  const [showProjectStatus, setShowProjectStatus] = useState(false);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
   const _handleSelectFile = useCallback(
@@ -85,7 +90,6 @@ const CodePage = () => {
     _handleSelectFile,  
     projectContext?.details?.sdk?.content     
   ]);
-  
 
   useEffect(() => {
     const selectFileAfterLoad = () => {
@@ -175,6 +179,27 @@ const CodePage = () => {
     window.location.href = '/';
   }, [toast]);
 
+  const handleGenerateUIFromCodePage = async () => {
+    if (!user) { console.error("User not found."); return; }
+    setIsTaskModalOpen(true);
+    try {
+      await handleGenerateUI(
+        projectContext.id, 
+        projectContext, 
+        setProjectContext, 
+        setIsPolling, 
+        setIsLoading, 
+        addLog, 
+        setIsTaskModalOpen,
+        user
+      );
+    } catch (error) {
+      console.error("Error generating UI:", error);
+    } finally {
+      setProjectContext((prev) => ({ ...prev, details: { ...prev.details, genUiClicked: true } }));
+    }
+  };
+
   return (
     <Flex
       direction="column"
@@ -184,36 +209,26 @@ const CodePage = () => {
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
         <TopPanel 
-          onBuild={_handleBuildProject} 
           onSave={_handleSave} 
-          onTest={_handleTestProject} 
-          onDeploy={_handleDeployProject} 
           onToggleWallet={handleToggleWallet} 
           onLogout={handleLogout}
         />
       </Flex>
 
       <Flex flex="1" overflow="hidden" borderLeft="1px" borderColor="gray.200">
-        <Flex flexDirection="column" py={2} >
-          <Button 
-            onClick={() => setShowProjectStatus((prev) => !prev)}
-            variant="outline"
-            size="xs"
-            width="50%"
-            mx={0}
-            mb={2}
-          >
-            {showProjectStatus ? 'Hide Project Status' : 'Show Project Status'}
-          </Button>
-          {showProjectStatus && (
-            <Box flex="1">  
-              <ProjectStatus />
-            </Box>
-          )}
+        <Flex flexDirection="column" py={2}>
+          <Box flex="1">
+            <ProjectStatus 
+              onBuild={_handleBuildProject} 
+              onDeploy={_handleDeployProject} 
+              onGenerateUI={handleGenerateUIFromCodePage}
+              setIsTaskModalOpen={setIsTaskModalOpen}
+            />
+          </Box>
           <Box flex="5" borderRight="1px" borderColor="gray.200" overflowY="auto">
             <FileTree onSelectFile={_handleSelectFile} files={files} selectedItem={selectedFile} />
           </Box>
-        </Flex> 
+        </Flex>
         <Box
           flex={1}
           minHeight="100%"
@@ -243,7 +258,6 @@ const CodePage = () => {
           borderColor="gray.300"
           pb="2"
         >
-          
           <AIChat
             selectedFile={selectedFile}
             fileContent={fileContent}
@@ -253,6 +267,13 @@ const CodePage = () => {
         </Box>
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => setIsTaskModalOpen(false)} 
+        setIsPolling={setIsPolling} 
+        setIsLoading={setIsLoading} 
+        addLog={addLog} 
+      />
     </Flex>
   );
 };

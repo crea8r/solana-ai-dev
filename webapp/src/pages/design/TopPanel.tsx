@@ -102,9 +102,11 @@ const TopPanel: React.FC<TopPanelProps> = ({
             <Text fontSize="xs">Select AI Model</Text>
           </MenuButton>
           <MenuList>
-            <MenuItem onClick={() => { onSelectModel('codestral-latest', ''); setSelectedModel('codestral-latest'); }}><Text fontSize="xs">codestral-latest</Text></MenuItem>
             <MenuItem onClick={() => { onSelectModel('gpt-4o', apiKey); setSelectedModel('gpt-4o'); }}><Text fontSize="xs">gpt-4o</Text></MenuItem>
-            <MenuItem onClick={() => { onSelectModel('claude-3.5-sonnet', apiKey); setSelectedModel('claude-3.5-sonnet'); }}><Text fontSize="xs">claude-3.5-sonnet</Text></MenuItem>
+            {/*
+            <MenuItem onClick={() => { onSelectModel('codestral-latest', ''); setSelectedModel('codestral-latest'); }} disabled={true}><Text fontSize="xs">codestral-latest</Text></MenuItem>
+            <MenuItem onClick={() => { onSelectModel('claude-3.5-sonnet', apiKey); setSelectedModel('claude-3.5-sonnet'); }} disabled={true}><Text fontSize="xs">claude-3.5-sonnet</Text></MenuItem>
+            */}
           </MenuList>
         </Menu>
         {(selectedModel === 'gpt-4o' || selectedModel === 'claude-3.5-sonnet') && (

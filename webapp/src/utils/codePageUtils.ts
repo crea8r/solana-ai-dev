@@ -438,23 +438,16 @@ export const handleDeployProject = async (
     const { status, fileContent } = await startPollingTaskStatus(sanitizedTaskId, setIsPolling, setIsLoading, addLog);
 
     if (status === 'succeed') {
-      if (!fileContent) {
-        addLog('Deployment failed. No program ID found.');
-      } else {
-        addLog(`Program successfully deployed with ID: ${fileContent}`);
-        console.log(`Program successfully deployed with ID: ${fileContent}`);
+      addLog(`Program was successfully deployed. Program ID: ${projectContext.details.programId}`);
 
-        setProjectContext((prev) => ({
-          ...prev,
+      setProjectContext((prev) => ({
+        ...prev,
         details: {
           ...prev.details,
           deployStatus: true,
-          programId: fileContent,
-          },
-        }));
-
-        updateProjectInDatabase(projectContext);
-      }
+        },
+      }));
+      updateProjectInDatabase(projectContext);
     } else if (status === 'failed') { 
       if (fileContent) addLog(`Deployment failed. ${fileContent}`);
       else addLog('Deployment failed.'); 

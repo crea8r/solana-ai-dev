@@ -5,6 +5,7 @@ export const MAX_LOG_ENTRIES = 100;
 export type LogEntry = {
   message: string;
   type: 'start' | 'success' | 'warning' | 'error' | 'info';
+  color?: string;
 };
 
 // Define the actions for the reducer
@@ -32,8 +33,8 @@ const logReducer = (state: LogEntry[], action: TerminalLogAction): LogEntry[] =>
 export const useTerminalLogs = () => {
   const [logs, dispatch] = useReducer(logReducer, []);
 
-  const addLog = useCallback((message: string, type: LogEntry["type"] = "info") => {
-    dispatch({ type: "ADD_LOG", payload: { message, type } });
+  const addLog = useCallback((message: string, type: LogEntry["type"] = "info", color?: string) => {
+    dispatch({ type: "ADD_LOG", payload: { message, type, color } });
   }, []);
 
   // Clear all logs
@@ -41,5 +42,9 @@ export const useTerminalLogs = () => {
     dispatch({ type: "CLEAR_LOGS" });
   }, []);
 
-  return { logs, addLog, clearLogs };
+  return {
+    logs,
+    addLog: addLog as (message: string, type?: LogEntry["type"], color?: string) => void,
+    clearLogs,
+  };
 };

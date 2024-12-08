@@ -42,6 +42,7 @@ export interface ProjectDetailsToSave {
   deployStatus: boolean;
   isSdk: boolean;
   isUi: boolean;
+  genUiClicked: boolean;
   idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
   sdk: { fileName: string; content: string; };
   walletPublicKey: string;
@@ -81,6 +82,7 @@ export interface ProjectDetails {
   deployStatus: boolean;
   isSdk: boolean;
   isUi: boolean;
+  genUiClicked: boolean;
   idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
   sdk: { fileName: string; content: string; };
   walletPublicKey: string;

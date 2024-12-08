@@ -22,7 +22,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const menuItems = [
     { icon: PiGraphLight, label: 'Design', path: '/design' },
     { icon: PiTerminalWindowLight, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
-    { icon: PiAppWindowLight, label: 'UI', path: '/ui', disabled: !projectContext.details.buildStatus },
+    { icon: PiAppWindowLight, label: 'UI', path: '/ui', disabled: !projectContext.details.genUiClicked },
     { icon: PiBookOpenText, label: 'Docs', path: '/doc', disabled: true },
     { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
   ];

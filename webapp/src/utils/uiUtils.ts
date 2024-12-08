@@ -266,6 +266,8 @@ export const handleGenerateUI = async (
     console.log('accounts', accounts);
 
     await generateSdk(projectContext, setProjectContext, instructions, accounts, setIsPolling, setIsLoading, addLog, user);
+    setProjectContext((prev) => ({ ...prev, details: { ...prev.details, genUiClicked: true } }));
+    console.log('genUiClicked', projectContext.details.genUiClicked);
     await uiApi.compileTsFile(projectId, user.id);
 
   } catch (error) { console.error('Error checking directory existence:', error); }
@@ -281,13 +283,11 @@ export const callInstruction = async (
   try {
     console.log(`Calling ${instruction.name} with params:`, params);
 
-    // Convert the parameters if necessary (e.g., to PublicKey or other types)
     const convertedParams = Object.entries(params).reduce((acc, [key, value]) => {
-      acc[key] = key === "user" || key === "initializer" ? new sdk.web3.PublicKey(value) : value; // Example conversion
+      acc[key] = key === "user" || key === "initializer" ? new sdk.web3.PublicKey(value) : value;
       return acc;
     }, {} as any);
 
-    // Call the appropriate SDK method dynamically
     switch (instruction.name) {
       case "run_initialize_counter":
         await sdk.run_initialize_counter(convertedParams.initializer, sdk.web3.SystemProgram.programId);

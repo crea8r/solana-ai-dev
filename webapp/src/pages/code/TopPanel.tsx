@@ -12,19 +12,13 @@ import {
 import { Wallet } from 'lucide-react';
 
 interface TopPanelProps {
-  onBuild: () => void;
   onSave: () => void;
-  onTest: () => void;
-  onDeploy: () => void;
   onToggleWallet: () => void;
   onLogout: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({ 
-  onBuild, 
   onSave, 
-  onTest, 
-  onDeploy, 
   onToggleWallet,
   onLogout
 }) => {
@@ -53,15 +47,11 @@ const TopPanel: React.FC<TopPanelProps> = ({
           </MenuList>
         </Menu>
         <Menu>
-          <MenuButton as={Button} variant="ghost" size="xs" mr={2}>Team</MenuButton>
           <MenuList>
             <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>Manage</MenuItem>
             <MenuItem onClick={() => console.log('Invite')} isDisabled={true}>Invite</MenuItem>
           </MenuList>
         </Menu>
-        <Button variant="ghost" size="xs" mr={2} onClick={onBuild}>Build</Button>
-        <Button variant="ghost" size="xs" mr={2} onClick={onDeploy}>Deploy</Button>
-        <Button variant="ghost" size="xs" onClick={onTest}>Test</Button>
       </Flex>
       <Flex 
         flexDirection="row" 

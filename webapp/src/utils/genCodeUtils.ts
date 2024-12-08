@@ -132,19 +132,20 @@ export const amendConfigFile = async (
   fileName: string,
   filePath: string,
   programDirName: string
-): Promise<string> => {
-  console.log('amendConfigFile filePath', filePath);
-  console.log('Program Directory:', programDirName);
-  console.log('Cargo.toml Path:', filePath);
-  console.log('Anchor.toml Path:', filePath);
+): Promise<{ updatedFileContent: string, programId?: string }> => {
+  //console.log('amendConfigFile filePath', filePath);
+  //console.log('Program Directory:', programDirName);
+  //console.log('Cargo.toml Path:', filePath);
+  //console.log('Anchor.toml Path:', filePath);
 
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
   const _pollDesc = `Getting ${fileName} content to amend content.`;
   const oldContent = await pollTaskStatus(taskId, _pollDesc);
-  console.log('oldContent', oldContent);
+  //console.log('oldContent', oldContent);
 
   let updatedToml = oldContent;
+  let programId: string | undefined;
 
   if (fileName === 'Cargo.toml') {
     const lines = oldContent.split('\n');
@@ -170,11 +171,17 @@ export const amendConfigFile = async (
 
       const [oldKey, address] = Object.entries(localnet)[0]; 
       //console.log(`Old Key: ${oldKey}, Address: ${address}`);
+      
       delete localnet[oldKey];
-      localnet[programDirName] = address;
+      const devnet = {
+        [programDirName]: address
+      };
 
       delete parsedToml.programs;
-      parsedToml['programs.localnet'] = localnet;
+      parsedToml['programs.devnet'] = devnet;
+
+      programId = Object.values(devnet)[0] as string;
+      console.log('Extracted Program ID:', programId);
 
     } else  throw new Error('[programs.localnet] section not found in Anchor.toml');
 
@@ -195,7 +202,7 @@ export const amendConfigFile = async (
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
   const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
   //console.log('updatedFileContent', updatedFileContent);
-  return updatedFileContent;
+  return { updatedFileContent, programId };
 };
 
 export const ensureInstructionNaming = async (
@@ -298,8 +305,8 @@ export const extractProgramIdFromAnchorToml = async (
 
     //console.log("parsedToml", parsedToml);
 
-    const programSection = parsedToml['programs.localnet'];
-    if (!programSection)  throw new Error('No [programs.localnet] section found in Anchor.toml');
+    const programSection = parsedToml['programs.devnet'];
+    if (!programSection)  throw new Error('No [programs.devnet] section found in Anchor.toml');
 
     const programId = programSection[programDirName];
     if (!programId) throw new Error(`Program ID for "${programDirName}" not found in Anchor.toml`);
@@ -455,11 +462,9 @@ export const extractStateStructs = async (
         fields.push({ name: fieldName, type: fieldType });
       }
 
-      // Add the struct to the result
       structs.push({ name, fields });
     }
 
-    //console.log("structs", structs);
     return structs;
   } catch (error) {
     console.error(`Error extracting state structs:`, error);
@@ -469,26 +474,23 @@ export const extractStateStructs = async (
 
 export function extractJSON(content: string): string {
   try {
-    // Step 1: Remove Markdown enclosures
     const cleanedContent = content
-      .replace(/```json/g, '') // Remove opening markdown enclosure
-      .replace(/```/g, '') // Remove closing markdown enclosure
-      .trim(); // Remove unnecessary whitespace
+      .replace(/```json/g, '') 
+      .replace(/```/g, '') 
+      .trim(); 
 
-    // Step 2: Attempt to parse and validate as JSON directly
     try {
-      JSON.parse(cleanedContent); // If this works, it's valid JSON
-      return cleanedContent; // Return it as is
+      JSON.parse(cleanedContent);
+      return cleanedContent; 
     } catch {
-      // Step 3: Fallback to regex to extract JSON if parsing fails
-      const jsonMatch = cleanedContent.match(/({[\s\S]*})|(\[[\s\S]*\])/); // Match JSON object or array
+      const jsonMatch = cleanedContent.match(/({[\s\S]*})|(\[[\s\S]*\])/); 
       if (!jsonMatch) {
         throw new Error('No JSON object found in the content.');
       }
 
       const extractedJSON = jsonMatch[0];
-      JSON.parse(extractedJSON); // Validate extracted JSON
-      return extractedJSON; // Return the valid JSON
+      JSON.parse(extractedJSON); 
+      return extractedJSON; 
     }
   } catch (error) {
     console.error('Error extracting JSON:', error, 'Content:', content);

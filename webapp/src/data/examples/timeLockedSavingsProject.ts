@@ -199,6 +199,7 @@ const timeLockedSavingsProject: Project = {
     deployStatus: false,
     isSdk: false,
     isUi: false,
+    genUiClicked: false,
     idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
     sdk: { fileName: '', content: '' },
     walletPublicKey: '',

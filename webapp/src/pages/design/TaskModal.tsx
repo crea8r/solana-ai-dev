@@ -610,6 +610,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               anchorTomlPath,
               programDirName
             );
+
+            setProjectContext((prevProjectContext) => ({
+              ...prevProjectContext,
+              details: {
+                ...prevProjectContext.details,
+                programId: programId,
+              },
+            }));
       
             const libRsContent = getLibRsTemplate(programDirName, programId, instructionDetails);
       
