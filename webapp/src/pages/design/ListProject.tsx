@@ -109,6 +109,7 @@ const ListProject: React.FC<ListProjectProps> = ({
             sdk: { fileName: '', content: '' },
             walletPublicKey: '',
             walletSecretKey: '',
+            programId: null,
           },
         });
       }

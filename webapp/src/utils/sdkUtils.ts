@@ -7,6 +7,15 @@ import { Instruction } from "../types/uiTypes";
 import { fileApi } from "../api/file";
 import { startPollingTaskStatus } from "./codePageUtils";
 
+
+// ----------------------------
+// String utils
+// ----------------------------
+export const toCamelCase = (str: string): string => {
+  const snakeToCamel = str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  return snakeToCamel.charAt(0).toLowerCase() + snakeToCamel.slice(1);
+};
+
 export const processInstructions = (
     instructions: Instruction[],
     instructionNodes: { data: { label: string; item?: { description?: string } } }[],

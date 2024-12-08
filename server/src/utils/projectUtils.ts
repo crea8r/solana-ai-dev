@@ -12,37 +12,38 @@ export const runCommand = async (
   command: string,
   cwd: string,
   taskId: string
-): Promise<void> => {
+): Promise<string> => {
   return new Promise((resolve, reject) => {
+    const sanitizedTaskId = taskId.trim().replace(/,$/, '');
     console.log(`Running command: ${command} in directory: ${cwd}`);
     
     exec(command, { cwd }, async (error, stdout, stderr) => {
       let result = '';
 
-      console.log(`Command completed. Checking result for taskId: ${taskId}`);
+      console.log(`Command completed. Checking result for taskId: ${sanitizedTaskId}`);
 
       if (error) {
-        // Critical failure - mark as failed
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
-        console.log(`Error occurred for taskId: ${taskId}: ${result}`);
-        await updateTaskStatus(taskId, 'failed', result);
-        reject(new Error(result)); // Explicit rejection to handle stuck tasks
+        console.log(`Error occurred for taskId: ${sanitizedTaskId}: ${result}`);
+        await updateTaskStatus(sanitizedTaskId, 'failed', result);
+        //reject(new Error(result)); // Explicit rejection to handle stuck tasks
+        resolve(result);
       } else {
         if (stderr) {
           // Non-fatal warnings
           result = `Warning: ${stderr}\n\nStdout: ${stdout}`;
-          console.log(`Warnings occurred for taskId: ${taskId}: ${stderr}`);
-          await updateTaskStatus(taskId, 'warning', result);
+          console.log(`Warnings occurred for taskId: ${sanitizedTaskId}: ${stderr}`);
+          await updateTaskStatus(sanitizedTaskId, 'warning', result);
         } else {
           // Success
           result = `Stdout: ${stdout}`;
-          console.log(`Success for taskId: ${taskId}: ${stdout}`);
-          await updateTaskStatus(taskId, 'succeed', result);
+          console.log(`Success for taskId: ${sanitizedTaskId}: ${stdout}`);
+          await updateTaskStatus(sanitizedTaskId, 'succeed', result);
         }
       }
 
-      resolve(); // Mark task as done, whether it succeeded or failed
-      console.log(`Task ${taskId} resolved`);
+      resolve(stdout.trim()); // Mark task as done, whether it succeeded or failed
+      console.log(`Task ${sanitizedTaskId} resolved`);
     });
   });
 };
@@ -71,7 +72,8 @@ export const startAnchorInitTask = async (
 ): Promise<string> => {
   const taskId = await createTask('Anchor Init', creatorId, projectId);
   setImmediate(async () => {
-    await runCommand(`anchor init ${rootPath}`, APP_CONFIG.ROOT_FOLDER, taskId);
+    const result = await runCommand(`anchor init ${rootPath}`, APP_CONFIG.ROOT_FOLDER, taskId);
+    console.log('result', result);
   });
   return taskId;
 };
@@ -81,6 +83,7 @@ export const startAnchorBuildTask = async (
   creatorId: string
 ): Promise<string> => {
   const taskId = await createTask('Anchor Build', creatorId, projectId);
+  const sanitizedTaskId = taskId.trim().replace(/,$/, '');
 
   setImmediate(async () => {
     try {
@@ -88,13 +91,13 @@ export const startAnchorBuildTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
       await runCommand('anchor build', projectPath, taskId).catch(async (error) => {
           await updateTaskStatus(
-            taskId,
+            sanitizedTaskId,
             'failed',
             `Error: ${error.message || 'Unknown error occurred'}`
           );
         });
     } catch (error: any) {
-      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+      await updateTaskStatus(sanitizedTaskId, 'failed', `Error: ${error.message}`);
     }
   });
 
@@ -106,27 +109,49 @@ export const startAnchorDeployTask = async (
   creatorId: string
 ): Promise<string> => {
   const taskId = await createTask('Anchor Deploy', creatorId, projectId);
+  let programId: string | null = null;
+  const sanitizedTaskId = taskId.trim().replace(/,$/, '');
 
   setImmediate(async () => {
     try {
       const rootPath = await getProjectRootPath(projectId);
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
 
-      await runCommand(`solana config set --url https://api.devnet.solana.com`, projectPath, taskId);
+      await runCommand(`solana config set --url https://api.devnet.solana.com`, projectPath, sanitizedTaskId);
 
-      await runCommand('anchor deploy', projectPath, taskId).catch(async (error) => {
-        await updateTaskStatus(
-          taskId,
-          'failed',
-          `Error: ${error.message || 'Unknown error occurred'}`
-        );
+      const result = await runCommand('anchor deploy', projectPath, sanitizedTaskId).catch(async (error: any) => {
+        console.error('Error during deployment:', sanitizedTaskId, error);
+        await updateTaskStatus(sanitizedTaskId, 'failed', `Error: ${error.message}`);
       });
+
+      if (result && result.startsWith('Error:')) {
+        console.error(`Deployment failed for Task ID: ${sanitizedTaskId}. Reason: ${result}`);
+        await updateTaskStatus(sanitizedTaskId, 'failed', result);
+        return;
+      }
+
+      console.log(`Result: ${result}`);
+
+      const programIdMatch = result?.match(/Program Id:\s+([a-zA-Z0-9]+)/);
+      console.log(`Program ID match: ${programIdMatch}`);
+      if (!programIdMatch) throw new Error('Program ID not found in deploy output. Deployment may have failed.');
+
+      programId = programIdMatch[1];
+      console.log(`Program ID: ${programId}`);
+      if (programId) console.log(`Program successfully deployed with ID: ${programId}`);
+      
+      await updateTaskStatus(
+        sanitizedTaskId,
+        'succeed',
+        programId
+      );
     } catch (error: any) {
-      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+      console.error('Error during deployment:', sanitizedTaskId, error);
+      return [sanitizedTaskId, null];
     }
   });
 
-  return taskId;
+  return sanitizedTaskId;
 };
 
 export const startAnchorTestTask = async (
@@ -134,6 +159,7 @@ export const startAnchorTestTask = async (
   creatorId: string
 ): Promise<string> => {
   const taskId = await createTask('Anchor Test', creatorId, projectId);
+  const sanitizedTaskId = taskId.trim().replace(/,$/, '');
 
   setImmediate(async () => {
     try {
@@ -141,7 +167,7 @@ export const startAnchorTestTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
       await runCommand('anchor test', projectPath, taskId);
     } catch (error: any) {
-      await updateTaskStatus(taskId, 'failed', `Error: ${error.message}`);
+      await updateTaskStatus(sanitizedTaskId, 'failed', `Error: ${error.message}`);
     }
   });
 

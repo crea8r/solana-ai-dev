@@ -15,12 +15,25 @@ const authApi = axios.create({
 export const login = async (
   username: string, 
   password: string,
+  setUser: (user: User) => void
 ) => {
   try {
     const response = await authApi.post('/auth/login', { username, password });
     if (response.data.token && response.data.user) {
-      console.log('Token cookie set:', response.data.token);
-      console.log('User data received:', response.data.user);
+      //console.log('Token cookie set:', response.data.token);
+      //console.log('User data received:', response.data.user);
+
+      setUser({
+        id: response.data.user.id,
+        username: response.data.user.username,
+        org_id: response.data.user.org_id,
+        orgName: response.data.user.org_name,
+        walletCreated: response.data.user.wallet_created,
+        hasViewedWalletModal: response.data.user.private_key_viewed,
+        walletPublicKey: response.data.user.wallet_public_key,
+        walletPrivateKey: response.data.user.wallet_private_key,
+      });
+      
     } else console.error('No token or user data received in response');
 
     return response.data;

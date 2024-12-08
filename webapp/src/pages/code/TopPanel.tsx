@@ -17,9 +17,17 @@ interface TopPanelProps {
   onTest: () => void;
   onDeploy: () => void;
   onToggleWallet: () => void;
+  onLogout: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest, onDeploy, onToggleWallet }) => {
+const TopPanel: React.FC<TopPanelProps> = ({ 
+  onBuild, 
+  onSave, 
+  onTest, 
+  onDeploy, 
+  onToggleWallet,
+  onLogout
+}) => {
   return (
     <Flex
       borderBottom="1px solid"
@@ -74,7 +82,16 @@ const TopPanel: React.FC<TopPanelProps> = ({ onBuild, onSave, onTest, onDeploy, 
           >
             <Text fontSize="xs">Wallet</Text>
           </Button>
-          <Avatar size="xs" src="/placeholder.svg" />
+          <Menu>
+          <MenuButton as={Button} variant="ghost" size="xs" rounded="full">
+            <Avatar size="xs" src="/placeholder.svg" />
+          </MenuButton>
+          <MenuList w="auto">
+            <MenuItem onClick={onLogout} p={0} pl={2}>
+              <Text fontSize="xs">Logout</Text>
+            </MenuItem>
+          </MenuList>
+        </Menu>
       </Flex>
     </Flex>
   );

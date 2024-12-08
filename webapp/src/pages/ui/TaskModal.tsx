@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Modal, ModalOverlay, ModalContent, ModalBody, Box, Text, Flex, Spinner, Button, ModalHeader } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { X } from 'lucide-react';
@@ -29,12 +29,14 @@ type Task = {
 export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPolling, setIsLoading, addLog }) => {
     const { projectContext, setProjectContext } = useProjectContext();
     const { user } = useAuthContext();
-    
+    const [walletPrivateKey, setWalletPrivateKey] = useState('');
     const [tasks, setTasks] = useState<Task[]>([]);
     const [contextReady, setContextReady] = useState(false);
     const tasksInitializedRef = useRef(false);
     const toast = useToast();
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
+
+    
 
     useEffect(() => {
         if (projectContext) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Button, Flex } from '@chakra-ui/react';
+import { Box, Button, Flex, useToast } from '@chakra-ui/react';
 import CodeEditor from '../../components/CodeEditor';
 import TopPanel from './TopPanel';
 import FileTree from '../../components/FileTree';
@@ -23,8 +23,10 @@ import { saveProject } from '../../utils/projectUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
 import ProjectStatus from './projectStatus';
+import { logout } from '../../services/authApi';
 
 const CodePage = () => {
+  const toast = useToast();
   const { projectContext, setProjectContext } = useProjectContext();
   const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
 
@@ -162,6 +164,17 @@ const CodePage = () => {
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
   const handleToggleWallet = () => { setShowWallet((prev) => !prev); };
 
+  const handleLogout = useCallback(() => {
+    logout();
+    toast({
+      title: 'Logged out successfully',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+    window.location.href = '/';
+  }, [toast]);
+
   return (
     <Flex
       direction="column"
@@ -170,7 +183,14 @@ const CodePage = () => {
       justifyContent="space-between"
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
-        <TopPanel onBuild={_handleBuildProject} onSave={_handleSave} onTest={_handleTestProject} onDeploy={_handleDeployProject} onToggleWallet={handleToggleWallet} />
+        <TopPanel 
+          onBuild={_handleBuildProject} 
+          onSave={_handleSave} 
+          onTest={_handleTestProject} 
+          onDeploy={_handleDeployProject} 
+          onToggleWallet={handleToggleWallet} 
+          onLogout={handleLogout}
+        />
       </Flex>
 
       <Flex flex="1" overflow="hidden" borderLeft="1px" borderColor="gray.200">

@@ -59,7 +59,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
+          setUser({
+            id: data.user.id,
+            username: data.user.username,
+            org_id: data.user.org_id,
+            orgName: data.user.org_name,
+            walletCreated: data.user.wallet_created,
+            hasViewedWalletModal: data.user.private_key_viewed,
+            walletPublicKey: data.user.wallet_public_key,
+            walletPrivateKey: data.user.wallet_private_key,
+          });
           setFirstLoginAfterRegistration(
             data.user.walletCreated && !data.user.hasViewedWalletModal
           );
@@ -88,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await apiLogin(username, password);
+      const response = await apiLogin(username, password, setUser);
       setUser(response.user);
       setFirstLoginAfterRegistration(!response.user.walletCreated);
     } catch (error) {

@@ -1,9 +1,17 @@
 import { Idl } from "@coral-xyz/anchor";
 
 export interface InstructionContextAccount {
-    name: string;
-    isSigner: boolean;
-    isWritable: boolean;
+  name: string;
+  isSigner: boolean;
+  isWritable: boolean;
+  address?: string;
+  pda?: { 
+      seeds: Array<{
+        kind: "const" | "account"; 
+        value?: number[];         
+        path?: string;            
+      }>;
+  };
 }
 
 export interface InstructionParam {

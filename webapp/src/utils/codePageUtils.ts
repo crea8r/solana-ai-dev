@@ -11,6 +11,7 @@ import { transformToProjectInfoToSave } from "../contexts/ProjectContext";
 const updateProjectInDatabase = async (projectContext: Project) => {
   try {
       const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+      console.log('projectInfoToSave', projectInfoToSave);
       await projectApi.updateProject(projectContext.id, projectInfoToSave);
       console.log('Project updated successfully in the database.');
   } catch (error) { console.error('Error updating project in the database:', error); }
@@ -21,7 +22,8 @@ const updateProjectInDatabase = async (projectContext: Project) => {
 // -------------------
 
 export const startPollingTaskStatus = (
-  taskId: string, setIsPolling: React.Dispatch<React.SetStateAction<boolean>>, 
+  taskId: string, 
+  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>, 
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>, 
   addLog: (message: string, type: LogEntry['type']) => void, 
   onComplete?: (taskResult: string) => void,
@@ -395,7 +397,7 @@ export const handleBuildProject = async (
 
     if (response.taskId) {
       addLog('Building project. This may take a few minutes...', 'start');
-      const { status } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+      const { status, fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
       if (status === 'finished' || status === 'succeed' || status === 'warning') {
         setProjectContext((prev) => ({
         ...prev,
@@ -424,21 +426,42 @@ export const handleDeployProject = async (
   try {
     setIsLoading(true);
     addLog('Starting deployment process...');
+
     const response = await projectApi.deployProject(projectId);
-    const { status, fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
-    if (status === 'finished' || status === 'succeed' || status === 'warning') {
-      setProjectContext((prev) => ({
-        ...prev,
+    const taskId = response.taskId;
+    console.log(`Task ID: ${taskId.toString()}`);
+
+    const sanitizedTaskId = taskId.toString().trim().replace(/,$/, '');
+    console.log(`Sanitized Task ID: ${sanitizedTaskId}`);
+    //addLog(`Task ID: ${sanitizedTaskId}`);
+
+    const { status, fileContent } = await startPollingTaskStatus(sanitizedTaskId, setIsPolling, setIsLoading, addLog);
+
+    if (status === 'succeed') {
+      if (!fileContent) {
+        addLog('Deployment failed. No program ID found.');
+      } else {
+        addLog(`Program successfully deployed with ID: ${fileContent}`);
+        console.log(`Program successfully deployed with ID: ${fileContent}`);
+
+        setProjectContext((prev) => ({
+          ...prev,
         details: {
           ...prev.details,
           deployStatus: true,
-        },
-      }));
-      updateProjectInDatabase(projectContext);
+          programId: fileContent,
+          },
+        }));
+
+        updateProjectInDatabase(projectContext);
+      }
+    } else if (status === 'failed') { 
+      if (fileContent) addLog(`Deployment failed. ${fileContent}`);
+      else addLog('Deployment failed.'); 
     }
   } catch (error) {
     console.error('Error during deployment:', error);
-    addLog('Failed to start deployment process.');
+    addLog(`Error during deployment: ${error}`);
   } finally {
     setIsLoading(false);
   }

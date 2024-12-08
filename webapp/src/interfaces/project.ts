@@ -46,6 +46,7 @@ export interface ProjectDetailsToSave {
   sdk: { fileName: string; content: string; };
   walletPublicKey: string;
   walletSecretKey: string;
+  programId: string | null;
 }
 
 export interface ProjectDetails {
@@ -84,6 +85,7 @@ export interface ProjectDetails {
   sdk: { fileName: string; content: string; };
   walletPublicKey: string;
   walletSecretKey: string;
+  programId: string | null;
 }
 
 export interface Project {

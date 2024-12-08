@@ -292,6 +292,7 @@ const crowdfundingProject: Project = {
     sdk: { fileName: '', content: '' },
     walletPublicKey: '',
     walletSecretKey: '',
+    programId: null,
   } as ProjectDetails,
 };
 

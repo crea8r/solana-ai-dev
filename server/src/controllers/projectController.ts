@@ -288,9 +288,7 @@ export const deployProject = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
   try {
     const projectCheck = await pool.query(

@@ -1,4 +1,8 @@
-import { processInstructions, amendTsConfigFile } from '../../utils/sdkUtils';
+import { 
+    processInstructions, 
+    amendTsConfigFile, 
+    toCamelCase 
+} from '../../utils/sdkUtils';
 import { Instruction, InstructionParam, Account } from '../../types/uiTypes';
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
@@ -35,11 +39,10 @@ export const getSdkTemplate = async (
     setIsPolling: Dispatch<SetStateAction<boolean>>,
     setIsLoading: Dispatch<SetStateAction<boolean>>,
     addLog: (message: string, type: LogEntry['type']) => void,
-    user: User | null
+    user: User
 ): Promise<string> => {
-    if (!user) throw new Error('User not found');
-    const walletPrivateKey = user.walletPrivateKey;
-    if (!walletPrivateKey) throw new Error('Wallet private key not found');
+
+    if (!user.walletPrivateKey) throw new Error('Wallet private key not found');
 
     const updatedInstructions = processInstructions( 
         _instructions, 
@@ -61,60 +64,115 @@ export const getSdkTemplate = async (
     }));
 
     const instructionFunctions = updatedInstructions.map(({ name, description, params, context }) => {
+        const camelCaseName = toCamelCase(name);
         const uniqueParams = new Map<string, string>();
-
+    
+        // Map instruction arguments (params)
         params.forEach(param => {
             const mappedType = typeMapping(param.type as string); 
             if (!uniqueParams.has(param.name)) uniqueParams.set(param.name, `${param.name}: ${mappedType}`);
-        }); 
+        });
 
-        context.accounts.forEach(account => {
-        if (!uniqueParams.has(account.name)) uniqueParams.set(account.name, `${account.name}: ${account.isSigner ? "web3.Keypair" : "web3.PublicKey"}`);
-        });   
-
+        console.log('context', context);
+    
+        // Map accounts required by the instruction
+        context.accounts
+        //.filter(account => account.address !== "11111111111111111111111111111111")
+        .filter(account => account.name !== "system_program")
+        .forEach(account => {
+            const camelCaseAccountName = toCamelCase(account.name);
+            if (!uniqueParams.has(account.name)) uniqueParams.set(camelCaseAccountName, `${camelCaseAccountName}: ${account.isSigner ? "web3.Keypair" : "web3.PublicKey"}`);
+        });
+    
         const paramsList = Array.from(uniqueParams.values()).join(", ");
+    
+        // Generate account mappings for `accounts` section
+        const accountMappings = context.accounts
+        .filter(account => account.name !== "system_program")
+        .map(account => {
+            const accountName = account.name;
+            const camelCaseAccountName = toCamelCase(accountName);
         
-        const accountMappings = context.accounts .map(account => `${account.name}: ${account.name}${account.isSigner ? '.publicKey' : ''}`).join(",\n          ");
-        
-        const signersList = context.accounts.filter(account => account.isSigner).map(account => account.name).join(", ");
-
+            if (account.pda) {
+                if (!account.pda.seeds || account.pda.seeds.length === 0) {
+                    throw new Error("PDA seeds not found or empty");
+                }
+            
+                const seeds = account.pda.seeds.map(seed => {
+                    if (seed.kind === "const") {
+                        if (!seed.value) {
+                            throw new Error("PDA seed value for 'const' kind is missing");
+                        }
+                        return `Buffer.from([${seed.value.join(", ")}])`;
+                    } else if (seed.kind === "account") {
+                        if (!seed.path) {
+                            throw new Error("PDA seed path for 'account' kind is missing");
+                        }
+                        return `${toCamelCase(seed.path)}.toBuffer()`;
+                    }
+                    throw new Error("Unknown PDA seed kind");
+                }).join(", ");
+            
+                return `
+                    const ${camelCaseAccountName} = web3.PublicKey.createProgramAddressSync(
+                        [${seeds}],
+                        this.${_programFieldName}.programId
+                    );`;
+            } else {
+                // Handle regular accounts
+                return `${camelCaseAccountName}: ${camelCaseAccountName}${account.isSigner ? ".publicKey" : ""}`;
+            }
+        }).join(",\n          ");
+    
+        // Generate list of signers
+        const signersList = context.accounts
+            .filter(account => account.isSigner)
+            .map(account => toCamelCase(account.name))
+            .join(", ");
+    
+        // Generate the argument object dynamically, defaulting to {}
+        const paramArg = `{ ${params.map(param => `${param.name}: ${param.name}`).join(", ")} }`;
+    
         return `
         // ${description}
-        async ${name}(${paramsList}): Promise<web3.Transaction> {
+        async ${camelCaseName}(${paramsList}): Promise<web3.Transaction> {
             try {
-                const ix = await this.${_programFieldName}.methods.${name}(${params.map(param => param.name).join(", ")}).accounts({
+                const ix = await this.${_programFieldName}.methods.${camelCaseName}(${paramArg})
+                .accounts({
                     ${accountMappings}
                 }).instruction();
-
+    
                 const transaction = new web3.Transaction().add(ix);
                 transaction.recentBlockhash = (await this.${_programFieldName}.provider.connection.getLatestBlockhash()).blockhash;
-
+    
                 ${signersList ? `transaction.sign(${signersList});` : ''}
-
+    
                 return transaction;
             } catch (error) {
-                console.error('Error executing ${name}:', error);
+                console.error('Error executing ${camelCaseName}:', error);
                 throw error;
             }
         }`;
     }).join("\n");
+    
 
     const accountFetchers = accounts.map(({ name, description, fields }) => {
         const fieldMappings = fields.map(({ name, type }) => {
         const typeConversion = type === 'u64' ? '.toNumber()' : '';
-        return `${name}: account.account.${name}${typeConversion}`;
+        const camelCaseFieldName = toCamelCase(name);
+        return `${camelCaseFieldName}: account.account.${camelCaseFieldName}${typeConversion}`;
         }).join(",\n          ");
 
         return `
         // ${description}
-        async fetch${name}Accounts(): Promise<${name}[]> {
+        async fetch${toCamelCase(name)}s(): Promise<${name}[]> {
             try {
-            const accounts = await this.${_programFieldName}.account.${name}.all();
+            const accounts = await this.${_programFieldName}.account.${toCamelCase(name)}.all();
             return accounts.map(account => ({
                 ${fieldMappings}
             }));
             } catch (error) {
-            console.error('Error fetching ${name} accounts:', error);
+            console.error('Error fetching ${toCamelCase(name)} accounts:', error);
             throw error;
             }
         }`;
@@ -124,7 +182,7 @@ export const getSdkTemplate = async (
     export const setup${_programClassName} = () => {
         const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         
-        const secretKey = [${JSON.parse(walletPrivateKey)}];
+        const secretKey = [${Object.values(JSON.parse(user.walletPrivateKey))}];
         const wallet = new Wallet(Keypair.fromSecretKey(new Uint8Array(secretKey)));
     
         const provider = new AnchorProvider(connection, wallet, {

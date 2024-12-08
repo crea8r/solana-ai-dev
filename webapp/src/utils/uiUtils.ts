@@ -100,7 +100,7 @@ export const generateSdk = async (
   setIsPolling: Dispatch<SetStateAction<boolean>>,
   setIsLoading: Dispatch<SetStateAction<boolean>>,
   addLog: (message: string, type: LogEntry['type']) => void,
-  user: User | null
+  user: User
 ) => {
   try {
     const _rootPath = projectContext.rootPath;
@@ -134,7 +134,7 @@ export const generateSdk = async (
       addLog,
       user
     );
-    console.log('sdkTemplate', sdkTemplate);
+    //console.log('sdkTemplate', sdkTemplate);
     
     setProjectContext((prev) => ({
       ...prev,
@@ -145,10 +145,24 @@ export const generateSdk = async (
     }));
 
     const filePath = `/sdk/index.ts`;
-    const res = await fileApi.createFile(projectContext.id, filePath, sdkTemplate);
-    const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
-    console.log('status', status);
-    if (status !== 'success') throw new Error('Failed to update SDK');
+
+
+    // check if file already exists
+    if (projectContext.details.sdk.fileName === 'index.ts') {
+      // update file
+      const res = await fileApi.updateFile(projectContext.id, filePath, sdkTemplate);
+      const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
+      console.log('status', status);
+      if (status !== 'succeed') throw new Error('Failed to update SDK');
+      return;
+    } else {
+      // create file
+      console.log('creating file');
+      const res = await fileApi.createFile(projectContext.id, filePath, sdkTemplate);
+      const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
+      console.log('status', status);
+      if (status !== 'succeed') throw new Error('Failed to create SDK');
+    }
   } catch (error) { console.error('Error generating SDK:', error); }
 } 
 
@@ -236,11 +250,11 @@ export const handleGenerateUI = async (
   setIsLoading: Dispatch<SetStateAction<boolean>>,
   addLog: (message: string, type: LogEntry['type']) => void,
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>,
-  user: User,
+  user: User
 ) => {
   setIsTaskModalOpen(true);
   console.log('handleGenerateUI');
-  if (!user) throw new Error('User in auth context not found');
+  if (!user) throw new Error('User not found');
   try {
     const idlContent = await getIdlContents(projectId, projectContext, setIsPolling, setIsLoading, addLog);
     if (!idlContent) throw new Error('No IDL content found');

@@ -21,7 +21,6 @@ import { useProjectContext } from '../../contexts/ProjectContext';
 import { useAuthContext, User } from '../../contexts/AuthContext';
 import { handleGenerateUI } from '../../utils/uiUtils';
 import { LogEntry } from '../../hooks/useTerminalLogs';
-import { Project } from '../../interfaces/project';
 
 interface TopPanelProps {
   onToggleWallet: () => void;
@@ -30,6 +29,7 @@ interface TopPanelProps {
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   addLog: (message: string, type: LogEntry['type']) => void;
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>;
+  user: User | null;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -39,9 +39,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
   setIsLoading,
   addLog,
   setIsTaskModalOpen,
+  user
 }) => {
   const { projectContext, setProjectContext } = useProjectContext();
-  const { user } = useAuthContext();
   const [hover, setHover] = useState(false);
   const [selectedModel, setSelectedModel] = useState('Codestral');
   const [apiKey, setApiKey] = useState('');
@@ -49,7 +49,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const handleMouseEnter = () => setHover(true);
   const handleMouseLeave = () => setHover(false);
 
-  
+  if (!user) return null;
   return (
     <Flex direction="row" justify="space-between" align="center" bg="gray.50" borderBottomWidth="1px" borderColor="gray.300">
       <Flex flex={1} direction="row" justify="flex-start" pl={12}>

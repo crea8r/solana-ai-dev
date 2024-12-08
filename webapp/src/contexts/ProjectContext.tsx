@@ -26,7 +26,8 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     idl: project.details.idl,
     sdk: project.details.sdk,
     walletPublicKey: project.details.walletPublicKey,
-    walletSecretKey: project.details.walletSecretKey
+    walletSecretKey: project.details.walletSecretKey,
+    programId: project.details.programId,
   },
 });
 

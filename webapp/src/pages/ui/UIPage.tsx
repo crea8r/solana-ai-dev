@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState }   from "react";
+import React, { useCallback, useEffect, useState, useMemo }   from "react";
 import { Box, Flex, Text, useToast, Divider, Button } from "@chakra-ui/react";
 import TopPanel from "./TopPanel";
 import { useProjectContext } from "../../contexts/ProjectContext";
@@ -23,6 +23,15 @@ const UIPage = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const toast = useToast();
   const [toggleState, setToggleState] = useState(true);
+  const [walletPrivateKey, setWalletPrivateKey] = useState(user?.walletPrivateKey || '');
+
+  useEffect(() => {
+    if (!user || !user.walletPrivateKey) throw new Error('User or wallet private key not found');
+  }, []);
+
+  useEffect(() => {
+    console.log('user:', user);
+  }, []);
 
   const handleSelectModel = (model: string, apiKey: string) => {
     setAiModel(model);
@@ -52,9 +61,6 @@ const UIPage = () => {
     console.log("projectContext", projectContext);
   }, [projectContext]);
 
-  useEffect(() => {
-    console.log('user:', user);
-  }, [user]);
 
   return (
     <Flex direction="column" height="100vh" overflow="hidden">
@@ -65,6 +71,7 @@ const UIPage = () => {
         setIsLoading={setIsLoading}
         addLog={addLog} 
         setIsTaskModalOpen={setIsTaskModalOpen}
+        user={user}
       />
       <Flex flex={1} overflow="hidden" direction="column">
 
