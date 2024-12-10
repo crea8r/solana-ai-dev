@@ -38,6 +38,7 @@ export default {
       "stream": require.resolve("stream-browserify"),
       "buffer": require.resolve("buffer/"),
       "process": require.resolve("process/browser"),
+      "path": require.resolve("path-browserify"),
     }
   },
   devServer: {

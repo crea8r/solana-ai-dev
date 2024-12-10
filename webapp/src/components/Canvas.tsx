@@ -57,6 +57,15 @@ const Canvas: React.FC<CanvasProps> = ({
 
       updatedNodes.forEach((node) => {
         if (node.type === "instruction" && node.data.item) {
+          const { id, name, description, parameters, aiInstruction, ownerProgramId } = node.data.item;
+          node.data.item = new Instruction(
+            id,
+            name || '',
+            description || '',
+            parameters || '',
+            aiInstruction || '',
+            ownerProgramId || null
+          );
           const instruction = node.data.item as Instruction;
           instruction.setName(node.data.label);
           if (node.data.description) {

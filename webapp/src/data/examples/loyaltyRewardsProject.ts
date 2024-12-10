@@ -1,4 +1,4 @@
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
@@ -10,6 +10,7 @@ const loyaltyRewardsProject: Project = {
     'A Solana program that allows businesses to reward customers with loyalty points and manage point balances.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
   details: {
     nodes: [
       {
@@ -17,7 +18,7 @@ const loyaltyRewardsProject: Project = {
         height: 44,
         id: 'program-34567',
         type: 'program',
-        position: { x: 50, y: 200 }, // Program node on the left
+        position: { x: 50, y: 200 },
         data: {
           label: 'Loyalty Rewards Program',
           item: {
@@ -192,6 +193,20 @@ const loyaltyRewardsProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
+    aiInstructions: [],
+    sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
+    isSdk: false,
+    isUi: false,
+    genUiClicked: false,
+    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    sdk: { fileName: '', content: '' },
+    walletPublicKey: '',
+    walletSecretKey: '',
+    programId: null,
+    pdas: [],
   } as ProjectDetails,
 };
 

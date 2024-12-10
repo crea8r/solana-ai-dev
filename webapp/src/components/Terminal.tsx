@@ -3,7 +3,7 @@ import { Box, Flex, Text, Icon, Button, Menu, MenuButton, MenuList, MenuItem, Di
 import { ChevronRight, Check } from 'lucide-react';
 import { keyframes } from '@emotion/react';
 import { Spinner } from './Spinner';
-import { LogEntry } from '../pages/code/CodePage';
+import { LogEntry } from '../hooks/useTerminalLogs';
 import { CloseIcon, WarningIcon } from '@chakra-ui/icons';
 
 type TerminalProps = {
@@ -47,16 +47,9 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
             </Flex>
           )}
         </Flex>
-        <Menu>
-          <MenuButton as={Button} size="xs" colorScheme="gray" variant="ghost">
-            <Text fontSize="xs" color="gray.700" fontWeight="normal">Commands</Text>
-          </MenuButton>
-          <MenuList fontSize="xs" p={0}>
-            <MenuItem onClick={clearLogs}>clear</MenuItem>
-            <MenuItem onClick={() => onRunCommand('cargo clean')}>cargo clean</MenuItem>
-            <MenuItem onClick={() => onRunCommand('anchor clean')}>anchor clean</MenuItem>
-          </MenuList>
-        </Menu>
+        <Button onClick={clearLogs} size="xs" colorScheme="gray" variant="ghost">
+          <Text fontSize="0.6rem" color="gray.600" fontWeight="normal" letterSpacing="0.05rem">clear logs</Text>
+        </Button>
       </Flex>
       <Box p={4} overflowY="auto">
         <Flex>
@@ -66,18 +59,18 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
                 <Icon as={ChevronRight} w={3} h={3} mr={2} mt={1} color="gray.500" />
 
                 {log.type === 'success' ? (
-                  <Icon as={Check} w={3} h={3} mr={2} mt={1} color="green.500" />
+                  <Icon as={Check} w={2} h={2} mr={2} mt={1} color="#1cba70" />
                 ) : log.type === 'error' ? (
-                  <Icon as={CloseIcon} w={3} h={3} mr={2} mt={1} color="red.500" />
+                  <Icon as={CloseIcon} w={2} h={2} mr={2} mt={1} color="#ec3232" />
                 ) : log.type === 'warning' ? (
-                  <Icon as={WarningIcon} w={3} h={3} mr={2} mt={1} color="yellow.500" />
+                  <Icon as={WarningIcon} w={2} h={2} mr={2} mt={1} color="#ddbf27" />
                 ) : null}
 
                 <Text
                   width="100% !important"
                   mb={4}
                   whiteSpace="pre-wrap"
-                  fontSize="xs"
+                  fontSize="0.75rem"
                   fontWeight="bold"
                   color={
                     log.type === 'start'
@@ -107,4 +100,4 @@ const Terminal: React.FC<TerminalProps> = ({ logs, clearLogs, onRunCommand, isPo
   );
 };
 
-export default Terminal;
+export default React.memo(Terminal);

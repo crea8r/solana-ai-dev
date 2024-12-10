@@ -1,4 +1,4 @@
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
@@ -9,6 +9,7 @@ const votingProject: Project = {
   description: 'A Solana program that allows users to vote on a proposal. The program stores the votes and tracks which users have voted.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
   details: {
     nodes: [
       {
@@ -16,7 +17,7 @@ const votingProject: Project = {
         height: 44,
         id: 'program-56789',
         type: 'program',
-        position: { x: 50, y: 200 }, // Left side
+        position: { x: 50, y: 200 },
         data: {
           label: 'Voting Program',
           item: {
@@ -156,6 +157,20 @@ const votingProject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
+    aiInstructions: [],
+    sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
+    isSdk: false,
+    isUi: false,
+    genUiClicked: false,
+    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    sdk: { fileName: '', content: '' },
+    walletPublicKey: '',
+    walletSecretKey: '',
+    programId: null,
+    pdas: [],
   } as ProjectDetails,
 };
 

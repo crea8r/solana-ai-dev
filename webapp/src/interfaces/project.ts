@@ -1,11 +1,9 @@
 import { Node, Edge } from 'react-flow-renderer';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from './file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
-import { counterProject } from '../data/examples/counterProject';
-import { votingProject } from '../data/examples/votingProject';
-import { crowdfundingProject } from '../data/examples/crowdfundingProject';
-import { loyaltyRewardsProject } from '../data/examples/loyaltyRewardsProject';
+import { Account, Instruction } from '../types/uiTypes';
+import { PdaInfo } from '../types/uiTypes';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -14,6 +12,7 @@ export type ProjectInfoToSave = {
   details: ProjectDetailsToSave;
   aiModel: string;
   apiKey: string;
+  walletPublicKey: string;
 }
 
 export interface ProjectDetailsToSave {
@@ -23,6 +22,34 @@ export interface ProjectDetailsToSave {
   aiFilePaths: string[];
   aiStructure: string;
   isCode: boolean;
+  uiResults: any[];
+  aiInstructions: {
+    function_name: string;
+    description?: string;
+    params_fields: {
+      name: string;
+      type: string;
+      default_value?: string;
+      validation?: string;
+    }[];
+    accounts: {
+      name: string;
+      type: string;
+      attributes: string[];
+    }[];
+  }[];
+  sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
+  buildStatus: boolean;
+  deployStatus: boolean;
+  isSdk: boolean;
+  isUi: boolean;
+  genUiClicked: boolean;
+  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  sdk: { fileName: string; content: string; };
+  walletPublicKey: string;
+  walletSecretKey: string;
+  programId: string | null;
+  pdas: PdaInfo[];
 }
 
 export interface ProjectDetails {
@@ -36,6 +63,34 @@ export interface ProjectDetails {
   aiFilePaths: string[];
   aiStructure: string;
   stateContent: string | undefined;
+  uiResults: any[];
+  aiInstructions: {
+    function_name: string;
+    description?: string;
+    params_fields: {
+      name: string;
+      type: string;
+      default_value?: string;
+      validation?: string;
+    }[];
+    accounts: {
+      name: string;
+      type: string;
+      attributes: string[];
+    }[];
+  }[];
+  sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
+  buildStatus: boolean;
+  deployStatus: boolean;
+  isSdk: boolean;
+  isUi: boolean;
+  genUiClicked: boolean;
+  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  sdk: { fileName: string; content: string; };
+  walletPublicKey: string;
+  walletSecretKey: string;
+  programId: string | null;
+  pdas: PdaInfo[];
 }
 
 export interface Project {
@@ -46,6 +101,7 @@ export interface Project {
   details: ProjectDetails;
   aiModel: string;
   apiKey: string;
+  walletPublicKey: string;
 }
 
 export type ProjectExample = {

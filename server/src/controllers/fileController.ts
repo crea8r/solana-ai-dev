@@ -23,6 +23,13 @@ interface FileStructure {
   children?: FileStructure[];
 }
 
+interface FileTreeItemType {
+  name: string;
+  type: 'directory' | 'file';
+  path: string;
+  ext?: string;
+  children?: FileTreeItemType[];
+}
 
 export const getFilePath = async (req: Request, res: Response, next: NextFunction) => {
   const { projectId, fileName } = req.params;
@@ -52,36 +59,42 @@ export const getFilePath = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-
 const getFullDirectoryStructure = async (
   directoryPath: string,
   relativePath: string = ''
-): Promise<FileStructure[]> => {
-  const files = await fs.readdir(directoryPath, { withFileTypes: true });
+): Promise<FileTreeItemType[]> => {
+  try {
+    const files = await fs.readdir(directoryPath, { withFileTypes: true });
 
-  const fileStructure: FileStructure[] = await Promise.all(
-    files.map(async (file) => {
-      const fullPath = path.join(directoryPath, file.name);
-      const fileRelativePath = path.join(relativePath, file.name); 
+    const fileStructure: FileTreeItemType[] = await Promise.all(
+      files.map(async (file) => {
+        const fullPath = path.join(directoryPath, file.name);
+        const fileRelativePath = path.join(relativePath, file.name); 
 
-      if (file.isDirectory()) {
-        return {
-          name: file.name,
-          isDirectory: true,
-          path: fileRelativePath,
-          children: await getFullDirectoryStructure(fullPath, fileRelativePath),
-        };
-      } else {
-        return {
-          name: file.name,
-          isDirectory: false,
-          path: fileRelativePath,
-        };
-      }
-    })
-  );
-
-  return fileStructure;
+        if (file.isDirectory()) {
+          return {
+            name: file.name,
+            type: 'directory',
+            path: fileRelativePath,
+            ext: undefined,
+            children: await getFullDirectoryStructure(fullPath, fileRelativePath),
+          };
+        } else {
+          return {
+            name: file.name,
+            type: 'file',
+            path: fileRelativePath,
+            ext: file.name.split('.').pop(),
+            children: undefined,
+          };
+        }
+      })
+    );
+    return fileStructure;
+  } catch (error) {
+    console.error('Error in getFullDirectoryStructure:', error);
+    throw error;
+  }
 };
 
 export const getDirectoryStructure = async (
@@ -92,17 +105,13 @@ export const getDirectoryStructure = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
-  const { projectName, rootPath } = req.params;
+  const { rootPath } = req.params;
   const directoryName = `${rootPath}`;
   const rootFolder = process.env.ROOT_FOLDER;
 
-  if (!rootFolder) {
-    return next(new AppError('Root folder not configured', 500));
-  }
+  if (!rootFolder) return next(new AppError('Root folder not configured', 500));
 
   const directoryPath = path.join(rootFolder, directoryName);
 
@@ -182,6 +191,7 @@ export const getFileContent = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
+  if (!projectId || !filePath) return next(new AppError('Missing required parameters', 400));
   if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
   try {
@@ -190,14 +200,8 @@ export const getFileContent = async (
       [projectId, orgId]
     );
 
-    if (projectCheck.rows.length === 0) {
-      next(
-        new AppError(
-          'Project not found or you do not have permission to access it',
-          404
-        )
-      );
-    } else {
+    if (projectCheck.rows.length === 0) next(new AppError('Project not found or you do not have permission to access it', 404));
+    else {
       const taskId = await startGetFileContentTask(projectId, filePath, userId);
 
       res.status(200).json({
@@ -225,7 +229,6 @@ export const createFile = async (
   }
 
   try {
-    // Check if the project exists and belongs to the user's organization
     const projectCheck = await pool.query(
       'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
       [projectId, orgId]
@@ -266,12 +269,9 @@ export const updateFile = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
 
   try {
-    // Check if the project exists and belongs to the user's organization
     const projectCheck = await pool.query(
       'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
       [projectId, orgId]

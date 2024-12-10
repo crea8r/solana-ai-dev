@@ -2,10 +2,10 @@ import { Box, Button, Flex, Textarea, VStack, Text, IconButton, Menu, MenuButton
 import { Copy } from 'lucide-react';
 import { BsPaperclip } from "react-icons/bs";
 import { ChevronUp, Plus, X } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useCodeFiles } from '../contexts/CodeFileContext';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import { chatAI } from '../services/prompt'; 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -21,7 +21,7 @@ export interface AIMessageType {
 interface AIChatProps {
   selectedFile?: FileTreeItemType;
   fileContent: string;
-  onSelectFile: (file: FileTreeItemType) => Promise<void>;
+  onSelectFile: (file: FileTreeItemType) => void;
   files: FileTreeItemType[]; 
 }
 
@@ -83,6 +83,15 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   useEffect(() => {
     setLocalSelectedFile(selectedFile);
   }, [selectedFile]);
+
+  useEffect(() => {
+    const savedMessages = sessionStorage.getItem('chatMessages');
+    if (savedMessages) setMessages(JSON.parse(savedMessages));
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) sessionStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
 
   const fetchFileContent = async (projectId: string, filePath: string): Promise<string> => {
     try {
@@ -255,7 +264,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                         color="gray.600"
                         width="fit-content"
                         borderRadius="md" 
-                        fontSize="0.6rem"
+                        fontSize="0.75rem"
                         fontWeight="500"
                       >
                         {file.name}
@@ -460,4 +469,4 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   );
 };
 
-export default AIChat;
+export default React.memo(AIChat);

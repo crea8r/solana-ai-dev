@@ -37,10 +37,16 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       const selectedProject = predefinedProjects[exampleName];
       if (!selectedProject) return;
 
-      const instantiatedNodes = selectedProject.details.nodes
-        .map((node): ReactFlowNode | null => {
-          if (!node.type || !node.data.item) return null;
+      //console.log('Selected Project Nodes:', selectedProject.details.nodes);
+
+      const instantiatedNodes = selectedProject.details.nodes.map((node): ReactFlowNode | null => {
+          if (!node.type || !node.data.item) { console.error('Invalid node:', node); return null; }
           const item = loadItem(node.type, node.data.item);
+          if (!item) {
+            console.error('Failed to load item for node:', node);
+            return null;
+          }
+          //console.log('Loaded Item:', item);
           return {
             ...node,
             data: {
@@ -50,6 +56,8 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           } as ReactFlowNode;
         })
         .filter((node): node is ReactFlowNode => node !== null);
+
+      //console.log('Instantiated Nodes:', instantiatedNodes);
 
       setProjectContext((prev) => ({
         ...prev,
@@ -68,29 +76,31 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
   return (
     <Box
       width="20%"
-      bg="white"
+      bg="gray.50"
       py={4}
       px={6}      
       borderRight="1px solid"
       borderColor="gray.200"
-      shadow="lg"
       fontFamily="Red Hat Display"
       letterSpacing="0.05em"
     >
       <VStack spacing={2} align="stretch">
         <Flex direction="column" alignItems="stretch" gap={4} mb={6} mt={4} ml={2} mr={2}>
-          <Text fontWeight="300" textAlign="left" fontSize="sm" color="gray.400" >Select Example</Text>
-          <Divider/>
           <Select
             placeholder="Select Example"
             value={selectedExample}
             onChange={handleExampleChange}
             size="sm"
-            fontWeight="600"
+            fontWeight="normal"
             letterSpacing="0.05em"
             fontFamily="Red Hat Display"
-            color="gray.600"
+            bg="white"
+            color="gray.700"
             mb={3}
+            shadow="sm"
+            borderRadius="md"
+            border="1px solid"
+            borderColor="gray.300"
           >
               <option value="Counter"><Text>Counter Program</Text></option>
               <option value="Voting"><Text>Voting Program</Text></option>
@@ -100,14 +110,14 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
               <option value="EscrowPayment"><Text>Escrow Payment Program</Text></option>
           </Select>
         </Flex>
-        <Text fontWeight="300" textAlign="left" fontSize="sm" color="gray.400">Drag items onto canvas</Text>
-        <Divider mb={3}/>
+        <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>
+        <Divider mb={3} borderColor="gray.500"/>
         <SimpleGrid columns={2} spacing={4}>
           {toolboxItems.map((item) => (
             <Tooltip key={item.id} label={item.getName()} placement="right"
               bg='#a9b7ff'
               color='white'
-              shadow='md'
+              shadow='sm'
               fontSize='xs' 
               hasArrow
               borderRadius='md'
@@ -122,12 +132,14 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 fontFamily="Red Hat Display"
                 borderRadius="md"
                 border= '2px solid #a9b7ff'
+                bg="white"
                 _hover={{ shadow: 'md' }}
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
                 justifyContent="center"
                 height="auto"
+                shadow="sm"
               >
                 <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getName()}</Text>
               </Box>

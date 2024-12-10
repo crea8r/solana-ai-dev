@@ -1,5 +1,5 @@
 import { snakeToPascal, normalizeName, extractInstructionContext } from '../utils/genCodeUtils';
-
+import { Instruction, Account } from '../types/uiTypes';
 export const getLibRsTemplate = (
   programName: string,
   programId: string,
@@ -148,79 +148,6 @@ export const getInstructionTemplate = (
   ${errorCodes.map(({ name, msg }) => `    #[msg("${msg}")] ${name},`).join('\n')}
   }
   `;
-};
-
-export const getSdkTemplate = (
-  programName: string,
-  programId: string,
-  instructions: { name: string; description: string; params: string[] }[],
-  accounts: { name: string; description: string; fields: { name: string; type: string }[] }[]
-): string => {
-  // Generate functions for each instruction
-  const instructionFunctions = instructions
-    .map(({ name, description, params }) => {
-      const paramsList = params.map((param) => `${param}: any`).join(", ");
-      return `
-  /**
-   * ${description}
-   */
-  async ${name}(${paramsList}): Promise<Transaction> {
-    // TODO: Implement the instruction logic
-    const ix = await this.program.methods.${name}(${params.join(", ")}).accounts({
-      // Add account mappings here
-    }).instruction();
-    return ix;
-  }`;
-    })
-    .join("\n");
-
-  // Generate functions for fetching accounts
-  const accountFetchers = accounts
-    .map(({ name, description, fields }) => {
-      return `
-  /**
-   * Fetch all ${name} accounts.
-   * ${description}
-   */
-  async fetch${name}Accounts(): Promise<${name}[]> {
-    const accounts = await this.program.account.${name.toLowerCase()}.all();
-    return accounts.map(account => ({
-      ${fields.map(({ name }) => `${name}: account.account.data.${name}`).join(",\n      ")}
-    }));
-  }`;
-    })
-    .join("\n");
-
-  return `
-import { Program, AnchorProvider, Idl, web3, Transaction } from '@coral-xyz/anchor';
-
-/**
- * SDK for interacting with the ${programName} program.
- */
-export class ${programName}SDK {
-  private program: Program;
-
-  constructor(provider: AnchorProvider, idl: Idl, programId: string = "${programId}") {
-    this.program = new Program(idl, programId, provider);
-  }
-
-  ${instructionFunctions}
-
-  ${accountFetchers}
-}
-
-/**
- * Types for program accounts.
- */
-${accounts
-  .map(({ name, fields }) => {
-    const fieldsStr = fields.map(({ name, type }) => `  ${name}: ${type};`).join("\n");
-    return `export interface ${name} {
-${fieldsStr}
-}`;
-  })
-  .join("\n\n")}
-`;
 };
 
 export const getTestTemplate = (

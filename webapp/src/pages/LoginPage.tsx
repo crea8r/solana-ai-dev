@@ -1,6 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import { 
   Text,
   Button,
@@ -20,6 +19,8 @@ import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Container } from "@tsparticles/engine";
+import { useAuth } from '../hooks/useAuth';
+import { login } from '../services/authApi';
 
 const style: React.CSSProperties = {
   position: "relative",
@@ -48,7 +49,6 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
   );
 };
 
-// ParticlesContainer component
 const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
   const [init, setInit] = useState(false);
 
@@ -151,18 +151,18 @@ const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
 });
 
 const LoginPage: React.FC = () => {
+  const { user, setUser } = useAuth();
   const [username, setUsername] = useState(''); 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
   const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(username, password); 
+      await login(username, password, setUser); // change
       navigate('/design');
     } catch (error) {
       console.error('Login failed:', error);

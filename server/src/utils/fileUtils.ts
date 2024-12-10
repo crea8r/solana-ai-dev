@@ -184,8 +184,9 @@ export const startGetFileContentTask = async (
         projectRootPath,
         filePath
       );
-      console.log('Reading file:', fullPath);
+      //console.log('Reading file:', fullPath);
       const content = await fs.promises.readFile(fullPath, 'utf-8');
+      //console.log(`taskId: ${taskId} file content: ${content}`);
       await updateTaskStatus(taskId, 'succeed', content);
     } catch (error) {
       console.error('Error reading file:', error);

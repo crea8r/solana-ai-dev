@@ -2,37 +2,53 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-      "program_name": {
-        "type": "string",
-        "description": "The name of the program, used for class and function names."
-      },
-      "program_id": {
-        "type": "string",
-        "description": "The unique ID of the Solana program."
-      },
+      "program_name": {"type": "string","description": "The name of the program, used for class and function names."},
       "instructions": {
         "type": "array",
         "description": "Details about the program instructions.",
         "items": {
           "type": "object",
           "properties": {
-            "name": {
-              "type": "string",
-              "description": "The name of the instruction in camelCase format."
-            },
-            "description": {
-              "type": "string",
-              "description": "A description of what the instruction does."
-            },
+            "name": {"type": "string","description": "The name of the instruction in camelCase format."},
+            "description": {"type": "string","description": "A description of what the instruction does."},
             "params": {
               "type": "array",
               "description": "The list of parameters for the instruction.",
-              "items": {
-                "type": "string"
-              }
+              "items": {"type": "string"}
+            },
+            "context": {
+              "type": "object",
+              "description": "The context of the instruction, specifying which accounts are used.",
+              "properties": {
+                "accounts": {
+                  "type": "array",
+                  "description": "Accounts needed for the instruction.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the account."
+                      },
+                      "isSigner": {
+                        "type": "boolean",
+                        "description": "Whether the account is a signer."
+                      },
+                      "isWritable": {
+                        "type": "boolean",
+                        "description": "Whether the account is writable."
+                      }
+                    },
+                    "required": ["name", "isSigner", "isWritable"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["accounts"],
+              "additionalProperties": false
             }
           },
-          "required": ["name", "description", "params"],
+          "required": ["name", "description", "params", "context"],
           "additionalProperties": false
         }
       },
@@ -75,6 +91,6 @@
         }
       }
     },
-    "required": ["program_name", "program_id", "instructions", "accounts"],
+    "required": ["program_name", "instructions", "accounts"],
     "additionalProperties": false
 }

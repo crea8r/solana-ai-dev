@@ -85,6 +85,16 @@ export const projectApi = {
     }
   },
 
+  deployProject: async (projectId: string): Promise<TaskResponse> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/deploy`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deploying project:', error);
+      throw error;
+    }
+  },
+
   buildProject: async (projectId: string): Promise<TaskResponse> => {
     try {
       const response = await api.post(`/projects/${projectId}/build`);
@@ -116,6 +126,16 @@ export const projectApi = {
       return response.data;
     } catch (error) {
       console.error('Error running project command:', error);
+      throw error;
+    }
+  },
+
+  installPackages: async (projectId: string): Promise<TaskResponse> => {
+    try {
+      const response = await api.post(`/projects/${projectId}/install-packages`);
+      return response.data;
+    } catch (error) {
+      console.error('Error installing npm packages:', error);
       throw error;
     }
   },

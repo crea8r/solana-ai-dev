@@ -3,6 +3,10 @@ export interface JwtPayload {
   org_id: string;
   name: string;
   org_name: string;
+  wallet_created: boolean;
+  private_key_viewed: boolean;
+  wallet_public_key: string;
+  wallet_private_key: string;
 }
 
 // export interface Organisation {
@@ -71,6 +75,7 @@ export interface PaginatedResponse<T> {
 
 export interface WalletInfo {
   publicKey: string;
+  privateKey?: string;
   balance: number;
   creationDate?: string;
 }

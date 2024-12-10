@@ -6,9 +6,11 @@ import { getProjectRootPath, startDeleteProjectFolderTask } from '../utils/fileU
 import { normalizeProjectName } from '../utils/stringUtils';
 import {
   startAnchorBuildTask,
+  startAnchorDeployTask,
   startAnchorInitTask,
   startAnchorTestTask,
   startCustomCommandTask,
+  startInstallPackagesTask,
 } from '../utils/projectUtils';
 
 
@@ -49,9 +51,7 @@ export const createProject = async (
   const org_id = req.user?.org_id;
   const userId = req.user?.id;
 
-  if (!org_id || !userId) {
-    return next(new AppError('User organization not found', 400));
-  }
+  if (!org_id || !userId) return next(new AppError('User organization not found', 400));
 
   const client = await pool.connect();
 
@@ -279,6 +279,44 @@ export const buildProject = async (
   }
 };
 
+export const deployProject = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+
+  try {
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to deploy it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startAnchorDeployTask(id, userId);
+
+    res.status(200).json({
+      message: 'Anchor deploy process started',
+      taskId: taskId,
+    });
+  } catch (error) {
+    console.error('Error in deployProject:', error);
+    next(new AppError('Failed to start deployment process', 500));
+  }
+};
+
 export const testProject = async (
   req: Request,
   res: Response,
@@ -328,12 +366,9 @@ export const getProjectDetails = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) {
-    return next(new AppError('User information not found', 400));
-  }
+  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
 
   try {
-    // Get project details
     const projectResult = await pool.query(
       `
       SELECT id, name, description, org_id, root_path, details, last_updated, created_at
@@ -343,18 +378,10 @@ export const getProjectDetails = async (
       [id, orgId]
     );
 
-    if (projectResult.rows.length === 0) {
-      return next(
-        new AppError(
-          'Project not found or you do not have permission to access it',
-          404
-        )
-      );
-    }
+    if (projectResult.rows.length === 0) return next( new AppError( 'Project not found or you do not have permission to access it', 404 ) );
 
     const project = projectResult.rows[0];
 
-    // Get recent tasks (e.g., last 5 tasks)
     const tasksResult = await pool.query(
       `
       SELECT id, name, status, created_at, last_updated
@@ -366,7 +393,6 @@ export const getProjectDetails = async (
       [id]
     );
 
-    // Get file tree (assuming you have a function to generate this)
     const fileTreeResult = await pool.query(
       `
       SELECT result
@@ -378,12 +404,8 @@ export const getProjectDetails = async (
       [id]
     );
 
-    const fileTree =
-      fileTreeResult.rows.length > 0
-        ? JSON.parse(fileTreeResult.rows[0].result)
-        : null;
+    const fileTree = fileTreeResult.rows.length > 0 ? JSON.parse(fileTreeResult.rows[0].result) : null;
 
-    // Combine all information
     const projectDetails = {
       ...project,
       recentTasks: tasksResult.rows,
@@ -436,5 +458,44 @@ export const runProjectCommand = async (
   } catch (error) {
     console.error('Error in runProjectCommand:', error);
     next(new AppError('Failed to run project command', 500));
+  }
+};
+
+export const installPackages = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.params;
+  const { packages } = req.body;
+  const userId = req.user?.id;
+  const orgId = req.user?.org_id;
+
+  if (!userId || !orgId) return next(new AppError('User information not found', 400));
+  
+  try {
+    const projectCheck = await pool.query(
+      'SELECT * FROM SolanaProject WHERE id = $1 AND org_id = $2',
+      [id, orgId]
+    );
+
+    if (projectCheck.rows.length === 0) {
+      return next(
+        new AppError(
+          'Project not found or you do not have permission to access it',
+          404
+        )
+      );
+    }
+
+    const taskId = await startInstallPackagesTask(id, userId, packages);
+
+    res.status(200).json({
+      message: 'NPM packages installation started successfully',
+      taskId: taskId,
+    });
+  } catch (error) {
+    console.error('Error in installPackages:', error);
+    next(new AppError('Failed to start package installation process', 500));
   }
 };

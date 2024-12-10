@@ -8,10 +8,32 @@ import { WalletInfo } from 'src/types';
 import { AppError } from 'src/middleware/errorHandler';
 import path from 'path';
 import fs from 'fs';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const connection = new Connection("https://api.devnet.solana.com");
+
+export const airdropTokens = async (
+  publicKey: string,
+  amount: number = 1
+): Promise<void> => {
+  try {
+    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+    const walletPublicKey = new PublicKey(publicKey);
+    console.log(`Requesting airdrop of ${amount} SOL to wallet: ${walletPublicKey.toBase58()}`);
+
+    const airdropSignature = await connection.requestAirdrop(walletPublicKey, amount * 1e9);
+    console.log(`Airdrop signature: ${airdropSignature}`);
+
+    await connection.confirmTransaction(airdropSignature, "confirmed");
+
+    console.log(`Successfully airdropped ${amount} SOL to ${walletPublicKey.toBase58()}`);
+  } catch (error: any) {
+    console.error(`Failed to airdrop tokens: ${error}`);
+    throw new AppError(`Failed to airdrop tokens: ${error.message}`, 500);
+  }
+};
 
 export const createWallet = async (
   req: Request,
@@ -22,6 +44,7 @@ export const createWallet = async (
   if (!userId) return next(new AppError('User ID not found', 400));
 
   const client = await pool.connect();
+
   try {
     const result = await client.query('SELECT wallet_created FROM Creator WHERE id = $1', [userId]);
     const walletCreated = result.rows[0]?.wallet_created;
@@ -29,36 +52,40 @@ export const createWallet = async (
 
     const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${userId}.json`);
     exec(`solana-keygen new --outfile ${walletPath} --no-bip39-passphrase`, async (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error generating wallet: ${stderr}`);
-        return next(new AppError(`Error generating wallet: ${stderr}`, 500));
-      }
+      if (error) { console.error(`Error generating wallet: ${stderr}`); return next(new AppError(`Error generating wallet: ${stderr}`, 500)); }
 
       try {
-        const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
-        console.log(walletData);
+        execSync(`solana config set --keypair ${walletPath}`, { stdio: 'inherit' });
+        execSync(`solana config set --url devnet`, { stdio: 'inherit' });
 
-        // Create a Uint8Array from the private key array
+        const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+
         const privateKeyArray = Uint8Array.from(walletData);
         const keypair = Keypair.fromSecretKey(privateKeyArray);
         const publicKey = keypair.publicKey.toBase58();
-        console.log("privateKeyArray", privateKeyArray);
-        console.log("keypair", keypair);
-        console.log("publicKey", publicKey);
-
+        const privateKey = JSON.stringify(privateKeyArray);
 
         const walletInfo: WalletInfo = {
           publicKey,
+          privateKey,
           balance: 0,
           creationDate: new Date().toISOString(),
         };
 
-      // Optionally overwrite the wallet file to remove the private key after returning it
-      //fs.writeFileSync(walletPath, JSON.stringify([publicKey]), 'utf-8');
+        /*
+        try {
+          await airdropTokens(publicKey, 2);
+          walletInfo.balance = 2;
+          console.log("Wallet Balance:", walletInfo.balance);
+        } catch (airdropError) { console.error(`Failed to airdrop tokens: ${airdropError}`);  return next(new AppError("Failed to airdrop test tokens", 500)); }
+        */
 
         try {
           await client.query('BEGIN');
-          await client.query('UPDATE Creator SET wallet_created = $1 WHERE id = $2', [true, userId]);
+          await client.query(
+            'UPDATE Creator SET wallet_created = $1, wallet_public_key = $2, wallet_private_key = $3 WHERE id = $4', 
+            [true, publicKey, privateKey, userId]
+          );
           await client.query('COMMIT');
           console.log(`Wallet creation recorded for user ${userId}`);
 
@@ -200,13 +227,35 @@ export const register = async (req: Request, res: Response) => {
         org_id: orgId,
         name: username,
         org_name: organisation,
+        wallet_created: false,
+        private_key_viewed: false,
+        wallet_public_key: '',
+        wallet_private_key: '',
       });
+
+      /*
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      */
+
+      //console.log("registration success, cookie set", token);
 
       res.status(201).json({
         message: 'User registered successfully',
         token,
         wallet_created: false,
-        user: { id: userId, username, org_id: orgId, role: 'admin' },
+        user: { 
+          id: userId, 
+          username, 
+          org_id: orgId, 
+          role: 'admin',
+          wallet_public_key: '',
+          wallet_private_key: '',
+        },
       });
     } catch (error) {
       await client.query('ROLLBACK');
@@ -224,32 +273,36 @@ export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   try {
-    // Get user from database
     const result = await pool.query(
       'SELECT Creator.*, Organisation.name as org_name FROM Creator JOIN Organisation ON Creator.org_id = Organisation.id WHERE Creator.username = $1',
       [username]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
+    if (result.rows.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
     const user = result.rows[0];
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
     const token = generateToken({
       id: user.id,
       org_id: user.org_id,
       name: user.username,
       org_name: user.org_name,
+      wallet_created: user.wallet_created,
+      private_key_viewed: user.private_key_viewed,
+      wallet_public_key: user.wallet_public_key,
+      wallet_private_key: user.wallet_private_key,
     });
+
+    /*
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' ? true : false,
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    */
 
     res.json({
       message: 'Logged in successfully',
@@ -260,10 +313,41 @@ export const login = async (req: Request, res: Response) => {
         org_id: user.org_id,
         role: user.role,
         wallet_created: user.wallet_created,
+        private_key_viewed: user.private_key_viewed,
+        wallet_public_key: user.wallet_public_key,
+        wallet_private_key: user.wallet_private_key,
       },
     });
   } catch (error) {
     console.error('Error in login:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.json({ message: 'Logged out successfully' });
+};
+
+export const getUser = (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: No user data' });
+    }
+
+    res.status(200).json({
+      user: {
+        id: req.user.id,
+        username: req.user.name,
+        org_id: req.user.org_id,
+        org_name: req.user.org_name,
+        wallet_created: req.user.wallet_created,
+        private_key_viewed: req.user.private_key_viewed,
+        wallet_public_key: req.user.wallet_public_key,
+        wallet_private_key: req.user.wallet_private_key,
+      },
+    });
+  } catch (error) {
+    console.error('Error retrieving user:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };

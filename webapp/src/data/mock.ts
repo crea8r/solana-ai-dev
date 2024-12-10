@@ -1,4 +1,4 @@
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../interfaces/project';
 
@@ -226,6 +226,20 @@ const todoproject: Project = {
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
+    aiInstructions: [],
+    sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
+    isSdk: false,
+    isUi: false,
+    genUiClicked: false,
+    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    sdk: { fileName: '', content: '' },
+    walletPublicKey: '',
+    walletSecretKey: '',
+    programId: null,
+    pdas: [],
   } as ProjectDetails,
 } as Project;
 export { todoproject };

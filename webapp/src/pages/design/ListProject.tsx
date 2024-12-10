@@ -22,6 +22,8 @@ import {
 } from '../../interfaces/project';
 import { Trash2 } from 'lucide-react';
 import { shortenText } from '../../utils/text';
+import { useProjectContext } from '../../contexts/ProjectContext';
+import { useToast } from '@chakra-ui/react';
 
 interface ListProjectProps {
   isOpen: boolean;
@@ -34,12 +36,14 @@ const ListProject: React.FC<ListProjectProps> = ({
   onClose,
   onProjectClick,
 }) => {
+  const { projectContext, setProjectContext } = useProjectContext();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const toast = useToast();
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -71,8 +75,66 @@ const ListProject: React.FC<ListProjectProps> = ({
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    await projectApi.deleteProject(projectId);
-    fetchProjects();
+    try {
+      await projectApi.deleteProject(projectId);
+
+      if (projectContext.id === projectId) {
+        setProjectContext({
+          id: '',
+          rootPath: '',
+          name: '',
+          description: '',
+          aiModel: 'codestral-latest',
+          apiKey: '',
+          walletPublicKey: '',
+          details: {
+            nodes: [],
+            edges: [],
+            files: { name: '', type: 'directory', children: [] },
+            codes: [],
+            docs: [],
+            isAnchorInit: false,
+            isCode: false,
+            aiFilePaths: [],
+            aiStructure: '',
+            stateContent: '',
+            uiResults: [],
+            aiInstructions: [],
+            sdkFunctions: [],
+            buildStatus: false,
+            deployStatus: false,
+            isSdk: false,
+            isUi: false,
+            genUiClicked: false,
+            idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+            sdk: { fileName: '', content: '' },
+            walletPublicKey: '',
+            walletSecretKey: '',
+            programId: null,
+            pdas: [],
+          },
+        });
+      }
+
+      fetchProjects();
+
+      toast({
+        title: 'Project Deleted',
+        description: `The project was successfully deleted.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: 'Error Deleting Project',
+        description: 'There was an error deleting the project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -87,6 +149,8 @@ const ListProject: React.FC<ListProjectProps> = ({
               placeholder='Search projects...'
               value={search}
               onChange={handleSearchChange}
+              bg="white"
+              shadow="sm"
             />
             {loading && <Spinner />}
             {error && <Text color='red.500'>{error}</Text>}
@@ -99,11 +163,14 @@ const ListProject: React.FC<ListProjectProps> = ({
                 p={2}              
                 borderWidth={1}
                 borderRadius='md'
->
+                shadow="sm"
+                border="2px solid gray.200"
+                boxSizing='border-box'
+                _hover={{ shadow: 'lg', cursor: 'pointer' }}
+              >
               <Box
                 key={project.id}
                 p={3}
-                _hover={{ bg: 'gray.100', cursor: 'pointer' }}
                 onClick={() => handleProjectClick(project.id, project.name)}
                 width="100%"
               >

@@ -13,6 +13,15 @@ Here is the template for generating instruction files:
 !Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
 for example: pub system_program: Program<'info, System>
 
+!Important: when initializing an account, always provide the seeds and bump in the \`#[account(init)]\` constraint.
+for example like this:
+#[account(
+        init, 
+        payer = initializer, 
+        space = 8 + 32 + 8, 
+        seeds = [b"byte string literal name", initializer.key().as_ref()],
+        bump)]
+
 !If an account is specified as the \`payer\` in the \`#[account(init)]\` constraint, ensure it is declared as \`#[account(mut)]\` in the \`#[derive(Accounts)]\` struct. For example:
 
 - Input: \`#[account(init, payer = initializer, space = ...)]\`
@@ -21,7 +30,6 @@ for example: pub system_program: Program<'info, System>
 This ensures the \`payer\` account is mutable as required by Anchor's constraints.
 
 !Don't forget to add the Overflow variant to the error enum if applicable.!
-
 
 \`\`\`rust
 use anchor_lang::prelude::*;
@@ -63,6 +71,10 @@ ${JSON.stringify(instructionSchema, null, 2)}
 5. "params_fields": A list of parameter fields, each with:
    - "name": Parameter name as a string.
    - "type": Parameter type (e.g., "u64", "String").
+   - "expected_source": Indicates the expected source of the parameter value. Options include:
+      - "wallet": Indicates the value should come from the Solai user's wallet public key.
+      - "account": Indicates the value should come from another on-chain account.
+      - "none": Indicates no specific source is required (e.g., numeric or string input from the user).
 6. "error_codes": A list of error codes, each with:
    - "name": Error code name in PascalCase.
    - "msg": A human-readable error message.

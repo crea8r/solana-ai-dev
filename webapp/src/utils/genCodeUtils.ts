@@ -1,13 +1,16 @@
 import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
-import { FileTreeItemType } from '../components/FileTree';
+import { FileTreeItemType } from '../interfaces/file';
 import { parse, stringify } from 'smol-toml'
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getSdkTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
+import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
 import instructionSchema from '../data/ai_schema/instruction_schema.json';
 import stateSchema from '../data/ai_schema/state_schema.json';
 import sdkSchema from '../data/ai_schema/sdk_schema.json';
 import testSchema from '../data/ai_schema/test_schema.json';
 import Ajv from 'ajv';
+import path from 'path-browserify';
+
+const walletsFolder = process.env.WALLETS_FOLDER || '/root/projects/solana-ai-dev/wallets';
 
 type CargoToml = {
   package?: { name?: string; };
@@ -83,20 +86,17 @@ export function getFileList(
   item: FileTreeItemType,
   fileList: { name: string; path: string }[] = []
 ): { name: string; path: string }[] {
-  // Validate item and ensure it has a valid name
   if (!item || !item.name) {
     console.error('Invalid item encountered:', item);
-    return fileList; // Skip invalid items
+    return fileList;
   }
 
-  // If the item has children, recursively process them
   if (item.children && item.children.length > 0) {
     for (const child of item.children) {
       getFileList(child, fileList);
     }
   } else {
-    // Add item to the file list with a fallback for missing `path`
-    const path = item.path || item.name; // Fallback to `name` if `path` is missing
+    const path = item.path || item.name;
     fileList.push({ name: item.name, path });
   }
 
@@ -127,37 +127,38 @@ export function extractCodeBlock(text: string): string {
 }
 
 export const amendConfigFile = async (
+  userId: string,
   projectId: string,
   fileName: string,
   filePath: string,
   programDirName: string
-): Promise<string> => {
-  console.log('amendConfigFile filePath', filePath);
+): Promise<{ updatedFileContent: string, programId?: string }> => {
+  //console.log('amendConfigFile filePath', filePath);
+  //console.log('Program Directory:', programDirName);
+  //console.log('Cargo.toml Path:', filePath);
+  //console.log('Anchor.toml Path:', filePath);
 
-  // Fetch existing file content
   const oldContentResponse = await fileApi.getFileContent(projectId, filePath);
   const taskId = oldContentResponse.taskId;
   const _pollDesc = `Getting ${fileName} content to amend content.`;
   const oldContent = await pollTaskStatus(taskId, _pollDesc);
+  //console.log('oldContent', oldContent);
 
   let updatedToml = oldContent;
+  let programId: string | undefined;
 
   if (fileName === 'Cargo.toml') {
-    // Split the file into lines for easier manipulation
     const lines = oldContent.split('\n');
     const dependenciesStartIndex = lines.findIndex((line) => line.trim() === '[dependencies]');
 
     if (dependenciesStartIndex !== -1) {
-      // Remove any existing anchor-lang line in the dependencies block
       const updatedLines = lines.filter(
         (line, index) =>
           !(index > dependenciesStartIndex && line.trim().startsWith('anchor-lang'))
       );
 
-      // Add the new anchor-lang dependency string
       updatedLines.splice(dependenciesStartIndex + 1, 0, 'anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }');
 
-      // Join the lines back into a single TOML string
       updatedToml = updatedLines.join('\n');
     }
   }
@@ -169,23 +170,39 @@ export const amendConfigFile = async (
       const localnet = parsedToml.programs.localnet;
 
       const [oldKey, address] = Object.entries(localnet)[0]; 
-      console.log(`Old Key: ${oldKey}, Address: ${address}`);
+      //console.log(`Old Key: ${oldKey}, Address: ${address}`);
+      
       delete localnet[oldKey];
-      localnet[programDirName] = address;
+      const devnet = {
+        [programDirName]: address
+      };
 
       delete parsedToml.programs;
-      parsedToml['programs.localnet'] = localnet;
+      parsedToml['programs.devnet'] = devnet;
 
-      updatedToml = stringify(parsedToml);
+      programId = Object.values(devnet)[0] as string;
+      console.log('Extracted Program ID:', programId);
+
+    } else  throw new Error('[programs.localnet] section not found in Anchor.toml');
+
+    if (parsedToml.provider) {
+      parsedToml.provider.cluster = 'Devnet';
+      if (walletsFolder === '') throw new Error('WALLETS_FOLDER environment variable is not set');
+      const userWalletPath = path.join(walletsFolder, `${userId}.json`);
+      parsedToml.provider.wallet = userWalletPath;
+
     } else {
-      throw new Error('[programs.localnet] section not found in Anchor.toml');
+      throw new Error('[provider] section not found in Anchor.toml');
     }
+
+    updatedToml = stringify(parsedToml);
+    //console.log('updatedToml', updatedToml);
   }
 
-  // Update the file with the modified content
   const res = await fileApi.updateFile(projectId, filePath, updatedToml);
   const updatedFileContent = await pollTaskStatus(res.taskId, `Updating ${fileName} content.`);
-  return updatedFileContent;
+  //console.log('updatedFileContent', updatedFileContent);
+  return { updatedFileContent, programId };
 };
 
 export const ensureInstructionNaming = async (
@@ -200,14 +217,16 @@ export const ensureInstructionNaming = async (
       const fileContentResponse = await fileApi.getFileContent(projectId, filePath);
       const taskId = fileContentResponse.taskId;
       const pollDesc = `Getting ${filePath} content to change function names.`;
+      //console.log('pollDesc', pollDesc);
       const fileContent = await pollTaskStatus(taskId, pollDesc);
+      //console.log('fileContent', fileContent);
 
       const updatedContent = fileContent.replace(
         /pub fn\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
         (match, functionName) => {
           if (!functionName.startsWith('run_')) {
             const newFunctionName = `run_${functionName}`;
-            console.log(`Renaming function: ${functionName} to ${newFunctionName}`);
+            //console.log(`Renaming function: ${functionName} to ${newFunctionName}`);
             return `pub fn ${newFunctionName}`;
           }
           return match;
@@ -216,7 +235,7 @@ export const ensureInstructionNaming = async (
 
       if (updatedContent !== fileContent) {
         await fileApi.updateFile(projectId, filePath, updatedContent);
-        console.log(`Updated function names in ${filePath}`);
+        // console.log(`Updated function names in ${filePath}`);
       }
     } catch (error) {
       console.error(`Error processing file ${filePath}:`, error);
@@ -246,12 +265,12 @@ export const normalizeName = (name: string): string => {
   }
   return name
     .trim()
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')     // Insert underscore between lower-upper
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')   // Insert underscore between upper-upper-lower
-    .replace(/\s+/g, '_')                       // Replace spaces with underscores
-    .toLowerCase()                              // Convert to lowercase
-    .replace(/[^a-z0-9_]+/g, '')                // Remove non-alphanumeric except underscores
-    .replace(/^_+|_+$/g, '');                   // Remove leading/trailing underscores
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
+    .replace(/\s+/g, '_')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '')
+    .replace(/^_+|_+$/g, '');
 };
 
 export const getNormalizedInstructionNames = (
@@ -284,10 +303,10 @@ export const extractProgramIdFromAnchorToml = async (
 
     const parsedToml = parse(anchorTomlContent) as Record<string, any>;
 
-    console.log("!!! parsedToml", parsedToml);
+    //console.log("parsedToml", parsedToml);
 
-    const programSection = parsedToml['programs.localnet'];
-    if (!programSection)  throw new Error('No [programs.localnet] section found in Anchor.toml');
+    const programSection = parsedToml['programs.devnet'];
+    if (!programSection)  throw new Error('No [programs.devnet] section found in Anchor.toml');
 
     const programId = programSection[programDirName];
     if (!programId) throw new Error(`Program ID for "${programDirName}" not found in Anchor.toml`);
@@ -321,11 +340,11 @@ export const extractInstructionContext = async (
         continue;
       }
 
-      console.log(`Instruction Content for ${instructionName}:\n`, content);
+      //console.log(`Instruction Content for ${instructionName}:\n`, content);
 
       // Extract function signature
       const funcRegex = /\bfn\s+(\w+)\s*\(\s*ctx:\s*Context<([^>]+)>(?:,\s*params:\s*([^,)]+))?\s*\)/;
-      console.log("funcRegex", funcRegex);
+      //console.log("funcRegex", funcRegex);
 
       const funcMatch = content.match(funcRegex);
       if (!funcMatch) {
@@ -443,11 +462,9 @@ export const extractStateStructs = async (
         fields.push({ name: fieldName, type: fieldType });
       }
 
-      // Add the struct to the result
       structs.push({ name, fields });
     }
 
-    console.log("structs", structs);
     return structs;
   } catch (error) {
     console.error(`Error extracting state structs:`, error);
@@ -457,26 +474,23 @@ export const extractStateStructs = async (
 
 export function extractJSON(content: string): string {
   try {
-    // Step 1: Remove Markdown enclosures
     const cleanedContent = content
-      .replace(/```json/g, '') // Remove opening markdown enclosure
-      .replace(/```/g, '') // Remove closing markdown enclosure
-      .trim(); // Remove unnecessary whitespace
+      .replace(/```json/g, '') 
+      .replace(/```/g, '') 
+      .trim(); 
 
-    // Step 2: Attempt to parse and validate as JSON directly
     try {
-      JSON.parse(cleanedContent); // If this works, it's valid JSON
-      return cleanedContent; // Return it as is
+      JSON.parse(cleanedContent);
+      return cleanedContent; 
     } catch {
-      // Step 3: Fallback to regex to extract JSON if parsing fails
-      const jsonMatch = cleanedContent.match(/({[\s\S]*})|(\[[\s\S]*\])/); // Match JSON object or array
+      const jsonMatch = cleanedContent.match(/({[\s\S]*})|(\[[\s\S]*\])/); 
       if (!jsonMatch) {
         throw new Error('No JSON object found in the content.');
       }
 
       const extractedJSON = jsonMatch[0];
-      JSON.parse(extractedJSON); // Validate extracted JSON
-      return extractedJSON; // Return the valid JSON
+      JSON.parse(extractedJSON); 
+      return extractedJSON; 
     }
   } catch (error) {
     console.error('Error extracting JSON:', error, 'Content:', content);
@@ -484,8 +498,8 @@ export function extractJSON(content: string): string {
   }
 }
 
-
-export function validateFileTree(tree: any): FileTreeItemType | null {
+// Depreciated 
+function validateFileTree(tree: any): FileTreeItemType | null {
   if (!tree || typeof tree.name !== 'string' || typeof tree.type !== 'string') {
     console.error('Invalid file tree item:', tree);
     return null;
@@ -548,7 +562,7 @@ export const processAIStateOutput = async (
     const filePath = `programs/${normalizedProgramName}/src/state.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
 
-    console.log(`Successfully processed and updated file: ${filePath}`);
+   // console.log(`Successfully processed and updated file: ${filePath}`);
     return codeContent;
 
   } catch (error) {
@@ -560,6 +574,7 @@ export const processAIStateOutput = async (
 // instructions
 export interface AIInstructionOutput {
   function_name: string;
+  description: string;
   context_struct: string;
   params_struct: string;
   accounts: { name: string; type: string; attributes: string[] }[];
@@ -584,10 +599,7 @@ export const processAIInstructionOutput = async (
     aiData = sanitizeAIOutput(aiData, instructionSchema);
 
     const valid = validate(aiData);
-    if (!valid) {
-      console.error('AI JSON does not conform to schema:', validate.errors);
-      throw new Error('Invalid AI JSON structure.');
-    }
+    if (!valid) { console.error('AI JSON does not conform to schema:', validate.errors); throw new Error('Invalid AI JSON structure.'); }
 
     const codeContent = getInstructionTemplate(
       instructionName,
@@ -603,7 +615,7 @@ export const processAIInstructionOutput = async (
     const filePath = `programs/${normalizedProgramName}/src/instructions/${instructionName}.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
 
-    console.log(`Successfully processed and updated file: ${filePath}`);
+    //console.log(`Successfully processed and updated file: ${filePath}`);
     return { codeContent, aiData };
 
   } catch (error) {
@@ -742,11 +754,17 @@ export const processAILibOutput = async (
 // sdk
 export interface AISdkOutput {
   program_name: string;
-  program_id: string;
   instructions: {
     name: string;
     description: string;
     params: string[];
+    context: {
+      accounts: {
+        name: string;
+        isSigner: boolean;
+        isWritable: boolean;
+      }[];
+    };
   }[];
   accounts: {
     name: string;
@@ -754,45 +772,6 @@ export interface AISdkOutput {
     fields: { name: string; type: string }[];
   }[];
 }
-
-export const processAISdkOutput = async (
-  projectId: string,
-  normalizedProgramName: string,
-  aiJson: string
-): Promise<string> => {
-  const ajv = new Ajv();
-  const validate = ajv.compile(sdkSchema);
-
-  try {
-    const jsonContent = extractJSON(aiJson);
-    let aiData: AISdkOutput = JSON.parse(jsonContent);
-
-    aiData = sanitizeAIOutput(aiData, sdkSchema);
-
-    const valid = validate(aiData);
-    if (!valid) {
-      console.error('AI JSON does not conform to schema:', validate.errors);
-      throw new Error('Invalid AI JSON structure.');
-    }
-
-    // Generate SDK code using the template
-    const codeContent = getSdkTemplate(
-      aiData.program_name,
-      aiData.program_id,
-      aiData.instructions,
-      aiData.accounts
-    );
-
-    const filePath = `sdk/${normalizedProgramName}_sdk.ts`;
-    await fileApi.updateFile(projectId, filePath, codeContent);
-
-    console.log(`Successfully processed and updated SDK file: ${filePath}`);
-    return codeContent;
-  } catch (error) {
-    console.error('Error processing AI SDK output:', error);
-    throw error;
-  }
-};
 
 // test
 export interface AITestOutput {
@@ -882,5 +861,40 @@ const getDefaultForType = (propertySchema: any): any => {
   }
 };
 
+export const parseSdkFunctions = (
+  sdkFileContent: string,
+  setProjectContext: React.Dispatch<React.SetStateAction<any>>
+) => {
+  const functionRegex = /async\s+(\w+)\s*\(([^)]*)\)/g;
+  const parsedFunctions: {
+    function_name: string;
+    params: { name: string; type: string }[];
+  }[] = [];
+
+  let match;
+  while ((match = functionRegex.exec(sdkFileContent)) !== null) {
+    const [_, functionName, paramsString] = match;
+    const params = paramsString
+      .split(',')
+      .map((param) => param.trim())
+      .filter((param) => param)
+      .map((param) => {
+        const [name, type] = param.split(':').map((p) => p.trim());
+        return { name, type: type || 'unknown' };
+      });
+
+    parsedFunctions.push({ function_name: functionName, params });
+  }
+
+  setProjectContext((prevContext: any) => ({
+    ...prevContext,
+    details: {
+      ...prevContext.details,
+      sdkFunctions: parsedFunctions,
+    },
+  }));
+
+  return parsedFunctions;
+};
 
 

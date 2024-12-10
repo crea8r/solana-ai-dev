@@ -1,5 +1,3 @@
-// src/components/WalkthroughDialog.tsx
-
 import React, { useState } from 'react';
 import {
   Modal,
@@ -14,49 +12,43 @@ import {
   Link,
   Flex,
 } from '@chakra-ui/react';
-import img1 from '../assets/walkthrough/1.png';
-import img2 from '../assets/walkthrough/2.png';
-import img3 from '../assets/walkthrough/3.png';
-import img4 from '../assets/walkthrough/4.png';
-import img5 from '../assets/walkthrough/5.png';
-import img6 from '../assets/walkthrough/6.png';
-import img7 from '../assets/walkthrough/7.png';
+import { LiaTelegram } from "react-icons/lia";
+import { FaXTwitter } from "react-icons/fa6";
+import { RiArrowDropLeftFill, RiArrowDropRightFill } from "react-icons/ri";
+import { IoIosCheckmark } from "react-icons/io";
+import Emoji from 'react-emoji-render';
+
+import img1 from '../assets/walkthrough/img1.png';
+import img2 from '../assets/walkthrough/img2.png';
+import img3 from '../assets/walkthrough/img3.png';
+import img4 from '../assets/walkthrough/img4.png';
+import img5 from '../assets/walkthrough/img5.png';
 
 const steps = [
   {
     image: img1,
     caption:
-      'Everything in Solana starts with a Program, drag it from the left-hand toolbox to create a new program. You name the program and add description to it, usually: who you Program serve and roughly how it works. Hit Save.',
+      'Everything in Solana starts with a Program, drag a Program node from the left-hand toolbox to create a new program. You can name the program and add a description, adding as much context as possible will help facilitate the AI to generate better code. Click Save.',
   },
   {
     image: img2,
     caption:
-      'You drag the Account from the toolbox. You name the Account and add description to it, usually how it is used. The detail of its structure is defined in the Data Struct textarea. Remember to connect the Account to the Program. Then, hit Save',
+      'Next, drag an Account node from the toolbox. a name, description and data structure is required. Remember to connect the Account to the Program. Then, click Save',
   },
   {
     image: img3,
     caption:
-      'You click on the edge connecting the Account and Program and define the seed. The seed is the unique identifier of the Account. Think of seed as table name mix with primary key to identify your record with the Program. It is used to locate the Account in the Solana blockchain. Hit Save',
+      'Drag an Instruction node from the toolbox. If Accounts represent the storage of the Program, the instructions define the functionality. Add the function name, description, its parameters, then a step-by-step overview of the logic. Click Save.',
   },
   {
     image: img4,
     caption:
-      'You will see something like this image. Note that they AI will extract the meaning from the text, feel free to write it in a descriptive way.',
+      'The final design will look like this. You have the Accounts and Instructions connected to the Program.',
   },
   {
     image: img5,
     caption:
-      'You drag the Instruction from the toolbox. As Account represent the storage of the Program, instruction is the functionality of the Progran. You define the function name, the parameters and step by step instructions to the AI. Hit Save',
-  },
-  {
-    image: img6,
-    caption:
-      'The final design usually looks like this. You have the Account and Instruction neatly connected to the Program, with a seed on the path of the edge from Program to Accounts. Now, hit the Build button to generate the prompt for the AI to generate the code.',
-  },
-  {
-    image: img7,
-    caption:
-      'Finally, click Copy to Clipboard and paste the text into your favourite AI to get the final code. This prompt will generate not only Anchor rust code but typescript SDK and testcode for your convenience.',
+      `Finally, select the AI model (GPT-4o), enter your api key, then click 'Generate Code'`,
   },
 ];
 
@@ -89,26 +81,62 @@ const WalkthroughDialog: React.FC<WalkthroughDialogProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size='xl'>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Welcome to Solana IDE</ModalHeader>
-        <ModalBody>
-          <Flex direction='column' align='left' gap={1} mb={2}>
-            <Text mb={1}>
-              Watch our tutorial video to get started. Contact @0xk2_ for
-              support
-            </Text>
+          <Flex direction='row' color='blue.500' fontSize='xl' alignSelf='center' py={5} gap={1}><Text pt={1}>Welcome!</Text><Emoji text=":tada:" /></Flex>
+          <ModalBody>
+          <Flex direction='column' align='center' gap={1} mb={2}>
+            <Flex direction='row' align='center' gap={2} mb={2}>
+            <Text mb={1}> For support, contact either: </Text>
+            <Flex align='center' gap={1}>
+              <LiaTelegram />
+              <Text  p={0} borderRadius='md'> 
+                <Link 
+                  href='https://t.me/hfox8' 
+                  target='_blank'
+                  color='blue.500'
+                >@hfox8</Link> 
+              </Text>
+              <Text  p={0} borderRadius='md'> 
+                <Link 
+                href='https://t.me/hieubt88' 
+                target='_blank'
+                  color='blue.500'
+                >@hieubt88</Link> 
+              </Text>
+            </Flex>
+            <Flex align='center' gap={1}>
+              <FaXTwitter />
+              <Text p={0} borderRadius='md'> 
+                <Link 
+                  href='https://x.com/_sol_f0x' 
+                  target='_blank'
+                  color='blue.500'
+                >@sol_f0x</Link> 
+              </Text>  
+              <Text p={0} borderRadius='md'> 
+                <Link 
+                  href='https://x.com/0xk2_' 
+                  target='_blank'
+                  color='blue.500'
+                >@0xk2_</Link> 
+              </Text>
+            </Flex>
+            </Flex>
+            <Flex align='center' gap={1}>
+            <Text mb={1}> Watch our 
             <Link
-              href='https://youtu.be/FK5WILag95s'
+              href='https://www.youtube.com/watch?v=NbO50Rm8u6Q'
               isExternal
               color='blue.500'
               target='_blank'
               style={{
-                textDecoration: 'underline',
+                textDecorationLine: 'none',
+                textDecorationColor: '#a9b7ff',
                 userSelect: 'none',
                 boxShadow: 'none',
               }}
-            >
-              Tutorial Video
-            </Link>
+            > video tutorial </Link> to get started. </Text>
+            </Flex>
+            
           </Flex>
           <Image
             src={steps[currentStep].image}
@@ -118,14 +146,21 @@ const WalkthroughDialog: React.FC<WalkthroughDialogProps> = ({
             borderColor='gray.500'
             borderStyle='solid'
           />
-          <Text>{steps[currentStep].caption}</Text>
+          <Text fontSize='xs'>{steps[currentStep].caption}</Text>
         </ModalBody>
         <ModalFooter>
-          <Button mr={3} onClick={handlePrev} isDisabled={currentStep === 0}>
-            Previous
+          <Button size='xs' mr={3} onClick={handlePrev} isDisabled={currentStep === 0} leftIcon={<RiArrowDropLeftFill />}>
+          <Text fontSize='xs' fontWeight='normal'>Previous</Text>
           </Button>
-          <Button colorScheme='blue' onClick={handleNext}>
-            {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
+          <Button
+              size='xs'
+              colorScheme='blue'
+              onClick={handleNext}
+              rightIcon={
+                currentStep === steps.length - 1 ? <IoIosCheckmark /> : <RiArrowDropRightFill />
+              }
+            >
+            <Text fontSize='xs' fontWeight='normal'>{currentStep === steps.length - 1 ? 'Finish' : 'Next'}</Text>
           </Button>
         </ModalFooter>
       </ModalContent>

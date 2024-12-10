@@ -30,7 +30,9 @@ CREATE TABLE Creator (
     profile JSONB,
     password TEXT NOT NULL,
     org_id UUID REFERENCES Organisation(id),
-    role TEXT CHECK (role IN ('member', 'admin'))
+    role TEXT CHECK (role IN ('member', 'admin')),
+    wallet_public_key TEXT,
+    wallet_private_key TEXT
 );
 
 ALTER TABLE Creator ADD COLUMN wallet_created BOOLEAN DEFAULT FALSE;

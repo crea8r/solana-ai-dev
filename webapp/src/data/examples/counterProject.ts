@@ -1,4 +1,4 @@
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
@@ -9,6 +9,7 @@ const counterProject: Project = {
   description: 'A Solana program to increment or reset a shared counter, with restricted reset permissions.',
   aiModel: '',
   apiKey: '',
+  walletPublicKey: '',
   details: {
     nodes: [
       {
@@ -16,7 +17,7 @@ const counterProject: Project = {
         height: 44,
         id: 'program-12345',
         type: 'program',
-        position: { x: 50, y: 200 }, // Left side
+        position: { x: 50, y: 200 },
         data: {
           label: 'Counter Program',
           item: {
@@ -153,9 +154,23 @@ const counterProject: Project = {
     isSaved: false,
     isAnchorInit: false,
     isCode: false,
+    genUiClicked: false,
     aiFilePaths: [],
     aiStructure: '',
     stateContent: '',
+    uiResults: [],
+    aiInstructions: [],
+    sdkFunctions: [],
+    buildStatus: false,
+    deployStatus: false,
+    isSdk: false,
+    isUi: false,
+    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    sdk: { fileName: '', content: '' },
+    walletPublicKey: '',
+    walletSecretKey: '',
+    programId: null,
+    pdas: [],
   } as ProjectDetails,
 };
 

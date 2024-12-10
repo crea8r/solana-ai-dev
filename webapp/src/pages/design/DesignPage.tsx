@@ -22,7 +22,7 @@ import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
 import { promptAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
-import { FileTreeItemType } from '../../components/FileTree';
+import { FileTreeItemType } from '../../interfaces/file';
 import { saveProject } from '../../utils/projectUtils';
 
 import { todoproject } from '../../data/mock';
@@ -154,13 +154,11 @@ const DesignPage: React.FC = () => {
   };
 
   const handleUpdateNode = (updatedNode: Node) => {
-    // Check if ownerProgramId has changed
     const oldNode = projectContext.details.nodes.find((node) => node.id === updatedNode.id);
     const newOwnerProgramId = (updatedNode.data.localValues as any).ownerProgramId;
     const oldOwnerProgramId = oldNode && (oldNode.data.item as any).ownerProgramId;
     
     if (newOwnerProgramId !== oldOwnerProgramId) {
-      // Remove old edge if it exists
       if (oldOwnerProgramId) {
         setProjectContext((prevProjectContext) => ({
           ...prevProjectContext,
@@ -177,7 +175,6 @@ const DesignPage: React.FC = () => {
         }));
       }
 
-      // Add new edge if ownerProgramId is set
       if (newOwnerProgramId) {
         const newEdge: Edge = {
           id: uuidv4(),
@@ -192,7 +189,6 @@ const DesignPage: React.FC = () => {
             strokeWidth: 2,
           },
         };
-        //console.log(newEdge);
         setProjectContext((prevProjectContext) => ({
           ...prevProjectContext,
           details: {
@@ -257,10 +253,10 @@ const DesignPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const hasSeenWalkthrough = localStorage.getItem('hasSeenWalkthrough');
+    const hasSeenWalkthrough = sessionStorage.getItem('hasSeenWalkthrough');
     if (!hasSeenWalkthrough) {
       setIsWalkthroughOpen(true);
-      localStorage.setItem('hasSeenWalkthrough', 'true');
+      sessionStorage.setItem('hasSeenWalkthrough', 'true');
     }
     if (isProduction) {
       initGA(GA_MEASUREMENT_ID);
@@ -300,6 +296,8 @@ const DesignPage: React.FC = () => {
         rootPath: '',
         name: '',
         description: '',
+        aiModel: 'codestral-latest',
+        apiKey: '',
         details: {
           ...prevProjectContext.details,
           nodes: [],
@@ -310,66 +308,63 @@ const DesignPage: React.FC = () => {
           isSaved: false,
           isAnchorInit: false,
           isCode: false,
+          aiFilePaths: [],
+          aiStructure: '',
+          stateContent: '',
         },
       }));
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        details: {
-          ...prevProjectContext.details,
-          nodes: [],
-          edges: [],
-        },
-      }));
-
-    } catch (error) {
-      console.error('Error creating new project:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    } 
+    catch (error) { console.error('Error creating new project:', error); } 
+    finally { setIsLoading(false); }
   };
 
   const handleLoadProject = async (projectId: string, projectName: string) => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
+      //console.log("fetchedProject", fetchedProject);
 
-      // recreate the toolbox item
-      const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => {
-        const restoredItem = createItem(node.data.item.type);
-        return {
+      setProjectContext((prevProjectContext) => {
+        const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
           ...node,
           data: {
             ...node.data,
-            item: restoredItem,
+            item: createItem(node.data.item.type, node.data.item),
+          },
+        }));
+        //console.log("nodesWithTypedItems", nodesWithTypedItems);
+      
+        return {
+          ...prevProjectContext,
+          id: fetchedProject.id,
+          name: fetchedProject.name,
+          description: fetchedProject.description,
+          rootPath: fetchedProject.root_path,
+          details: {
+            ...prevProjectContext.details,
+            nodes: nodesWithTypedItems || [],
+            edges: fetchedProject.details.edges || [],
+            isAnchorInit: fetchedProject.details.isAnchorInit,
+            isCode: fetchedProject.details.isCode,
+            aiFilePaths: fetchedProject.details.aiFilePaths,
+            uiResults: fetchedProject.details.uiResults,
+            aiInstructions: fetchedProject.details.aiInstructions,
+            sdkFunctions: fetchedProject.details.sdkFunctions,
+            buildStatus: fetchedProject.details.buildStatus,
+            deployStatus: fetchedProject.details.deployStatus,
+            isSdk: fetchedProject.details.isSdk,
+            isUi: fetchedProject.details.isUi,
+            genUiClicked: fetchedProject.details.genUiClicked,
+            idl: fetchedProject.details.idl,
+            sdk: fetchedProject.details.sdk,
+            isSaved: fetchedProject.details.isSaved,
+            files: { name: '', children: [] },
+            codes: [],
+            programId: fetchedProject.details.programId,
           },
         };
       });
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        id: fetchedProject.id,
-        rootPath: fetchedProject.root_path,
-        name: fetchedProject.name,
-        description: fetchedProject.description,
-        details: {
-          ...prevProjectContext.details,
-          nodes: fetchedProject.details.nodes,
-          edges: fetchedProject.details.edges,
-          isSaved: fetchedProject.details.isSaved,
-          isAnchorInit: fetchedProject.details.isAnchorInit,
-          isCode: fetchedProject.details.isCode,
-        },
-      }));
-
-      setProjectContext((prevProjectContext) => ({
-        ...prevProjectContext,
-        details: {
-          ...prevProjectContext.details,
-          nodes: nodesWithTypedItems || [],
-          edges: fetchedProject.details.edges || [],
-        },
-      }));
+      
 
     } catch (e) {
       toast({
@@ -419,6 +414,7 @@ const DesignPage: React.FC = () => {
       setProjectContext({
         ...projectContext,
         ...selectedProject,
+        aiModel: projectContext.aiModel || 'codestral-latest',
       });
     }
   };
@@ -469,6 +465,10 @@ const DesignPage: React.FC = () => {
     }
     console.log('projectContext:', projectContext);
   }, [projectContext.details.nodes, projectContext.details.edges, setProjectContext, loadingExample]);
+
+  useEffect(() => {
+    console.log('user:', user);
+  }, [user]);
 
   return (
     <>
@@ -525,12 +525,19 @@ const DesignPage: React.FC = () => {
         </Flex>
         <Button
           position='fixed'
+          boxSizing='border-box'
           bottom='4'
           right='4'
-          colorScheme='blue'
+          bg="white"
+          border="2.5px solid"
+          borderColor="#a9b7ff"
+          shadow="lg"
+          color="#a9b7ff"
+          cursor="pointer !important"
           onClick={handleOpenWalkthrough}
           leftIcon={<FaQuestion />}
           style={{ zIndex: 100 }}
+          _hover={{ bg: '#a9b7ff', color: 'white', border: '2.5px solid transparent' }}
         >
           Help
         </Button>

@@ -1,5 +1,3 @@
-// src/utils/itemFactory.ts
-
 import { NodeTypes } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { Account } from '../items/Account';
@@ -8,23 +6,41 @@ import { Program } from '../items/Program';
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 
-export function createItem(type: string): ToolboxItem | null {
+export function createItem(type: string, itemData?: Partial<ToolboxItem>): ToolboxItem | null {
   switch (type) {
-    case 'account':
-      return new Account(`account-${Date.now()}`, 'Account', '', '', '');
+    case 'account': {
+      const accountData = itemData as Partial<Account>;
+      const account = new Account(
+        itemData?.id || `account-${Date.now()}`,
+        itemData?.name || 'Account',
+        itemData?.description || '',
+        accountData?.json || '',
+        accountData?.ownerProgramId || ''
+      );
+
+      Object.assign(account, itemData);
+      return account;
+    }  
     case 'instruction':
-      return new Instruction(
-        `instruction-${Date.now()}`,
-        'Instruction',
-        '',
-        '',
-        '',
-        ''
+      const instructionData = itemData as Partial<Instruction>;
+      return Object.assign(
+        new Instruction(
+          instructionData?.id || `instruction-${Date.now()}`,
+          instructionData?.name || 'Instruction',
+          instructionData?.parameters || '',
+          instructionData?.description || '',
+          instructionData?.aiInstruction || '',
+          instructionData?.ownerProgramId || ''
+          ),
+        itemData
       );
     case 'program':
-      return new Program(`program-${Date.now()}`, 'Program', '');
+      return Object.assign(
+        new Program(itemData?.id || `program-${Date.now()}`, itemData?.name || 'Program', ''),
+        itemData
+      );    
     default:
-      return null;
+    return null;
   }
 }
 

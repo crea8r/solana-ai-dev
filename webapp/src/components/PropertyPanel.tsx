@@ -4,6 +4,9 @@ import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
 import { useProjectContext } from '../contexts/ProjectContext';
+import { Account } from '../items/Account';
+import { Program } from '../items/Program';
+import { Instruction } from '../items/Instruction';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -56,6 +59,22 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       setEdgeLabel('');
     }
   }, [selectedNode, selectedEdge, projectContext]);
+
+  useEffect(() => {
+    if (selectedNode) {
+      try {
+        console.log('Selected Node:', selectedNode);
+        console.log('Item Instance:', selectedNode.data.item);  
+        console.log('Item Type:', typeof selectedNode.data.item);
+        console.log('Is Account:', selectedNode.data.item instanceof Account);
+        console.log('Is Instruction:', selectedNode.data.item instanceof Instruction);
+        console.log('Is Program:', selectedNode.data.item instanceof Program);
+      } catch (error) {
+        console.error('Error logging selected node:', error);
+        console.log('Selected Node (Raw):', selectedNode);
+      }
+    }
+  }, [selectedNode]);
 
   if (!selectedNode && !selectedEdge) return null;
 

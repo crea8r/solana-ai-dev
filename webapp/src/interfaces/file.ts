@@ -1,7 +1,8 @@
-export interface FileTreeNode {
+// name, ext, type, path, children
+export interface FileTreeItemType {
   name: string;
-  type: 'file' | 'directory';
-  children?: FileTreeNode[];
   ext?: string;
+  type?: 'directory' | 'file';
+  children?: FileTreeItemType[];
   path?: string;
 }
