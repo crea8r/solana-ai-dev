@@ -10,6 +10,7 @@ import {
   applyNodeChanges,
   MarkerType,
 } from 'react-flow-renderer';
+import { MdOutlineFeedback } from "react-icons/md";
 import TopPanel from './TopPanel';
 import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
@@ -17,6 +18,7 @@ import PropertyPanel from '../../components/PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
+import FeedbackForm from '../../components/FeedbackForm';
 import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
 import genStructure from '../../prompts/genStructure';
@@ -68,6 +70,7 @@ const DesignPage: React.FC = () => {
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [promptString, setPromptString] = useState<any>({});
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
@@ -250,6 +253,10 @@ const DesignPage: React.FC = () => {
 
   const handleOpenWalkthrough = () => {
     setIsWalkthroughOpen(true);
+  };
+
+  const handleOpenFeedbackForm = () => {
+    setIsFeedbackFormOpen(true);
   };
 
   useEffect(() => {
@@ -481,6 +488,10 @@ const DesignPage: React.FC = () => {
         isOpen={isWalkthroughOpen}
         onClose={handleCloseWalkthrough}
       />
+      <FeedbackForm
+        isOpen={isFeedbackFormOpen}
+        onClose={() => setIsFeedbackFormOpen(false)}
+      />
       <Flex direction='column' height='100vh'>
         <ProjectBanner
           isOpen={isListProjectModalShown}
@@ -523,24 +534,44 @@ const DesignPage: React.FC = () => {
             nodes={projectContext.details.nodes}
           />
         </Flex>
-        <Button
-          position='fixed'
-          boxSizing='border-box'
-          bottom='4'
-          right='4'
-          bg="white"
-          border="2.5px solid"
-          borderColor="#a9b7ff"
-          shadow="lg"
-          color="#a9b7ff"
-          cursor="pointer !important"
-          onClick={handleOpenWalkthrough}
-          leftIcon={<FaQuestion />}
-          style={{ zIndex: 100 }}
-          _hover={{ bg: '#a9b7ff', color: 'white', border: '2.5px solid transparent' }}
-        >
-          Help
-        </Button>
+        
+          <Button
+            position='fixed'
+            bottom='4'
+            right='10'
+            boxSizing='border-box'
+            bg="white"
+            border="2.5px solid"
+            borderColor="#a9b7ff"
+            shadow="lg"
+            color="#a9b7ff"
+            cursor="pointer !important"
+            onClick={handleOpenWalkthrough}
+            leftIcon={<FaQuestion />}
+            style={{ zIndex: 100 }}
+            _hover={{ bg: '#a9b7ff', color: 'white', border: '2.5px solid transparent' }}
+            zIndex={100}
+          >
+            Help
+          </Button>
+          <Button
+            position='fixed'
+            bottom='4'
+            right='40'
+            boxSizing='border-box'
+            bg="white"
+            border="2.5px solid"
+            borderColor="#a9b7ff"
+            shadow="lg"
+            color="#a9b7ff"
+            cursor="pointer !important"
+            onClick={handleOpenFeedbackForm}
+            _hover={{ bg: '#a9b7ff', color: 'white', border: '2.5px solid transparent' }}
+            leftIcon={<MdOutlineFeedback size={20}/>}
+            zIndex={100}
+          >
+            Feedback
+          </Button>
       </Flex>
       <ListProject
         isOpen={isListProjectModalShown}

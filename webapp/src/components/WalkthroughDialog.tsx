@@ -85,7 +85,7 @@ const WalkthroughDialog: React.FC<WalkthroughDialogProps> = ({
           <ModalBody>
           <Flex direction='column' align='center' gap={1} mb={2}>
             <Flex direction='row' align='center' gap={2} mb={2}>
-            <Text mb={1}> For support, contact either: </Text>
+            <Text mb={1}> For support, please contact: </Text>
             <Flex align='center' gap={1}>
               <LiaTelegram />
               <Text  p={0} borderRadius='md'> 
@@ -94,13 +94,6 @@ const WalkthroughDialog: React.FC<WalkthroughDialogProps> = ({
                   target='_blank'
                   color='blue.500'
                 >@hfox8</Link> 
-              </Text>
-              <Text  p={0} borderRadius='md'> 
-                <Link 
-                href='https://t.me/hieubt88' 
-                target='_blank'
-                  color='blue.500'
-                >@hieubt88</Link> 
               </Text>
             </Flex>
             <Flex align='center' gap={1}>
@@ -112,13 +105,6 @@ const WalkthroughDialog: React.FC<WalkthroughDialogProps> = ({
                   color='blue.500'
                 >@sol_f0x</Link> 
               </Text>  
-              <Text p={0} borderRadius='md'> 
-                <Link 
-                  href='https://x.com/0xk2_' 
-                  target='_blank'
-                  color='blue.500'
-                >@0xk2_</Link> 
-              </Text>
             </Flex>
             </Flex>
             <Flex align='center' gap={1}>
