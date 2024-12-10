@@ -97,7 +97,7 @@ export const logout = async () => {
 
 export const getUser = async () => {
   try {
-    const response = await authApi.get('/auth/getUser');
+    const response = await authApi.get('/auth/user');
     return response.data.user;
   } catch (error) {
     console.error('Error fetching user:', error);

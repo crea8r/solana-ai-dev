@@ -2,11 +2,11 @@ import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
-const crowdfundingProgramProject: Project = {
+const loanProgramProject: Project = {
   id: '',
   rootPath: '',
-  name: 'Crowdfunding Program',
-  description: 'A Solana program that allows users to pledge funds towards a crowdfunding campaign. Once the campaign reaches its funding goal, the funds are released to the campaign owner.',
+  name: 'Loan Program',
+  description: 'A Solana program that manages a simple loan system, allowing users to borrow tokens with a collateral-backed loan structure.',
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
@@ -15,16 +15,16 @@ const crowdfundingProgramProject: Project = {
       {
         width: 56,
         height: 44,
-        id: 'program-11223',
+        id: 'program-123456',
         type: 'program',
         position: { x: 50, y: 200 },
         data: {
-          label: 'Crowdfunding Program',
+          label: 'Loan Program',
           item: {
-            id: 'program-11223',
+            id: 'program-123456',
             type: 'program',
-            name: 'Crowdfunding Program',
-            description: 'Enables users to pledge funds to a crowdfunding campaign. Once the goal is reached, the funds are released to the campaign owner.',
+            name: 'Loan Program',
+            description: 'Manages loans with collateral. Users can borrow tokens by providing collateral, and the loan can be repaid with interest.',
           },
         },
         selected: false,
@@ -33,18 +33,18 @@ const crowdfundingProgramProject: Project = {
       {
         width: 80,
         height: 44,
-        id: 'account-11224',
+        id: 'account-123457',
         type: 'account',
         position: { x: 300, y: 50 }, // Top-right
         data: {
-          label: 'CampaignAccount',
+          label: 'LoanAccount',
           item: {
-            id: 'account-11224',
+            id: 'account-123457',
             type: 'account',
-            name: 'CampaignAccount',
-            description: 'Stores campaign details including total funding goal, total pledged amount, and the list of backers.',
-            json: '{owner: PubKey, goal_amount: u64, total_pledged: u64, backers: Vec<PubKey>, status: string}',
-            ownerProgramId: 'program-11223',
+            name: 'LoanAccount',
+            description: 'Stores loan details including borrower, loan amount, collateral, and loan status.',
+            json: '{borrower: PubKey, loan_amount: u64, collateral_amount: u64, interest_rate: f32, loan_status: string}',
+            ownerProgramId: 'program-123456',
           },
         },
         selected: false,
@@ -53,19 +53,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11225',
+        id: 'instruction-123458',
         type: 'instruction',
         position: { x: 300, y: 150 }, // Second from top-right
         data: {
-          label: 'PledgeFunds',
+          label: 'CreateLoan',
           item: {
-            id: 'instruction-11225',
+            id: 'instruction-123458',
             type: 'instruction',
-            name: 'PledgeFunds',
-            description: 'Allows a user to pledge funds towards a crowdfunding campaign.',
-            parameters: 'campaign_account: AccountInfo, pledge_amount: u64, backer: PubKey',
-            aiInstruction: 'Check if the backer has sufficient funds, add the pledged amount to the total pledged amount, and update the backer list.',
-            ownerProgramId: 'program-11223',
+            name: 'CreateLoan',
+            description: 'Creates a new loan by verifying the collateral and storing the loan details.',
+            parameters: 'borrower: PubKey, loan_amount: u64, collateral_amount: u64, interest_rate: f32',
+            aiInstruction: 'Verify the borrower, validate collateral, store loan details, and set loan status to "active". The loan should also include an interest rate, and collateral should exceed a minimum value.',
+            ownerProgramId: 'program-123456',
           },
         },
         selected: true,
@@ -74,19 +74,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11226',
+        id: 'instruction-123459',
         type: 'instruction',
         position: { x: 300, y: 250 }, // Third from top-right
         data: {
-          label: 'ReleaseFunds',
+          label: 'RepayLoan',
           item: {
-            id: 'instruction-11226',
+            id: 'instruction-123459',
             type: 'instruction',
-            name: 'ReleaseFunds',
-            description: 'Releases the pledged funds to the campaign owner once the goal has been reached.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'Check if the total pledged amount has reached the funding goal. If the goal is met, release the funds to the campaign owner and mark the campaign as successful.',
-            ownerProgramId: 'program-11223',
+            name: 'RepayLoan',
+            description: 'Repays a portion of the loan, including interest, and reduces the loan balance.',
+            parameters: 'loan_account: AccountInfo, payment_amount: u64, borrower: PubKey',
+            aiInstruction: 'Verify the loan balance, calculate the repayment including interest, and update the loan balance accordingly. If the loan is fully repaid, mark the loan status as "paid off".',
+            ownerProgramId: 'program-123456',
           },
         },
         selected: true,
@@ -95,19 +95,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11227',
+        id: 'instruction-123460',
         type: 'instruction',
         position: { x: 300, y: 350 }, // Bottom-right
         data: {
-          label: 'RefundBackers',
+          label: 'LiquidateLoan',
           item: {
-            id: 'instruction-11227',
+            id: 'instruction-123460',
             type: 'instruction',
-            name: 'RefundBackers',
-            description: 'Refunds all backers if the campaign does not reach its funding goal.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'If the campaign fails to reach its goal by the end of the campaign period, refund all backers and mark the campaign as unsuccessful.',
-            ownerProgramId: 'program-11223',
+            name: 'LiquidateLoan',
+            description: 'Liquidates the loan if the borrower defaults, seizing the collateral to cover the loan amount.',
+            parameters: 'loan_account: AccountInfo, borrower: PubKey',
+            aiInstruction: 'Check if the loan is overdue and if the borrower has defaulted. If so, liquidate the collateral and mark the loan status as "liquidated".',
+            ownerProgramId: 'program-123456',
           },
         },
         selected: true,
@@ -117,32 +117,32 @@ const crowdfundingProgramProject: Project = {
     edges: [
       {
         id: 'edge-1',
-        source: 'program-11223',
-        target: 'account-11224',
+        source: 'program-123456',
+        target: 'account-123457',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-2',
-        source: 'program-11223',
-        target: 'instruction-11225',
+        source: 'program-123456',
+        target: 'instruction-123458',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-3',
-        source: 'program-11223',
-        target: 'instruction-11226',
+        source: 'program-123456',
+        target: 'instruction-123459',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-4',
-        source: 'program-11223',
-        target: 'instruction-11227',
+        source: 'program-123456',
+        target: 'instruction-123460',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
@@ -174,4 +174,4 @@ const crowdfundingProgramProject: Project = {
   } as ProjectDetails,
 };
 
-export { crowdfundingProgramProject };
+export { loanProgramProject };

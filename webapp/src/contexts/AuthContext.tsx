@@ -3,6 +3,7 @@ import {
   login as apiLogin,
   register as apiRegister,
   logout as apiLogout,
+  getUser,
 } from '../services/authApi';
 
 export interface User {
@@ -53,27 +54,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const initializeAuth = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/user`, {
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          console.log("token", token);
+          const fetchedUser = await getUser(); 
           setUser({
-            id: data.user.id,
-            username: data.user.username,
-            org_id: data.user.org_id,
-            orgName: data.user.org_name,
-            walletCreated: data.user.wallet_created,
-            hasViewedWalletModal: data.user.private_key_viewed,
-            walletPublicKey: data.user.wallet_public_key,
-            walletPrivateKey: data.user.wallet_private_key,
+            id: fetchedUser.id,
+            username: fetchedUser.username,
+            org_id: fetchedUser.org_id,
+            orgName: fetchedUser.orgName,
+            walletCreated: fetchedUser.walletCreated,
+            hasViewedWalletModal: fetchedUser.hasViewedWalletModal,
+            walletPublicKey: fetchedUser.walletPublicKey,
+            walletPrivateKey: fetchedUser.walletPrivateKey,
           });
           setFirstLoginAfterRegistration(
-            data.user.walletCreated && !data.user.hasViewedWalletModal
+            fetchedUser.walletCreated && !fetchedUser.hasViewedWalletModal
           );
-          console.log('User:', data.user);
+          console.log('User:', fetchedUser);
         } else {
+          console.log("no token");
           setUser(null);
         }
       } catch (error) {
@@ -98,8 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (username: string, password: string) => {
     try {
       const response = await apiLogin(username, password, setUser);
-      setUser(response.user);
-      setFirstLoginAfterRegistration(!response.user.walletCreated);
+      if (response.token && response.user) {
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        setFirstLoginAfterRegistration(!response.user.walletCreated);
+      } else throw new Error('Invalid login response');
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

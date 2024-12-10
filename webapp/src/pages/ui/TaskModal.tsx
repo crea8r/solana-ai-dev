@@ -36,8 +36,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
     const toast = useToast();
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
 
-    
-
     useEffect(() => {
         if (projectContext) {
             setContextReady(true);

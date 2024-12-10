@@ -2,11 +2,11 @@ import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
-const crowdfundingProgramProject: Project = {
+const vestingProgramProject: Project = {
   id: '',
   rootPath: '',
-  name: 'Crowdfunding Program',
-  description: 'A Solana program that allows users to pledge funds towards a crowdfunding campaign. Once the campaign reaches its funding goal, the funds are released to the campaign owner.',
+  name: 'Token Vesting Program',
+  description: 'A Solana program that allows tokens to be distributed to users over a specified vesting period, ensuring they receive their tokens incrementally.',
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
@@ -15,16 +15,16 @@ const crowdfundingProgramProject: Project = {
       {
         width: 56,
         height: 44,
-        id: 'program-11223',
+        id: 'program-33445',
         type: 'program',
         position: { x: 50, y: 200 },
         data: {
-          label: 'Crowdfunding Program',
+          label: 'Vesting Program',
           item: {
-            id: 'program-11223',
+            id: 'program-33445',
             type: 'program',
-            name: 'Crowdfunding Program',
-            description: 'Enables users to pledge funds to a crowdfunding campaign. Once the goal is reached, the funds are released to the campaign owner.',
+            name: 'Token Vesting Program',
+            description: 'A program that enables incremental token distribution over a set period to users.',
           },
         },
         selected: false,
@@ -33,18 +33,18 @@ const crowdfundingProgramProject: Project = {
       {
         width: 80,
         height: 44,
-        id: 'account-11224',
+        id: 'account-33446',
         type: 'account',
         position: { x: 300, y: 50 }, // Top-right
         data: {
-          label: 'CampaignAccount',
+          label: 'VestingAccount',
           item: {
-            id: 'account-11224',
+            id: 'account-33446',
             type: 'account',
-            name: 'CampaignAccount',
-            description: 'Stores campaign details including total funding goal, total pledged amount, and the list of backers.',
-            json: '{owner: PubKey, goal_amount: u64, total_pledged: u64, backers: Vec<PubKey>, status: string}',
-            ownerProgramId: 'program-11223',
+            name: 'VestingAccount',
+            description: 'Stores information on the user’s token vesting, including the total tokens, amount vested, and the vesting schedule.',
+            json: '{user: PubKey, total_tokens: u64, vested_amount: u64, release_schedule: Vec<i64>, status: string}',
+            ownerProgramId: 'program-33445',
           },
         },
         selected: false,
@@ -53,19 +53,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11225',
+        id: 'instruction-33447',
         type: 'instruction',
         position: { x: 300, y: 150 }, // Second from top-right
         data: {
-          label: 'PledgeFunds',
+          label: 'SetVestingSchedule',
           item: {
-            id: 'instruction-11225',
+            id: 'instruction-33447',
             type: 'instruction',
-            name: 'PledgeFunds',
-            description: 'Allows a user to pledge funds towards a crowdfunding campaign.',
-            parameters: 'campaign_account: AccountInfo, pledge_amount: u64, backer: PubKey',
-            aiInstruction: 'Check if the backer has sufficient funds, add the pledged amount to the total pledged amount, and update the backer list.',
-            ownerProgramId: 'program-11223',
+            name: 'SetVestingSchedule',
+            description: 'Sets the vesting schedule, specifying when tokens will be released to the user.',
+            parameters: 'vesting_account: AccountInfo, release_schedule: Vec<i64>',
+            aiInstruction: 'Define the vesting schedule by specifying the time intervals at which the user will receive their tokens. The total vesting period should be considered when creating this schedule.',
+            ownerProgramId: 'program-33445',
           },
         },
         selected: true,
@@ -74,19 +74,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11226',
+        id: 'instruction-33448',
         type: 'instruction',
         position: { x: 300, y: 250 }, // Third from top-right
         data: {
-          label: 'ReleaseFunds',
+          label: 'ReleaseTokens',
           item: {
-            id: 'instruction-11226',
+            id: 'instruction-33448',
             type: 'instruction',
-            name: 'ReleaseFunds',
-            description: 'Releases the pledged funds to the campaign owner once the goal has been reached.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'Check if the total pledged amount has reached the funding goal. If the goal is met, release the funds to the campaign owner and mark the campaign as successful.',
-            ownerProgramId: 'program-11223',
+            name: 'ReleaseTokens',
+            description: 'Releases tokens to the user based on the vesting schedule.',
+            parameters: 'vesting_account: AccountInfo',
+            aiInstruction: 'Check the current time against the release schedule and release tokens to the user accordingly. Update the vested amount and mark tokens as fully vested once the schedule is complete.',
+            ownerProgramId: 'program-33445',
           },
         },
         selected: true,
@@ -95,19 +95,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11227',
+        id: 'instruction-33449',
         type: 'instruction',
         position: { x: 300, y: 350 }, // Bottom-right
         data: {
-          label: 'RefundBackers',
+          label: 'CancelVesting',
           item: {
-            id: 'instruction-11227',
+            id: 'instruction-33449',
             type: 'instruction',
-            name: 'RefundBackers',
-            description: 'Refunds all backers if the campaign does not reach its funding goal.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'If the campaign fails to reach its goal by the end of the campaign period, refund all backers and mark the campaign as unsuccessful.',
-            ownerProgramId: 'program-11223',
+            name: 'CancelVesting',
+            description: 'Cancels the vesting program and reverts all unvested tokens back to the owner.',
+            parameters: 'vesting_account: AccountInfo',
+            aiInstruction: 'If the vesting program is cancelled, revert all unvested tokens back to the owner and mark the vesting account as cancelled.',
+            ownerProgramId: 'program-33445',
           },
         },
         selected: true,
@@ -117,32 +117,32 @@ const crowdfundingProgramProject: Project = {
     edges: [
       {
         id: 'edge-1',
-        source: 'program-11223',
-        target: 'account-11224',
+        source: 'program-33445',
+        target: 'account-33446',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-2',
-        source: 'program-11223',
-        target: 'instruction-11225',
+        source: 'program-33445',
+        target: 'instruction-33447',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-3',
-        source: 'program-11223',
-        target: 'instruction-11226',
+        source: 'program-33445',
+        target: 'instruction-33448',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-4',
-        source: 'program-11223',
-        target: 'instruction-11227',
+        source: 'program-33445',
+        target: 'instruction-33449',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
@@ -174,4 +174,4 @@ const crowdfundingProgramProject: Project = {
   } as ProjectDetails,
 };
 
-export { crowdfundingProgramProject };
+export { vestingProgramProject };

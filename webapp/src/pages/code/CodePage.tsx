@@ -42,6 +42,7 @@ const CodePage = () => {
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
   const [fileContent, setFileContent] = useState<string>('');
   const [showWallet, setShowWallet] = useState(false);
+  const [refreshFileTree, setRefreshFileTree] = useState(false);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
   const _handleSelectFile = useCallback(
@@ -93,7 +94,9 @@ const CodePage = () => {
     setIsLoading,            
     addLog,                  
     _handleSelectFile,  
-    projectContext?.details?.sdk?.content     
+    projectContext?.details?.sdk?.content,
+    projectContext?.details?.genUiClicked,
+    projectContext?.details?.isSdk,
   ]);
 
   useEffect(() => {
@@ -185,26 +188,56 @@ const CodePage = () => {
   }, [toast]);
 
   const handleGenerateUIFromCodePage = async () => {
-    if (!user) { console.error("User not found."); return; }
+    if (!user) {
+      console.error("User not found.");
+      return;
+    }
     setIsTaskModalOpen(true);
     try {
       await handleGenerateUI(
-        projectContext.id, 
-        projectContext, 
-        setProjectContext, 
-        setIsPolling, 
-        setIsLoading, 
-        addLog, 
+        projectContext.id,
+        projectContext,
+        setProjectContext,
+        setIsPolling,
+        setIsLoading,
+        addLog,
         setIsTaskModalOpen,
         user
       );
+  
+      const updatedRootNode : any = await fetchDirectoryStructure(
+        projectContext.id,
+        projectContext.rootPath,
+        projectContext.name,
+        mapFileTreeNodeToItemType,
+        filterFiles(projectContext.rootPath),
+        setFiles,
+        setProjectContext,
+        setIsPolling,
+        setIsLoading,
+        addLog,
+        _handleSelectFile
+      );
+  
+      const sdkDirectory = updatedRootNode.children?.find((child: any) => child.name === 'sdk');
+      if (sdkDirectory) {
+        _handleSelectFile(sdkDirectory);
+        setRefreshFileTree(prev => !prev);
+      } else {
+        console.warn("SDK directory not found in the updated file structure.");
+      }
+  
     } catch (error) {
       console.error("Error generating UI:", error);
     } finally {
-      setProjectContext((prev) => ({ ...prev, details: { ...prev.details, genUiClicked: true } }));
+      setProjectContext((prev) => ({
+        ...prev,
+        details: { ...prev.details, genUiClicked: true }
+      }));
     }
   };
-
+  
+  
   return (
     <Flex
       direction="column"

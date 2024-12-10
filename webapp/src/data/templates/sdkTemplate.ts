@@ -36,6 +36,7 @@ export const getSdkTemplate = async (
     _rootPath: string,
     _idlPath: string,
     _walletPublicKey: string,
+    _walletPrivateKey: string,
     projectContext: Project,
     setProjectContext: Dispatch<SetStateAction<Project>>,
     setIsPolling: Dispatch<SetStateAction<boolean>>,
@@ -43,6 +44,7 @@ export const getSdkTemplate = async (
     addLog: (message: string, type: LogEntry['type']) => void,
     user: User
 ): Promise<string> => {
+    console.log("wallet private key- sdktemplate", _walletPrivateKey);
     const systemAccountAddresses = [
         "11111111111111111111111111111111", 
         "SysvarRent111111111111111111111111111111111", 
@@ -57,7 +59,6 @@ export const getSdkTemplate = async (
         "tokenProgram"
     ];
 
-    if (!user.walletPrivateKey) throw new Error('Wallet private key not found');
     if (_pdas.length === 0) throw new Error('No PDAs found');
 
     const updatedInstructions = processInstructions( 
@@ -268,7 +269,7 @@ export const getSdkTemplate = async (
     export const setup${_programClassName} = () => {
         const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
         
-        const secretKey = [${Object.values(JSON.parse(user.walletPrivateKey))}];
+        const secretKey = [${Object.values(JSON.parse(_walletPrivateKey))}];
         const wallet = new Wallet(Keypair.fromSecretKey(new Uint8Array(secretKey)));
     
         const provider = new AnchorProvider(connection, wallet, {
