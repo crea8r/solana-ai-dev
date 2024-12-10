@@ -29,6 +29,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     walletPublicKey: project.details.walletPublicKey,
     walletSecretKey: project.details.walletSecretKey,
     programId: project.details.programId,
+    pdas: project.details.pdas,
   },
 });
 
@@ -82,6 +83,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           walletPublicKey: '',
           walletSecretKey: '',
           programId: '',
+          pdas: [],
         },
       };
   });

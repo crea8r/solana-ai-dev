@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Box, Text, Input, Button, Flex, VStack } from "@chakra-ui/react";
 import { Instruction } from "../../types/uiTypes";
 import { useProjectContext } from "../../contexts/ProjectContext";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { toCamelCase } from "../../utils/uiUtils";
 import { uiApi } from "../../api/ui";
 
 interface InstructionCardProps {
@@ -14,8 +16,14 @@ const InstructionCard: React.FC<InstructionCardProps> = ({
   isSimpleMode,
 }) => {
   const { projectContext } = useProjectContext();
+  const { user } = useAuthContext();
   const [params, setParams] = useState<{ [key: string]: string }>({});
-  const [CounterProgramSDK, setCounterProgramSDK] = useState<any>(null);
+  const [userInputs, setUserInputs] = useState<string[]>([]);
+  const [autoFilledParams, setAutoFilledParams] = useState<Record<string, string>>({});
+
+  const isInitializerInstruction = (instruction: any): boolean => {
+    return instruction.context.accounts.some((account: any) => account.pda !== undefined);
+  };
 
   const handleInputChange = (paramName: string, value: string) => {
     setParams((prev) => ({
@@ -25,14 +33,15 @@ const InstructionCard: React.FC<InstructionCardProps> = ({
   };
 
   const handleExecuteInstruction = async () => {
-    console.log(`Executing ${instruction.name}`);
-    const response = await uiApi.executeSdkInstruction(projectContext.id, instruction.name, params);
+    const instructionName = toCamelCase(instruction.name);
+    console.log(`Executing ${instructionName}`);
+    console.log("params", params);
+
+    if (!user) throw new Error("User not found");
+
+    const response = await uiApi.executeSdkInstruction(user.id, projectContext.id, instructionName, params);
     console.log(response.data.status);
   };
-
-  useEffect(() => {
-    console.log("instruction:", instruction);
-  }, [instruction]);
 
   return (
     <Box
@@ -51,36 +60,26 @@ const InstructionCard: React.FC<InstructionCardProps> = ({
     >
       <VStack spacing={4} align="stretch">
         <Flex align="center" gap={2}>
-          <Text fontSize="lg" fontWeight="bold" >
+          <Text fontSize="lg" fontWeight="bold">
             {instruction.name}
           </Text>
         </Flex>
-        {!isSimpleMode && (
-          <Text fontSize="sm">
-            {instruction.description}
-          </Text>
-        )}
+        {!isSimpleMode && <Text fontSize="sm">{instruction.description}</Text>}
         {!isSimpleMode &&
-          instruction.params.map((param, idx) => {
-            const paramType =
-              typeof param.type === "object" && "name" in param.type
-                ? param.type.name
-                : String(param.type);
-            return (
-              <Box key={idx}>
-                <Text fontSize="sm" fontWeight="medium" color="gray.800">
-                  {param.name} ({paramType})
-                </Text>
-                <Input
-                  placeholder={`Enter ${param.name} (${paramType})`}
-                  size="sm"
-                  mt={1}
-                  width="75%"
-                  onChange={(e) => handleInputChange(param.name, e.target.value)}
-                />
-              </Box>
-            );
-          })}
+          userInputs.map((param, idx) => (
+            <Box key={idx}>
+              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                {param}
+              </Text>
+              <Input
+                placeholder={`Enter ${param}`}
+                size="sm"
+                mt={1}
+                width="75%"
+                onChange={(e) => handleInputChange(param, e.target.value)}
+              />
+            </Box>
+          ))}
         {!isSimpleMode && (
           <Button
             bg="#a9b7ff"

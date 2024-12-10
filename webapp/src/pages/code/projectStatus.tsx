@@ -140,14 +140,14 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
                 cursor="pointer"
                 onClick={onBuild}
               >
-                <Text fontSize="0.75rem" fontWeight="normal" color="#df5020">Built</Text>
+                <Text fontSize="0.75rem" fontWeight="normal" color="#df5020">Build</Text>
                 <RxCrossCircled size={14} color="#df5020" />
               </Flex>
             </Tooltip>
           )}
           {buildStatus && (
             <Flex direction="row" gap={2} alignItems="center" justifyContent="center" cursor="default">
-              <Text fontSize="0.75rem" fontWeight="normal" color="#46af0e">Built</Text>
+              <Text fontSize="0.75rem" fontWeight="normal" color="#46af0e">Build</Text>
               <GoCheckCircle size={14} color="#46af0e" />
             </Flex>
           )}
@@ -164,7 +164,7 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
         borderColor="gray.200" 
         p={2}
         >
-          {!deployStatus && (
+          {!deployStatus && buildStatus && (
             <Tooltip 
               label="Deploy project" 
               placement="bottom" 
@@ -184,17 +184,36 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
                 cursor="pointer"
                 onClick={onDeploy}
               >
-                <Text fontSize="0.75rem" fontWeight="normal" color="#df5020">Deployed</Text>
+                <Text fontSize="0.75rem" fontWeight="normal" color="#df5020">Deploy</Text>
                 <RxCrossCircled size={14} color="#df5020" />
               </Flex>
             </Tooltip>
           )}
-          {deployStatus && (
+          {deployStatus && buildStatus && (
             <>
               <Flex direction="row" gap={2} alignItems="center" justifyContent="center" cursor="default">
-                <Text fontSize="0.75rem" fontWeight="normal" color="#46af0e">Deployed</Text>
+                <Text fontSize="0.75rem" fontWeight="normal" color="#46af0e">Deploy</Text>
                 <GoCheckCircle size={14} color="#46af0e" />
               </Flex>
+            </>
+          )}
+          {!deployStatus && !buildStatus && (
+            <>
+            <Tooltip 
+              label="Build project first" 
+              placement="bottom" 
+              hasArrow 
+              bg="gray.100" 
+              color="gray.700" 
+              borderRadius="md" 
+              fontSize="0.75rem"
+              fontWeight="normal"
+            >
+              <Flex direction="row" gap={2} alignItems="center" justifyContent="center" cursor="default">
+                <Text fontSize="0.75rem" fontWeight="normal" color="#df5020">Deploy</Text>
+                <RxCrossCircled size={14} color="#df5020" />
+              </Flex>
+            </Tooltip>
             </>
           )}
           {deployStatus && projectContext?.details?.programId && (

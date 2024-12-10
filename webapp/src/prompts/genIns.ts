@@ -13,6 +13,15 @@ Here is the template for generating instruction files:
 !Important: if the instruction requires a system program (for example, if the instruction initialises a new account), always use the correct arguments of 'info and System.
 for example: pub system_program: Program<'info, System>
 
+!Important: when initializing an account, always provide the seeds and bump in the \`#[account(init)]\` constraint.
+for example like this:
+#[account(
+        init, 
+        payer = initializer, 
+        space = 8 + 32 + 8, 
+        seeds = [b"byte string literal name", initializer.key().as_ref()],
+        bump)]
+
 !If an account is specified as the \`payer\` in the \`#[account(init)]\` constraint, ensure it is declared as \`#[account(mut)]\` in the \`#[derive(Accounts)]\` struct. For example:
 
 - Input: \`#[account(init, payer = initializer, space = ...)]\`

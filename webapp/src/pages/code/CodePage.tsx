@@ -17,9 +17,9 @@ import {
   handleRunCommand,
   handleSelectFileUtil,
   findFirstFile,
-  handleDeployProject
+  handleDeployProject,
+  updateProjectInDatabase
 } from '../../utils/codePageUtils';
-import { saveProject } from '../../utils/projectUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
 import ProjectStatus from './projectStatus';
@@ -52,6 +52,11 @@ const CodePage = () => {
   useEffect(() => {
     console.log("projectContext", projectContext);
   }, [projectContext]);
+
+  useEffect(() => {
+    console.log("projectContext.details.deployStatus", projectContext.details.deployStatus);
+    if (projectContext.details.deployStatus === true) updateProjectInDatabase(projectContext);
+  }, [projectContext.details.deployStatus]);
 
   useEffect(() => {
     const fetchFilesIfNeeded = async () => {

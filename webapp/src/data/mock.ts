@@ -239,6 +239,7 @@ const todoproject: Project = {
     walletPublicKey: '',
     walletSecretKey: '',
     programId: null,
+    pdas: [],
   } as ProjectDetails,
 } as Project;
 export { todoproject };

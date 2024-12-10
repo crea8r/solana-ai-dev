@@ -3,13 +3,14 @@ import {
     amendTsConfigFile, 
     toCamelCase 
 } from '../../utils/sdkUtils';
-import { Instruction, InstructionParam, Account } from '../../types/uiTypes';
+import { Instruction, InstructionParam, Account, PDA } from '../../types/uiTypes';
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
 import { Project } from '../../interfaces/project';
 import { LogEntry } from '../../hooks/useTerminalLogs';
 import { Wallet } from '@coral-xyz/anchor';
 import { User } from '../../contexts/AuthContext';
+import { toSnakeCase } from '../../utils/uiUtils';
 
 const typeMapping = (type: string): string => {
     switch (type) {
@@ -28,6 +29,7 @@ export const getSdkTemplate = async (
     _programFieldName: string,
     programId: string,
     _instructions: Instruction[],
+    _pdas: PDA[],
     accounts: Account[],
     instructionNodes: { data: { label: string; item?: { description?: string } } }[],
     aiInstructions: { function_name: string; params_fields: InstructionParam[] }[],
@@ -41,8 +43,22 @@ export const getSdkTemplate = async (
     addLog: (message: string, type: LogEntry['type']) => void,
     user: User
 ): Promise<string> => {
+    const systemAccountAddresses = [
+        "11111111111111111111111111111111", 
+        "SysvarRent111111111111111111111111111111111", 
+        "SysvarC1ock111111111111111111111111111111111", 
+    ];
+    
+    const systemAccountNames = [
+        "system_program",
+        "rent",
+        "clock",
+        "associatedTokenProgram",
+        "tokenProgram"
+    ];
 
     if (!user.walletPrivateKey) throw new Error('Wallet private key not found');
+    if (_pdas.length === 0) throw new Error('No PDAs found');
 
     const updatedInstructions = processInstructions( 
         _instructions, 
@@ -63,84 +79,155 @@ export const getSdkTemplate = async (
     },
     }));
 
+    const programSnakeCaseName = toSnakeCase(_programClassName);
+
     const instructionFunctions = updatedInstructions.map(({ name, description, params, context }) => {
         const camelCaseName = toCamelCase(name);
         const uniqueParams = new Map<string, string>();
+
+        const pdaAccountsContext = context.accounts.filter(account => account.pda);
+        const pdaInitCheck = pdaAccountsContext
+            .map(account => `!this.${toCamelCase(account.name)}Pda`)
+            .join(' || ');
     
-        // Map instruction arguments (params)
         params.forEach(param => {
             const mappedType = typeMapping(param.type as string); 
             if (!uniqueParams.has(param.name)) uniqueParams.set(param.name, `${param.name}: ${mappedType}`);
-        });
-
-        console.log('context', context);
+        });        
     
-        // Map accounts required by the instruction
         context.accounts
-        //.filter(account => account.address !== "11111111111111111111111111111111")
         .filter(account => account.name !== "system_program")
         .forEach(account => {
             const camelCaseAccountName = toCamelCase(account.name);
-            if (!uniqueParams.has(account.name)) uniqueParams.set(camelCaseAccountName, `${camelCaseAccountName}: ${account.isSigner ? "web3.Keypair" : "web3.PublicKey"}`);
+            //if (!uniqueParams.has(account.name)) uniqueParams.set(camelCaseAccountName, `${camelCaseAccountName}: ${account.isSigner ? "web3.Keypair" : "web3.PublicKey"}`);
         });
     
         const paramsList = Array.from(uniqueParams.values()).join(", ");
     
-        // Generate account mappings for `accounts` section
         const accountMappings = context.accounts
-        .filter(account => account.name !== "system_program")
-        .map(account => {
-            const accountName = account.name;
-            const camelCaseAccountName = toCamelCase(accountName);
-        
-            if (account.pda) {
-                if (!account.pda.seeds || account.pda.seeds.length === 0) {
-                    throw new Error("PDA seeds not found or empty");
-                }
+            .filter(account => account.name !== "system_program")
+            .map(account => {
+                const accountName = account.name;
+                const camelCaseAccountName = toCamelCase(accountName);
+                const publicKeyVar = `${camelCaseAccountName}PubKey`;
             
-                const seeds = account.pda.seeds.map(seed => {
-                    if (seed.kind === "const") {
-                        if (!seed.value) {
-                            throw new Error("PDA seed value for 'const' kind is missing");
+                if (account.pda) {
+                    if (typeof account.pda !== 'boolean') {
+                        // It's a PDA initializer
+                        if (!account.pda.seeds || account.pda.seeds.length === 0) {
+                            throw new Error("PDA seeds not found or empty");
                         }
-                        return `Buffer.from([${seed.value.join(", ")}])`;
-                    } else if (seed.kind === "account") {
-                        if (!seed.path) {
-                            throw new Error("PDA seed path for 'account' kind is missing");
-                        }
-                        return `${toCamelCase(seed.path)}.toBuffer()`;
+                    
+                        const seeds = account.pda.seeds.map(seed => {
+                            if (seed.kind === "const") {
+                                if (!seed.value) {
+                                    throw new Error("PDA seed value for 'const' kind is missing");
+                                }
+                                return `Buffer.from([${seed.value.join(", ")}])`;
+                            } else if (seed.kind === "account") {
+                                if (!seed.path) {
+                                    throw new Error("PDA seed path for 'account' kind is missing");
+                                }
+                                return `${toCamelCase(seed.path)}PubKey.toBuffer()`;
+                            }
+                            throw new Error("Unknown PDA seed kind");
+                        }).join(", ");
+                    
+                        return `
+                            const ${publicKeyVar} = web3.PublicKey.createProgramAddressSync(
+                                [${seeds}],
+                                this.${_programFieldName}.programId
+                            );`;
+                    } else {
+                        // It's a dependent PDA
+                        return `${camelCaseAccountName}: ${publicKeyVar}${account.isSigner ? ".publicKey" : ""}`;
                     }
-                    throw new Error("Unknown PDA seed kind");
-                }).join(", ");
-            
-                return `
-                    const ${camelCaseAccountName} = web3.PublicKey.createProgramAddressSync(
-                        [${seeds}],
-                        this.${_programFieldName}.programId
-                    );`;
-            } else {
-                // Handle regular accounts
-                return `${camelCaseAccountName}: ${camelCaseAccountName}${account.isSigner ? ".publicKey" : ""}`;
-            }
-        }).join(",\n          ");
-    
-        // Generate list of signers
+                } else {
+                    // Not a PDA
+                    return `${camelCaseAccountName}: ${publicKeyVar}${account.isSigner ? ".publicKey" : ""}`;
+                }
+            }).join(",\n          ");
+
         const signersList = context.accounts
             .filter(account => account.isSigner)
-            .map(account => toCamelCase(account.name))
-            .join(", ");
+            .map(account => {
+                const camelCaseName = toCamelCase(account.name);
+        
+                if (account.name === "initializer") return `this.${camelCaseName}`;
+        
+                return camelCaseName;
+            }).join(", ");
     
-        // Generate the argument object dynamically, defaulting to {}
-        const paramArg = `{ ${params.map(param => `${param.name}: ${param.name}`).join(", ")} }`;
+            const accountOverrides = `{ 
+                ${context.accounts
+                    .filter(account => {
+                        // Exclude irrelevant accounts
+                        if (!context.accounts.some(instrAccount => instrAccount.name === account.name)) return false;
+                        
+                        // Exclude system accounts
+                        if (account.systemAccount) return false;
+                        if (account.address && systemAccountAddresses.includes(account.address)) return false;
+                        if (systemAccountNames.includes(account.name)) return false;
+            
+                        // Include valid accounts
+                        return true;
+                    })
+                    .map(account => {
+                        const camelCaseName = toCamelCase(account.name);
+            
+                        // Handle special case for `initializer`
+                        if (account.name === "initializer") {
+                            return `${camelCaseName}: this.${camelCaseName}`; // Assume `this.initializer` is a PublicKey
+                        }
+            
+                        // Use PDA if available
+                        if (account.pda) {
+                            return `${camelCaseName}: this.${camelCaseName}Pda`;
+                        }
+            
+                        // For signer accounts, use `.publicKey`
+                        if (account.isSigner) {
+                            return `${camelCaseName}: ${camelCaseName}.publicKey`;
+                        }
+            
+                        // Default case
+                        return `${camelCaseName}: ${camelCaseName}`;
+                    })
+                    .join(", ")}
+            }`;
+                    
+            
+            
+        const paramsTypes = params.map(param => {
+            const accountContext = context.accounts.find(acc => acc.name === param.name);
+            if (!accountContext)  throw new Error(`Account ${param.name} not found in context.accounts`);
+    
+            const paramType = accountContext.isSigner ? "web3.Keypair" : "web3.PublicKey";
+            return `${param.name}: ${paramType}`;
+        }).join(", ");
+
+        const paramsArg = params.map(param => {
+            const accountContext = context.accounts.find(acc => acc.name === param.name);
+            if (!accountContext) throw new Error(`Account ${param.name} not found in context.accounts`);
+
+            return accountContext.isSigner ? `${param.name}: ${param.name}.publicKey` : `${param.name}: ${param.name}`;
+        }).join(", ");
+
+        console.log('name', camelCaseName);
+        console.log('context', context);
+        console.log('pdaAccountsContext', pdaAccountsContext);
+        console.log('params', paramsList);
     
         return `
         // ${description}
-        async ${camelCaseName}(${paramsList}): Promise<web3.Transaction> {
+        async ${camelCaseName}(${paramsTypes}): Promise<web3.Transaction> {
             try {
-                const ix = await this.${_programFieldName}.methods.${camelCaseName}(${paramArg})
-                .accounts({
-                    ${accountMappings}
-                }).instruction();
+                if (!this.initializer || ${pdaInitCheck}) throw new Error("PDA is not initialized. Call \`initialize${_programClassName}Pdas\` first.");
+
+                const accounts = await this.getAccountsForInstruction('${name}', ${accountOverrides});
+                
+                const ix = await this.${_programFieldName}.methods.${camelCaseName}({${paramsArg}})
+                .accounts(accounts).instruction();
     
                 const transaction = new web3.Transaction().add(ix);
                 transaction.recentBlockhash = (await this.${_programFieldName}.provider.connection.getLatestBlockhash()).blockhash;
@@ -155,7 +242,6 @@ export const getSdkTemplate = async (
         }`;
     }).join("\n");
     
-
     const accountFetchers = accounts.map(({ name, description, fields }) => {
         const fieldMappings = fields.map(({ name, type }) => {
         const typeConversion = type === 'u64' ? '.toNumber()' : '';
@@ -193,56 +279,151 @@ export const getSdkTemplate = async (
     };
     `;
 
-    const getPdaFunction = () => {
-       return `
-            async get${_programClassName}Pda(initializer: web3.PublicKey): Promise<web3.PublicKey> {
+    const getPdaFunction = (_pdas: PDA[]): string => {
+        return _pdas.map((pda) => {
+            const pdaNameCamel = toCamelCase(pda.name);
+            return `
+            async get${toCamelCase(pda.name)}Pda(initializer: web3.PublicKey): Promise<web3.PublicKey> {
                 try {
                     const seeds = [
-                        Buffer.from("counter"),
+                        Buffer.from("${pda.name}"),
                         initializer.toBuffer(),
                     ];
             
-                    const counterAccountPda = web3.PublicKey.createProgramAddressSync(
+                    const [${pdaNameCamel}Pda] = web3.PublicKey.findProgramAddressSync(
                         seeds,
                         this.${_programFieldName}.programId
                     );
             
-                    return counterAccountPda;
+                    return ${pdaNameCamel}Pda;
                 } catch (error) {
-                    console.error("Error deriving PDA:", error);
+                    console.error("Error deriving PDA for ${pda.name}:", error);
                     throw error;
                 }
             }
+            `;
+        }).join("\n");
+    };
+
+    const getAccountsForInstruction = (_programFieldName: string): string => {
+        return `
+        async getAccountsForInstruction(instructionName: string, overrides: Record<string, web3.PublicKey> = {}): Promise<Record<string, web3.PublicKey>> {
+            try {
+                const idl = this.${_programFieldName}.idl;
+                const instruction = idl.instructions.find(instr => instr.name === instructionName);
+                if (!instruction) throw new Error(\`Instruction '\${instructionName}' not found in the IDL\`);
+    
+                const accounts: Record<string, web3.PublicKey> = {};
+                const systemAccounts = ['systemProgram', 'rent', 'clock', 'associatedTokenProgram', 'tokenProgram'];
+    
+                for (const account of instruction.accounts) {
+                    const accountName: string = account.name;
+    
+                    if (overrides[accountName]) {
+                        accounts[accountName] = overrides[accountName];
+                    } else if (systemAccounts.includes(accountName)) {
+                        accounts[accountName] = this.resolveSystemProgramAccount(accountName);
+                    } else if (this[accountName + 'Pda']) {
+                        accounts[accountName] = this[accountName + 'Pda'] as web3.PublicKey;
+                    } else {
+                        throw new Error(\`Unable to resolve account: \${accountName}. Provide it in the overrides or initialize the PDA.\`);
+                    }
+                }
+    
+                return accounts;
+    
+            } catch (error) {
+                console.error(\`Error inferring accounts for instruction \${instructionName}:\`, error);
+                throw error;
+            }
+        }
         `;
-    }
+    };
+
+    const isValidPublicKey = `
+    isValidPublicKey(publicKey: web3.PublicKey): boolean {
+        try { return web3.PublicKey.isOnCurve(publicKey); } 
+        catch (error) { return false; }
+    };`;
+
+    const resolveSystemProgramAccount = `
+        resolveSystemProgramAccount(accountName: string): web3.PublicKey {
+            switch (accountName) {
+                case 'systemProgram':
+                    return web3.SystemProgram.programId;
+                case 'rent':
+                    return web3.SYSVAR_RENT_PUBKEY;
+                case 'clock':
+                    return web3.SYSVAR_CLOCK_PUBKEY;
+                case 'associatedTokenProgram':
+                    return ASSOCIATED_TOKEN_PROGRAM_ID;
+                case 'tokenProgram':
+                    return TOKEN_PROGRAM_ID;
+                default:
+                    throw new Error(\`Unknown system account: \${accountName}\`);
+            }
+        }`;
+    
+    const pdasClassFields = _pdas.map((pda) => `private ${toCamelCase(pda.name)}Pda?: web3.PublicKey;`).join("\n            ");
+
+    const initializeMethod = (_programClassName: string, _pdas: PDA[]): string => {
+        const pdaInitializationCode = _pdas
+            .map((pda) => `this.${toCamelCase(pda.name)}Pda = await this.get${toCamelCase(pda.name)}Pda(initializer);`)
+            .join("\n            ");
+    
+        return `
+        async initialize${_programClassName}Pdas(initializer: web3.PublicKey): Promise<void> {
+            try {
+                this.initializer = initializer;
+                ${pdaInitializationCode}
+            } catch (error) {
+                console.error("Error initializing PDAs:", error);
+                throw error;
+            }
+        }
+        `;
+    };
 
     await amendTsConfigFile(projectContext, setIsPolling, setIsLoading, addLog);
 
+    // ${projectContext.details.idl.parsed.metadata?.name}
     return `
         import { Connection, PublicKey, Keypair } from '@solana/web3.js';
         import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
         import { Program, Idl, web3 } from '@coral-xyz/anchor';
-        import idlJson from '../target/idl/counter_program.json'; 
-        import { CounterProgram } from '../target/types/counter_program';
-        const idl = idlJson as CounterProgram;
+        import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
+        const idlJson = require('../target/idl/${programSnakeCaseName}.json'); 
+        import { ${_programClassName} } from '../target/types/${programSnakeCaseName}';
+        const idl = idlJson as ${_programClassName};
 
         export class ${_programClassName}SDK {
-            private ${_programFieldName}: Program<CounterProgram>;
+            private ${_programFieldName}: Program<${_programClassName}>;
+            private initializer?: web3.PublicKey;
+            ${pdasClassFields}
 
             constructor(
                 provider: AnchorProvider, 
-                idl: CounterProgram, 
+                idl: ${_programClassName}, 
                 programId: string = "${programId}"
             ) {
                 this.${_programFieldName} = new Program<${_programClassName}>(idl, provider);
+                if (!this.${_programFieldName}.programId) (this.${_programFieldName} as any).programId = new web3.PublicKey(programId);
             }
 
-            ${getPdaFunction()}
+            ${initializeMethod(_programClassName, _pdas)}
+
+            ${getPdaFunction(_pdas)}
+
+            ${getAccountsForInstruction(_programFieldName)}
+
+            ${isValidPublicKey}
+
+            ${resolveSystemProgramAccount}
 
             ${instructionFunctions}
 
             ${accountFetchers}
-            }
+        }
 
         ${setupFunction}
 

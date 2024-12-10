@@ -172,6 +172,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       details: {
                         ...prev.details,
                         isCode: true,
+                        programId: prev.details.programId,
                       },
                     }));
                   }

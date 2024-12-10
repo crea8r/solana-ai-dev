@@ -1,8 +1,8 @@
 import { api } from '../utils/apiHelper';
 
 export const uiApi = {
-  executeSdkInstruction: async (projectId: string, instructionName: string, params: any) => {
-    const response = await api.post('/ui/execute-instruction', { projectId, instructionName, params });
+  executeSdkInstruction: async (userId: string, projectId: string, instructionName: string, params: any) => {
+    const response = await api.post('/ui/execute-instruction', { userId, projectId, instructionName, params });
     return response.data;
   },
   compileTsFile: async (projectId: string, userId: string) => {

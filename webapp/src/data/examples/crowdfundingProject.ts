@@ -294,6 +294,7 @@ const crowdfundingProject: Project = {
     walletPublicKey: '',
     walletSecretKey: '',
     programId: null,
+    pdas: [],
   } as ProjectDetails,
 };
 

@@ -3,6 +3,7 @@ import { FileTreeItemType } from './file';
 import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
 import { Account, Instruction } from '../types/uiTypes';
+import { PdaInfo } from '../types/uiTypes';
 
 export type ProjectInfoToSave = {
   id?: string;
@@ -48,6 +49,7 @@ export interface ProjectDetailsToSave {
   walletPublicKey: string;
   walletSecretKey: string;
   programId: string | null;
+  pdas: PdaInfo[];
 }
 
 export interface ProjectDetails {
@@ -88,6 +90,7 @@ export interface ProjectDetails {
   walletPublicKey: string;
   walletSecretKey: string;
   programId: string | null;
+  pdas: PdaInfo[];
 }
 
 export interface Project {

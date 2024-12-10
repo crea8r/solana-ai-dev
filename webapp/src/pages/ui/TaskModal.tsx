@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
-import { getIdlContents, parseIdl, generateSdk } from '../../utils/uiUtils';
+import { getIdlContents, parseIdl, generateSdk, toSnakeCase } from '../../utils/uiUtils';
 import { LogEntry } from '../../hooks/useTerminalLogs';
 import { flushSync } from 'react-dom';
 
@@ -68,22 +68,21 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
     }, [isOpen, projectContext, contextReady]);
 
     const runTasksSequentially = async () => {
-        if (!projectContext || !user) {
-            console.error('Project context or user not available.');
-            return;
-        }
+        if (!projectContext || !user) throw new Error('Project context or user not available.');
+        if (!projectContext.id) throw new Error('No project ID found');
         try {
-            // Fetch IDL File
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === 1 ? { ...task, status: 'loading' } : task
                 )
             );
             await new Promise((resolve) => setTimeout(resolve, 0)); 
+            const _idlFileName = projectContext.details.idl.fileName ? projectContext.details.idl.fileName : toSnakeCase(projectContext.name);
 
             const idlContent = await getIdlContents(
+                _idlFileName,
                 projectContext.id,
-                projectContext,
+                setProjectContext,
                 setIsPolling,
                 setIsLoading,
                 addLog

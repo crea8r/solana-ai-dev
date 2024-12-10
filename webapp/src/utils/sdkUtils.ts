@@ -60,7 +60,7 @@ export const amendTsConfigFile = async (
       const updatedContent = JSON.stringify(tsConfig, null, 2);
       const res = await fileApi.updateFile(projectContext.id, tsConfigPath, updatedContent);
       const { status } = await startPollingTaskStatus(res.taskId, setIsPolling, setIsLoading, addLog);
-      if (status !== 'success') throw new Error('Failed to update tsconfig.json');
+      if (status !== 'succeed') throw new Error('Failed to update tsconfig.json');
     } catch (error) { console.error('Error amending tsconfig.json:', error); }  
   };
       

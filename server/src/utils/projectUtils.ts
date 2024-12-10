@@ -207,6 +207,10 @@ export const startInstallPackagesTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
 
       await runCommand('npm install @coral-xyz/anchor', projectPath, taskId);
+      await runCommand('npm install @solana/web3.js', projectPath, taskId);
+      await runCommand('npm install @solana/spl-token', projectPath, taskId);
+      await runCommand('npm install fs', projectPath, taskId);
+
       if (_packages) {
         _packages.forEach(async (_package: string) => {
           await runCommand(`npm install ${_package}`, projectPath, taskId);

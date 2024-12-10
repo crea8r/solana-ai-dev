@@ -170,6 +170,7 @@ const counterProject: Project = {
     walletPublicKey: '',
     walletSecretKey: '',
     programId: null,
+    pdas: [],
   } as ProjectDetails,
 };
 

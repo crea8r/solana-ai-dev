@@ -1,17 +1,33 @@
 import { Idl } from "@coral-xyz/anchor";
 
+export interface PdaInfo {
+  name: string; 
+  isInitialized: boolean; 
+  address: string | null; 
+  initializerFunction: string;
+  seeds: {
+    kind: "const" | "account";
+    value?: number[]; 
+    path?: string;
+  }[];
+}
+
+export interface PDA {
+  name: string;
+  seeds: {
+    kind: "const" | "account";
+    value?: number[];
+    path?: string;
+  }[];
+}
+
 export interface InstructionContextAccount {
   name: string;
   isSigner: boolean;
   isWritable: boolean;
   address?: string;
-  pda?: { 
-      seeds: Array<{
-        kind: "const" | "account"; 
-        value?: number[];         
-        path?: string;            
-      }>;
-  };
+  systemAccount?: boolean;
+  pda?: PDA | boolean;
 }
 
 export interface InstructionParam {

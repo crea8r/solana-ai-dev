@@ -8,7 +8,7 @@ import { CodeFile } from "../contexts/CodeFileContext";
 import { LogEntry } from "../hooks/useTerminalLogs";
 import { transformToProjectInfoToSave } from "../contexts/ProjectContext";
 
-const updateProjectInDatabase = async (projectContext: Project) => {
+export const updateProjectInDatabase = async (projectContext: Project) => {
   try {
       const projectInfoToSave = transformToProjectInfoToSave(projectContext);
       console.log('projectInfoToSave', projectInfoToSave);
@@ -432,8 +432,6 @@ export const handleDeployProject = async (
     console.log(`Task ID: ${taskId.toString()}`);
 
     const sanitizedTaskId = taskId.toString().trim().replace(/,$/, '');
-    console.log(`Sanitized Task ID: ${sanitizedTaskId}`);
-    //addLog(`Task ID: ${sanitizedTaskId}`);
 
     const { status, fileContent } = await startPollingTaskStatus(sanitizedTaskId, setIsPolling, setIsLoading, addLog);
 
@@ -447,7 +445,7 @@ export const handleDeployProject = async (
           deployStatus: true,
         },
       }));
-      updateProjectInDatabase(projectContext);
+      
     } else if (status === 'failed') { 
       if (fileContent) addLog(`Deployment failed. ${fileContent}`);
       else addLog('Deployment failed.'); 

@@ -111,6 +111,7 @@ const ListProject: React.FC<ListProjectProps> = ({
             walletPublicKey: '',
             walletSecretKey: '',
             programId: null,
+            pdas: [],
           },
         });
       }
