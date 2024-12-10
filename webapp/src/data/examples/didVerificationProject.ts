@@ -2,11 +2,11 @@ import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
-const crowdfundingProgramProject: Project = {
+const didVerificationProgramProject: Project = {
   id: '',
   rootPath: '',
-  name: 'Crowdfunding Program',
-  description: 'A Solana program that allows users to pledge funds towards a crowdfunding campaign. Once the campaign reaches its funding goal, the funds are released to the campaign owner.',
+  name: 'DID Verification Program',
+  description: 'A Solana program that enables users to register a decentralized identity, verify credentials, and manage their identity data securely on the blockchain.',
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
@@ -15,16 +15,16 @@ const crowdfundingProgramProject: Project = {
       {
         width: 56,
         height: 44,
-        id: 'program-11223',
+        id: 'program-44556',
         type: 'program',
         position: { x: 50, y: 200 },
         data: {
-          label: 'Crowdfunding Program',
+          label: 'DID Program',
           item: {
-            id: 'program-11223',
+            id: 'program-44556',
             type: 'program',
-            name: 'Crowdfunding Program',
-            description: 'Enables users to pledge funds to a crowdfunding campaign. Once the goal is reached, the funds are released to the campaign owner.',
+            name: 'DID Verification Program',
+            description: 'Enables users to register their decentralized identity and verify credentials securely on the blockchain.',
           },
         },
         selected: false,
@@ -33,18 +33,18 @@ const crowdfundingProgramProject: Project = {
       {
         width: 80,
         height: 44,
-        id: 'account-11224',
+        id: 'account-44557',
         type: 'account',
         position: { x: 300, y: 50 }, // Top-right
         data: {
-          label: 'CampaignAccount',
+          label: 'DIDAccount',
           item: {
-            id: 'account-11224',
+            id: 'account-44557',
             type: 'account',
-            name: 'CampaignAccount',
-            description: 'Stores campaign details including total funding goal, total pledged amount, and the list of backers.',
-            json: '{owner: PubKey, goal_amount: u64, total_pledged: u64, backers: Vec<PubKey>, status: string}',
-            ownerProgramId: 'program-11223',
+            name: 'DIDAccount',
+            description: 'Stores a decentralized identity for a user, including the public key, credentials, and identity metadata.',
+            json: '{user: PubKey, credentials: Vec<String>, metadata: String, status: string}',
+            ownerProgramId: 'program-44556',
           },
         },
         selected: false,
@@ -53,19 +53,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11225',
+        id: 'instruction-44558',
         type: 'instruction',
         position: { x: 300, y: 150 }, // Second from top-right
         data: {
-          label: 'PledgeFunds',
+          label: 'RegisterDID',
           item: {
-            id: 'instruction-11225',
+            id: 'instruction-44558',
             type: 'instruction',
-            name: 'PledgeFunds',
-            description: 'Allows a user to pledge funds towards a crowdfunding campaign.',
-            parameters: 'campaign_account: AccountInfo, pledge_amount: u64, backer: PubKey',
-            aiInstruction: 'Check if the backer has sufficient funds, add the pledged amount to the total pledged amount, and update the backer list.',
-            ownerProgramId: 'program-11223',
+            name: 'RegisterDID',
+            description: 'Registers a new decentralized identity for the user.',
+            parameters: 'did_account: AccountInfo, credentials: Vec<String>',
+            aiInstruction: 'Create a new DID for the user, store their credentials and metadata, and set their status to "active". Ensure that the credentials are valid and verify the identity.',
+            ownerProgramId: 'program-44556',
           },
         },
         selected: true,
@@ -74,19 +74,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11226',
+        id: 'instruction-44559',
         type: 'instruction',
         position: { x: 300, y: 250 }, // Third from top-right
         data: {
-          label: 'ReleaseFunds',
+          label: 'VerifyDID',
           item: {
-            id: 'instruction-11226',
+            id: 'instruction-44559',
             type: 'instruction',
-            name: 'ReleaseFunds',
-            description: 'Releases the pledged funds to the campaign owner once the goal has been reached.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'Check if the total pledged amount has reached the funding goal. If the goal is met, release the funds to the campaign owner and mark the campaign as successful.',
-            ownerProgramId: 'program-11223',
+            name: 'VerifyDID',
+            description: 'Verifies the credentials of a user’s decentralized identity.',
+            parameters: 'did_account: AccountInfo',
+            aiInstruction: 'Verify the credentials stored in the DID account, ensuring that the identity is legitimate and not tampered with. If verified, the status is set to "verified".',
+            ownerProgramId: 'program-44556',
           },
         },
         selected: true,
@@ -95,19 +95,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11227',
+        id: 'instruction-44560',
         type: 'instruction',
         position: { x: 300, y: 350 }, // Bottom-right
         data: {
-          label: 'RefundBackers',
+          label: 'UpdateDID',
           item: {
-            id: 'instruction-11227',
+            id: 'instruction-44560',
             type: 'instruction',
-            name: 'RefundBackers',
-            description: 'Refunds all backers if the campaign does not reach its funding goal.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'If the campaign fails to reach its goal by the end of the campaign period, refund all backers and mark the campaign as unsuccessful.',
-            ownerProgramId: 'program-11223',
+            name: 'UpdateDID',
+            description: 'Allows a user to update their decentralized identity credentials and metadata.',
+            parameters: 'did_account: AccountInfo, new_credentials: Vec<String>, new_metadata: String',
+            aiInstruction: 'Verify that the user is the owner of the DID account, update their credentials and metadata, and mark the account status as "updated". Ensure that the new credentials are valid.',
+            ownerProgramId: 'program-44556',
           },
         },
         selected: true,
@@ -117,32 +117,32 @@ const crowdfundingProgramProject: Project = {
     edges: [
       {
         id: 'edge-1',
-        source: 'program-11223',
-        target: 'account-11224',
+        source: 'program-44556',
+        target: 'account-44557',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-2',
-        source: 'program-11223',
-        target: 'instruction-11225',
+        source: 'program-44556',
+        target: 'instruction-44558',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-3',
-        source: 'program-11223',
-        target: 'instruction-11226',
+        source: 'program-44556',
+        target: 'instruction-44559',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-4',
-        source: 'program-11223',
-        target: 'instruction-11227',
+        source: 'program-44556',
+        target: 'instruction-44560',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
@@ -174,4 +174,4 @@ const crowdfundingProgramProject: Project = {
   } as ProjectDetails,
 };
 
-export { crowdfundingProgramProject };
+export { didVerificationProgramProject };

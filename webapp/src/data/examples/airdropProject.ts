@@ -2,11 +2,11 @@ import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
-const crowdfundingProgramProject: Project = {
+const airdropProgramProject: Project = {
   id: '',
   rootPath: '',
-  name: 'Crowdfunding Program',
-  description: 'A Solana program that allows users to pledge funds towards a crowdfunding campaign. Once the campaign reaches its funding goal, the funds are released to the campaign owner.',
+  name: 'Airdrop Program',
+  description: 'A Solana program to distribute a fixed number of tokens to a list of eligible users. The program checks eligibility and transfers tokens accordingly.',
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
@@ -15,16 +15,16 @@ const crowdfundingProgramProject: Project = {
       {
         width: 56,
         height: 44,
-        id: 'program-11223',
+        id: 'program-45678',
         type: 'program',
         position: { x: 50, y: 200 },
         data: {
-          label: 'Crowdfunding Program',
+          label: 'Airdrop Program',
           item: {
-            id: 'program-11223',
+            id: 'program-45678',
             type: 'program',
-            name: 'Crowdfunding Program',
-            description: 'Enables users to pledge funds to a crowdfunding campaign. Once the goal is reached, the funds are released to the campaign owner.',
+            name: 'Airdrop Program',
+            description: 'Distributes tokens to eligible users based on a list of public keys.',
           },
         },
         selected: false,
@@ -33,18 +33,18 @@ const crowdfundingProgramProject: Project = {
       {
         width: 80,
         height: 44,
-        id: 'account-11224',
+        id: 'account-45679',
         type: 'account',
         position: { x: 300, y: 50 }, // Top-right
         data: {
-          label: 'CampaignAccount',
+          label: 'AirdropAccount',
           item: {
-            id: 'account-11224',
+            id: 'account-45679',
             type: 'account',
-            name: 'CampaignAccount',
-            description: 'Stores campaign details including total funding goal, total pledged amount, and the list of backers.',
-            json: '{owner: PubKey, goal_amount: u64, total_pledged: u64, backers: Vec<PubKey>, status: string}',
-            ownerProgramId: 'program-11223',
+            name: 'AirdropAccount',
+            description: 'Stores the list of eligible users and their allocated token amounts for the airdrop.',
+            json: '{user: PubKey, amount: u64, status: string}',
+            ownerProgramId: 'program-45678',
           },
         },
         selected: false,
@@ -53,19 +53,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11225',
+        id: 'instruction-45680',
         type: 'instruction',
         position: { x: 300, y: 150 }, // Second from top-right
         data: {
-          label: 'PledgeFunds',
+          label: 'AddEligibleUser',
           item: {
-            id: 'instruction-11225',
+            id: 'instruction-45680',
             type: 'instruction',
-            name: 'PledgeFunds',
-            description: 'Allows a user to pledge funds towards a crowdfunding campaign.',
-            parameters: 'campaign_account: AccountInfo, pledge_amount: u64, backer: PubKey',
-            aiInstruction: 'Check if the backer has sufficient funds, add the pledged amount to the total pledged amount, and update the backer list.',
-            ownerProgramId: 'program-11223',
+            name: 'AddEligibleUser',
+            description: 'Adds an eligible user to the airdrop list.',
+            parameters: 'user: PubKey, amount: u64',
+            aiInstruction: 'Add the user to the airdrop list with their allocated token amount. Set their status to "pending".',
+            ownerProgramId: 'program-45678',
           },
         },
         selected: true,
@@ -74,19 +74,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11226',
+        id: 'instruction-45681',
         type: 'instruction',
         position: { x: 300, y: 250 }, // Third from top-right
         data: {
-          label: 'ReleaseFunds',
+          label: 'DistributeTokens',
           item: {
-            id: 'instruction-11226',
+            id: 'instruction-45681',
             type: 'instruction',
-            name: 'ReleaseFunds',
-            description: 'Releases the pledged funds to the campaign owner once the goal has been reached.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'Check if the total pledged amount has reached the funding goal. If the goal is met, release the funds to the campaign owner and mark the campaign as successful.',
-            ownerProgramId: 'program-11223',
+            name: 'DistributeTokens',
+            description: 'Distributes tokens to eligible users from the airdrop list.',
+            parameters: 'airdrop_account: AccountInfo, total_amount: u64',
+            aiInstruction: 'For each user in the airdrop list, transfer their allocated tokens to them. After the transfer, update their status to "completed".',
+            ownerProgramId: 'program-45678',
           },
         },
         selected: true,
@@ -95,19 +95,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11227',
+        id: 'instruction-45682',
         type: 'instruction',
         position: { x: 300, y: 350 }, // Bottom-right
         data: {
-          label: 'RefundBackers',
+          label: 'CancelAirdrop',
           item: {
-            id: 'instruction-11227',
+            id: 'instruction-45682',
             type: 'instruction',
-            name: 'RefundBackers',
-            description: 'Refunds all backers if the campaign does not reach its funding goal.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'If the campaign fails to reach its goal by the end of the campaign period, refund all backers and mark the campaign as unsuccessful.',
-            ownerProgramId: 'program-11223',
+            name: 'CancelAirdrop',
+            description: 'Cancels the airdrop and reverts all changes.',
+            parameters: 'airdrop_account: AccountInfo',
+            aiInstruction: 'Revert all transactions made during the airdrop, set all users’ status to "cancelled", and remove the airdrop account.',
+            ownerProgramId: 'program-45678',
           },
         },
         selected: true,
@@ -117,32 +117,32 @@ const crowdfundingProgramProject: Project = {
     edges: [
       {
         id: 'edge-1',
-        source: 'program-11223',
-        target: 'account-11224',
+        source: 'program-45678',
+        target: 'account-45679',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-2',
-        source: 'program-11223',
-        target: 'instruction-11225',
+        source: 'program-45678',
+        target: 'instruction-45680',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-3',
-        source: 'program-11223',
-        target: 'instruction-11226',
+        source: 'program-45678',
+        target: 'instruction-45681',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-4',
-        source: 'program-11223',
-        target: 'instruction-11227',
+        source: 'program-45678',
+        target: 'instruction-45682',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
@@ -174,4 +174,4 @@ const crowdfundingProgramProject: Project = {
   } as ProjectDetails,
 };
 
-export { crowdfundingProgramProject };
+export { airdropProgramProject };

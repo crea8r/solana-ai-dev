@@ -2,11 +2,11 @@ import { FileTreeItemType } from '../../interfaces/file';
 import { CodeFile } from '../../contexts/CodeFileContext';
 import { Project, ProjectDetails } from '../../interfaces/project';
 
-const crowdfundingProgramProject: Project = {
+const nftMarketplaceProject: Project = {
   id: '',
   rootPath: '',
-  name: 'Crowdfunding Program',
-  description: 'A Solana program that allows users to pledge funds towards a crowdfunding campaign. Once the campaign reaches its funding goal, the funds are released to the campaign owner.',
+  name: 'NFT Marketplace',
+  description: 'A Solana program that facilitates the buying and selling of NFTs in a marketplace. Users can list, purchase, and transfer NFTs.',
   aiModel: '',
   apiKey: '',
   walletPublicKey: '',
@@ -15,16 +15,16 @@ const crowdfundingProgramProject: Project = {
       {
         width: 56,
         height: 44,
-        id: 'program-11223',
+        id: 'program-78901',
         type: 'program',
         position: { x: 50, y: 200 },
         data: {
-          label: 'Crowdfunding Program',
+          label: 'NFT Marketplace',
           item: {
-            id: 'program-11223',
+            id: 'program-78901',
             type: 'program',
-            name: 'Crowdfunding Program',
-            description: 'Enables users to pledge funds to a crowdfunding campaign. Once the goal is reached, the funds are released to the campaign owner.',
+            name: 'NFT Marketplace',
+            description: 'Facilitates the buying, selling, and transfer of NFTs in a decentralized marketplace.',
           },
         },
         selected: false,
@@ -33,18 +33,18 @@ const crowdfundingProgramProject: Project = {
       {
         width: 80,
         height: 44,
-        id: 'account-11224',
+        id: 'account-78902',
         type: 'account',
         position: { x: 300, y: 50 }, // Top-right
         data: {
-          label: 'CampaignAccount',
+          label: 'NFTAccount',
           item: {
-            id: 'account-11224',
+            id: 'account-78902',
             type: 'account',
-            name: 'CampaignAccount',
-            description: 'Stores campaign details including total funding goal, total pledged amount, and the list of backers.',
-            json: '{owner: PubKey, goal_amount: u64, total_pledged: u64, backers: Vec<PubKey>, status: string}',
-            ownerProgramId: 'program-11223',
+            name: 'NFTAccount',
+            description: 'Stores the NFT metadata including owner, price, and transaction history.',
+            json: '{owner: PubKey, price: u64, metadata: String, transaction_history: Vec<String>}',
+            ownerProgramId: 'program-78901',
           },
         },
         selected: false,
@@ -53,19 +53,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11225',
+        id: 'instruction-78903',
         type: 'instruction',
         position: { x: 300, y: 150 }, // Second from top-right
         data: {
-          label: 'PledgeFunds',
+          label: 'ListNFT',
           item: {
-            id: 'instruction-11225',
+            id: 'instruction-78903',
             type: 'instruction',
-            name: 'PledgeFunds',
-            description: 'Allows a user to pledge funds towards a crowdfunding campaign.',
-            parameters: 'campaign_account: AccountInfo, pledge_amount: u64, backer: PubKey',
-            aiInstruction: 'Check if the backer has sufficient funds, add the pledged amount to the total pledged amount, and update the backer list.',
-            ownerProgramId: 'program-11223',
+            name: 'ListNFT',
+            description: 'Lists an NFT for sale in the marketplace with a specified price.',
+            parameters: 'nft_account: AccountInfo, price: u64',
+            aiInstruction: 'Verify the NFT account, check that the NFT is owned by the user, and set the price for sale. Add the NFT to the marketplace listing.',
+            ownerProgramId: 'program-78901',
           },
         },
         selected: true,
@@ -74,19 +74,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11226',
+        id: 'instruction-78904',
         type: 'instruction',
         position: { x: 300, y: 250 }, // Third from top-right
         data: {
-          label: 'ReleaseFunds',
+          label: 'BuyNFT',
           item: {
-            id: 'instruction-11226',
+            id: 'instruction-78904',
             type: 'instruction',
-            name: 'ReleaseFunds',
-            description: 'Releases the pledged funds to the campaign owner once the goal has been reached.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'Check if the total pledged amount has reached the funding goal. If the goal is met, release the funds to the campaign owner and mark the campaign as successful.',
-            ownerProgramId: 'program-11223',
+            name: 'BuyNFT',
+            description: 'Allows a user to purchase an NFT listed in the marketplace.',
+            parameters: 'nft_account: AccountInfo, buyer: PubKey',
+            aiInstruction: 'Verify that the NFT is listed for sale, ensure the buyer has sufficient funds, and transfer the NFT ownership to the buyer after deducting the price.',
+            ownerProgramId: 'program-78901',
           },
         },
         selected: true,
@@ -95,19 +95,19 @@ const crowdfundingProgramProject: Project = {
       {
         width: 66,
         height: 44,
-        id: 'instruction-11227',
+        id: 'instruction-78905',
         type: 'instruction',
         position: { x: 300, y: 350 }, // Bottom-right
         data: {
-          label: 'RefundBackers',
+          label: 'TransferNFT',
           item: {
-            id: 'instruction-11227',
+            id: 'instruction-78905',
             type: 'instruction',
-            name: 'RefundBackers',
-            description: 'Refunds all backers if the campaign does not reach its funding goal.',
-            parameters: 'campaign_account: AccountInfo',
-            aiInstruction: 'If the campaign fails to reach its goal by the end of the campaign period, refund all backers and mark the campaign as unsuccessful.',
-            ownerProgramId: 'program-11223',
+            name: 'TransferNFT',
+            description: 'Transfers ownership of an NFT to another user without a monetary transaction.',
+            parameters: 'nft_account: AccountInfo, new_owner: PubKey',
+            aiInstruction: 'Transfer ownership of the NFT to the new user, updating the NFT account with the new owner’s public key.',
+            ownerProgramId: 'program-78901',
           },
         },
         selected: true,
@@ -117,32 +117,32 @@ const crowdfundingProgramProject: Project = {
     edges: [
       {
         id: 'edge-1',
-        source: 'program-11223',
-        target: 'account-11224',
+        source: 'program-78901',
+        target: 'account-78902',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-2',
-        source: 'program-11223',
-        target: 'instruction-11225',
+        source: 'program-78901',
+        target: 'instruction-78903',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-3',
-        source: 'program-11223',
-        target: 'instruction-11226',
+        source: 'program-78901',
+        target: 'instruction-78904',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
       },
       {
         id: 'edge-4',
-        source: 'program-11223',
-        target: 'instruction-11227',
+        source: 'program-78901',
+        target: 'instruction-78905',
         type: 'solana',
         animated: false,
         style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
@@ -174,4 +174,4 @@ const crowdfundingProgramProject: Project = {
   } as ProjectDetails,
 };
 
-export { crowdfundingProgramProject };
+export { nftMarketplaceProject };

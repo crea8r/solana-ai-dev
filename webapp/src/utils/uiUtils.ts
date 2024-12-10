@@ -21,6 +21,7 @@ import { startPollingTaskStatus } from "./codePageUtils";
 import { LogEntry } from "../hooks/useTerminalLogs";
 import { InstructionParam, PDA, PdaInfo } from "../types/uiTypes";
 import { uiApi } from "../api/ui";
+import { getUser } from "../services/authApi";
 
 
 // String Manipulation Utilities
@@ -129,6 +130,11 @@ export const generateSdk = async (
 
     console.log('pdas', projectContext.details.pdas);
 
+    const fetchedUser = await getUser();
+    console.log('fetchedUser', fetchedUser);
+    const _walletPrivateKey = fetchedUser.wallet_private_key;
+    console.log('wallet private key- uiutils', _walletPrivateKey);
+
     const sdkTemplate = await getSdkTemplate(
       _projectClassName, 
       _projectFieldName, 
@@ -141,6 +147,7 @@ export const generateSdk = async (
       _rootPath, 
       _idlPath, 
       _walletPublicKey,
+      _walletPrivateKey,
       projectContext,
       setProjectContext,
       setIsPolling,

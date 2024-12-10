@@ -104,10 +104,16 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           >
               <option value="Counter"><Text>Counter Program</Text></option>
               <option value="Voting"><Text>Voting Program</Text></option>
+              <option value="Transfer"><Text>Transfer Program</Text></option>
+              <option value="Loan"><Text>Loan Program</Text></option>
+              <option value="NFTMarketplace"><Text>NFT Marketplace Program</Text></option>
+              <option value="Staking"><Text>Staking Program</Text></option>
+              <option value="Airdrop"><Text>Airdrop Program</Text></option>
+              <option value="Auction"><Text>Auction Program</Text></option>
               <option value="Crowdfunding"><Text>Crowdfunding Program</Text></option>
-              <option value="LoyaltyRewards"><Text>Loyalty Rewards Program</Text></option>
-              <option value="TimeLockedSavings"><Text>Time Locked Savings Program</Text></option>
-              <option value="EscrowPayment"><Text>Escrow Payment Program</Text></option>
+              <option value="Vesting"><Text>Vesting Program</Text></option>
+              <option value="DIDVerification"><Text>DID Verification Program</Text></option>
+              <option value="Lending"><Text>Lending Program</Text></option>
           </Select>
         </Flex>
         <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>
