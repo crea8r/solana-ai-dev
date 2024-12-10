@@ -131,6 +131,11 @@ export const filterFiles = (projectContextRootPath: string) => (item: FileTreeIt
     return false;
   }
 
+  const isInSdkDirectory = item?.path?.includes('/sdk/') || item?.path?.startsWith('sdk/');
+  const isIndexJs = item?.name?.endsWith('/index.js') || item?.name === 'index.js';
+
+  if (isInSdkDirectory && isIndexJs)  return false; 
+
   return (
     !ignoreFiles.includes(item.name) &&
     !ignoredDirs &&

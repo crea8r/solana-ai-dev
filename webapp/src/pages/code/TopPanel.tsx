@@ -12,13 +12,11 @@ import {
 import { Wallet } from 'lucide-react';
 
 interface TopPanelProps {
-  onSave: () => void;
   onToggleWallet: () => void;
   onLogout: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({ 
-  onSave, 
   onToggleWallet,
   onLogout
 }) => {
@@ -38,14 +36,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
         gap={1}
         alignItems="center"
       >
-        <Menu>
-          <MenuButton as={Button} variant="ghost" size="xs" mr={2}>File</MenuButton>
-          <MenuList>
-            <MenuItem fontSize="xs" onClick={() => {}}>Open</MenuItem>
-            <MenuItem fontSize="xs" onClick={onSave}>Save</MenuItem>
-            <MenuItem fontSize="xs" onClick={() => {}}>New</MenuItem>
-          </MenuList>
-        </Menu>
         <Menu>
           <MenuList>
             <MenuItem onClick={() => console.log('Manage')} isDisabled={true}>Manage</MenuItem>

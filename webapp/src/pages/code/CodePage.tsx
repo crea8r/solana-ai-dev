@@ -214,7 +214,6 @@ const CodePage = () => {
     >
       <Flex flexDirection="column" flex="1" flexShrink={0} height="60px">
         <TopPanel 
-          onSave={_handleSave} 
           onToggleWallet={handleToggleWallet} 
           onLogout={handleLogout}
         />

@@ -9,8 +9,21 @@ const authApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  //withCredentials: true,
 });
+
+authApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export const login = async (
   username: string, 
@@ -20,8 +33,7 @@ export const login = async (
   try {
     const response = await authApi.post('/auth/login', { username, password });
     if (response.data.token && response.data.user) {
-      //console.log('Token cookie set:', response.data.token);
-      //console.log('User data received:', response.data.user);
+      localStorage.setItem('token', response.data.token);
 
       setUser({
         id: response.data.user.id,
@@ -54,11 +66,17 @@ export const register = async (
       password,
     });
 
-    //sessionStorage.setItem('token', response.data.token);
-    if(response.data.user) console.log("user created!", response.data.user.username)
-    await createWallet(response.data.user.id);
-    //const walletInfo = await getWalletInfo(response.data.user.id);
-    //console.log("walletInfo", walletInfo);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      console.log("token stored in localStorage", response.data.token)
+    }
+
+    if(response.data.user) {
+      console.log("user created!", response.data.user.username)
+      await createWallet();
+    } else {
+      console.error('No user data received in response');
+    }
 
     return response.data;
   } catch (error) {
@@ -68,17 +86,21 @@ export const register = async (
 
 export const logout = async () => {
   try {
-    /*
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('projectContext');
-    sessionStorage.removeItem('chatMessages');
-    sessionStorage.removeItem('terminalLogs');
-    sessionStorage.removeItem('selectedFilePath');
-    */
     const response = await authApi.post('/auth/logout');
     console.log(response.data.message);
+    localStorage.removeItem('token');
   } catch (error: any) {
     console.error('Error during logout:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getUser = async () => {
+  try {
+    const response = await authApi.get('/auth/getUser');
+    return response.data.user;
+  } catch (error) {
+    console.error('Error fetching user:', error);
     throw error;
   }
 };

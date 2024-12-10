@@ -52,7 +52,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, setIsPollin
                 { id: 1, name: 'Fetch IDL File', status: 'loading', type: 'main' },
                 { id: 2, name: 'Parse IDL File', status: 'loading', type: 'main' },
                 { id: 3, name: 'Generate SDK', status: 'loading', type: 'main' },
-                { id: 4, name: 'Generate UI Components', status: 'loading', type: 'main' },
+                //{ id: 4, name: 'Generate UI Components', status: 'loading', type: 'main' },
             ];
 
             setTasks(initialTasks);

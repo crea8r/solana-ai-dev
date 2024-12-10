@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Button, Flex, MenuItem } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from '../interfaces/file';
@@ -204,11 +204,14 @@ const CodeEditor = ({
 
   return (
     <Flex direction="column" height="100%" overflowY="hidden">
-      {selectedFile ? (
-        <Box py={2} px={2} borderBottom="1px" borderColor="gray.300">
+      <Flex direction="row" justifyContent="center" alignItems="center" py={1} height="auto">
+        {selectedFile ? (
+          <Box flex="1" py={2} px={2} borderBottom="1px" borderColor="gray.300">
           {selectedFile.path}
         </Box>
       ) : null}
+      <Button fontSize="xs" fontWeight="normal" onClick={onSave} mr={2} bg='#a9b7ff' color='white' variant="solid" size="xs">Save File</Button>
+      </Flex>
 
       <Box overflow="hidden" height="auto">
         <MonacoEditor

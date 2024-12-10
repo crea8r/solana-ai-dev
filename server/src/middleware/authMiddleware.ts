@@ -6,6 +6,10 @@ interface DecodedToken {
   org_id: string;
   name: string;
   org_name: string;
+  wallet_created: boolean;
+  private_key_viewed: boolean;
+  wallet_public_key: string;
+  wallet_private_key: string;
 }
 
 declare global {
@@ -21,7 +25,10 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.cookies?.token;
+  //const token = req.cookies?.token;
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
   if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
 
   try {

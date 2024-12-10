@@ -233,12 +233,14 @@ export const register = async (req: Request, res: Response) => {
         wallet_private_key: '',
       });
 
+      /*
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+      */
 
       //console.log("registration success, cookie set", token);
 
@@ -293,12 +295,14 @@ export const login = async (req: Request, res: Response) => {
       wallet_private_key: user.wallet_private_key,
     });
 
+    /*
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production' ? true : false,
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    */
 
     res.json({
       message: 'Logged in successfully',
@@ -321,36 +325,29 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-    path: '/', 
-  });
-  res.json({ message: 'Logged out' });
+  res.json({ message: 'Logged out successfully' });
 };
 
 export const getUser = (req: Request, res: Response) => {
   try {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: 'Unauthorized: No token provided' });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: No user data' });
+    }
 
     res.status(200).json({
       user: {
-        id: decoded.id,
-        username: decoded.name,
-        org_id: decoded.org_id,
-        org_name: decoded.org_name,
-        wallet_created: decoded.wallet_created,
-        private_key_viewed: decoded.private_key_viewed,
-        wallet_public_key: decoded.wallet_public_key,
-        wallet_private_key: decoded.wallet_private_key,
+        id: req.user.id,
+        username: req.user.name,
+        org_id: req.user.org_id,
+        org_name: req.user.org_name,
+        wallet_created: req.user.wallet_created,
+        private_key_viewed: req.user.private_key_viewed,
+        wallet_public_key: req.user.wallet_public_key,
+        wallet_private_key: req.user.wallet_private_key,
       },
     });
   } catch (error) {
-    console.error('Error verifying token:', error);
-    return res.status(401).json({ message: 'Unauthorized: Invalid or expired token' });
+    console.error('Error retrieving user:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };

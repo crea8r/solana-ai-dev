@@ -1,9 +1,9 @@
 import { WalletInfo, WalletPrivateKeyInfo } from "../interfaces/wallet";
 import { api } from "../utils/apiHelper";
 
-export const createWallet = async (userId: string): Promise<void> => {
+export const createWallet = async (): Promise<void> => {
     try {
-      await api.post('/auth/wallet/create', { params: { userId } });
+      await api.post('/auth/wallet/create');
     } catch (error) {
       console.error('Error creating wallet:', error);
       throw error;

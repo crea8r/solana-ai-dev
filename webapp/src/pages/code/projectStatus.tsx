@@ -256,7 +256,7 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
               onGenerateUI();
             }}
           >
-            <Text fontSize="0.75rem" fontWeight="normal">Generate UI</Text>
+            <Text fontSize="0.75rem" fontWeight="normal">Generate SDK</Text>
           </Button>
         </Flex>
       )}
