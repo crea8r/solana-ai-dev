@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { APP_CONFIG } from '../config/appConfig';
 import { createTask, updateTaskStatus } from './taskUtils';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import path from 'path';
 import { AppError } from '../middleware/errorHandler';
 import { getProjectRootPath } from './fileUtils';
@@ -48,7 +48,7 @@ export const runCommand = async (
   });
 };
 
-// deprecated
+// depreciated
 export const createProjectFolder = (rootPath: string): void => {
   const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
 
@@ -118,6 +118,9 @@ export const startAnchorDeployTask = async (
       const projectPath = path.join(APP_CONFIG.ROOT_FOLDER, rootPath);
 
       await runCommand(`solana config set --url https://api.devnet.solana.com`, projectPath, sanitizedTaskId);
+      const walletPath = path.join(APP_CONFIG.WALLETS_FOLDER, `${creatorId}.json`);
+      execSync(`solana config set --keypair ${walletPath}`, { stdio: 'inherit' });
+      execSync(`solana config set --url devnet`, { stdio: 'inherit' });
 
       const result = await runCommand('anchor deploy', projectPath, sanitizedTaskId).catch(async (error: any) => {
         console.error('Error during deployment:', sanitizedTaskId, error);
