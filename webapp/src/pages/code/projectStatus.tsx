@@ -244,7 +244,7 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
           )}
         </Flex>
       </Flex>
-      {buildStatus && deployStatus && (
+      {/*{buildStatus && deployStatus && (
         <Flex direction="row" gap={2} alignItems="center" justifyContent="center" cursor="default">
           <Button 
             size="xs" 
@@ -259,7 +259,7 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
             <Text fontSize="0.75rem" fontWeight="normal">Generate SDK</Text>
           </Button>
         </Flex>
-      )}
+      )}*/}
     </Flex>
   );
 };
