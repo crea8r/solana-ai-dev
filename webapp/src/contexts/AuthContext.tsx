@@ -18,6 +18,8 @@ export interface User {
 }
 
 interface RegisterResponse {
+  success: boolean;
+  message: string;
   user: {
     id: string;
     username: string;
@@ -31,7 +33,8 @@ interface AuthContextType {
   register: (
     orgName: string,
     username: string,
-    password: string
+    password: string,
+    code: string
   ) => Promise<RegisterResponse>;
   logout: () => void;
   firstLoginAfterRegistration: boolean;
@@ -113,10 +116,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const register = async (
     orgName: string,
     username: string,
-    password: string
+    password: string,
+    code: string
   ): Promise<RegisterResponse> => {
     try {
-      const response: RegisterResponse = await apiRegister(orgName, username, password);
+      const response: RegisterResponse = await apiRegister(orgName, username, password, code);
       setFirstLoginAfterRegistration(true);
       return response;
     } catch (error) {
