@@ -11,6 +11,7 @@ import fs from 'fs';
 import { exec, execSync } from 'child_process';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { getValidBetaCodes } from '../utils/betaCodes';
 
 const connection = new Connection("https://api.devnet.solana.com");
 
@@ -176,7 +177,12 @@ export const getPrivateKey = async (
 };
 
 export const register = async (req: Request, res: Response) => {
-  const { username, password, organisation, description } = req.body;
+  const { username, password, organisation, description, code } = req.body;
+
+  if (!code) return res.status(200).json({ success: false, message: 'Registration code is required' });
+  const validCodes = getValidBetaCodes();
+  console.log("validCodes", validCodes);
+  if (!validCodes.has(code)) return res.status(200).json({ success: false, message: 'Invalid registration code' });
 
   try {
     const client = await pool.connect();
@@ -245,6 +251,7 @@ export const register = async (req: Request, res: Response) => {
       //console.log("registration success, cookie set", token);
 
       res.status(201).json({
+        success: true,
         message: 'User registered successfully',
         token,
         wallet_created: false,
@@ -265,7 +272,7 @@ export const register = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('Error in register:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

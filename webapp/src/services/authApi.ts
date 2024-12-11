@@ -57,13 +57,15 @@ export const login = async (
 export const register = async (
   organisation: string,
   username: string,
-  password: string
+  password: string,
+  code: string
 ): Promise<any> => {
   try {
     const response = await authApi.post('/auth/register', {
       organisation,
       username,
       password,
+      code,
     });
 
     if (response.data.token) {

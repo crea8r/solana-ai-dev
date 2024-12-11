@@ -37,6 +37,7 @@ export const APP_CONFIG = {
   PASSWORD_SALT_ROUNDS: 10,
   TOKEN_EXPIRATION: '7d',
   MAX_FILE_SIZE: 1024 * 1024 * 5, // 5MB
+  BETA_CODE: process.env.BETA_CODE as string,
 };
 
 // Validate required environment variables
