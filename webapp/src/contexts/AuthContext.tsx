@@ -15,6 +15,7 @@ export interface User {
   hasViewedWalletModal?: boolean;
   walletPublicKey?: string;
   walletPrivateKey?: string;
+  openAiApiKey?: string;
 }
 
 interface RegisterResponse {
@@ -23,6 +24,7 @@ interface RegisterResponse {
   user: {
     id: string;
     username: string;
+    openAiApiKey: string;
   };
 }
 
@@ -34,7 +36,8 @@ interface AuthContextType {
     orgName: string,
     username: string,
     password: string,
-    code: string
+    code: string,
+    openAiApiKey: string
   ) => Promise<RegisterResponse>;
   logout: () => void;
   firstLoginAfterRegistration: boolean;
@@ -117,10 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     orgName: string,
     username: string,
     password: string,
-    code: string
+    code: string,
+    openAiApiKey: string
   ): Promise<RegisterResponse> => {
     try {
-      const response: RegisterResponse = await apiRegister(orgName, username, password, code);
+      const response: RegisterResponse = await apiRegister(orgName, username, password, code, openAiApiKey);
       setFirstLoginAfterRegistration(true);
       return response;
     } catch (error) {

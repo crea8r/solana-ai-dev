@@ -164,11 +164,14 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [code, setCode] = useState('');
+  const [openAiApiKey, setOpenAiApiKey] = useState('');
+  const [openAiApiKeyError, setOpenAiApiKeyError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setCodeError('');
+    setOpenAiApiKeyError('');
 
     if (password !== confirmPassword) {
       setError("Passwords don't match");
@@ -176,7 +179,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await register(orgName, username, password, code);
+      const response = await register(orgName, username, password, code, openAiApiKey);
 
       if (response.success === false) {
         if (response.message === 'Invalid registration code') {
@@ -212,6 +215,7 @@ const RegisterPage: React.FC = () => {
             orgName: orgName,
             walletCreated: false,
             hasViewedWalletModal: false,
+            openAiApiKey: openAiApiKey,
           };
         }
     
@@ -324,6 +328,20 @@ const RegisterPage: React.FC = () => {
                   autoComplete="off"
                 />
                 {codeError && <Text color="red.500" fontSize="sm">{codeError}</Text>}
+              </Box>
+              <Box className="space-y-2">
+                <FormLabel htmlFor="openAiApiKey" fontSize="md">OpenAI API Key</FormLabel>
+                <Input
+                  id="openAiApiKey"
+                  type="text"
+                  required
+                  value={openAiApiKey}
+                  onChange={(e) => setOpenAiApiKey(e.target.value)}
+                  isInvalid={!!openAiApiKeyError}
+                  errorBorderColor="red.500"
+                  autoComplete="off"
+                />
+                {openAiApiKeyError && <Text color="red.500" fontSize="sm">{openAiApiKeyError}</Text>}
               </Box>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button 

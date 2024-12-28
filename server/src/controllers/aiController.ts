@@ -3,6 +3,8 @@ import { AppError } from '../middleware/errorHandler';
 import { logMessages } from '../utils/aiLog';
 import { SolanaAgentKit } from 'solana-agent-kit';
 
+const solanaRpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 let OPENAI_API_KEY = '';
 let ANTHROPIC_API_KEY = '';
@@ -237,17 +239,19 @@ export const handleAIChat = async (
   }
 };
 
-export const initializeSAK = async (
+
+export const initSAK = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { solanaPrivateKey, solanaRpcUrl, openAiApiKey } = req.body;
+    const { solanaPrivateKey, openAiApiKey } = req.body;
 
     if (!solanaPrivateKey || !solanaRpcUrl || !openAiApiKey) return next(new AppError('Missing required settings. Please provide solanaPrivateKey, solanaRpcUrl, and openAiApiKey.',  400 ));
 
-    const sakAgent = new SolanaAgentKit(solanaPrivateKey, solanaRpcUrl, openAiApiKey);
+    //const sakAgent = new SolanaAgentKit(solanaPrivateKey, solanaRpcUrl, openAiApiKey);
+    // console.log('sakAgent', sakAgent);
 
     res.status(200).json({
       message: 'Solana Agent Kit initialized successfully',

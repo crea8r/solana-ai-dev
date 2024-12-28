@@ -58,7 +58,8 @@ export const register = async (
   organisation: string,
   username: string,
   password: string,
-  code: string
+  code: string,
+  openAiApiKey: string
 ): Promise<any> => {
   try {
     const response = await authApi.post('/auth/register', {
@@ -66,6 +67,7 @@ export const register = async (
       username,
       password,
       code,
+      openAiApiKey
     });
 
     if (response.data.token) {

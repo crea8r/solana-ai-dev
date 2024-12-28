@@ -177,7 +177,7 @@ export const getPrivateKey = async (
 };
 
 export const register = async (req: Request, res: Response) => {
-  const { username, password, organisation, description, code } = req.body;
+  const { username, password, organisation, description, code, openAiApiKey } = req.body;
 
   if (!code) return res.status(200).json({ success: false, message: 'Registration code is required' });
   const validCodes = getValidBetaCodes();
@@ -222,8 +222,8 @@ export const register = async (req: Request, res: Response) => {
 
       const userId = uuidv4();
       await client.query(
-        'INSERT INTO Creator (id, username, password, org_id, role, wallet_created, private_key_viewed) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [userId, username, hashedPassword, orgId, 'admin', false, false]
+        'INSERT INTO Creator (id, username, password, org_id, role, wallet_created, private_key_viewed, openAiApiKey) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [userId, username, hashedPassword, orgId, 'admin', false, false, openAiApiKey]
       );
 
       await client.query('COMMIT');
@@ -237,6 +237,7 @@ export const register = async (req: Request, res: Response) => {
         private_key_viewed: false,
         wallet_public_key: '',
         wallet_private_key: '',
+        openAiApiKey: openAiApiKey,
       });
 
       /*
@@ -300,6 +301,7 @@ export const login = async (req: Request, res: Response) => {
       private_key_viewed: user.private_key_viewed,
       wallet_public_key: user.wallet_public_key,
       wallet_private_key: user.wallet_private_key,
+      openAiApiKey: user.openAiApiKey,
     });
 
     /*
@@ -349,8 +351,9 @@ export const getUser = (req: Request, res: Response) => {
         org_name: req.user.org_name,
         wallet_created: req.user.wallet_created,
         private_key_viewed: req.user.private_key_viewed,
-        wallet_public_key: req.user.wallet_public_key,
+        wallet_public_key: req.user.wallet_public_key,  
         wallet_private_key: req.user.wallet_private_key,
+        openAiApiKey: req.user.openAiApiKey,
       },
     });
   } catch (error) {
