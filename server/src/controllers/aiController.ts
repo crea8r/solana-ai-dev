@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, response } from 'express';
 import { AppError } from '../middleware/errorHandler';
 import { logMessages } from '../utils/aiLog';
+import { SolanaAgentKit } from 'solana-agent-kit';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 let OPENAI_API_KEY = '';
@@ -233,5 +234,30 @@ export const handleAIChat = async (
   } catch (error) {
     console.error('Error generating AI response:', error);
     next(new AppError('Failed to generate AI chat response', 500));
+  }
+};
+
+export const initializeSAK = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { solanaPrivateKey, solanaRpcUrl, openAiApiKey } = req.body;
+
+    if (!solanaPrivateKey || !solanaRpcUrl || !openAiApiKey) return next(new AppError('Missing required settings. Please provide solanaPrivateKey, solanaRpcUrl, and openAiApiKey.',  400 ));
+
+    const sakAgent = new SolanaAgentKit(solanaPrivateKey, solanaRpcUrl, openAiApiKey);
+
+    res.status(200).json({
+      message: 'Solana Agent Kit initialized successfully',
+      agent: {
+        rpcUrl: solanaRpcUrl,
+        apiKey: openAiApiKey,
+      },
+    });
+  } catch (error) {
+    console.error('Error initializing Solana Agent Kit:', error);
+    next(new AppError('Failed to initialize Solana Agent Kit', 500));
   }
 };
