@@ -10,6 +10,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { ChakraProvider } from '@chakra-ui/react';
 import AccountPage from '../pages/AccountPage';
 import UIPage from '../pages/ui/UIPage';
+import LearnPage from '../pages/learn/LearnPage';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -53,6 +54,14 @@ const AppRoutes: React.FC = () => {
           }
         />
         */}
+        <Route
+          path='/learn'
+          element={
+            <ProtectedRoute>
+              <LearnPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path='/account'
           element={

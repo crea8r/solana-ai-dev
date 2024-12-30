@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, Icon, Tooltip, Flex, Button } from '@chakra-ui/react';
 import { PiGraphLight } from "react-icons/pi";
 import { PiTerminalWindowLight } from "react-icons/pi";
+import { GoLightBulb } from "react-icons/go";
 import { PiBookOpenText } from "react-icons/pi";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 import { PiAppWindowLight } from "react-icons/pi";
@@ -24,6 +25,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { icon: PiTerminalWindowLight, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
     { icon: PiAppWindowLight, label: 'UI - Coming Soon', path: '/ui', disabled: true }, //!projectContext.details.genUiClicked
     { icon: PiBookOpenText, label: 'Docs - Coming Soon', path: '/doc', disabled: true },
+    { icon: GoLightBulb, label: 'Learn', path: '/learn', disabled: false },
     { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
   ];
 
