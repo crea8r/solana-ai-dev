@@ -33,11 +33,6 @@ const UIPage = () => {
     console.log('user:', user);
   }, []);
 
-  const handleSelectModel = (model: string, apiKey: string) => {
-    setAiModel(model);
-    setProjectContext({ ...projectContext, aiModel: model });
-  };
-
   const handleToggleWallet = () => {
     setShowWallet((prev) => !prev);
   };

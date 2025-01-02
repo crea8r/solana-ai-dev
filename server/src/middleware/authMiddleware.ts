@@ -10,7 +10,7 @@ interface DecodedToken {
   private_key_viewed: boolean;
   wallet_public_key: string;
   wallet_private_key: string;
-  openAiApiKey: string;
+  openai_api_key: string;
 }
 
 declare global {

@@ -27,7 +27,6 @@ import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../interfaces/file';
 import { saveProject } from '../../utils/projectUtils';
 
-import { todoproject } from '../../data/mock';
 import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
@@ -86,13 +85,6 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-  const handleSelectModel = (model: string, apiKey: string) => {
-    setAiModel(model);
-    console.log('handleselectmodel model:', model);
-    console.log('handleselectmodel apiKey:', apiKey);
-    setProjectContext({ ...projectContext, aiModel: model });
-  };
   
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
@@ -418,11 +410,7 @@ const DesignPage: React.FC = () => {
   const handleExampleChange = (exampleName: string) => {
     if (exampleName && predefinedProjects[exampleName]) {
       const selectedProject = predefinedProjects[exampleName];
-      setProjectContext({
-        ...projectContext,
-        ...selectedProject,
-        aiModel: projectContext.aiModel || 'codestral-latest',
-      });
+      setProjectContext(selectedProject);
     }
   };
 
@@ -507,7 +495,6 @@ const DesignPage: React.FC = () => {
           onClickSave={handleSaveClick}
           onLogout={handleLogout}
           onToggleWallet={handleToggleWallet}
-          onSelectModel={handleSelectModel}
         />
         <Flex flex={1}>
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}

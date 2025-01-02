@@ -1,6 +1,6 @@
+/*
 import { airdropProgramProject } from "../data/examples/airdropProject";
 import { auctionProgramProject } from "../data/examples/auctionProject";
-import { counterProject } from "../data/examples/counterProject";
 import { crowdfundingProgramProject } from "../data/examples/crowdfundingProject";
 import { didVerificationProgramProject } from "../data/examples/didVerificationProject";
 import { lendingProgramProject } from "../data/examples/lendingProject";
@@ -10,10 +10,13 @@ import { stakingProgramProject } from "../data/examples/stakingProject";
 import { transferProject } from "../data/examples/transferProject";
 import { vestingProgramProject } from "../data/examples/vestingProject";
 import { votingProject } from "../data/examples/votingProject";
+*/
+
+import { counterProject } from "../data/examples/counterProject";
 import { Project } from "./project";
 
 export const predefinedProjects: Record<string, Project> = {
-  Counter: counterProject,
+  /*
   Voting: votingProject,
   Transfer: transferProject,
   Loan: loanProgramProject,
@@ -25,6 +28,8 @@ export const predefinedProjects: Record<string, Project> = {
   Vesting: vestingProgramProject,
   DIDVerification: didVerificationProgramProject,
   Lending: lendingProgramProject,
+  */
+  Counter: counterProject,
 };  
 
 export interface ProjectExample {

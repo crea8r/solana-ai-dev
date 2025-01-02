@@ -44,6 +44,7 @@ export const login = async (
         hasViewedWalletModal: response.data.user.private_key_viewed,
         walletPublicKey: response.data.user.wallet_public_key,
         walletPrivateKey: response.data.user.wallet_private_key,
+        openAiApiKey: response.data.user.openai_api_key,
       });
       
     } else console.error('No token or user data received in response');

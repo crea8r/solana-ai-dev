@@ -482,8 +482,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 }
       
                 const _promptContent = genFile(nodes, edges, fileName, filePath, '');
-                const _model = projectContext.aiModel;
-                const _apiKey = projectContext.apiKey;
+                const _apiKey = user?.openAiApiKey || '';
       
                 const _schema = isInstructionFile ? instructionSchema
                   : isStateFile ? stateSchema
@@ -500,6 +499,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                   : '';
       
                 if (_schema === '') throw new Error('No schema for file generation');
+
+                const _model = 'gpt-4o';
 
                 console.log('prompt content', _promptContent);
                 console.log('model', _model);

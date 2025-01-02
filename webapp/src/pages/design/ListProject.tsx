@@ -23,6 +23,7 @@ import {
 import { Trash2 } from 'lucide-react';
 import { shortenText } from '../../utils/text';
 import { useProjectContext } from '../../contexts/ProjectContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
 
 interface ListProjectProps {
@@ -37,6 +38,7 @@ const ListProject: React.FC<ListProjectProps> = ({
   onProjectClick,
 }) => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { user } = useAuthContext();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +86,17 @@ const ListProject: React.FC<ListProjectProps> = ({
           rootPath: '',
           name: '',
           description: '',
-          aiModel: 'codestral-latest',
-          apiKey: '',
-          walletPublicKey: '',
           details: {
             nodes: [],
             edges: [],
+            program: [],
+            instruction: [],
+            accounts: [],
+            keyFeatures: [],
+            userInteractions: [],
+            sectorContext: '',
+            optimizationGoals: [''],
+            uiHints: [''],
             files: { name: '', type: 'directory', children: [] },
             codes: [],
             docs: [],
@@ -108,8 +115,6 @@ const ListProject: React.FC<ListProjectProps> = ({
             genUiClicked: false,
             idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
             sdk: { fileName: '', content: '' },
-            walletPublicKey: '',
-            walletSecretKey: '',
             programId: null,
             pdas: [],
           },

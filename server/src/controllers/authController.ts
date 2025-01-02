@@ -237,7 +237,7 @@ export const register = async (req: Request, res: Response) => {
         private_key_viewed: false,
         wallet_public_key: '',
         wallet_private_key: '',
-        openAiApiKey: openAiApiKey,
+        openai_api_key: openAiApiKey,
       });
 
       /*
@@ -260,9 +260,11 @@ export const register = async (req: Request, res: Response) => {
           id: userId, 
           username, 
           org_id: orgId, 
+          org_name: organisation,
           role: 'admin',
           wallet_public_key: '',
           wallet_private_key: '',
+          openai_api_key: openAiApiKey,
         },
       });
     } catch (error) {
@@ -301,7 +303,7 @@ export const login = async (req: Request, res: Response) => {
       private_key_viewed: user.private_key_viewed,
       wallet_public_key: user.wallet_public_key,
       wallet_private_key: user.wallet_private_key,
-      openAiApiKey: user.openAiApiKey,
+      openai_api_key: user.openaiapikey,
     });
 
     /*
@@ -320,11 +322,13 @@ export const login = async (req: Request, res: Response) => {
         id: user.id,
         username: user.username,
         org_id: user.org_id,
+        org_name: user.org_name,
         role: user.role,
         wallet_created: user.wallet_created,
         private_key_viewed: user.private_key_viewed,
         wallet_public_key: user.wallet_public_key,
         wallet_private_key: user.wallet_private_key,
+        openai_api_key: user.openaiapikey,
       },
     });
   } catch (error) {
@@ -339,9 +343,7 @@ export const logout = (req: Request, res: Response) => {
 
 export const getUser = (req: Request, res: Response) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized: No user data' });
-    }
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized: No user data' });
 
     res.status(200).json({
       user: {
@@ -353,7 +355,7 @@ export const getUser = (req: Request, res: Response) => {
         private_key_viewed: req.user.private_key_viewed,
         wallet_public_key: req.user.wallet_public_key,  
         wallet_private_key: req.user.wallet_private_key,
-        openAiApiKey: req.user.openAiApiKey,
+        openai_api_key: req.user.openai_api_key,
       },
     });
   } catch (error) {
