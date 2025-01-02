@@ -21,7 +21,7 @@ import { Node as ReactFlowNode } from 'react-flow-renderer';
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}', ''),
   new Instruction('instruction-template', 'Instruction', '', '', '', ''),
-  new Program('program-template', 'Program', ''),
+  new Program('program-template', 'Program', '', '11111111111111111111111111111111'),
 ];
 
 const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({ onExampleChange }) => {
@@ -120,7 +120,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
         <Divider mb={3} borderColor="gray.500"/>
         <SimpleGrid columns={2} spacing={4}>
           {toolboxItems.map((item) => (
-            <Tooltip key={item.id} label={item.getName()} placement="right"
+            <Tooltip key={item.identifier} label={item.getName()} placement="right"
               bg='#a9b7ff'
               color='white'
               shadow='sm'

@@ -2,7 +2,7 @@ import { Node } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
 
 export interface ToolboxItem {
-  id: string;
+  identifier: string;
   type: 'account' | 'instruction' | 'program';
   name: string;
   description: string;
@@ -23,3 +23,26 @@ export interface ToolboxItem {
   getPropertyValues(): any;
   setPropertyValues(values: any): void;
 }
+
+export interface ProgramToolboxItem extends ToolboxItem {
+  type: 'program';
+  programId: string;
+
+  getProgramId(): string;
+  setProgramId(programId: string): void;
+}
+
+export interface InstructionToolboxItem extends ToolboxItem {
+  type: 'instruction';
+  parameters: string;
+  aiInstruction: string;
+  ownerProgramId: string;
+}
+
+export interface AccountToolboxItem extends ToolboxItem {
+  type: 'account';
+  json: string;
+  ownerProgramId: string;
+}
+
+export type ToolboxItemUnion = ProgramToolboxItem | InstructionToolboxItem | AccountToolboxItem;

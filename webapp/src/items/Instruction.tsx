@@ -7,7 +7,7 @@ import { IconType } from 'react-icons';
 import { IoIosCode } from 'react-icons/io';
 
 export class Instruction implements ToolboxItem {
-  id: string;
+  identifier: string;
   type: 'instruction' = 'instruction';
   name: string;
   description: string;
@@ -23,7 +23,7 @@ export class Instruction implements ToolboxItem {
     aiInstruction: string,
     ownerProgramId: string
   ) {
-    this.id = id;
+    this.identifier = id;
     this.name = name;
     this.description = description;
     this.parameters = parameters;
@@ -69,7 +69,7 @@ export class Instruction implements ToolboxItem {
 
   toNode(position: { x: number; y: number }): Node {
     return {
-      id: this.id,
+      id: this.identifier,
       type: 'instruction',
       position,
       data: { label: this.name, item: this },

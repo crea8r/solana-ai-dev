@@ -1,70 +1,83 @@
 import { NodeTypes } from 'react-flow-renderer';
-import { ToolboxItem } from '../interfaces/ToolboxItem';
+import { ToolboxItem, ToolboxItemUnion, ProgramToolboxItem, AccountToolboxItem, InstructionToolboxItem } from '../interfaces/ToolboxItem';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 
-export function createItem(type: string, itemData?: Partial<ToolboxItem>): ToolboxItem | null {
+export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): ToolboxItemUnion | null {
   switch (type) {
     case 'account': {
-      const accountData = itemData as Partial<Account>;
+      const accountData = itemData as Partial<AccountToolboxItem>;
       const account = new Account(
-        itemData?.id || `account-${Date.now()}`,
-        itemData?.name || 'Account',
-        itemData?.description || '',
+        accountData?.identifier || `account-${Date.now()}`,
+        accountData?.name || 'Account',
+        accountData?.description || '',
         accountData?.json || '',
         accountData?.ownerProgramId || ''
       );
 
-      Object.assign(account, itemData);
-      return account;
+      Object.assign(account, accountData);
+      return account as AccountToolboxItem;
     }  
-    case 'instruction':
-      const instructionData = itemData as Partial<Instruction>;
+    case 'instruction': {
+      const instructionData = itemData as Partial<InstructionToolboxItem>;
       return Object.assign(
         new Instruction(
-          instructionData?.id || `instruction-${Date.now()}`,
+          instructionData?.identifier || `instruction-${Date.now()}`,
           instructionData?.name || 'Instruction',
           instructionData?.parameters || '',
           instructionData?.description || '',
           instructionData?.aiInstruction || '',
           instructionData?.ownerProgramId || ''
-          ),
-        itemData
-      );
-    case 'program':
+        ),
+        instructionData
+      ) as InstructionToolboxItem;
+    }
+    case 'program': {
+      const programData = itemData as Partial<ProgramToolboxItem>;
       return Object.assign(
-        new Program(itemData?.id || `program-${Date.now()}`, itemData?.name || 'Program', ''),
-        itemData
-      );    
+        new Program(
+          programData?.identifier || `program-${Date.now()}`, 
+          programData?.name || 'Program', 
+          programData?.description || '', 
+          programData?.programId || '11111111111111111111111111111111'
+        ),
+        programData
+      ) as ProgramToolboxItem;
+    }    
     default:
-    return null;
+      return null;
   }
 }
 
-export function loadItem(type: string, data: any): ToolboxItem | null {
+export function loadItem(type: string, data: any): ToolboxItemUnion | null {
   switch (type) {
     case 'account':
       return new Account(
-        data.id,
+        data.identifier,
         data.name,
         data.description,
         data.json,
         data.ownerProgramId
-      );
+      ) as AccountToolboxItem;
     case 'instruction':
       return new Instruction(
-        data.id,
+        data.identifier,
         data.name,
         data.description,
         data.parameters,
         data.aiInstruction,
         data.ownerProgramId
-      );
+      ) as InstructionToolboxItem;
     case 'program':
-      return new Program(data.id, data.name, data.description);
+      return new Program(
+        data.identifier,
+        data.name,
+        data.description,
+        data.programId
+      ) as ProgramToolboxItem;
     default:
       return null;
   }

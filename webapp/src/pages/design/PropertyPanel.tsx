@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, Text, Input, Button, Flex } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { Node, Edge } from 'react-flow-renderer';
-import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { useProjectContext } from '../contexts/ProjectContext';
-import { Account } from '../items/Account';
-import { Program } from '../items/Program';
-import { Instruction } from '../items/Instruction';
+import { ToolboxItem } from '../../interfaces/ToolboxItem';
+import { useProjectContext } from '../../contexts/ProjectContext';
+import { Account } from '../../items/Account';
+import { Program } from '../../items/Program';
+import { Instruction } from '../../items/Instruction';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -153,7 +153,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
 
   return (
-    <Box width='300px' bg='white' p={4} borderLeft="1px solid" borderColor="gray.200" shadow="xl">
+    <Box width='25vw' bg='white' p={4} borderLeft="1px solid" borderColor="gray.200" shadow="xl">
       <VStack spacing={4} align='stretch'>
         {selectedNode && (
           <>

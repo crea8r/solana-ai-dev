@@ -13,6 +13,7 @@ import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { Instruction } from '../items/Instruction';
+import { Program } from '../items/Program';
 
 interface CanvasProps {
   nodes: Node[];
@@ -73,6 +74,23 @@ const Canvas: React.FC<CanvasProps> = ({
           }
           if (node.data.parameters) {
             instruction.setParameters(node.data.parameters);
+          }
+        }
+        if (node.type === "program" && node.data.item) {
+          const { identifier, name, description, programId } = node.data.item;
+          node.data.item = new Program(
+            identifier,
+            name || '',
+            description || '',
+            programId || '11111111111111111111111111111111'
+          );
+          const program = node.data.item as Program;
+          program.setName(node.data.label);
+          if (node.data.description) {
+            program.setDescription(node.data.description);
+          }
+          if (node.data.programId) {
+            program.setProgramId(node.data.programId);
           }
         }
       });

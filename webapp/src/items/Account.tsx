@@ -7,7 +7,7 @@ import { Handle, Position, NodeProps } from 'react-flow-renderer';
 import { VscJson } from 'react-icons/vsc';
 
 export class Account implements ToolboxItem {
-  id: string;
+  identifier: string;
   type: 'account' = 'account';
   name: string;
   description: string;
@@ -21,7 +21,7 @@ export class Account implements ToolboxItem {
     json: string,
     ownerProgramId: string
   ) {
-    this.id = id;
+    this.identifier = id;
     this.name = name;
     this.description = description;
     this.json = json;
@@ -60,7 +60,7 @@ export class Account implements ToolboxItem {
 
   toNode(position: { x: number; y: number }): Node {
     return {
-      id: this.id,
+      id: this.identifier,
       type: 'account',
       position,
       data: { label: this.name, item: this },

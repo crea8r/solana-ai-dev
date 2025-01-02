@@ -14,7 +14,7 @@ import { MdOutlineFeedback } from "react-icons/md";
 import TopPanel from './TopPanel';
 import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
-import PropertyPanel from '../../components/PropertyPanel';
+import PropertyPanel from './PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
@@ -62,8 +62,6 @@ const DesignPage: React.FC = () => {
   const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
-  const [aiModel, setAiModel] = useState('codestral-latest');
-  const [apiKey, setApiKey] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
