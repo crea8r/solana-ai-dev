@@ -131,8 +131,8 @@ const generateInstructionText = (instructionNodes: Node[]) => {
     const instructionData = instruction.data.item as Instruction;
     const instructionName = instructionData.getName();
     const instructionDesc = instructionData.getDescription();
-    const instructionParams = instructionData.getParameters();
-    const instructionLogic = instructionData.getAiInstruction();
+    const instructionParams = instructionData.getParams();
+    const instructionLogic = instructionData.getLogic();
 
     let instructionDetails = `${instructionName} is an instruction, ${instructionDesc} with parameters: ${instructionParams}; and logic as following: ${instructionLogic}`;
     instructionText += `${instructionDetails}\n`;
@@ -170,7 +170,7 @@ const findNodesByType = (nodes: Node[], edges: Edge[], programId: string, nodeTy
 
 const generateInstructionContent = (instructionData: Instruction) => {
   const instructionName = instructionData.getName();
-  const instructionLogic = instructionData.getAiInstruction();
+  const instructionLogic = instructionData.getLogic();
   return `
     // ${instructionName} instruction logic
     pub fn run_${instructionName.toLowerCase()}() {

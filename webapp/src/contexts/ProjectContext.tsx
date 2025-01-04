@@ -53,103 +53,6 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-const defaultProgram: ProgramContext = {
-  id: '',
-  name: '',
-  description: '',
-  account: [],
-  instruction: [],
-  dependencies: [],
-  security: '',
-  sector: [],
-}
-
-const defaultInstruction: InstructionContext = {
-  id: '',
-  name: '',
-  description: '',
-  programId: [],
-  category: [],
-  params: [{
-    name: '',
-    type: '',
-    input_source: [],
-    default_value: '',
-    validation: [],
-  }],
-  logic: [],
-  output: [{
-    name: '',
-    type: '',
-    description: '',
-  }],
-  pda: [{
-    name: '',
-    seeds: [],
-    bump: 0,
-  }],
-  authenticated_accounts: [{
-    name: '',
-    public_key: [],
-  }],
-  relationships: [{
-    name: '',
-    type: '',
-    description: '',
-  }],
-  state_changes: [{
-    account_id: '',
-    account_name: '',
-    before: '',
-    after: '',
-  }],
-  events: [{
-    name: '',
-    description: '',
-    fields: [{
-      name: '',
-      type: '',
-    }],
-  }],
-  conditions: [
-    { condition: '', order: orderEnum.before },
-    { condition: '', order: orderEnum.after },
-  ],
-  triggers: [{
-    type: triggerType.event,
-    description: '',
-    source: [{ name: '', description: '' }],
-    schedule: [{
-      time: '',
-      interval: intervalEnum.daily,
-      description: '', // template literal insertion of values
-    }],
-    account: [{
-      id: '',
-      name: '',
-      description: '',
-      state: [],
-    }],
-  }],
-} 
-
-const defaultAccount: AccountContext = {
-  id: '',
-  name: '',
-  description: '',
-  publicKey: '',
-  category: [],
-  programId: [],
-  is_mutable: false,
-  is_signer: false,
-  is_writable: false,
-  initialized_by: [],
-  structure: {
-    key: '',
-    value: '',
-  },
-}
-
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [projectContext, setProjectContext] = useState<Project>(() => {
     const savedProject = sessionStorage.getItem('projectContext');
@@ -163,9 +66,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           details: {
             nodes: [],
             edges: [],
-            program: [defaultProgram],
-            instruction: [defaultInstruction],
-            accounts: [defaultAccount],
             files: { name: '', type: 'directory', children: [] },
             codes: [],
             docs: [],

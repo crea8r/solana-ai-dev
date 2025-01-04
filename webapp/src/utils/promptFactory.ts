@@ -94,8 +94,8 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
         const instruction_data = instruction.data.item as Instruction;
         const instruction_name = instruction_data.getName();
         const instruction_desc = instruction_data.getDescription();
-        const instruction_params = instruction_data.getParameters();
-        const instruction_ai = instruction_data.getAiInstruction();
+        const instruction_params = instruction_data.getParams();
+        const instruction_ai = instruction_data.getLogic();
         let instruction_text =
           instruction_name +
           ' is a instruction, ' +

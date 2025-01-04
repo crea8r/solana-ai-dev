@@ -98,13 +98,9 @@ export interface ProgramContext {
   id: string;
   name: string;
   description: string;
+  programId: string;
   account: string[];
   instruction: string[];
-  dependencies: {
-    name: string;
-    type: string;
-    programId?: string;
-  }[];
   security: string;
   sector: sectorEnum[];
 }
@@ -128,57 +124,6 @@ export interface InstructionContext {
     type: string;
     description: string;
   }[];
-  pda: {
-    name: string;
-    seeds: string[];
-    bump: number;
-  }[];
-  authenticated_accounts: {
-    name: string;
-    public_key: string[];
-  }[];
-  relationships: {
-    name: string;
-    type: string;
-    description: string;
-  }[];
-  state_changes: {
-    account_id: string;
-    account_name: string;
-    before: string;
-    after: string;
-  }[];
-  events: {
-    name: string;
-    description: string;
-    fields: {
-      name: string;
-      type: string;
-    }[];
-  }[];
-  conditions: {
-    condition: string;
-    order: orderEnum;
-  }[];
-  triggers: {
-    type: triggerType;
-    description: string;
-    source: {
-      name: string;
-      description: string;
-    }[];
-    schedule: {
-      time: string;
-      interval: intervalEnum;
-      description: string; // template literal insertion of values
-    }[];
-    account?: {
-      id: string;
-      name: string;
-      description: string;
-      state: string[];
-    }[];
-  }[];
 }
 
 export interface AccountContext {
@@ -201,9 +146,6 @@ export interface AccountContext {
 export interface ProjectDetails {
   nodes: Node[];
   edges: Edge[];
-  program: ProgramContext[];
-  instruction: InstructionContext[];
-  accounts: AccountContext[];
   files: FileTreeItemType;
   codes: CodeFile[];
   docs: Docs[];
@@ -282,7 +224,6 @@ export interface ProjectListItem {
   root_path: string;
 }
 
-
 export interface ListProjectsResponse {
   data: ProjectListItem[];
   total: number;
@@ -296,7 +237,6 @@ export interface SaveProjectResponse {
   projectId: string;
   rootPath: string;
 }
-
 
 interface Program {
   id: string;

@@ -23,17 +23,26 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
     }  
     case 'instruction': {
       const instructionData = itemData as Partial<InstructionToolboxItem>;
-      return Object.assign(
-        new Instruction(
-          instructionData?.identifier || `instruction-${Date.now()}`,
-          instructionData?.name || 'Instruction',
-          instructionData?.parameters || '',
-          instructionData?.description || '',
-          instructionData?.aiInstruction || '',
-          instructionData?.ownerProgramId || ''
-        ),
-        instructionData
-      ) as InstructionToolboxItem;
+      const instruction = new Instruction(
+        instructionData?.identifier || `instruction-${Date.now()}`,
+        instructionData?.name || 'Instruction',
+        instructionData?.description || '',
+        instructionData?.programId || [],
+        instructionData?.category || [],
+        instructionData?.params || [],
+        instructionData?.logic || [],
+        instructionData?.output || [],
+        instructionData?.pda || [],
+        instructionData?.authenticated_accounts || [],
+        instructionData?.relationships || [],
+        instructionData?.state_changes || [],
+        instructionData?.events || [],
+        instructionData?.conditions || [],
+        instructionData?.triggers || []
+      );
+
+      Object.assign(instruction, instructionData);
+      return instruction as InstructionToolboxItem;
     }
     case 'program': {
       const programData = itemData as Partial<ProgramToolboxItem>;
@@ -54,29 +63,51 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
 
 export function loadItem(type: string, data: any): ToolboxItemUnion | null {
   switch (type) {
+    
     case 'account':
       return new Account(
         data.identifier,
         data.name,
         data.description,
         data.json,
-        data.ownerProgramId
+        data.ownerProgramId || '',
+        data.category || [],
+        data.is_mutable ?? true,
+        data.is_signer ?? false,
+        data.is_writable ?? true,
+        data.initialized_by || [],
+        data.structure || { key: '', value: '' }
       ) as AccountToolboxItem;
-    case 'instruction':
+    
+      case 'instruction':
       return new Instruction(
         data.identifier,
-        data.name,
-        data.description,
-        data.parameters,
-        data.aiInstruction,
-        data.ownerProgramId
+        data.name || '',
+        data.description || '',
+        data.programId || [],
+        data.category || [],
+        data.params || [],
+        data.logic || [],
+        data.output || [],
+        data.pda || [],
+        data.authenticated_accounts || [],
+        data.relationships || [],
+        data.state_changes || [],
+        data.events || [],
+        data.conditions || [],
+        data.triggers || []
       ) as InstructionToolboxItem;
-    case 'program':
+    
+      case 'program':
       return new Program(
         data.identifier,
-        data.name,
-        data.description,
-        data.programId
+        data.name || '',
+        data.description || '',
+        data.programId || '',
+        data.account || [],
+        data.instruction || [],
+        data.security || 'Public',
+        data.sector || []
       ) as ProgramToolboxItem;
     default:
       return null;

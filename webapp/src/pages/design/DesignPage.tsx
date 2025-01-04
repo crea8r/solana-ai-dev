@@ -408,7 +408,14 @@ const DesignPage: React.FC = () => {
   const handleExampleChange = (exampleName: string) => {
     if (exampleName && predefinedProjects[exampleName]) {
       const selectedProject = predefinedProjects[exampleName];
-      setProjectContext(selectedProject);
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          nodes: selectedProject.details.nodes,
+          edges: selectedProject.details.edges,
+        },
+      }));
     }
   };
 
@@ -478,7 +485,7 @@ const DesignPage: React.FC = () => {
         isOpen={isFeedbackFormOpen}
         onClose={() => setIsFeedbackFormOpen(false)}
       />
-      <Flex direction='column' height='100vh'>
+      <Flex direction='column' height='99vh' maxHeight='99vh !important' overflow='hidden'>
         <ProjectBanner
           isOpen={isListProjectModalShown}
           onClickSave={() => {}}
@@ -494,7 +501,7 @@ const DesignPage: React.FC = () => {
           onLogout={handleLogout}
           onToggleWallet={handleToggleWallet}
         />
-        <Flex flex={1}>
+        <Flex flex={1} maxHeight='99vh !important' overflow='hidden'>
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
           <Toolbox onExampleChange={handleExampleChange} />
           <Canvas
@@ -517,13 +524,14 @@ const DesignPage: React.FC = () => {
             onUpdateEdge={handleUpdateEdge}
             programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
             nodes={projectContext.details.nodes}
+            edges={projectContext.details.edges}
           />
         </Flex>
         
           <Button
             position='fixed'
             bottom='4'
-            right='10'
+            left='10'
             boxSizing='border-box'
             bg="white"
             border="2.5px solid"
@@ -542,7 +550,7 @@ const DesignPage: React.FC = () => {
           <Button
             position='fixed'
             bottom='4'
-            right='40'
+            left='40'
             boxSizing='border-box'
             bg="white"
             border="2.5px solid"

@@ -89,9 +89,6 @@ const ListProject: React.FC<ListProjectProps> = ({
           details: {
             nodes: [],
             edges: [],
-            program: [],
-            instruction: [],
-            accounts: [],
             keyFeatures: [],
             userInteractions: [],
             sectorContext: '',

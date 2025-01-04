@@ -20,7 +20,7 @@ import { Node as ReactFlowNode } from 'react-flow-renderer';
 
 const toolboxItems = [
   new Account('account-template', 'Account', '', '{}', ''),
-  new Instruction('instruction-template', 'Instruction', '', '', '', ''),
+  new Instruction('instruction-template', 'Instruction', '', [], [], []),
   new Program('program-template', 'Program', '', '11111111111111111111111111111111'),
 ];
 

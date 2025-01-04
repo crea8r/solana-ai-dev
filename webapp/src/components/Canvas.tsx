@@ -8,12 +8,13 @@ import ReactFlow, {
   ReactFlowInstance,
   applyNodeChanges,
 } from 'react-flow-renderer';
-import { Box } from '@chakra-ui/react';
+import { Box, Tag, TagLabel, Wrap, WrapItem } from '@chakra-ui/react';
 import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
+import { Account } from '../items/Account';
 
 interface CanvasProps {
   nodes: Node[];
@@ -58,41 +59,122 @@ const Canvas: React.FC<CanvasProps> = ({
 
       updatedNodes.forEach((node) => {
         if (node.type === "instruction" && node.data.item) {
-          const { id, name, description, parameters, aiInstruction, ownerProgramId } = node.data.item;
-          node.data.item = new Instruction(
-            id,
-            name || '',
-            description || '',
-            parameters || '',
-            aiInstruction || '',
-            ownerProgramId || null
-          );
-          const instruction = node.data.item as Instruction;
-          instruction.setName(node.data.label);
-          if (node.data.description) {
-            instruction.setDescription(node.data.description);
-          }
-          if (node.data.parameters) {
-            instruction.setParameters(node.data.parameters);
-          }
-        }
-        if (node.type === "program" && node.data.item) {
-          const { identifier, name, description, programId } = node.data.item;
-          node.data.item = new Program(
+          const {
             identifier,
-            name || '',
+            name,
+            description,
+            programId,
+            category,
+            params,
+            logic,
+            output,
+            pda,
+            authenticated_accounts,
+            relationships,
+            state_changes,
+            events,
+            conditions,
+            triggers
+          } = node.data.item;
+        
+          node.data.item = new Instruction(
+            identifier || node.id,
+            name || node.data.label || '',
             description || '',
-            programId || '11111111111111111111111111111111'
+            programId || [],
+            category || [],
+            params || [],
+            logic || [],
+            output || [],
+            pda || [],
+            authenticated_accounts || [],
+            relationships || [],
+            state_changes || [],
+            events || [],
+            conditions || [],
+            triggers || []
           );
-          const program = node.data.item as Program;
-          program.setName(node.data.label);
-          if (node.data.description) {
-            program.setDescription(node.data.description);
-          }
-          if (node.data.programId) {
-            program.setProgramId(node.data.programId);
-          }
+        
+          const instruction = node.data.item as Instruction;
+        
+          instruction.setName(node.data.label || '');
+          if (node.data.description) instruction.setDescription(node.data.description);
+          if (node.data.programId) instruction.setProgramId(node.data.programId);
+          if (node.data.params) instruction.setParams(node.data.params);
+          if (node.data.logic) instruction.setLogic(node.data.logic);
+          if (node.data.output) instruction.setOutput(node.data.output);
         }
+        
+        if (node.type === 'program' && node.data.item) {
+          const {
+            identifier,
+            name,
+            description,
+            programId,
+            account,
+            instruction,
+            security,
+            sector
+          } = node.data.item;
+        
+          node.data.item = new Program(
+            identifier || node.id,
+            name || node.data.label || '',
+            description || '',
+            programId || '11111111111111111111111111111111',
+            account || [],
+            instruction || [],
+            security || 'Public',
+            sector || []
+          );
+        
+          const program = node.data.item as Program;
+        
+          program.setName(node.data.label || '');
+          if (node.data.description)  program.setDescription(node.data.description);
+          if (node.data.programId)  program.setProgramId(node.data.programId);
+          if (node.data.account) program.setAccounts(node.data.account);
+          if (node.data.instruction) program.setInstructions(node.data.instruction);
+          if (node.data.security) program.setSecurity(node.data.security);
+          if (node.data.sector) program.setSector(node.data.sector);
+        }
+        if (node.type === 'account' && node.data.item) {
+          const {
+            identifier,
+            name,
+            description,
+            json,
+            ownerProgramId,
+            category,
+            is_mutable,
+            is_signer,
+            is_writable,
+            initialized_by,
+            structure
+          } = node.data.item;
+      
+          node.data.item = new Account(
+            identifier || node.id,
+            name || node.data.label || '',
+            description || '',
+            json || '{}',
+            ownerProgramId || '',
+            category || [],
+            is_mutable ?? true,
+            is_signer ?? false,
+            is_writable ?? true,
+            initialized_by || [],
+            structure || { key: '', value: '' }
+          );
+      
+          const account = node.data.item as Account;
+      
+          account.setName(node.data.label || '');
+          if (node.data.description) account.setDescription(node.data.description);
+          if (node.data.json) account.setJson(node.data.json);
+          if (node.data.ownerProgramId) account.setOwnerProgramId(node.data.ownerProgramId);
+        }
+        
       });
 
       return {
@@ -128,7 +210,7 @@ const Canvas: React.FC<CanvasProps> = ({
         if (newNode.type === "instruction" && newNode.data.item) {
           const instruction = newNode.data.item as Instruction;
           instruction.setDescription("New instruction description");
-          instruction.setParameters("parameter1, parameter2");
+          instruction.setParams(["parameter1", "parameter2"]);
         }
 
         onAddNode(newNode);
