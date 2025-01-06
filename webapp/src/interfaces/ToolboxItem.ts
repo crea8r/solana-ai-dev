@@ -27,7 +27,7 @@ export interface ToolboxItem {
 export interface ProgramToolboxItem extends ToolboxItem {
   type: 'program';
   programId: string;
-
+  
   getProgramId(): string;
   setProgramId(programId: string): void;
 
@@ -62,57 +62,7 @@ export interface InstructionToolboxItem extends ToolboxItem {
     type: string;
     description: string;
   }[];
-  pda: {
-    name: string;
-    seeds: string[];
-    bump: number;
-  }[];
-  authenticated_accounts: {
-    name: string;
-    public_key: string[];
-  }[];
-  relationships: {
-    name: string;
-    type: string;
-    description: string;
-  }[];
-  state_changes: {
-    account_id: string;
-    account_name: string;
-    before: string;
-    after: string;
-  }[];
-  events: {
-    name: string;
-    description: string;
-    fields: {
-      name: string;
-      type: string;
-    }[];
-  }[];
-  conditions: {
-    condition: string;
-    order: string;
-  }[];
-  triggers: {
-    type: string;
-    description: string;
-    source: {
-      name: string;
-      description: string;
-    }[];
-    schedule: {
-      time: string;
-      interval: string;
-      description: string;
-    }[];
-    account?: {
-      id: string;
-      name: string;
-      description: string;
-      state: string[];
-    }[];
-  }[];
+  error_handling: string[];
 
   renderInstructionProperties(
     programs: { id: string; name: string }[],

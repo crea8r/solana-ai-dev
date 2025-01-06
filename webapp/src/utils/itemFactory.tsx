@@ -32,13 +32,7 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
         instructionData?.params || [],
         instructionData?.logic || [],
         instructionData?.output || [],
-        instructionData?.pda || [],
-        instructionData?.authenticated_accounts || [],
-        instructionData?.relationships || [],
-        instructionData?.state_changes || [],
-        instructionData?.events || [],
-        instructionData?.conditions || [],
-        instructionData?.triggers || []
+        instructionData?.error_handling || []
       );
 
       Object.assign(instruction, instructionData);
@@ -89,13 +83,7 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.params || [],
         data.logic || [],
         data.output || [],
-        data.pda || [],
-        data.authenticated_accounts || [],
-        data.relationships || [],
-        data.state_changes || [],
-        data.events || [],
-        data.conditions || [],
-        data.triggers || []
+        data.error_handling || []
       ) as InstructionToolboxItem;
     
       case 'program':
@@ -106,7 +94,7 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.programId || '',
         data.account || [],
         data.instruction || [],
-        data.security || 'Public',
+        data.is_public || true,
         data.sector || []
       ) as ProgramToolboxItem;
     default:

@@ -3,7 +3,7 @@ import { BsBox } from "react-icons/bs";
 import { ProgramToolboxItem, ToolboxItem } from '../interfaces/ToolboxItem';
 import { Node, Handle, Position, NodeProps } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
-import { Input, Textarea, VStack, Text, Flex, Select, Divider, Tag, TagLabel, Wrap, WrapItem, CloseButton, MenuItemOption, MenuOptionGroup, MenuList, Menu, MenuButton, Button, Checkbox } from '@chakra-ui/react';
+import { Input, Textarea, VStack, Text, Flex, Select, Divider, Tag, TagLabel, Wrap, WrapItem, CloseButton, MenuItemOption, MenuOptionGroup, MenuList, Menu, MenuButton, Button, Checkbox, Switch } from '@chakra-ui/react';
 import { sectorEnum } from '../interfaces/project';
 
 export class Program implements ProgramToolboxItem {
@@ -14,7 +14,7 @@ export class Program implements ProgramToolboxItem {
   programId: string;
   account: string[];
   instruction: string[];
-  security: string[];
+  is_public: boolean;
   sector: sectorEnum[];
 
   constructor(
@@ -24,7 +24,7 @@ export class Program implements ProgramToolboxItem {
     programId: string,
     account: string[] = [],
     instruction: string[] = [],
-    security: string[] = [],
+    is_public: boolean = true,
     sector: sectorEnum[] = [],
   ) {
     this.identifier = id;
@@ -34,7 +34,7 @@ export class Program implements ProgramToolboxItem {
     this.programId = programId;
     this.account = account;
     this.instruction = instruction;
-    this.security = security;
+    this.is_public = is_public;
     this.sector = sector;
   }
 
@@ -57,8 +57,8 @@ export class Program implements ProgramToolboxItem {
     this.instruction = instructions.map((instruction) => instruction.id);
   }
 
-  setSecurity(security: string[]): void {
-    this.security = security;
+  setIsPublic(is_public: boolean): void {
+    this.is_public = is_public;
   }
 
   setSector(sector: sectorEnum[]): void {
@@ -195,28 +195,16 @@ export class Program implements ProgramToolboxItem {
           ))}
         </Select>
 
-        {/* Security Tags Section */}
-        <Wrap>
-          {Array.isArray(values.security) && values.security.length > 0 ? (
-            values.security.map((sec: string) => (
-              <WrapItem key={sec}>
-                <Tag size="sm" variant="subtle" colorScheme="purple">
-                  <TagLabel>{sec}</TagLabel>
-                  <CloseButton
-                    size="sm"
-                    onClick={() => {
-                      const updatedSecurity = values.security.filter((s: string) => s !== sec);
-                      onChange('security', updatedSecurity);
-                    }}
-                    ml={2}
-                  />
-                </Tag>
-              </WrapItem>
-            ))
-          ) : (
-            <Text fontSize="xs" color="gray.500">No security level selected</Text>
-          )}
-        </Wrap>
+        <Flex alignItems="center" gap={4}>
+          <Text fontSize="sm">Private</Text>
+          <Switch
+            size="md"
+            colorScheme="teal"
+            isChecked={values.isPublic}
+            onChange={(e) => onChange('isPublic', e.target.checked)}
+          />
+          <Text fontSize="sm">Public</Text>
+        </Flex>
 
         {/* Security Dropdown Menu */}
         <Select
@@ -345,7 +333,7 @@ export class Program implements ProgramToolboxItem {
       'account',
       'instruction',
       'sector',
-      'security',
+      'is_public',
     ];
   }
 
@@ -357,7 +345,7 @@ export class Program implements ProgramToolboxItem {
       account: this.account || [],
       instruction: this.instruction || [],
       sector: this.sector || [],
-      security: this.security || 'Public',
+      is_public: this.is_public || false,
     };
   }
 

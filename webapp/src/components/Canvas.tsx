@@ -68,13 +68,7 @@ const Canvas: React.FC<CanvasProps> = ({
             params,
             logic,
             output,
-            pda,
-            authenticated_accounts,
-            relationships,
-            state_changes,
-            events,
-            conditions,
-            triggers
+            error_handling
           } = node.data.item;
         
           node.data.item = new Instruction(
@@ -86,13 +80,7 @@ const Canvas: React.FC<CanvasProps> = ({
             params || [],
             logic || [],
             output || [],
-            pda || [],
-            authenticated_accounts || [],
-            relationships || [],
-            state_changes || [],
-            events || [],
-            conditions || [],
-            triggers || []
+            error_handling || []
           );
         
           const instruction = node.data.item as Instruction;
@@ -103,6 +91,7 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.params) instruction.setParams(node.data.params);
           if (node.data.logic) instruction.setLogic(node.data.logic);
           if (node.data.output) instruction.setOutput(node.data.output);
+          if (node.data.error_handling) instruction.setErrorHandling(node.data.error_handling);
         }
         
         if (node.type === 'program' && node.data.item) {
@@ -113,7 +102,7 @@ const Canvas: React.FC<CanvasProps> = ({
             programId,
             account,
             instruction,
-            security,
+            is_public,
             sector
           } = node.data.item;
         
@@ -124,7 +113,7 @@ const Canvas: React.FC<CanvasProps> = ({
             programId || '11111111111111111111111111111111',
             account || [],
             instruction || [],
-            security || 'Public',
+            is_public || false,
             sector || []
           );
         
@@ -135,7 +124,7 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.programId)  program.setProgramId(node.data.programId);
           if (node.data.account) program.setAccounts(node.data.account);
           if (node.data.instruction) program.setInstructions(node.data.instruction);
-          if (node.data.security) program.setSecurity(node.data.security);
+          if (node.data.is_public) program.setIsPublic(node.data.is_public);
           if (node.data.sector) program.setSector(node.data.sector);
         }
         if (node.type === 'account' && node.data.item) {

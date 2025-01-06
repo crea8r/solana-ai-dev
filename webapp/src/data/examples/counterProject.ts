@@ -41,7 +41,7 @@ const counterProject: Project = {
               { id: 'instruction2-10001', name: 'IncrementCounter', description: 'Increments the counter by 1' },
               { id: 'instruction3-10001', name: 'ResetCounter', description: 'Resets the counter to zero' },
             ],
-            security: ['Public'],
+            is_public: true,
             sector: [sectorEnum.utility],
           },
         },
@@ -62,7 +62,6 @@ const counterProject: Project = {
             type: 'account',
             name: 'CounterAccount',
             description: 'Stores the counter value and initializer’s public key.',
-            json: '{initializer: PubKey, count: u64}',
             ownerProgramId: 'program1-10001',
             publicKey: '11111111111111111111111111111111',
             category: ['state'],
@@ -70,10 +69,10 @@ const counterProject: Project = {
             is_signer: false,
             is_writable: true,
             initialized_by: ['initializer'],
-            structure: {
-              key: 'counter',
-              value: 'u64',
-            },
+            structure: [
+              { name: 'counter', type: 'u64' },
+              { name: 'initializer', type: 'Pubkey' },
+            ],
           },
         },
         selected: false,
@@ -89,6 +88,7 @@ const counterProject: Project = {
         data: {
           label: 'InitializeCounter',
           item: {
+            description: "Initializes a new counter account with an initial value of zero.",
             programId: ['program1-10001'],
             category: [categoryEnum.number],
             params: [
@@ -118,6 +118,11 @@ const counterProject: Project = {
                 type: 'Pubkey',
                 description: 'The public key of the initializer who created the CounterAccount.'
               }
+            ],
+            error_handling: [
+              "Return an error if the initializer's public key is invalid.",
+              "Return an error if account allocation fails due to insufficient lamports.",
+              "Return an error if the CounterAccount already exists."
             ]
           },
         },
@@ -134,6 +139,7 @@ const counterProject: Project = {
         data: {
           label: 'IncrementCounter',
           item: {
+            description: "Increments the counter value by one in the specified CounterAccount.",
             programId: ['program1-10001'],
             category: [categoryEnum.number],
             params: [
@@ -162,6 +168,12 @@ const counterProject: Project = {
                 type: 'u64',
                 description: 'The updated counter value after incrementing.'
               }
+            ],
+            error_handling: [
+              "Return an error if the CounterAccount does not exist.",
+              "Return an error if the user is not authorized to increment the counter.",
+              "Return an error if the CounterAccount is not writable.",
+              "Return an error if there is an arithmetic overflow when incrementing the counter."
             ]
           },
         },
@@ -178,6 +190,7 @@ const counterProject: Project = {
         data: {
           label: 'ResetCounter',
           item: {
+            description: "Resets the counter value to zero for a specified CounterAccount.",
             programId: ['program1-10001'],
             category: [categoryEnum.number],
             params: [
@@ -207,6 +220,12 @@ const counterProject: Project = {
                 description: 'The counter value after being reset to zero.'
               }
             ],
+            error_handling: [
+              "Return an error if the CounterAccount does not exist.",
+              "Return an error if the initializer is not authorized to reset the counter.",
+              "Return an error if the CounterAccount is not writable.",
+              "Return an error if an unexpected failure occurs when logging the reset operation."
+            ]
           },
         },
         selected: true,

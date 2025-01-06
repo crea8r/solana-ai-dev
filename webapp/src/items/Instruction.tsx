@@ -26,57 +26,7 @@ export class Instruction implements ToolboxItem {
     type: string;
     description: string;
   }[];
-  pda: {
-    name: string;
-    seeds: string[];
-    bump: number;
-  }[];
-  authenticated_accounts: {
-    name: string;
-    public_key: string[];
-  }[];
-  relationships: {
-    name: string;
-    type: string;
-    description: string;
-  }[];
-  state_changes: {
-    account_id: string;
-    account_name: string;
-    before: string;
-    after: string;
-  }[];
-  events: {
-    name: string;
-    description: string;
-    fields: {
-      name: string;
-      type: string;
-    }[];
-  }[];
-  conditions: {
-    condition: string;
-    order: string;
-  }[];
-  triggers: {
-    type: string;
-    description: string;
-    source: {
-      name: string;
-      description: string;
-    }[];
-    schedule: {
-      time: string;
-      interval: string;
-      description: string;
-    }[];
-    account?: {
-      id: string;
-      name: string;
-      description: string;
-      state: string[];
-    }[];
-  }[];
+  error_handling: string[];
 
   constructor(
     id: string,
@@ -87,13 +37,7 @@ export class Instruction implements ToolboxItem {
     params: any[] = [],
     logic: string[] = [],
     output: any[] = [],
-    pda: any[] = [],
-    authenticated_accounts: any[] = [],
-    relationships: any[] = [],
-    state_changes: any[] = [],
-    events: any[] = [],
-    conditions: any[] = [],
-    triggers: any[] = []
+    error_handling: string[] = []
   ) {
     this.identifier = id;
     this.name = name;
@@ -103,13 +47,7 @@ export class Instruction implements ToolboxItem {
     this.params = params;
     this.logic = logic;
     this.output = output;
-    this.pda = pda;
-    this.authenticated_accounts = authenticated_accounts;
-    this.relationships = relationships;
-    this.state_changes = state_changes;
-    this.events = events;
-    this.conditions = conditions;
-    this.triggers = triggers;
+    this.error_handling = error_handling;
   }
 
   getName(): string {
@@ -162,6 +100,14 @@ export class Instruction implements ToolboxItem {
 
   setOutput(output: any[]): void {
     this.output = output;
+  }
+
+  getErrorHandling(): string[] {
+    return this.error_handling;
+  }
+
+  setErrorHandling(error_handling: string[]): void {
+    this.error_handling = error_handling;
   }
 
   toNode(position: { x: number; y: number }): Node {
@@ -336,6 +282,48 @@ export class Instruction implements ToolboxItem {
           }
         >
           Add Output
+        </Button>
+
+        {/* Error Handling */}
+        <Divider />
+        <Text fontWeight="medium">Error Handling:</Text>
+        {values.error_handling?.map((error: string, index: number) => (
+          <Flex key={index} align="center" gap={2}>
+            <Textarea
+              placeholder="Error message"
+              value={error}
+              onChange={(e) =>
+                onChange('error_handling', [
+                  ...values.error_handling.slice(0, index),
+                  e.target.value,
+                  ...values.error_handling.slice(index + 1),
+                ])
+              }
+              fontSize="xs"
+              bg="white"
+              width="100%"
+            />
+            <Button
+              size="xs"
+              colorScheme="red"
+              onClick={() =>
+                onChange(
+                  'error_handling',
+                  values.error_handling.filter((_: any, i: number) => i !== index)
+                )
+              }
+            >
+              Remove
+            </Button>
+          </Flex>
+        ))}
+        <Button
+          size="sm"
+          onClick={() =>
+            onChange('error_handling', [...(values.error_handling || []), ''])
+          }
+        >
+          Add Error Message
         </Button>
       </VStack>
     );
