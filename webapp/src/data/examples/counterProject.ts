@@ -62,6 +62,7 @@ const counterProject: Project = {
             type: 'account',
             name: 'CounterAccount',
             description: 'Stores the counter value and initializer’s public key.',
+            structure: { key: 'counter', value: 'u64' },
             ownerProgramId: 'program1-10001',
             publicKey: '11111111111111111111111111111111',
             category: ['state'],
@@ -69,10 +70,6 @@ const counterProject: Project = {
             is_signer: false,
             is_writable: true,
             initialized_by: ['initializer'],
-            structure: [
-              { name: 'counter', type: 'u64' },
-              { name: 'initializer', type: 'Pubkey' },
-            ],
           },
         },
         selected: false,

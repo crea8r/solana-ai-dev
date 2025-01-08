@@ -110,9 +110,9 @@ const generateAccountText = (accountNodes: Node[], accountEdges: Edge[]) => {
     const accountData = account.data.item as Account;
     const accountName = accountData.getName();
     const accountDesc = accountData.getDescription();
-    const accountJson = accountData.getJson();
+    const accountStructure = accountData.getStructure();
 
-    let accountDetails = `${accountName} is ${accountDesc}; with data structure as ${accountJson}`;
+    let accountDetails = `${accountName} is ${accountDesc}; with data structure as ${accountStructure}`;
     const edge = accountEdges.find((edge) => edge.target === account.id);
     if (edge) {
       accountDetails += `; the seed is ${edge.data?.label}`;

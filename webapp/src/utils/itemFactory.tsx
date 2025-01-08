@@ -14,10 +14,10 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
         accountData?.identifier || `account-${Date.now()}`,
         accountData?.name || 'Account',
         accountData?.description || '',
-        accountData?.json || '',
+        accountData?.structure || { key: '', value: '' },
         accountData?.ownerProgramId || ''
       );
-
+      
       Object.assign(account, accountData);
       return account as AccountToolboxItem;
     }  
@@ -63,14 +63,13 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.identifier,
         data.name,
         data.description,
-        data.json,
+        data.structure || { key: '', value: '' },
         data.ownerProgramId || '',
         data.category || [],
         data.is_mutable ?? true,
         data.is_signer ?? false,
         data.is_writable ?? true,
         data.initialized_by || [],
-        data.structure || { key: '', value: '' }
       ) as AccountToolboxItem;
     
       case 'instruction':

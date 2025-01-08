@@ -146,21 +146,20 @@ const Canvas: React.FC<CanvasProps> = ({
             identifier || node.id,
             name || node.data.label || '',
             description || '',
-            json || '{}',
+            structure || { key: '', value: '' },
             ownerProgramId || '',
             category || [],
             is_mutable ?? true,
             is_signer ?? false,
             is_writable ?? true,
             initialized_by || [],
-            structure || { key: '', value: '' }
           );
       
           const account = node.data.item as Account;
       
           account.setName(node.data.label || '');
           if (node.data.description) account.setDescription(node.data.description);
-          if (node.data.json) account.setJson(node.data.json);
+          if (node.data.structure) account.setStructure(node.data.structure);
           if (node.data.ownerProgramId) account.setOwnerProgramId(node.data.ownerProgramId);
         }
         

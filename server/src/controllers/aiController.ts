@@ -20,6 +20,9 @@ export const generateAIResponse = async (
 ) => {
   const { messages, model, _apiKey, _schema, _promptType } = req.body;
 
+  console.log('_apiKey', _apiKey);
+  if (_apiKey === '') console.log('no api key provided in api call');
+
   if (model === 'gpt-4o') OPENAI_API_KEY = _apiKey;
   if (model === 'claude-3.5-sonnet') ANTHROPIC_API_KEY = _apiKey;
 

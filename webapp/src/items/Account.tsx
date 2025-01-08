@@ -11,42 +11,37 @@ export class Account implements ToolboxItem {
   type: 'account' = 'account';
   name: string;
   description: string;
-  json: string;
+  structure: { key: string; value: string };
   ownerProgramId: string | null = null;
   category: string[];
   is_mutable: boolean;
   is_signer: boolean;
   is_writable: boolean;
   initialized_by: string[];
-  structure: {
-    key: string;
-    value: string;
-  };
 
   constructor(
     id: string,
     name: string,
     description: string,
-    json: string,
+    structure: { key: string; value: string } = { key: '', value: '' },
     ownerProgramId: string,
     category: string[] = [],
     is_mutable: boolean = true,
     is_signer: boolean = false,
     is_writable: boolean = true,
     initialized_by: string[] = [],
-    structure: { key: string; value: string } = { key: '', value: '' }
+    
   ) {
     this.identifier = id;
     this.name = name;
     this.description = description;
-    this.json = json;
+    this.structure = structure;
     this.ownerProgramId = ownerProgramId;
     this.category = category;
     this.is_mutable = is_mutable;
     this.is_signer = is_signer;
     this.is_writable = is_writable;
     this.initialized_by = initialized_by;
-    this.structure = structure;
   }
 
   getName(): string {
@@ -69,12 +64,12 @@ export class Account implements ToolboxItem {
     return this.type;
   }
 
-  getJson(): string {
-    return this.json;
+  getStructure(): { key: string; value: string } {
+    return this.structure;
   }
 
-  setJson(json: string): void {
-    this.json = json;
+  setStructure(structure: { key: string; value: string }): void {
+    this.structure = structure;
   }
 
   toNode(position: { x: number; y: number }): Node {
@@ -135,14 +130,22 @@ export class Account implements ToolboxItem {
             bg="white"
           />
         </Flex>
-  
-        {/* Data Structure */}
+
+        {/* Structure Key/Value Inputs */}
         <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Data Structure *</Text>
-          <Textarea
-            placeholder='e.g., { owner: Pubkey, balance: u64 }'
-            value={values.json || ''}
-            onChange={(e) => onChange('json', e.target.value)}
+          <Text fontSize="xs" fontWeight="medium">Structure Key</Text>
+          <Input
+            placeholder="Key"
+            value={values.structure?.key || ''} // Ensure structure is defined
+            onChange={(e) => onChange('structure', { ...values.structure, key: e.target.value })}
+            fontSize="xs"
+            bg="white"
+          />
+          <Text fontSize="xs" fontWeight="medium">Structure Value</Text>
+          <Input
+            placeholder="Value"
+            value={values.structure?.value || ''} // Ensure structure is defined
+            onChange={(e) => onChange('structure', { ...values.structure, value: e.target.value })}
             fontSize="xs"
             bg="white"
           />
@@ -250,27 +253,6 @@ export class Account implements ToolboxItem {
           />
         </Flex>
 
-        <Divider my={2} />
-  
-        {/* Structure Key/Value Inputs */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Structure Key</Text>
-          <Input
-            placeholder="Key"
-            value={values.structure?.key || ''} // Ensure structure is defined
-            onChange={(e) => onChange('structure', { ...values.structure, key: e.target.value })}
-            fontSize="xs"
-            bg="white"
-          />
-          <Text fontSize="xs" fontWeight="medium">Structure Value</Text>
-          <Input
-            placeholder="Value"
-            value={values.structure?.value || ''} // Ensure structure is defined
-            onChange={(e) => onChange('structure', { ...values.structure, value: e.target.value })}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
       </Flex>
     );
   }
@@ -295,28 +277,26 @@ export class Account implements ToolboxItem {
     return {
       name: this.name || '',
       description: this.description || '',
-      json: this.json || '',
+      structure: this.structure || { key: '', value: '' },
       ownerProgramId: this.ownerProgramId || '',
       category: this.category || [],
       is_mutable: this.is_mutable,
       is_signer: this.is_signer,
       is_writable: this.is_writable,
       initialized_by: this.initialized_by || [],
-      structure: this.structure || { key: '', value: '' },
     };
   }
 
   setPropertyValues(values: any): void {
     this.name = values.name;
     this.description = values.description;
-    this.json = values.json;
+    this.structure = values.structure || { key: '', value: '' };
     this.ownerProgramId = values.ownerProgramId;
     this.category = values.category || [];
     this.is_mutable = values.is_mutable;
     this.is_signer = values.is_signer;
     this.is_writable = values.is_writable;
     this.initialized_by = values.initialized_by || [];
-    this.structure = values.structure || { key: '', value: '' };
   }
 
   getIcon(): IconType {

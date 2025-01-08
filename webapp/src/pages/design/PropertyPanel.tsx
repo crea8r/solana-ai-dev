@@ -261,30 +261,30 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                 {selectedNode.data.item.renderProgramProperties(
                 nodes
                   .filter((n) => n.type === 'account')
-                  .map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })), // Available accounts
-                handleChange,
-                localValues,
-                (accountId: string) => handleAddAccount(accountId), // Add account handler
-                edges
+                  .map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })),
+                  handleChange,
+                  localValues,
+                  (accountId: string) => handleAddAccount(accountId),
+                  edges
                   .filter((edge) => edge.source === selectedNode.id)
                   .map((edge) => {
                     const accountNode = nodes.find((n) => n.id === edge.target && n.type === 'account');
                     return accountNode ? { id: accountNode.id, name: accountNode.data.label || 'Unnamed Account' } : null;
                   })
-                  .filter((a) => a !== null) as { id: string; name: string }[], // Connected accounts
-                (accountId: string) => handleRemoveAccount(accountId), // Remove account handler
+                  .filter((a) => a !== null) as { id: string; name: string }[],
+                (accountId: string) => handleRemoveAccount(accountId),
                 nodes
                   .filter((n) => n.type === 'instruction')
-                  .map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })), // Available instructions
+                  .map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })),
                 edges
                   .filter((edge) => edge.source === selectedNode.id)
                   .map((edge) => {
                     const instructionNode = nodes.find((n) => n.id === edge.target && n.type === 'instruction');
                     return instructionNode ? { id: instructionNode.id, name: instructionNode.data.label || 'Unnamed Instruction' } : null;
                   })
-                  .filter((i) => i !== null) as { id: string; name: string }[], // Connected instructions
-                (instructionId: string) => handleAddInstruction(instructionId), // Add instruction handler
-                (instructionId: string) => handleRemoveInstruction(instructionId) // Remove instruction handler
+                  .filter((i) => i !== null) as { id: string; name: string }[],
+                (instructionId: string) => handleAddInstruction(instructionId),
+                (instructionId: string) => handleRemoveInstruction(instructionId)
               )}
               </>
             )}

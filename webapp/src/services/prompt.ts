@@ -3,10 +3,15 @@ import { api } from '../utils/apiHelper';
 export const promptAI = async (
   text: string, 
   model: string, 
-  apiKey: string, 
+  //apiKey: string = process.env.NEXT_PUBLIC_OPENAI_API_KEY || '', 
   schema: any, 
   promptType: string
 ) => {
+  if (process.env.REACT_APP_OPENAI_API_KEY === '') {
+    console.log('no api key provided in api call');
+    throw new Error('No API key provided');
+  }
+  const apiKey = process.env.REACT_APP_OPENAI_API_KEY || 'no api key provided';
   console.log('promptAI called');
   console.log('model:', model);
   console.log('apiKey:',  apiKey);
@@ -28,6 +33,12 @@ export const promptAI_v2 = async (
 
   while (retries < maxRetries) {
     try {
+      if (process.env.OPENAI_API_KEY === '') {
+        console.log('no api key provided in api call');
+        throw new Error('No API key provided');
+      }
+      const apiKey = process.env.OPENAI_API_KEY || '';
+
       console.log('promptAI called');
       console.log('model:', model);
       console.log('apiKey:', apiKey);

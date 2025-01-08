@@ -73,15 +73,15 @@ export interface InstructionToolboxItem extends ToolboxItem {
 
 
 export interface AccountToolboxItem extends ToolboxItem {
+  description: string;
   type: 'account';
-  json: string;
+  structure: { key: string; value: string };
   ownerProgramId: string;
   category: string[];
   is_mutable: boolean;
   is_signer: boolean;
   is_writable: boolean;
   initialized_by: string[];
-  structure: { key: string; value: string };
 
   renderAccountProperties(
     programs: { id: string; name: string }[],

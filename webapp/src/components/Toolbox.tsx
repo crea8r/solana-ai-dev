@@ -19,7 +19,7 @@ import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
 
 const toolboxItems = [
-  new Account('account-template', 'Account', '', '{}', ''),
+  new Account('account-template', 'Account', '', { key: '', value: '' }, ''),
   new Instruction('instruction-template', 'Instruction', '', [], [], []),
   new Program('program-template', 'Program', '', '11111111111111111111111111111111'),
 ];
