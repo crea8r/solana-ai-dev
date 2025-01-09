@@ -5,3 +5,4 @@ dist
 coverage
 projects/*
 wallets/*
+training_data/*
