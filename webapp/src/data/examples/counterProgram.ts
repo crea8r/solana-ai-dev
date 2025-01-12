@@ -12,7 +12,7 @@ import { Program } from '../../items/Program';
 
 
 
-const counterProject: Project = {
+const counterProgram: Project = {
   id: '',
   rootPath: '',
   name: 'Counter Program',
@@ -294,4 +294,4 @@ const counterProject: Project = {
   } as ProjectDetails,
 };
 
-export { counterProject };
+export { counterProgram };

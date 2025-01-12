@@ -9,6 +9,10 @@ import { Link as RouterLink } from 'react-router-dom';
 import Team from "./Team";
 import Roadmap from "./Roadmap";
 import Features from "./Features";
+import NavBar from "./Navbar";
+import HeroSection from "./Hero";
+import DemoVideoSection from "./DemoVid";
+import Features2 from "./Features2";
 
 const words = [
   'Revolutionizing Solana dApp Development with AI',
@@ -77,71 +81,13 @@ const LandingPage3 = () => {
     <Box w="100vw" h="100vh" overflowY="scroll" bgGradient="linear(to-b, blue.900, #80a3ff)" position="relative" zIndex={10}>
       <ParticlesContainer isDarkMode={false} />
 
-      {/* Navigation Bar */}
-      <Flex align="center" justify="space-between" p={4} bg="transparent" color="white" px="10" py="4">
-        <Flex align="center" bg="transparent">
-          <Image
-            src={logo}
-            alt="Logo"
-            boxSize="50px"
-            mr={4}
-          />
-        </Flex>
+      <NavBar logoSrc={logo} />
 
-        <Flex flex="1" justify="center">
-          <Link as={RouterLink} to="#tokenomics" mx={4}> Tokenomics </Link>
-          <Link as={RouterLink} to="/roadmap" mx={4}> Roadmap </Link>
-          <Link as={RouterLink} to="#changelog" mx={4}> Changelog </Link>
-          <Link as={RouterLink} to="#contact" mx={4}> Contact </Link>
-        </Flex>
+      <HeroSection words={words} />
 
-        <Button
-          as={RouterLink}
-          to="/landing"
-          outline="white"
-          size="md"
-          color="black"
-          ml={4}
-        >
-          Go to App
-        </Button>
-      </Flex>
+      <Features2 />
 
-      {/* Hero Section */}
-      <Flex
-        h="70vh"
-        direction="column"
-        align="center"
-        justify="center"
-        color="white"
-        textAlign="center"
-        p={8}
-        gap={10}
-        zIndex={10}
-      >
-        <Box mt="100px"><TypingEffect words={words} /></Box>
-        <Flex gap={4} direction="row">
-          <Button bg="white"  size="md" color="black" shadow="xl"> Get Started </Button>
-          <Button bg="white"  size="md" color="black" shadow="xl"> See Demo </Button>
-        </Flex>
-        
-      </Flex>
-
-      <Features />
-
-      {/* Demo Video Section */}
-      <Flex
-        h="auto"
-        direction="column"
-        align="center"
-        justify="center"
-        color="white"
-        textAlign="center"
-        p={8}
-        py="100px"
-      >
-        <YouTube videoId="NbO50Rm8u6Q" opts={{ width: '1000px', height: '500px' }} />
-      </Flex>
+      <DemoVideoSection videoId="NbO50Rm8u6Q" />
 
       <Team />
 

@@ -124,7 +124,7 @@ export const getNodeTypes = (): NodeTypes => ({
     color: '#909de0',
     fontWeight: '600',
     letterSpacing: '0.05em',
-    fontFamily: 'Red Hat Display',
+    fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
     //border: 'solid 2.5px #decae2', // purple
@@ -136,7 +136,7 @@ export const getNodeTypes = (): NodeTypes => ({
     color: '#909de0',
     fontWeight: '600',
     letterSpacing: '0.05em',
-    fontFamily: 'Red Hat Display',
+    fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
     //border: 'solid 2.5px #9de19f', // green
@@ -148,7 +148,7 @@ export const getNodeTypes = (): NodeTypes => ({
     color: '#909de0',
     fontWeight: '600',
     letterSpacing: '0.05em',
-    fontFamily: 'Red Hat Display',
+    fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
     //border: 'solid 2.5px #ff9494', // red

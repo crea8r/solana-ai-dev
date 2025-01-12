@@ -91,15 +91,16 @@ const LoginPage: React.FC = () => {
         <Card
           w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
           rounded="lg" shadow="2xl" p="5" zIndex="10" 
+          fontFamily="IBM Plex Mono"
         >
-          <CardHeader textAlign="center" pt="6" position="relative">
+          <CardHeader textAlign="center" pt="6" position="relative" fontFamily="IBM Plex Mono">
             <Link to="/landing" className="absolute left-0 top-0 p-5">
               <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
             <Text fontSize="md" color="gray.500" >Enter your details to login to your account</Text>
           </CardHeader>
-          <CardBody fontWeight="300" fontSize="xs">
+          <CardBody fontWeight="300" fontSize="xs" fontFamily="IBM Plex Mono">
             <form onSubmit={handleSubmit} className="space-y-4">
               <Box className="space-y-2">
                 <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>

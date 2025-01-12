@@ -81,7 +81,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       px={6}      
       borderRight="1px solid"
       borderColor="gray.200"
-      fontFamily="Red Hat Display"
+      fontFamily="IBM Plex Mono"
       letterSpacing="0.05em"
     >
       <VStack spacing={2} align="stretch">
@@ -93,7 +93,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             size="sm"
             fontWeight="normal"
             letterSpacing="0.05em"
-            fontFamily="Red Hat Display"
+            fontFamily="IBM Plex Mono"
             bg="white"
             color="gray.700"
             mb={3}
@@ -103,17 +103,8 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             borderColor="gray.300"
           >
               <option value="Counter"><Text>Counter Program</Text></option>
-              <option value="Voting"><Text>Voting Program</Text></option>
-              <option value="Transfer"><Text>Transfer Program</Text></option>
-              <option value="Loan"><Text>Loan Program</Text></option>
-              <option value="NFTMarketplace"><Text>NFT Marketplace Program</Text></option>
-              <option value="Staking"><Text>Staking Program</Text></option>
-              <option value="Airdrop"><Text>Airdrop Program</Text></option>
-              <option value="Auction"><Text>Auction Program</Text></option>
-              <option value="Crowdfunding"><Text>Crowdfunding Program</Text></option>
-              <option value="Vesting"><Text>Vesting Program</Text></option>
-              <option value="DIDVerification"><Text>DID Verification Program</Text></option>
-              <option value="Lending"><Text>Lending Program</Text></option>
+              <option value="TransferToken"><Text>Transfer Token Program</Text></option>
+              <option value="StakingRewards"><Text>Staking Rewards Program</Text></option>
           </Select>
         </Flex>
         <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>
@@ -135,7 +126,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 onDragStart={(e: any) => e.dataTransfer.setData('text/plain', item.getType())}
                 p={2}
                 letterSpacing="0.05em"
-                fontFamily="Red Hat Display"
+                fontFamily="IBM Plex Mono"
                 borderRadius="md"
                 border= '2px solid #a9b7ff'
                 bg="white"

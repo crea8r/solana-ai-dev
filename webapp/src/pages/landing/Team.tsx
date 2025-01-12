@@ -88,7 +88,10 @@ const teamMembers = [
 
 const Team = () => {
   return (
-    <Box  py={16}>
+    <Box 
+      zIndex={10}
+      bg="rgb(40, 44, 90)"
+      py={16}>
       <Box maxW="1200px" mx="auto" px={4}>
         <Heading 
             fontFamily="IBM Plex Mono"
