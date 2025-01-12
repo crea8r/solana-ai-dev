@@ -13,6 +13,7 @@ import UIPage from '../pages/ui/UIPage';
 import LearnPage from '../pages/learn/LearnPage';
 import Roadmap from '../pages/landing/Roadmap';
 import LandingPage1 from '../pages/landing/LandingPage1';
+import Contact from '../pages/landing/Contact';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const AppRoutes: React.FC = () => {
         <Route path='/' element={<LandingPage1 />} />
         <Route path='/landing' element={<LandingPage />} />
         <Route path='/roadmap' element={<Roadmap />} />
+        <Route path='/contact' element={<Contact />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route

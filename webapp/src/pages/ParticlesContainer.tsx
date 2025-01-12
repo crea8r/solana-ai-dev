@@ -57,7 +57,7 @@ const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
                             color: "#ffffff",
                             distance: 400,
                             duration: 5,
-                            opacity: 0.4,
+                            opacity: 0.2,
                             size: 3,
                         },
                         attract: {

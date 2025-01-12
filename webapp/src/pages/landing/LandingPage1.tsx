@@ -78,7 +78,7 @@ const LandingPage3 = () => {
   const logo = require('../../assets/brand/solai_logo.png');
 
   return (
-    <Box w="100vw" h="100vh" overflowY="scroll" bgGradient="linear(to-b, blue.900, #80a3ff)" position="relative" zIndex={10}>
+    <Box w="100vw" h="100vh" overflowY="scroll" bgGradient="linear(to-b, #282c5a, #80a3ff)" position="relative" zIndex={10}>
       <ParticlesContainer isDarkMode={false} />
 
       <NavBar logoSrc={logo} />
@@ -88,8 +88,6 @@ const LandingPage3 = () => {
       <Features2 />
 
       <DemoVideoSection videoId="NbO50Rm8u6Q" />
-
-      <Team />
 
     </Box>
   );

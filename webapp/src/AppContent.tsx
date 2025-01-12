@@ -16,6 +16,7 @@ import { CodeFileProvider } from './contexts/CodeFileContext';
 import UIPage from './pages/ui/UIPage';
 import LearnPage from './pages/learn/LearnPage';
 import Roadmap from './pages/landing/Roadmap';
+import Contact from './pages/landing/Contact';
 import LandingPage1 from './pages/landing/LandingPage1';
 import LandingPage from './pages/landing/LandingPage';
 const AppContent: React.FC = () => {
@@ -28,6 +29,7 @@ const AppContent: React.FC = () => {
       <Route path="/login" element={user ? <Navigate to="/design" replace /> : <LoginPage />} />
       <Route path="/register" element={user ? <Navigate to="/design" replace /> : <RegisterPage />} />
       <Route path="/roadmap" element={<Roadmap />} />
+      <Route path="/contact" element={<Contact />} />
       {user && (
         <Route>
           <Route

@@ -14,36 +14,59 @@ import {
   Collapse,
 } from "@chakra-ui/react";
 import { ChevronDownIcon, ChevronUpIcon, CheckCircleIcon } from "@chakra-ui/icons";
+import { TbProgress } from "react-icons/tb";
+import { MdFoundation } from "react-icons/md";
+import { IoIosCheckmarkCircleOutline } from "react-icons/io";
+import { HiOutlineSparkles } from "react-icons/hi2";
 import { Link as RouterLink } from "react-router-dom";
 import ParticlesContainer from "../ParticlesContainer";
-import { GradientType } from "@tsparticles/engine";
+import NavBar from "./Navbar";
+import landingPageTheme from "../../theme";
+
+const boxBgColor = landingPageTheme.colors.brand.boxBgColor;
+const pageBgColor = landingPageTheme.colors.brand.pageBgColor;
+const completedColor = landingPageTheme.colors.brand.roadMapStatusColor;
+const inProgressColor = landingPageTheme.colors.brand.roadMapStatusColor;
+
+interface DetailItem {
+  text: string;
+  status: "completed" | "in-progress";
+}
 
 interface RoadmapItem {
   title: string;
   description: string;
-  status: "completed" | "in-progress" | "upcoming";
-  details?: string[]; // Additional bullet points to reveal on hover
+  status: "completed" | "in-progress";
+  details?: DetailItem[]; // Updated to use DetailItem
+  icon?: React.ElementType;
 }
 
 const roadmapData: RoadmapItem[] = [
   {
     title: "Layed the foundations",
-    description: "Developed the basic technical infrastructure.",
+    description: "Developed the basic technical infrastructure of the app.",
     status: "completed",
     details: [
-      "Drag-and-drop design interface", 
-      "AI-powered code generation", 
-      "Basic Integrated Development Environment"
+      { text: "Drag-and-drop design interface", status: "completed" },
+      { text: "AI-powered code generation", status: "completed" },
+      { text: "Basic Integrated Development Environment", status: "completed" }
     ],
+    icon: MdFoundation,
   },
   {
-    title: "Layed the foundations",
+    title: "Train a team of AI agents",
     description: "Developed the basic technical infrastructure.",
-    status: "completed",
+    status: "in-progress",
+    details: [
+      { text: "Train on-chain developer agent/s", status: "in-progress" },
+      { text: "Train frontend developer agent/s", status: "in-progress" },
+      { text: "Train documentation writer agent/s", status: "in-progress" }
+    ],
+    icon: HiOutlineSparkles,
   },
   {
-    title: "Advisory and Team Build Out",
-    description: "Onboarded key advisors and built the core team.",
+    title: "Create a Learning Center",
+    description: "With comprehensive and interactive tutorials on a range of topics, including Solana, Anchor, Rust.",
     status: "in-progress",
   },
   {
@@ -66,22 +89,11 @@ const roadmapData: RoadmapItem[] = [
     description: "Introduced a basic IDE to build, edit, and deploy programs with ease.",
     status: "completed",
   },
-  {
-    title: "Testing",
-    description: "Running tests and ironing out any remaining bugs.",
-    status: "upcoming",
-  },
+
 ];
 
 const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, index }) => {
   const [isHovered, setIsHovered] = useState(false);
-
-  const bgColor =
-    item.status === "completed"
-      ? "green.300"
-      : item.status === "in-progress"
-      ? "yellow.400"
-      : "gray.300";
 
   return (
     <Flex
@@ -93,33 +105,34 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
       mx="auto"
     >
       <Circle
+        zIndex={10}
         size="40px"
-        bg={bgColor}
+        bg={landingPageTheme.colors.brand.boxBgColor}
+        boxShadow="xl"
         color="white"
         fontWeight="bold"
         fontSize="lg"
-        mr={4}
+        mx={4}
       >
         {index + 1}
       </Circle>
 
       <Box
-        borderWidth="1px"
-        borderColor="gray.500"
         borderRadius="md"
-        bg="whiteAlpha.600"
+        bg={landingPageTheme.colors.brand.boxBgColor}
         p={6}
         w="full"
-        boxShadow="md"
+        boxShadow="xl"
         position="relative"
         fontFamily="IBM Plex Mono"
       >
+       
         <Flex justify="space-between" align="center">
           <Heading 
             fontSize="xl" 
             fontWeight="bold" 
             mb={2} 
-            color="gray.800" 
+            color="#e2eaff" 
             fontFamily="IBM Plex Mono"
           >
             {item.title}
@@ -128,19 +141,27 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
             as={isHovered ? ChevronUpIcon : ChevronDownIcon}
             w={6}
             h={6}
-            color="gray.800"
+            color="white"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             cursor="pointer"
           />
         </Flex>
         <Flex direction="column" justify="flex-start" align="flex-start">
-          <Text color="gray.800">{item.description}</Text>
+          <Text color="#e2eaff">{item.description}</Text>
           {item.status === "completed" && (
-            <Flex align="center" mt={4}>
-              <CheckCircleIcon color="green.600" mr={2} />
-              <Text color="green.600" fontWeight="medium" fontFamily="IBM Plex Mono">
+            <Flex align="center" mt={4} bg="whiteAlpha.200" p={2} borderRadius="md" gap={2}>
+              <CheckCircleIcon color={completedColor} style={{ marginRight: "2px" }} />
+              <Text fontSize="xs" color={completedColor} fontWeight="normal" fontFamily="IBM Plex Mono">
                 Completed
+              </Text>
+            </Flex>
+          )}
+          {item.status === "in-progress" && (
+            <Flex align="center" mt={4} bg="whiteAlpha.200" p={2} borderRadius="md" gap={2}>
+              <TbProgress color={inProgressColor} style={{ marginRight: "2px" }} />
+              <Text fontSize="xs" color={inProgressColor} fontWeight="normal" fontFamily="IBM Plex Mono">
+                In Progress
               </Text>
             </Flex>
           )}
@@ -154,12 +175,17 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
               borderColor="gray.600" 
               pt={4}
               direction="column"
-              align="flex-start"
+              align="left"
             >
-              <List spacing={2}>
+              <List 
+                spacing={2}
+                fontFamily="IBM Plex Mono"
+                textAlign="left"
+              >
                 {item.details.map((detail, idx) => (
-                  <ListItem key={idx} color="gray.800">
-                    • {detail}
+                  <ListItem key={idx} color={completedColor} display="flex" justifyContent="space-between" alignItems="center">
+                    <span>• {detail.text}</span>
+                    <Icon as={detail.status === "completed" ? IoIosCheckmarkCircleOutline : TbProgress} color={completedColor} />
                   </ListItem>
                 ))}
               </List>
@@ -174,40 +200,13 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
 const Roadmap = () => {
   const logo = require("../../assets/brand/solai_logo.png");
   return (
-    <Box height="100vh" overflowY="auto" bgGradient="linear(to-b, blue.900, #80a3ff)" color="white">
+    <Box height="100vh" overflowY="auto" bg={pageBgColor} color="white">
       <ParticlesContainer isDarkMode={false} />
 
-      {/* Navigation Bar */}
-      <Flex align="center" justify="space-between" px={10} py={6} bg="transparent" color="white">
-        <Flex align="center">
-          <Image src={logo} alt="Logo" boxSize="50px" mr={6} />
-        </Flex>
+      <NavBar logoSrc={logo} />
 
-        <Flex flex="1" justify="center" mt="5px">
-          <Link as={RouterLink} to="/" mx={6}> Home </Link>
-          <Link as={RouterLink} to="#tokenomics" mx={6}> Tokenomics </Link>
-          <Link 
-            as={RouterLink} 
-            to="/roadmap" 
-            mx={6} 
-            pb="8px"
-            borderBottom="1px" 
-            borderColor="white"
-          > 
-            Roadmap 
-          </Link>
-          <Link as={RouterLink} to="#changelog" mx={6}> Changelog </Link>
-          <Link as={RouterLink} to="#contact" mx={6}> Contact </Link>
-        </Flex>
+      <Flex direction="column" align="center" textAlign="center" py={20} px={8}>
 
-        <Button outline="white" size="md" color="black" ml={6}>Go to App</Button>
-      </Flex>
-
-      {/* Roadmap Section */}
-      <Flex direction="column" align="center" textAlign="center" py={16} px={8}>
-        {/*<Heading fontSize={{ base: "3xl", md: "5xl" }} fontFamily="IBM Plex Mono" mb={10}>
-          Project Roadmap
-        </Heading>*/}
         <Box maxW="1100px" w="full">
           {roadmapData.map((item, index) => (
             <RoadmapItem key={index} item={item} index={index} />
