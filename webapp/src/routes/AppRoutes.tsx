@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import LandingPage from '../pages/LandingPage';
+import LandingPage from '../pages/landing/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DesignPage from '../pages/design/DesignPage';
@@ -11,12 +11,16 @@ import { ChakraProvider } from '@chakra-ui/react';
 import AccountPage from '../pages/AccountPage';
 import UIPage from '../pages/ui/UIPage';
 import LearnPage from '../pages/learn/LearnPage';
+import Roadmap from '../pages/landing/Roadmap';
+import LandingPage1 from '../pages/landing/LandingPage1';
 
 const AppRoutes: React.FC = () => {
   return (
     <ChakraProvider>
       <Routes>
-        <Route path='/' element={<LandingPage />} />
+        <Route path='/' element={<LandingPage1 />} />
+        <Route path='/landing' element={<LandingPage />} />
+        <Route path='/roadmap' element={<Roadmap />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route

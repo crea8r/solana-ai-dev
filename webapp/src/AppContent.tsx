@@ -2,7 +2,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DesignPage from './pages/design/DesignPage';
@@ -16,16 +15,19 @@ import { DocsProvider } from './contexts/DocsContext';
 import { CodeFileProvider } from './contexts/CodeFileContext';
 import UIPage from './pages/ui/UIPage';
 import LearnPage from './pages/learn/LearnPage';
-
+import Roadmap from './pages/landing/Roadmap';
+import LandingPage1 from './pages/landing/LandingPage1';
+import LandingPage from './pages/landing/LandingPage';
 const AppContent: React.FC = () => {
   const { user } = useAuth();
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<LandingPage1 />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={user ? <Navigate to="/design" replace /> : <LoginPage />} />
       <Route path="/register" element={user ? <Navigate to="/design" replace /> : <RegisterPage />} />
-
+      <Route path="/roadmap" element={<Roadmap />} />
       {user && (
         <Route>
           <Route

@@ -21,6 +21,7 @@ import { loadSlim } from "@tsparticles/slim";
 import type { Container } from "@tsparticles/engine";
 import { useAuth } from '../hooks/useAuth';
 import { login } from '../services/authApi';
+import ParticlesContainer from './ParticlesContainer';
 
 const style: React.CSSProperties = {
   position: "relative",
@@ -48,107 +49,6 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
     </div>
   );
 };
-
-const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
-  const [init, setInit] = useState(false);
-
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
-  }, []);
-
-  return (
-    <div>
-      {init && <Particles
-        id="tsparticles"
-        options={{
-          background: {
-            color: {
-              value: isDarkMode ? "#232734" : "#aac9fc",
-            },
-          },
-          fpsLimit: 130,
-          interactivity: {
-            events: {
-              onClick: {
-                enable: true,
-                mode: "repulse",
-              },
-              onHover: {
-                enable: true,
-                mode: ["grab"],
-              },
-            },
-            modes: {
-              grab: {
-                distance: 250,
-              },
-              bubble: {
-                color: "#ffffff",
-                distance: 400,
-                duration: 5,
-                opacity: 0.8,
-                size: 6,
-              },
-              attract: {
-                enable: true,
-                distance: 1000,
-              },
-              push: {
-                quantity: 4,
-              },
-              repulse: {
-                distance: 200,
-                duration: 0.3,
-              },
-            },
-          },
-          particles: {
-            color: {
-              value: "#ffffff",
-            },
-            links: {
-              color: "#ffffff",
-              distance: 280,
-              enable: true,
-              opacity: 0.4,
-              width: 1,
-            },
-            move: {
-              direction: "none",
-              enable: true,
-              outModes: {
-                default: "bounce",
-              },
-              random: true,
-              speed: 3,
-              straight: false,
-            },
-            number: {
-              density: {
-                enable: true,
-              },
-              value: 50,
-            },
-            opacity: {
-              value: 0.6,
-            },
-            shape: {
-              type: "circle",
-            },
-            size: {
-              value: { min: 4, max: 6 },
-            },
-          },
-          detectRetina: true,
-        }}
-      />}
-    </div>
-  );
-});
 
 const LoginPage: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -178,21 +78,22 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Flex h="100vh" w="100vw">
-        <Flex
-          w="50%"
-          justifyContent="center"
-          alignItems="center"
-          p="4"
-          bg={isDarkMode ? "#232734" : "#aac9fc"}
-        >
-          <ParticlesContainer isDarkMode={isDarkMode} />
+    <Flex 
+      h="100vh" w="100vw"
+      direction="column"
+      justifyContent="center"
+      alignItems="center"
+      fontFamily="IBM Plex Mono"
+      bgGradient="linear(to-b, blue.900, #80a3ff)"
+
+    >
+        <ParticlesContainer isDarkMode={isDarkMode} />
         <Card
           w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10" fontFamily="Red Hat Display"
+          rounded="lg" shadow="2xl" p="5" zIndex="10" 
         >
           <CardHeader textAlign="center" pt="6" position="relative">
-            <Link to="/" className="absolute left-0 top-0 p-5">
+            <Link to="/landing" className="absolute left-0 top-0 p-5">
               <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
@@ -256,12 +157,6 @@ const LoginPage: React.FC = () => {
             </Text>
           </CardFooter>
         </Card>
-      </Flex>
-      <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
-        <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
-          <VideoEmbed videoId="NbO50Rm8u6Q" />
-        </Flex>
-      </Flex>
     </Flex>
   );
 };

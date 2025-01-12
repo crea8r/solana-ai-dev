@@ -16,138 +16,9 @@ import {
   useToast
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
 import { useAuthContext } from '../contexts/AuthContext';
+import ParticlesContainer from './ParticlesContainer';
 
-const style: React.CSSProperties = {
-  position: "relative",
-  width: "100%",
-  height: "100%",
-  display: "block",
-  borderWidth: "2px",
-  borderColor: "white"
-};
-
-const VideoEmbed = ({ videoId }: { videoId: string }) => {
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1`;
-
-  return (
-    <div style={style}>
-      <iframe
-        width="100%"
-        height="100%"
-        src={embedUrl}
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        title="YouTube video"
-      />
-    </div>
-  );
-};
-
-// ParticlesContainer component
-const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
-  const [init, setInit] = useState(false);
-
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
-  }, []);
-
-  return (
-    <div>
-      {init && <Particles
-        id="tsparticles"
-        options={{
-          background: {
-            color: {
-              value: isDarkMode ? "#232734" : "#aac9fc",
-            },
-          },
-          fpsLimit: 130,
-          interactivity: {
-            events: {
-              onClick: {
-                enable: true,
-                mode: "repulse",
-              },
-              onHover: {
-                enable: true,
-                mode: ["grab"],
-              },
-            },
-            modes: {
-              grab: {
-                distance: 250,
-              },
-              bubble: {
-                color: "#ffffff",
-                distance: 400,
-                duration: 5,
-                opacity: 0.8,
-                size: 6,
-              },
-              attract: {
-                enable: true,
-                distance: 1000,
-              },
-              push: {
-                quantity: 4,
-              },
-              repulse: {
-                distance: 200,
-                duration: 0.3,
-              },
-            },
-          },
-          particles: {
-            color: {
-              value: "#ffffff",
-            },
-            links: {
-              color: "#ffffff",
-              distance: 280,
-              enable: true,
-              opacity: 0.4,
-              width: 1,
-            },
-            move: {
-              direction: "none",
-              enable: true,
-              outModes: {
-                default: "bounce",
-              },
-              random: true,
-              speed: 3,
-              straight: false,
-            },
-            number: {
-              density: {
-                enable: true,
-              },
-              value: 50,
-            },
-            opacity: {
-              value: 0.6,
-            },
-            shape: {
-              type: "circle",
-            },
-            size: {
-              value: { min: 4, max: 6 },
-            },
-          },
-          detectRetina: true,
-        }}
-      />}
-    </div>
-  );
-});
 
 const RegisterPage: React.FC = () => {
   const { setUser } = useAuthContext();
@@ -232,21 +103,27 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <Flex h="100vh" w="100vw">
-    <Flex
-      w="50%"
+    <Flex 
+      h="100vh" w="100vw"
+      bgGradient="linear(to-b, blue.900, #80a3ff)"
       justifyContent="center"
       alignItems="center"
-      p="4"
-      bg={isDarkMode ? "#232734" : "#aac9fc"}
-      >
+    >
         <ParticlesContainer isDarkMode={isDarkMode} />  
         <Card
-          w="full" maxW="lg" h="auto" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10" fontFamily="Red Hat Display"
+          w="full"
+          maxW="lg"
+          h="lg"
+          mx="auto"
+          bg="whiteAlpha.900"
+          backdropFilter="blur(10px)"
+          rounded="lg"
+          shadow="2xl"
+          p="5"
+          zIndex="10"
         >
           <CardHeader textAlign="center" pt="6" position="relative">
-            <Link to="/" className="absolute left-0 top-0 p-5">
+            <Link to="/landing" className="absolute left-0 top-0 p-5">
               <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Flex direction="column" justifyContent="center" alignItems="center" gap="2">
@@ -254,120 +131,117 @@ const RegisterPage: React.FC = () => {
               <Text size="md" color="gray.500">Enter your details to create an account</Text>
             </Flex>
           </CardHeader>
-          <CardBody fontWeight="300">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Box className="space-y-2">
-                <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
-                <Input 
-                  id="username" 
-                  type="text" 
-                  required 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoComplete="off"
-                />
-              </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="orgName" fontSize="md">Organization Name</FormLabel>
-                <Input 
-                  id="orgName" 
-                  type="text" 
-                  required 
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  autoComplete="off"
-                />
-              </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
-                <Box className="relative flex flex-row items-center gap-2">
+          <Box overflowY="auto" maxHeight="60vh" p="4">
+            <CardBody fontWeight="300">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
                   <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"} 
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="username" 
+                    type="text" 
+                    required 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     autoComplete="off"
                   />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    fontWeight="300"
-                  >
-                    {showPassword ? (
-                      <ViewOffIcon className="h-8 w-8" color="blue.500"/>
-                    ) : (
-                      <ViewIcon className="h-8 w-8" color="blue.500"/>
-                    )}
-                  </Button>
                 </Box>
-              </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="confirm-password" fontSize="md">Confirm Password</FormLabel>
-                <Input 
-                  id="confirm-password" 
-                  type="password" 
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="off"
-                />
-              </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="code" fontSize="md">Beta Registration Code</FormLabel>
-                <Input
-                  id="code"
-                  type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  isInvalid={!!codeError}
-                  errorBorderColor="red.500"
-                  autoComplete="off"
-                />
-                {codeError && <Text color="red.500" fontSize="sm">{codeError}</Text>}
-              </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="openAiApiKey" fontSize="md">OpenAI API Key</FormLabel>
-                <Input
-                  id="openAiApiKey"
-                  type="text"
-                  required
-                  value={openAiApiKey}
-                  onChange={(e) => setOpenAiApiKey(e.target.value)}
-                  isInvalid={!!openAiApiKeyError}
-                  errorBorderColor="red.500"
-                  autoComplete="off"
-                />
-                {openAiApiKeyError && <Text color="red.500" fontSize="sm">{openAiApiKeyError}</Text>}
-              </Box>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button 
-                type="submit" 
-                className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
-                fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
-                py="5"
-                bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
-              >
-                Create account
-              </Button>
-            </form>
-          </CardBody>
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="orgName" fontSize="md">Organization Name</FormLabel>
+                  <Input 
+                    id="orgName" 
+                    type="text" 
+                    required 
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    autoComplete="off"
+                  />
+                </Box>
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
+                  <Box className="relative flex flex-row items-center gap-2">
+                    <Input 
+                      id="password" 
+                      type={showPassword ? "text" : "password"} 
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="off"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                      fontWeight="300"
+                    >
+                      {showPassword ? (
+                        <ViewOffIcon className="h-8 w-8" color="blue.500"/>
+                      ) : (
+                        <ViewIcon className="h-8 w-8" color="blue.500"/>
+                      )}
+                    </Button>
+                  </Box>
+                </Box>
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="confirm-password" fontSize="md">Confirm Password</FormLabel>
+                  <Input 
+                    id="confirm-password" 
+                    type="password" 
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="off"
+                  />
+                </Box>
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="code" fontSize="md">Beta Registration Code</FormLabel>
+                  <Input
+                    id="code"
+                    type="text"
+                    required
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    isInvalid={!!codeError}
+                    errorBorderColor="red.500"
+                    autoComplete="off"
+                  />
+                  {codeError && <Text color="red.500" fontSize="sm">{codeError}</Text>}
+                </Box>
+                <Box className="space-y-2">
+                  <FormLabel htmlFor="openAiApiKey" fontSize="md">OpenAI API Key</FormLabel>
+                  <Input
+                    id="openAiApiKey"
+                    type="text"
+                    required
+                    value={openAiApiKey}
+                    onChange={(e) => setOpenAiApiKey(e.target.value)}
+                    isInvalid={!!openAiApiKeyError}
+                    errorBorderColor="red.500"
+                    autoComplete="off"
+                  />
+                  {openAiApiKeyError && <Text color="red.500" fontSize="sm">{openAiApiKeyError}</Text>}
+                </Box>
+                {error && <Text color="red.500">{error}</Text>}
+                <Button
+                  type="submit"
+                  w="full"
+                  py="5"
+                  bg="blue.300"
+                  color="white"
+                  _hover={{ bg: 'blue.400' }}
+                >
+                  Create account
+                </Button>
+              </form>
+            </CardBody>
+          </Box>
           <CardFooter>
             <Text className="text-center text-muted-foreground w-full" fontSize="sm" letterSpacing="0.05em">
-              Already have an account?{'   '}
+              Already have an account?{' '}
               <Link to='/login' className="hover:text-primary underline underline-offset-4">Sign in</Link>
             </Text>
           </CardFooter>
         </Card>
-      </Flex>
-      <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
-        <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
-          <VideoEmbed videoId="NbO50Rm8u6Q" />
-        </Flex>
-      </Flex>
     </Flex>
   );
 };
