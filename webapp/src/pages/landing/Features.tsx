@@ -1,74 +1,163 @@
-import React, { useRef } from 'react';
-import { Box, SimpleGrid, Heading, Flex, Text } from '@chakra-ui/react';
+import React, { useEffect } from 'react';
+import { Flex, Heading, Text } from '@chakra-ui/react';
 import { motion, useAnimation } from 'framer-motion';
-import { BiNetworkChart } from 'react-icons/bi';
-import { TbSparkles } from 'react-icons/tb';
-import { LuCodesandbox } from 'react-icons/lu';
+import { useInView } from 'react-intersection-observer';
+import landingPageTheme from '../../theme';
 
-interface Feature {
-  title: string;
-  description: string;
-  icon: JSX.Element;
-}
+const MotionFlex = motion(Flex);
 
-const features: Feature[] = [
-  { 
-    title: "AI-Powered Code Generation", 
-    description: "Idea to code in minutes - no coding skills required.",
-    icon: <motion.div whileHover={{ scale: 1.2 }}><TbSparkles size="40px" color="white" /></motion.div>,
-  },
-  { 
-    title: "Drag-and-Drop Interface", 
-    description: "Visualize and intuitively design your dApp.",
-    icon: <motion.div whileHover={{ scale: 1.2 }}><BiNetworkChart size="40px" color="white" /></motion.div>,
-  },
-  { 
-    title: "Pre-Built Templates", 
-    description: "Get started faster with pre-made Solana program templates.",
-    icon: <motion.div whileHover={{ scale: 1.2 }}><LuCodesandbox size="40px" color="white" /></motion.div>,
-  }
-];
+const FeatureSection: React.FC<{
+  refProp: React.Ref<HTMLDivElement>;
+  controls: any;
+  imageSrc: string;
+  heading: string;
+  text: string;
+  bgColor: string;
+  direction?: 'row' | 'row-reverse';
+  imageStyle?: React.CSSProperties;
+  textVariants: any;
+}> = ({
+  refProp,
+  controls,
+  imageSrc,
+  heading,
+  text,
+  bgColor,
+  direction = 'row',
+  imageStyle,
+  textVariants,
+}) => (
+  <MotionFlex
+    ref={refProp}
+    h="60vh"
+    bg={bgColor}
+    justify="space-evenly"
+    align="center"
+    color="white"
+    p={4}
+    initial="hidden"
+    animate={controls}
+    variants={{
+      hidden: { opacity: 0, y: 50 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+    }}
+    direction={direction}
+  >
+    <motion.img
+      src={imageSrc}
+      alt={heading}
+      style={{
+        height: '300px',
+        borderRadius: '10px',
+        ...imageStyle,
+      }}
+      whileHover={{ opacity: 1, filter: 'brightness(1.3) contrast(1.2) saturate(1.8)' }}
+    />
+    <MotionFlex
+      direction="column"
+      justify="center"
+      gap={6}
+      maxW="40%"
+      ml={direction === 'row' ? 8 : 0}
+      mr={direction === 'row-reverse' ? 8 : 0}
+      initial="hidden"
+      animate={controls}
+      variants={textVariants}
+    >
+      <Heading fontFamily="Major Mono Display" fontSize="4xl">
+        {heading}
+      </Heading>
+      <Text fontFamily="IBM Plex Mono" fontSize="lg" color={landingPageTheme.colors.brand.textAccentColor3}>
+        {text}
+      </Text>
+    </MotionFlex>
+  </MotionFlex>
+);
 
 const Features: React.FC = () => {
-  const controls = useAnimation();
+  const feature1 = require('../../assets/features/feature1.png');
+  const feature2 = require('../../assets/features/feature2.png');
+  const feature3 = require('../../assets/features/feature3.png');
 
-  React.useEffect(() => {
-    controls.start('visible');
-  }, [controls]);
+  const controls1 = useAnimation();
+  const controls2 = useAnimation();
+  const controls3 = useAnimation();
 
-  const variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  };
+  const [ref1, inView1] = useInView({ threshold: 0.2 });
+  const [ref2, inView2] = useInView({ threshold: 0.2 });
+  const [ref3, inView3] = useInView({ threshold: 0.2 });
+
+  useEffect(() => {
+    if (inView1) controls1.start('visible');
+    else controls1.start('hidden');
+
+    if (inView2) controls2.start('visible');
+    else controls2.start('hidden');
+
+    if (inView3) controls3.start('visible');
+    else controls3.start('hidden');
+  }, [controls1, controls2, controls3, inView1, inView2, inView3]);
+
+  const featureSections = [
+    {
+      refProp: ref1,
+      controls: controls1,
+      imageSrc: feature1,
+      heading: 'drag-and-drop Visualization',
+      text: 'Solai makes building dApps intuitive and faster than ever. Our AI-driven platform transforms your ideas into working smart contracts with just a few clicks.',
+      bgColor: 'rgba(88, 96, 183, 0.9)',
+      direction: 'row' as 'row',
+      imageStyle: {
+        height: '350px',
+        filter: 'brightness(1.2) contrast(1.1) saturate(1.5)',
+      },
+      textVariants: {
+        hidden: { opacity: 0, x: 50 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: 'easeOut', delay: 0.3 } },
+      },
+    },
+    {
+      refProp: ref2,
+      controls: controls2,
+      imageSrc: feature2,
+      heading: 'ai-powered code generation',
+      text: 'From idea to complete Anchor project in minutes.',
+      bgColor: 'rgba(75, 82, 159, 0.9)',
+      direction: 'row-reverse' as 'row-reverse',
+      imageStyle: {
+        height: '300px',
+        opacity: 0.8,
+      },
+      textVariants: {
+        hidden: { opacity: 0, x: -50 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: 'easeOut', delay: 0.3 } },
+      },
+    },
+    {
+      refProp: ref3,
+      controls: controls3,
+      imageSrc: feature3,
+      heading: 'solana ide',
+      text: 'View and edit your project code. Build and deploy your Solana programs.',
+      bgColor: 'rgba(63, 69, 135, 0.9)',
+      direction: 'row' as 'row',
+      imageStyle: {
+        height: '250px',
+        opacity: 0.9,
+      },
+      textVariants: {
+        hidden: { opacity: 0, x: 50 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: 'easeOut', delay: 0.3 } },
+      },
+    },
+  ];
 
   return (
-    <Box h="auto" color="white" textAlign="center" p={8} py="200px" zIndex={10}>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10}>
-        {features.map((feature, index) => (
-          <motion.div key={index} initial="hidden" animate={controls} variants={variants}>
-            <Flex
-              p={6}
-              direction="column"
-              bg="rgba(255, 255, 255, 0.3)"
-              borderRadius="md"
-              boxShadow="xl"
-              justifyContent="center"
-              alignItems="center"
-              h="300px"
-              w="100%"
-            >
-              <Box bg="transparent" color="white" mb={4} alignSelf="center">
-                {feature.icon}
-              </Box>
-              <Box bg="transparent" color="white">
-                <Heading fontSize="2xl" mb={4}>{feature.title}</Heading>
-                <Text fontSize="lg">{feature.description}</Text>
-              </Box>
-            </Flex>
-          </motion.div>
-        ))}
-      </SimpleGrid>
-    </Box>
+    <Flex direction="column" w="100%" overflow="hidden">
+      {featureSections.map((feature, index) => (
+        <FeatureSection key={index} {...feature} />
+      ))}
+    </Flex>
   );
 };
 

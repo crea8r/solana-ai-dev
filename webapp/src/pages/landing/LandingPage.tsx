@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useState, memo } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
+import React, { useState } from "react";
 import { Input, Button, Flex, Box, Heading, Text, Link as ChakraLink, Img } from "@chakra-ui/react";
 //import logo from '../assets/brand/solai_logo_png.png';
 import { Link, Link as RouterLink } from 'react-router-dom';
 import { FaXTwitter } from "react-icons/fa6";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ParticlesContainer from "../ParticlesContainer";
+import landingPageTheme from "../../theme";
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
 
 export default function LandingPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -20,7 +20,7 @@ export default function LandingPage() {
         direction="column"
         justifyContent="center"
         alignItems="center"
-        bgGradient="linear(to-b, blue.900, #80a3ff)"
+        bgGradient={bgGradient}
         
       >
           <ParticlesContainer isDarkMode={isDarkMode} />
@@ -55,10 +55,10 @@ export default function LandingPage() {
               </Flex>
             </Flex>
 
-            <Flex w="80%" direction="column" justifyContent="center" alignItems="center">
+            <Flex w="80%" direction="column" justifyContent="center" alignItems="center" fontFamily="IBM Plex Mono">
               <Flex justifyContent="space-between" alignItems="center" w="full" gap="2">
                 <Button
-                  fontSize="md" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                  fontSize="md" letterSpacing="0.05em"
                   borderColor="gray.200"
                   borderWidth="1px"
                   onClick={() => setActiveTab("login")}
@@ -70,7 +70,7 @@ export default function LandingPage() {
                   Login
                 </Button>
                 <Button
-                  fontSize="md" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                  fontSize="md" letterSpacing="0.05em"
                   borderColor="gray.200"
                   borderWidth="1px"
                   onClick={() => setActiveTab("register")}
@@ -85,7 +85,7 @@ export default function LandingPage() {
               <Box mt="2" textAlign="center" w="full">
                 {activeTab === "login" ? (
                   <Button 
-                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em"
                     bg="blue.300" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
                     py="5" mt="2"
                     as={RouterLink} to='/login'
@@ -94,7 +94,7 @@ export default function LandingPage() {
                   </Button>
                 ) : (
                   <Button 
-                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                    w="full" size="lg" fontSize="md" fontWeight="400" letterSpacing="0.05em"
                     bg="blue.300" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
                     py="5" mt="2"
                     as={RouterLink} to='/register'
@@ -103,19 +103,6 @@ export default function LandingPage() {
                   </Button>
                 )}
               </Box>
-            </Flex>
-            <Flex justifyContent="center" mt="4">
-              <ChakraLink
-                href="https://x.com/usesolai"
-                color="gray.500"
-                _hover={{ color: "#7292d3" }}
-                display="flex"
-                alignItems="center"
-                gap="1"
-              >
-                <FaXTwitter className="text-sm" />
-                <Text fontSize="sm" pb="1">@usesolai</Text>
-              </ChakraLink>
             </Flex>
           </Flex>
         </Flex>

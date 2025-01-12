@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { Flex, Heading, Text } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
 import YouTube from "react-youtube";
 
 interface DemoVideoSectionProps {
@@ -8,30 +8,34 @@ interface DemoVideoSectionProps {
   height?: string;
 }
 
-const DemoVideoSection: React.FC<DemoVideoSectionProps> = ({ videoId, width = "100%", height = "100%" }) => {
+const DemoVideoSection: React.FC<DemoVideoSectionProps> = ({
+  videoId,
+  width = "100%",
+  height = "100%",
+}) => {
   const videoRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const onPlayerReady = (event: any) => {
     videoRef.current = event.target;
-    iframeRef.current = event.target.getIframe();
+    iframeRef.current = event.target.getIframe(); 
   };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && videoRef.current) {
-          videoRef.current.mute(); // Mute to ensure autoplay compliance
-          videoRef.current.playVideo(); // Play video when visible
+          videoRef.current.mute();
+          videoRef.current.playVideo();
         } else if (videoRef.current) {
-          videoRef.current.pauseVideo(); // Pause when not visible
+          videoRef.current.pauseVideo();
         }
       },
       { threshold: 0.5 }
     );
 
     if (iframeRef.current) {
-      observer.observe(iframeRef.current);
+      observer.observe(iframeRef.current); 
     }
 
     return () => {
@@ -62,14 +66,17 @@ const DemoVideoSection: React.FC<DemoVideoSectionProps> = ({ videoId, width = "1
         <YouTube
           videoId={videoId}
           opts={{
-            width: "100%",
+            width: width,
             height: "720px",
             playerVars: {
-              autoplay: 1,
-              mute: 1,
+              autoplay: 1, 
+              mute: 1, 
+              modestbranding: 1,
+              controls: 0,
+              showinfo: 0, 
             },
           }}
-          onReady={onPlayerReady}
+          onReady={onPlayerReady} 
         />
       </div>
     </Flex>

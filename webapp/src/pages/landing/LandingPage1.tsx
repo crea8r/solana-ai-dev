@@ -8,11 +8,13 @@ import YouTube from 'react-youtube';
 import { Link as RouterLink } from 'react-router-dom';
 import Team from "./Team";
 import Roadmap from "./Roadmap";
-import Features from "./Features";
 import NavBar from "./Navbar";
 import HeroSection from "./Hero";
 import DemoVideoSection from "./DemoVid";
-import Features2 from "./Features2";
+import landingPageTheme from "../../theme";
+import Features from "./Features";
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
 
 const words = [
   'Revolutionizing Solana dApp Development with AI',
@@ -74,23 +76,18 @@ const TypingEffect = ({ words }: { words: string[] }) => {
   </Text>;
 };
 
-const LandingPage3 = () => {
+const LandingPage1 = () => {
   const logo = require('../../assets/brand/solai_logo.png');
 
   return (
-    <Box w="100vw" h="100vh" overflowY="scroll" bgGradient="linear(to-b, #282c5a, #80a3ff)" position="relative" zIndex={10}>
+    <Box w="100vw" h="100vh" overflowY="scroll" bgGradient={bgGradient} position="relative" zIndex={10}>
       <ParticlesContainer isDarkMode={false} />
-
       <NavBar logoSrc={logo} />
-
       <HeroSection words={words} />
-
-      <Features2 />
-
+      <Features />
       <DemoVideoSection videoId="NbO50Rm8u6Q" />
-
     </Box>
   );
 };
 
-export default LandingPage3;
+export default LandingPage1;
