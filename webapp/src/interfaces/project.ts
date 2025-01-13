@@ -4,6 +4,7 @@ import { CodeFile } from '../contexts/CodeFileContext';
 import { Docs } from '../contexts/DocsContext';
 import { Account, Instruction } from '../types/uiTypes';
 import { PdaInfo } from '../types/uiTypes';
+import { UiStructure } from './ui';
 
 export enum sectorEnum {
   utility = 'utility',
@@ -57,6 +58,7 @@ export type ProjectInfoToSave = {
 export interface ProjectDetailsToSave {
   nodes: Node[];
   edges: Edge[];
+  uiStructure: UiStructure;
   isAnchorInit: boolean;
   aiFilePaths: string[];
   aiStructure: string;
@@ -146,6 +148,7 @@ export interface AccountContext {
 export interface ProjectDetails {
   nodes: Node[];
   edges: Edge[];
+  uiStructure: UiStructure;
   files: FileTreeItemType;
   codes: CodeFile[];
   docs: Docs[];

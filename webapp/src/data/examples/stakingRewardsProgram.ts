@@ -346,6 +346,187 @@ const stakingRewardsProgram: Project = {
         style: { stroke: '#ffaa00', cursor: 'pointer', strokeWidth: 2 },
       }
     ],
+    uiStructure: {
+      header: {
+        title: 'Staking Rewards Program',
+        navigationMenu: ['Home', 'About', 'Contact'],
+        walletInfo: {
+          connectedWalletAddress: {
+            type: 'text',
+            placeholder: 'Not Connected',
+            description: 'Displays the connected wallet address if available. If not connected, show a "Connect Wallet" button.',
+          },
+          balanceDisplay: {
+            type: 'text',
+            description: 'Shows the balance of SOL and staked tokens.',
+          },
+          connectWalletButton: {
+            type: 'button',
+            label: 'Connect Wallet',
+            description: 'Visible only when no wallet is connected.',
+          },
+        },
+      },
+      mainSection: {
+        title: 'Staking Management',
+        layout: 'vertical',
+        formElements: [
+          {
+            id: 'stakeAmountInput',
+            type: 'input',
+            label: 'Stake Amount',
+            placeholder: 'Enter the amount to stake',
+            inputType: 'number',
+            validation: {
+              required: true,
+              min: 1,
+              errorMessage: 'Please enter a valid staking amount greater than 0.',
+            },
+            description: 'Specify the number of tokens you want to stake.',
+          },
+          {
+            id: 'stakeButton',
+            type: 'button',
+            label: 'Stake Tokens',
+            action: 'initializeStake',
+            description: 'Submits the transaction to initialize a stake with the specified amount.',
+          },
+          {
+            id: 'addStakeButton',
+            type: 'button',
+            label: 'Add to Existing Stake',
+            action: 'addStake',
+            description: 'Adds more tokens to the existing stake.',
+          },
+          {
+            id: 'claimRewardsButton',
+            type: 'button',
+            label: 'Claim Rewards',
+            action: 'claimRewards',
+            description: 'Claims your staking rewards based on the current period.',
+          },
+          {
+            id: 'withdrawStakeButton',
+            type: 'button',
+            label: 'Withdraw Stake',
+            action: 'withdrawStake',
+            description: 'Withdraws your entire staked amount and any rewards.',
+          },
+        ],
+      },
+      confirmationModal: {
+        isModal: true,
+        title: 'Confirm Staking Action',
+        content: {
+          fields: [
+            {
+              id: 'confirmationAction',
+              type: 'staticText',
+              label: 'Action',
+              value: 'Stake / Add Stake / Claim Rewards / Withdraw',
+              description: 'Displays the selected staking action for confirmation.',
+            },
+            {
+              id: 'confirmationStakeAmount',
+              type: 'staticText',
+              label: 'Stake Amount',
+              description: 'Displays the stake amount being initialized or added.',
+            },
+            {
+              id: 'confirmationRewardAmount',
+              type: 'staticText',
+              label: 'Reward Amount',
+              description: 'Displays the reward amount to be claimed, if applicable.',
+            },
+          ],
+        },
+        buttons: [
+          {
+            id: 'confirmButton',
+            type: 'button',
+            label: 'Confirm',
+            action: 'submitTransaction',
+            description: 'Confirms and submits the staking transaction.',
+          },
+          {
+            id: 'cancelButton',
+            type: 'button',
+            label: 'Cancel',
+            action: 'closeModal',
+            description: 'Closes the confirmation modal without submitting.',
+          },
+        ],
+      },
+      feedbackSection: {
+        title: 'Transaction Status',
+        elements: [
+          {
+            id: 'successNotification',
+            type: 'notification',
+            variant: 'success',
+            message: 'Transaction Completed Successfully!',
+            details: {
+              transactionHash: {
+                label: 'Transaction Hash',
+                type: 'link',
+                urlTemplate: 'https://explorer.solana.com/tx/{transactionHash}',
+              },
+            },
+            description: 'Displays a success message with a transaction hash link.',
+          },
+          {
+            id: 'errorNotification',
+            type: 'notification',
+            variant: 'error',
+            message: 'Transaction Failed!',
+            details: {
+              errorReason: {
+                label: 'Reason',
+                type: 'text',
+              },
+            },
+            description: 'Displays an error message and the reason for failure.',
+          },
+        ],
+      },
+      historySection: {
+        title: 'Recent Staking Transactions',
+        list: {
+          type: 'transactionHistoryList',
+          fields: ['timestamp', 'action', 'amount', 'status'],
+          description: 'A list showing recent staking transactions with their timestamps, action types, and amounts.',
+          maxItems: 10,
+          showPagination: true,
+        },
+      },
+      optionalFeatures: {
+        qrCodeScanner: {
+          enabled: true,
+          type: 'button',
+          label: 'Scan QR Code',
+          description: 'Allows you to scan a QR code to autofill wallet addresses.',
+        },
+        exportDataButton: {
+          enabled: true,
+          type: 'button',
+          label: 'Export Data',
+          formatOptions: ['csv', 'json'],
+          description: 'Allows you to export your staking history in CSV or JSON format.',
+        },
+        darkModeToggle: {
+          enabled: true,
+          type: 'switch',
+          label: 'Dark Mode',
+          description: 'Switch between light and dark mode for the UI.',
+        },
+        notificationsToggle: {
+          enabled: true,
+          type: 'switch',
+          label: 'Enable Notifications',
+          description: 'Toggle notifications for staking-related updates.',
+        },
+      },
+    },
     files: { name: '', type: 'directory', children: [] },
     codes: [],
     docs: [],

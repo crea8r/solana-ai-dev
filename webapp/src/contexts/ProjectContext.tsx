@@ -4,7 +4,6 @@ import { getWalletInfo } from '../api/wallet';
 import { ProgramContext, InstructionContext, AccountContext } from '../interfaces/project';
 import { intervalEnum, orderEnum } from '../interfaces/project';
 
-// Updated transform function to include additional user input fields, including uiHints
 export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSave => ({
   id: project.id,
   name: project.name,
@@ -12,6 +11,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
   details: {
     nodes: project.details.nodes,
     edges: project.details.edges,
+    uiStructure: project.details.uiStructure,
     isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
     aiFilePaths: project.details.aiFilePaths,
@@ -37,7 +37,6 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
   },
 });
 
-// Updated interface for ProjectContextType
 interface ProjectContextType {
   projectContext: Project;
   setProjectContext: Dispatch<SetStateAction<Project>>;
@@ -46,9 +45,9 @@ interface ProjectContextType {
   stateContent: string;
   setStateContent: Dispatch<SetStateAction<string>>;
   updateInstructions: (instructions: ProjectDetails['aiInstructions']) => void;
-  updateKeyFeatures: (features: string[]) => void; // New updater for keyFeatures
-  updateUserInteractions: (interactions: string[]) => void; // New updater for userInteractions
-  updateUiHints: (hints: string[]) => void; // New updater for uiHints
+  updateKeyFeatures: (features: string[]) => void; 
+  updateUserInteractions: (interactions: string[]) => void; 
+  updateUiHints: (hints: string[]) => void; 
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -66,6 +65,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           details: {
             nodes: [],
             edges: [],
+            uiStructure: {},
             files: { name: '', type: 'directory', children: [] },
             codes: [],
             docs: [],
@@ -86,12 +86,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             sdk: { fileName: '', content: '' },
             programId: '',
             pdas: [],
-            // New fields added to default state
             keyFeatures: [],
             userInteractions: [],
             sectorContext: '',
             optimizationGoals: [],
-            uiHints: [], // Added default state for uiHints
+            uiHints: [],
           },
         };
   });
@@ -99,7 +98,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
   const [stateContent, setStateContent] = useState<string>('');
 
-  // Updater for keyFeatures
   const updateKeyFeatures = (features: string[]) => {
     setProjectContext((prev) => ({
       ...prev,
@@ -110,7 +108,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  // Updater for userInteractions
   const updateUserInteractions = (interactions: string[]) => {
     setProjectContext((prev) => ({
       ...prev,
@@ -121,7 +118,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  // Updater for uiHints (new addition)
   const updateUiHints = (hints: string[]) => {
     setProjectContext((prev) => ({
       ...prev,
@@ -132,7 +128,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  // Updater for aiInstructions
   const updateInstructions = (instructions: ProjectDetails['aiInstructions']) => {
     setProjectContext((prev) => ({
       ...prev,
@@ -174,9 +169,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         stateContent,
         setStateContent,
         updateInstructions,
-        updateKeyFeatures, // Exposed updater for keyFeatures
-        updateUserInteractions, // Exposed updater for userInteractions
-        updateUiHints, // Exposed updater for uiHints
+        updateKeyFeatures, 
+        updateUserInteractions, 
+        updateUiHints,
       }}
     >
       {children}

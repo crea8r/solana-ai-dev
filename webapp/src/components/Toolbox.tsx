@@ -25,7 +25,7 @@ const toolboxItems = [
 ];
 
 const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({ onExampleChange }) => {
-  const { setProjectContext } = useProjectContext();
+  const { setProjectContext, projectContext } = useProjectContext();
   const [selectedExample, setSelectedExample] = useState('');
 
   const handleExampleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -37,7 +37,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       const selectedProject = predefinedProjects[exampleName];
       if (!selectedProject) return;
 
-      //console.log('Selected Project Nodes:', selectedProject.details.nodes);
+      //console.log('Selected Project:', selectedProject);
 
       const instantiatedNodes = selectedProject.details.nodes.map((node): ReactFlowNode | null => {
           if (!node.type || !node.data.item) { console.error('Invalid node:', node); return null; }
@@ -46,7 +46,6 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             console.error('Failed to load item for node:', node);
             return null;
           }
-          //console.log('Loaded Item:', item);
           return {
             ...node,
             data: {
@@ -57,7 +56,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
         })
         .filter((node): node is ReactFlowNode => node !== null);
 
-      //console.log('Instantiated Nodes:', instantiatedNodes);
+      //console.log('Selected Project:', selectedProject);
 
       setProjectContext((prev) => ({
         ...prev,
@@ -68,8 +67,11 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           ...prev.details,
           nodes: instantiatedNodes,
           edges: selectedProject.details.edges,
+          uiStructure: selectedProject.details.uiStructure,
         },
       }));
+      console.log('Selected Project:', selectedProject);
+      console.log('Project Context:', projectContext);
     }
   };
 

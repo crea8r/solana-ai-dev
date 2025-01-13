@@ -319,7 +319,7 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
-      //console.log("fetchedProject", fetchedProject);
+      console.log("fetchedProject", fetchedProject);
 
       setProjectContext((prevProjectContext) => {
         const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
@@ -341,6 +341,7 @@ const DesignPage: React.FC = () => {
             ...prevProjectContext.details,
             nodes: nodesWithTypedItems || [],
             edges: fetchedProject.details.edges || [],
+            uiStructure: fetchedProject.details.uiStructure,
             isAnchorInit: fetchedProject.details.isAnchorInit,
             isCode: fetchedProject.details.isCode,
             aiFilePaths: fetchedProject.details.aiFilePaths,

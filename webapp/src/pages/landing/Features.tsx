@@ -28,6 +28,7 @@ const FeatureSection: React.FC<{
   textVariants,
 }) => (
   <MotionFlex
+    zIndex={1}
     ref={refProp}
     h="60vh"
     bg={bgColor}

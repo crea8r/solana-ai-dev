@@ -10,6 +10,206 @@ import {
 import { ProgramContext, InstructionContext, AccountContext } from '../../interfaces/project';
 import { Program } from '../../items/Program';
 
+const _uiStructure = {
+  header: {
+    title: 'Token Transfer Program',
+    navigationMenu: ['Dashboard', 'Transfers', 'Settings'],
+    walletInfo: {
+      connectedWalletAddress: {
+        type: 'text',
+        placeholder: 'Not Connected',
+        description: 'Displays the connected wallet address if available. If not connected, show a "Connect Wallet" button.',
+      },
+      balanceDisplay: {
+        type: 'text',
+        description: 'Shows the balance of SOL and available SPL tokens.',
+      },
+      connectWalletButton: {
+        type: 'button',
+        label: 'Connect Wallet',
+        description: 'Visible only when no wallet is connected.',
+      },
+    },
+  },
+  mainSection: {
+    title: 'Token Transfer Actions',
+    layout: 'vertical',
+    formElements: [
+      {
+        id: 'payerPublicKeyInput',
+        type: 'input',
+        label: 'Payer Public Key',
+        placeholder: 'Enter your public key',
+        inputType: 'text',
+        validation: {
+          required: true,
+          pattern: '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
+          errorMessage: 'Invalid public key format.',
+        },
+        description: 'The public key of the user initializing the transfer.',
+      },
+      {
+        id: 'tokenMintInput',
+        type: 'input',
+        label: 'Token Mint',
+        placeholder: 'Enter token mint address',
+        inputType: 'text',
+        validation: {
+          required: true,
+          pattern: '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
+          errorMessage: 'Invalid mint address.',
+        },
+        description: 'The mint address of the token to be transferred.',
+      },
+      {
+        id: 'transferAmountInput',
+        type: 'input',
+        label: 'Amount to Transfer',
+        placeholder: 'Enter the amount',
+        inputType: 'number',
+        validation: {
+          required: true,
+          min: 1,
+          errorMessage: 'Please enter a valid transfer amount greater than 0.',
+        },
+        description: 'The amount of SPL tokens to transfer from the sender to the receiver.',
+      },
+      {
+        id: 'initializeAccountsButton',
+        type: 'button',
+        label: 'Initialize Accounts',
+        action: 'initializeAccounts',
+        description: 'Initializes the sender and receiver token accounts.',
+      },
+      {
+        id: 'transferTokensButton',
+        type: 'button',
+        label: 'Transfer Tokens',
+        action: 'transferTokens',
+        description: 'Transfers tokens from the sender account to the receiver account.',
+      },
+      {
+        id: 'closeAccountButton',
+        type: 'button',
+        label: 'Close Account',
+        action: 'closeAccount',
+        description: 'Closes the specified account and returns the remaining lamports.',
+      },
+    ],
+  },
+  confirmationModal: {
+    isModal: true,
+    title: 'Confirm Token Transfer',
+    content: {
+      fields: [
+        {
+          id: 'confirmationAction',
+          type: 'staticText',
+          label: 'Action',
+          description: 'Displays the action being performed (e.g., Initialize Accounts, Transfer Tokens, or Close Account).',
+        },
+        {
+          id: 'confirmationAmount',
+          type: 'staticText',
+          label: 'Amount',
+          description: 'Displays the amount of tokens being transferred or the lamports returned.',
+        },
+        {
+          id: 'confirmationReceiverAccount',
+          type: 'staticText',
+          label: 'Receiver Account',
+          description: 'Displays the public key of the receiver account.',
+        },
+      ],
+    },
+    buttons: [
+      {
+        id: 'confirmButton',
+        type: 'button',
+        label: 'Confirm',
+        action: 'submitTransaction',
+        description: 'Confirms the transaction and submits it to the blockchain.',
+      },
+      {
+        id: 'cancelButton',
+        type: 'button',
+        label: 'Cancel',
+        action: 'closeModal',
+        description: 'Cancels the action and closes the confirmation modal.',
+      },
+    ],
+  },
+  feedbackSection: {
+    title: 'Transaction Status',
+    elements: [
+      {
+        id: 'successNotification',
+        type: 'notification',
+        variant: 'success',
+        message: 'Transaction Completed Successfully!',
+        details: {
+          transactionHash: {
+            label: 'Transaction Hash',
+            type: 'link',
+            urlTemplate: 'https://explorer.solana.com/tx/{transactionHash}',
+          },
+        },
+        description: 'Displays a success message and the transaction hash for verification.',
+      },
+      {
+        id: 'errorNotification',
+        type: 'notification',
+        variant: 'error',
+        message: 'Transaction Failed!',
+        details: {
+          errorReason: {
+            label: 'Reason',
+            type: 'text',
+          },
+        },
+        description: 'Displays an error message if the transaction fails, including the reason for failure if available.',
+      },
+    ],
+  },
+  historySection: {
+    title: 'Recent Token Transfers',
+    list: {
+      type: 'transactionHistoryList',
+      fields: ['timestamp', 'action', 'amount', 'status'],
+      description: 'A list of recent token transfer transactions with their timestamps, actions, and status.',
+      maxItems: 10,
+      showPagination: true,
+    },
+  },
+  optionalFeatures: {
+    qrCodeScanner: {
+      enabled: true,
+      type: 'button',
+      label: 'Scan QR Code',
+      description: 'Scan a QR code to autofill the wallet addresses for sender or receiver.',
+    },
+    exportDataButton: {
+      enabled: true,
+      type: 'button',
+      label: 'Export Transfer History',
+      formatOptions: ['csv', 'json'],
+      description: 'Allows users to export the transfer history in CSV or JSON format.',
+    },
+    darkModeToggle: {
+      enabled: true,
+      type: 'switch',
+      label: 'Dark Mode',
+      description: 'Switch between light and dark modes for the interface.',
+    },
+    notificationsToggle: {
+      enabled: true,
+      type: 'switch',
+      label: 'Enable Notifications',
+      description: 'Toggle on or off notifications for token transfer status updates.',
+    },
+  },
+};
+
 const transferTokenProgram: Project = {
   id: '',
   rootPath: '',
@@ -308,6 +508,7 @@ const transferTokenProgram: Project = {
         style: { stroke: '#00aaff', cursor: 'pointer', strokeWidth: 2 },
       },
     ],
+    uiStructure: _uiStructure,    
     files: { name: '', type: 'directory', children: [] },
     codes: [],
     docs: [],

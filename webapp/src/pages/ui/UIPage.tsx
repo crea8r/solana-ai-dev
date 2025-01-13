@@ -25,9 +25,11 @@ const UIPage = () => {
   const [toggleState, setToggleState] = useState(true);
   const [walletPrivateKey, setWalletPrivateKey] = useState(user?.walletPrivateKey || '');
 
+  /*
   useEffect(() => {
     if (!user || !user.walletPrivateKey) throw new Error('User or wallet private key not found');
   }, []);
+  */
 
   useEffect(() => {
     console.log('user:', user);

@@ -22,6 +22,9 @@ import type { Container } from "@tsparticles/engine";
 import { useAuth } from '../hooks/useAuth';
 import { login } from '../services/authApi';
 import ParticlesContainer from './ParticlesContainer';
+import landingPageTheme from '../theme';
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
 
 const style: React.CSSProperties = {
   position: "relative",
@@ -84,7 +87,7 @@ const LoginPage: React.FC = () => {
       justifyContent="center"
       alignItems="center"
       fontFamily="IBM Plex Mono"
-      bgGradient="linear(to-b, blue.900, #80a3ff)"
+      bgGradient={bgGradient}
 
     >
         <ParticlesContainer isDarkMode={isDarkMode} />
