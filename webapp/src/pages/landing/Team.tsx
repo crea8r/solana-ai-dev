@@ -58,16 +58,30 @@ const TeamMemberCard: React.FC<{ member: TeamMember }> = ({ member }) => {
           {member.role}
         </Text>
         <Flex direction="column" gap={3}>
-          <Link href={`https://x.com/${member.x}`} color={landingPageTheme.colors.brand.textAccentColor3} isExternal>
+          <Link 
+            href={`https://x.com/${member.x}`} 
+            color={landingPageTheme.colors.brand.textAccentColor3} 
+            isExternal
+            textDecoration="none"
+            _hover={{ textDecoration: 'none' }}
+            _active={{ textDecoration: 'none' }}
+          >
             <Flex align="center" gap={2}>
               <FaXTwitter />
               <Text>{member.x}</Text>
             </Flex>
           </Link>
-          <Link href={`https://t.me/${member.tg}`} color={landingPageTheme.colors.brand.textAccentColor3} isExternal>
+          <Link 
+            href={`https://t.me/${member.tg}`} 
+            color={landingPageTheme.colors.brand.textAccentColor3} 
+            isExternal
+            textDecoration="none"
+            _hover={{ textDecoration: 'none' }}
+            _active={{ textDecoration: 'none' }}
+          >
             <Flex align="center" gap={2}>
               <FaTelegram />
-              <Text>{member.tg}</Text>
+              <Text>{`@${member.tg}`}</Text>
             </Flex>
           </Link>
         </Flex>
@@ -82,21 +96,21 @@ const teamMembers = [
     role: 'Founding Dev, Project Lead',
     image: foxImage,
     x: '@_sol_f0x',
-    tg: '@hfox8',
+    tg: 'hfox8',
   },
   {
     name: 'degen I rational',
     role: 'Business Operations',
     image: degenImage,
     x: '@Degenirational',
-    tg: '@Yamato_Nakamura',
+    tg: 'Yamato_Nakamura',
   },
   {
     name: 'k2',
     role: 'Founding Dev, Advisor',
     image: k2Image,
     x: '@0xk2_',
-    tg: '@hieubt88',
+    tg: 'hieubt88',
   },
 ];
 
@@ -115,7 +129,15 @@ const ContactInfoItem: React.FC<{ icon: React.ElementType; text: string; href: s
       _active={{ transform: 'scale(0.95)', transition: 'transform 0.3s ease-in-out' }}
     >
       <Icon as={icon} boxSize={5} />
-      <Link href={href} textDecoration="none" color={landingPageTheme.colors.brand.textAccentColor} fontWeight="bold">
+      <Link 
+        href={href} 
+        textDecoration="none"
+        color={landingPageTheme.colors.brand.textAccentColor} 
+        fontWeight="bold"
+        isExternal
+        _hover={{ textDecoration: 'none' }}
+        _active={{ textDecoration: 'none' }}
+      >
         {text}
       </Link>
     </Flex>

@@ -13,7 +13,8 @@ export const genState = (nodes: Node[], edges: Edge[]) => {
     return {
       name: accountData.getName(),
       description: accountData.getDescription(),
-      data_structure: accountData.getStructure(),
+      is_mutable: accountData.getIsMutable(),
+      is_signer: accountData.getIsSigner(),
     };
   });
 

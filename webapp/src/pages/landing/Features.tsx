@@ -52,7 +52,6 @@ const FeatureSection: React.FC<{
         borderRadius: '10px',
         ...imageStyle,
       }}
-      whileHover={{ opacity: 1, filter: 'brightness(1.3) contrast(1.2) saturate(1.8)' }}
     />
     <MotionFlex
       direction="column"
@@ -105,7 +104,7 @@ const Features: React.FC = () => {
       controls: controls1,
       imageSrc: feature1,
       heading: 'drag-and-drop Visualization',
-      text: 'Solai makes building dApps intuitive and faster than ever. Our AI-driven platform transforms your ideas into working smart contracts with just a few clicks.',
+      text: 'Design dApps effortlessly with an AI-powered interface — turn ideas into smart contracts in a few clicks.',
       bgColor: 'rgba(88, 96, 183, 0.9)',
       direction: 'row' as 'row',
       imageStyle: {
@@ -139,7 +138,7 @@ const Features: React.FC = () => {
       controls: controls3,
       imageSrc: feature3,
       heading: 'solana ide',
-      text: 'View and edit your project code. Build and deploy your Solana programs.',
+      text: 'Edit, build, and deploy your Solana programs—all in one powerful IDE.',
       bgColor: 'rgba(63, 69, 135, 0.9)',
       direction: 'row' as 'row',
       imageStyle: {

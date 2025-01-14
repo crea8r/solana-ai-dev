@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, VStack, Text, Input, Button, Flex, Tag, TagLabel, Wrap, WrapItem, Select, CloseButton, Divider, IconButton, Tooltip } from '@chakra-ui/react';
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
+import { FaSave, FaTrash } from "react-icons/fa";
 import { Node, Edge } from 'react-flow-renderer';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
 import { useProjectContext } from '../../contexts/ProjectContext';
@@ -215,7 +216,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   return (
     <Box
-      width="25vw"
+      width="30vw"
       bg="gray.50"
       p={4}
       borderLeft="1px solid"
@@ -227,26 +228,28 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         {selectedNode && (
           <>
             {/* Header Section */}
-            <Flex justify="space-between" align="center" mb={2}>
-              <Text fontSize="md" fontWeight="medium">
+            <Flex direction="row" justify="space-evenly" align="center" fontFamily="IBM Plex Mono">
+              <Text fontSize="md" fontWeight="semibold">
                 {(selectedNode.data.item as ToolboxItem).getName()}
               </Text>
-              <Flex gap={2}>
+              <Flex gap={1}>
                 <Tooltip label="Save">
                   <IconButton
                     aria-label="Save"
-                    icon={<IoSaveOutline />}
+                    icon={<FaSave />}
                     variant= "ghost"
-                    size="sm"
+                    size="md"
+                    colorScheme="green"
                     onClick={handleSave}
                   />
                 </Tooltip>
                 <Tooltip label="Delete">
                   <IconButton
                     aria-label="Delete"
-                    icon={<IoTrashOutline />}
+                    icon={<FaTrash />}
                     variant= "ghost"
-                    size="sm"
+                    size="md"
+                    colorScheme="blackAlpha"
                     onClick={handleDelete}
                   />
                 </Tooltip>
@@ -259,33 +262,30 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             {selectedNode.data.item instanceof Program && (
               <>
                 {selectedNode.data.item.renderProgramProperties(
-                nodes
-                  .filter((n) => n.type === 'account')
-                  .map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })),
+                  nodes.filter((n) => n.type === 'account').map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })),
                   handleChange,
                   localValues,
                   (accountId: string) => handleAddAccount(accountId),
-                  edges
-                  .filter((edge) => edge.source === selectedNode.id)
-                  .map((edge) => {
-                    const accountNode = nodes.find((n) => n.id === edge.target && n.type === 'account');
-                    return accountNode ? { id: accountNode.id, name: accountNode.data.label || 'Unnamed Account' } : null;
-                  })
-                  .filter((a) => a !== null) as { id: string; name: string }[],
-                (accountId: string) => handleRemoveAccount(accountId),
-                nodes
-                  .filter((n) => n.type === 'instruction')
-                  .map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })),
-                edges
-                  .filter((edge) => edge.source === selectedNode.id)
-                  .map((edge) => {
-                    const instructionNode = nodes.find((n) => n.id === edge.target && n.type === 'instruction');
-                    return instructionNode ? { id: instructionNode.id, name: instructionNode.data.label || 'Unnamed Instruction' } : null;
-                  })
-                  .filter((i) => i !== null) as { id: string; name: string }[],
-                (instructionId: string) => handleAddInstruction(instructionId),
-                (instructionId: string) => handleRemoveInstruction(instructionId)
-              )}
+                  edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'account')
+                    .map((edge) => {
+                      const accountNode = nodes.find((n) => n.id === edge.target && n.type === 'account');
+                      return accountNode ? { id: accountNode.id, name: accountNode.data.label || 'Unnamed Account' } : null;
+                    }).filter((a) => a !== null) as { id: string; name: string }[],
+                  (accountId: string) => handleRemoveAccount(accountId),
+                  nodes.filter((n) => n.type === 'instruction').map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })),
+                  edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'instruction')
+                    .map((edge) => {
+                      const instructionNode = nodes.find((n) => n.id === edge.target && n.type === 'instruction');
+                      return instructionNode ? { id: instructionNode.id, name: instructionNode.data.label || 'Unnamed Instruction' } : null;
+                    }).filter((i) => i !== null) as { id: string; name: string }[],
+                  (instructionId: string) => handleAddInstruction(instructionId),
+                  (instructionId: string) => handleRemoveInstruction(instructionId),
+                  localValues.version,
+                  localValues.description,
+                  localValues.tags,
+                  localValues.events || [],
+                  localValues.errorCodes || []
+                )}
               </>
             )}
 
@@ -293,13 +293,10 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             {selectedNode.data.item instanceof Instruction && (
               <>
                 {selectedNode.data.item.renderInstructionProperties(
-                  programs.map((program) => ({
-                    id: program.id,
-                    name: program.data.label || 'Unnamed Program',
-                  })),
-                  handleChange,
-                  localValues
-                )}
+                  nodes, // Pass the entire `nodes` array to access all program, account, and instruction nodes
+                  handleChange, // Function to handle changes to the instruction's fields
+                  localValues // The values (name, description, accounts, etc.) associated with the instruction
+            )}
               </>
             )}
 
@@ -312,7 +309,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     name: p.data.label || 'Unnamed Program',
                   })),
                   handleChange,
-                  localValues
+                  {
+                    ...localValues,
+                    is_mutable: localValues.is_mutable ?? true,
+                    is_signer: localValues.is_signer ?? false,
+                  }
                 )}
               </>
             )}

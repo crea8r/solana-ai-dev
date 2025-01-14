@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Node } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { VStack, Input, Textarea, Select, Text, CloseButton, TagLabel, Tag, WrapItem, Wrap, Checkbox, Divider, Flex } from '@chakra-ui/react';
+import { VStack, Input, Textarea, Text, Checkbox, Flex, Box, Switch } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 import { VscJson } from 'react-icons/vsc';
@@ -11,37 +11,21 @@ export class Account implements ToolboxItem {
   type: 'account' = 'account';
   name: string;
   description: string;
-  structure: { key: string; value: string };
-  ownerProgramId: string | null = null;
-  category: string[];
   is_mutable: boolean;
   is_signer: boolean;
-  is_writable: boolean;
-  initialized_by: string[];
 
   constructor(
     id: string,
     name: string,
-    description: string,
-    structure: { key: string; value: string } = { key: '', value: '' },
-    ownerProgramId: string,
-    category: string[] = [],
+    description: string = '',
     is_mutable: boolean = true,
-    is_signer: boolean = false,
-    is_writable: boolean = true,
-    initialized_by: string[] = [],
-    
+    is_signer: boolean = false
   ) {
     this.identifier = id;
     this.name = name;
     this.description = description;
-    this.structure = structure;
-    this.ownerProgramId = ownerProgramId;
-    this.category = category;
     this.is_mutable = is_mutable;
     this.is_signer = is_signer;
-    this.is_writable = is_writable;
-    this.initialized_by = initialized_by;
   }
 
   getName(): string {
@@ -64,14 +48,6 @@ export class Account implements ToolboxItem {
     return this.type;
   }
 
-  getStructure(): { key: string; value: string } {
-    return this.structure;
-  }
-
-  setStructure(structure: { key: string; value: string }): void {
-    this.structure = structure;
-  }
-
   toNode(position: { x: number; y: number }): Node {
     return {
       id: this.identifier,
@@ -79,13 +55,6 @@ export class Account implements ToolboxItem {
       position,
       data: { label: this.name, item: this },
     };
-  }
-
-  getOwnerProgramId(): string | null {
-    return this.ownerProgramId;
-  }
-  setOwnerProgramId(id: string | null): void {
-    this.ownerProgramId = id;
   }
 
   renderProperties(
@@ -106,197 +75,105 @@ export class Account implements ToolboxItem {
     values: any
   ): JSX.Element {
     return (
-      <Flex direction="column" gap={4}>
-        {/* Name */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Name *</Text>
-          <Input
-            placeholder="Name"
-            value={values.name || ''}
-            onChange={(e) => onChange('name', e.target.value)}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
-  
-        {/* Description */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Description *</Text>
-          <Textarea
-            placeholder="Description"
-            value={values.description || ''}
-            onChange={(e) => onChange('description', e.target.value)}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
-
-        {/* Structure Key/Value Inputs */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Structure Key</Text>
-          <Input
-            placeholder="Key"
-            value={values.structure?.key || ''} // Ensure structure is defined
-            onChange={(e) => onChange('structure', { ...values.structure, key: e.target.value })}
-            fontSize="xs"
-            bg="white"
-          />
-          <Text fontSize="xs" fontWeight="medium">Structure Value</Text>
-          <Input
-            placeholder="Value"
-            value={values.structure?.value || ''} // Ensure structure is defined
-            onChange={(e) => onChange('structure', { ...values.structure, value: e.target.value })}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
-  
-        {/* Owner Program */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Owner Program</Text>
-          <Select
-            placeholder="Select Program"
-            value={values.ownerProgramId || ''}
-            onChange={(e) => onChange('ownerProgramId', e.target.value || null)}
-            fontSize="xs"
-            bg="white"
-          >
-            {programs.map((program) => (
-              <option key={program.id} value={program.id}>
-                {program.name}
-              </option>
-            ))}
-          </Select>
-        </Flex>
-
-        {/* Boolean Fields */}
-        <Divider my={2} />
-        <Flex direction="row" gap={4} justifyContent="space-evenly" align="center">
-          <Checkbox
-            isChecked={values.is_mutable ?? true}
-            onChange={(e) => onChange('is_mutable', e.target.checked)}
-            size="xs"
-            fontSize="xs"
-            bg="white"
-          >
-            Mutable
-          </Checkbox>
-          <Checkbox
-            isChecked={values.is_signer ?? false}
-            onChange={(e) => onChange('is_signer', e.target.checked)}
-            size="xs"
-            fontSize="xs"
-            bg="white"
-          >
-            Signer
-          </Checkbox>
-          <Checkbox
-            isChecked={values.is_writable ?? true}
-            onChange={(e) => onChange('is_writable', e.target.checked)}
-            size="xs"
-            fontSize="xs"
-            bg="white"
-          >
-            Writable
-          </Checkbox>
-        </Flex>
-  
-        <Divider my={2} />
-
-        {/* Category Tags */}
-        <Text fontSize="xs" fontWeight="medium">Category</Text>
-        <Wrap>
-          {(values.category || []).map((cat: string) => ( // Ensure category is an array
-            <WrapItem key={cat}>
-              <Tag size="xs" fontSize="xs" variant="subtle" colorScheme="blue" padding={1} bg="white">
-                <Flex direction="row" gap={1} align="center" justify="center">
-                  <TagLabel ml={1}>{cat}</TagLabel>
-                  <CloseButton
-                    size="sm"
-                    fontSize="8px"
-                    onClick={() => {
-                    const updatedCategories = values.category.filter((c: string) => c !== cat);
-                    onChange('category', updatedCategories);
-                  }}
-                  />
-                </Flex>
-              </Tag>
-            </WrapItem>
-          ))}
-        </Wrap>
-        <Select
-          placeholder="Add category"
-          size="xs"
+      <VStack
+        spacing={6}
+        align="stretch"
+        padding="4"
+        bg="white"
+        borderRadius="md"
+        boxShadow="sm"
+        width="100%"
+      >
+        {/* Account Details Section */}
+        <Box
+          padding="4"
+          border="1px solid"
+          borderColor="gray.200"
+          borderRadius="md"
           fontSize="xs"
-          value=""
-          bg="white"
-          onChange={(e) => onChange('category', [...(values.category || []), e.target.value])} // Ensure values.category is an array
+          fontFamily="IBM Plex Mono"
         >
-          <option value="state">State</option>
-          <option value="config">Config</option>
-          <option value="metadata">Metadata</option>
-        </Select>
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Account Details
+            </Text>
+          </Flex>
+          <Flex direction="column" gap={4}>
+            <Flex direction="column" gap={2}>
+              <Text fontSize="xs" fontWeight="semibold">Name *</Text>
+              <Input
+                placeholder="Account Name"
+                value={values.name || ''}
+                onChange={(e) => onChange('name', e.target.value)}
+                bg="white"
+                borderColor="gray.300"
+                borderRadius="md"
+                fontSize="xs"
+                size="xs"
+              />
+            </Flex>
 
-        <Divider my={2} />
-    
-        {/* Initialized By */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Initialized By</Text>
-          <Textarea
-            placeholder="Enter public keys (comma-separated)"
-            value={(values.initialized_by || []).join(', ')} // Ensure initialized_by is an array
-            onChange={(e) =>
-              onChange('initialized_by', e.target.value.split(',').map((s) => s.trim()))
-            }
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
+            <Flex direction="column" gap={2}>
+              <Text fontSize="xs" fontWeight="semibold">Description</Text>
+              <Textarea
+                placeholder="Description"
+                value={values.description || ''}
+                onChange={(e) => onChange('description', e.target.value)}
+                fontSize="xs"
+                size="xs"
+                bg="white"
+                borderColor="gray.300"
+                borderRadius="md"
+              />
+            </Flex>
 
-      </Flex>
+            {/* Mutable Checkbox */}
+            <Flex alignItems="center" gap={4} mt={4}>
+              <Text fontSize="xs" fontWeight="semibold">Mutable *</Text>
+              <Switch
+                size="sm"
+                colorScheme="blackAlpha"
+                isChecked={values.is_mutable}
+                onChange={(e) => onChange('is_mutable', e.target.checked)}
+              />
+              <Text fontSize="xs">Can Modify</Text>
+            </Flex>
+
+            {/* Signer Checkbox */}
+            <Flex alignItems="center" gap={4}>
+              <Text fontSize="xs" fontWeight="semibold">Signer *</Text>
+              <Switch
+                size="sm"
+                colorScheme="blackAlpha"
+                isChecked={values.is_signer}
+                onChange={(e) => onChange('is_signer', e.target.checked)}
+              />
+              <Text fontSize="xs">Requires Signature</Text>
+            </Flex>
+          </Flex>
+        </Box>
+      </VStack>
     );
   }
-  
 
   getPropertyFields(): string[] {
-    return [
-      'name',
-      'description',
-      'json',
-      'ownerProgramId',
-      'category',
-      'is_mutable',
-      'is_signer',
-      'is_writable',
-      'initialized_by',
-      'structure',
-    ];
+    return ['name', 'description', 'is_mutable', 'is_signer'];
   }
 
   getPropertyValues(): any {
     return {
       name: this.name || '',
       description: this.description || '',
-      structure: this.structure || { key: '', value: '' },
-      ownerProgramId: this.ownerProgramId || '',
-      category: this.category || [],
       is_mutable: this.is_mutable,
       is_signer: this.is_signer,
-      is_writable: this.is_writable,
-      initialized_by: this.initialized_by || [],
     };
   }
 
   setPropertyValues(values: any): void {
     this.name = values.name;
     this.description = values.description;
-    this.structure = values.structure || { key: '', value: '' };
-    this.ownerProgramId = values.ownerProgramId;
-    this.category = values.category || [];
     this.is_mutable = values.is_mutable;
     this.is_signer = values.is_signer;
-    this.is_writable = values.is_writable;
-    this.initialized_by = values.initialized_by || [];
   }
 
   getIcon(): IconType {
@@ -306,10 +183,26 @@ export class Account implements ToolboxItem {
   static NodeType = memo(({ data }: NodeProps) => {
     return (
       <div style={{ background: 'lavender', padding: 10, borderRadius: 5 }}>
-        <Handle type='target' position={Position.Top} />
+        <Handle type="target" position={Position.Top} />
         <div>{data.label}</div>
-        <Handle type='source' position={Position.Bottom} />
+        <Handle type="source" position={Position.Bottom} />
       </div>
     );
   });
+
+  getIsMutable(): boolean {
+    return this.is_mutable;
+  }
+
+  getIsSigner(): boolean {
+    return this.is_signer;
+  }
+
+  setIsMutable(is_mutable: boolean): void {
+    this.is_mutable = is_mutable;
+  }
+
+  setIsSigner(is_signer: boolean): void {
+    this.is_signer = is_signer;
+  }
 }

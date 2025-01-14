@@ -3,8 +3,12 @@ import { BsBox } from "react-icons/bs";
 import { ProgramToolboxItem, ToolboxItem } from '../interfaces/ToolboxItem';
 import { Node, Handle, Position, NodeProps } from 'react-flow-renderer';
 import { IconType } from 'react-icons';
-import { Input, Textarea, VStack, Text, Flex, Select, Divider, Tag, TagLabel, Wrap, WrapItem, CloseButton, MenuItemOption, MenuOptionGroup, MenuList, Menu, MenuButton, Button, Checkbox, Switch } from '@chakra-ui/react';
-import { sectorEnum } from '../interfaces/project';
+import { 
+    Input, 
+    Textarea, 
+    VStack, 
+    Text, Flex, Select, Divider, Tag, TagLabel, Wrap, WrapItem, CloseButton, MenuItemOption, MenuOptionGroup, MenuList, Menu, MenuButton, Button, Checkbox, Switch, Box, IconButton, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Badge } from '@chakra-ui/react';
+import { IoMdClose } from "react-icons/io";
 
 export class Program implements ProgramToolboxItem {
   identifier: string;
@@ -14,8 +18,10 @@ export class Program implements ProgramToolboxItem {
   programId: string;
   account: string[];
   instruction: string[];
-  is_public: boolean;
-  sector: sectorEnum[];
+  isPublic: boolean;
+  version?: string;
+  events?: { name: string; fields: { name: string; type: string }[] }[];
+  errorCodes?: { code: number; name: string; msg: string }[];
 
   constructor(
     id: string,
@@ -24,8 +30,10 @@ export class Program implements ProgramToolboxItem {
     programId: string,
     account: string[] = [],
     instruction: string[] = [],
-    is_public: boolean = true,
-    sector: sectorEnum[] = [],
+    isPublic: boolean = true,
+    version?: string,
+    events: { name: string; fields: { name: string; type: string }[] }[] = [],
+    errorCodes: { code: number; name: string; msg: string }[] = []
   ) {
     this.identifier = id;
     this.type = 'program';
@@ -34,8 +42,10 @@ export class Program implements ProgramToolboxItem {
     this.programId = programId;
     this.account = account;
     this.instruction = instruction;
-    this.is_public = is_public;
-    this.sector = sector;
+    this.isPublic = isPublic;
+    this.version = version;
+    this.events = events;
+    this.errorCodes = errorCodes;
   }
 
   getType(): 'program' { return this.type; }
@@ -57,12 +67,8 @@ export class Program implements ProgramToolboxItem {
     this.instruction = instructions.map((instruction) => instruction.id);
   }
 
-  setIsPublic(is_public: boolean): void {
-    this.is_public = is_public;
-  }
-
-  setSector(sector: sectorEnum[]): void {
-    this.sector = sector;
+  setIsPublic(isPublic: boolean): void {
+    this.isPublic = isPublic;
   }
 
   toNode(position: { x: number; y: number }): Node {
@@ -74,16 +80,15 @@ export class Program implements ProgramToolboxItem {
     };
   }
 
-  // placeholder before implementation of node specific renderProperties method
   renderProperties(
     programs: { id: string; name: string }[],
     onChange: (field: string, value: any) => void,
     values: any
   ): JSX.Element {
     return (
-      <Flex direction="column" gap={4}>
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Name *</Text>
+      <Flex direction="column" gap={4}> 
+        <Flex direction="column" gap={4}>
+          <Text fontSize="xs" fontWeight="semibold">Name *</Text>
           <Input
             placeholder="Name"
             value={values.name || ""}
@@ -91,8 +96,8 @@ export class Program implements ProgramToolboxItem {
             fontSize="xs"
           />
         </Flex>
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Description *</Text>
+        <Flex direction="column" gap={4}>
+          <Text fontSize="xs" fontWeight="semibold">Description *</Text>
           <Textarea
             placeholder="Description"
             value={values.description || ""}
@@ -100,8 +105,8 @@ export class Program implements ProgramToolboxItem {
             fontSize="xs"
           />
         </Flex>
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Program ID</Text>
+        <Flex direction="column" gap={4}>
+          <Text fontSize="xs" fontWeight="semibold">Program ID</Text>
           <Input
             placeholder="Program ID"
             value={values.programId || ""}
@@ -123,205 +128,281 @@ export class Program implements ProgramToolboxItem {
     instructions: { id: string; name: string }[],
     connectedInstructions: { id: string; name: string }[],
     handleAddInstruction: (instructionId: string) => void,
-    handleRemoveInstruction: (instructionId: string) => void
+    handleRemoveInstruction: (instructionId: string) => void,
+    version: string,
+    description: string,
+    tags: string[],
+    events: { name: string; fields: { name: string; type: string }[] }[] = [],
+    errorCodes: { code: number; name: string; msg: string }[] = []
   ): JSX.Element {
     return (
-      <Flex direction="column" gap={4}>
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Name *</Text>
-          <Input
-            placeholder="Name"
-            value={values.name || ''}
-            onChange={(e) => onChange('name', e.target.value)}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Description *</Text>
-          <Textarea
-            placeholder="Description"
-            value={values.description || ''}
-            onChange={(e) => onChange('description', e.target.value)}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
-
-        {/* Sector Tags Section */}
-        <Wrap>
-          {Array.isArray(values.sector) && values.sector.length > 0 ? (
-            values.sector.map((sector: sectorEnum) => (
-              <WrapItem key={sector}>
-                <Tag size="sm" variant="subtle" colorScheme="blue">
-                  <TagLabel>{sector}</TagLabel>
-                  <CloseButton
-                    size="sm"
-                    onClick={() => {
-                      const updatedSectors = values.sector.filter((s: string) => s !== sector);
-                      onChange('sector', updatedSectors);
-                    }}
-                    ml={2}
-                  />
-                </Tag>
-              </WrapItem>
-            ))
-          ) : (
-            <Text fontSize="xs" color="gray.500">No sectors selected</Text>
-          )}
-        </Wrap>
-
-        {/* Sector Dropdown Menu */}
-        <Select
-          placeholder="Select a sector"
-          size="sm"
+      <VStack
+        spacing={6} 
+        align="stretch" 
+        padding="4" 
+        bg="white" 
+        borderRadius="md" 
+        boxShadow="sm"
+        width="100%"
+      >
+        {/* Program Details Section */}
+        <Box 
+          padding="4" 
+          border="1px solid" 
+          borderColor="gray.200" 
+          borderRadius="md" 
           fontSize="xs"
-          value=""
-          bg="white"
-          onChange={(e) => {
-            const selectedSector = e.target.value;
-            if (!Array.isArray(values.sector)) {
-              values.sector = []; // Initialize as an empty array if undefined
-            }
-            if (!values.sector.includes(selectedSector)) {
-              onChange('sector', [...values.sector, selectedSector]);
-            }
-          }}
+          fontFamily="IBM Plex Mono"
         >
-          {Object.values(sectorEnum).map((sector) => (
-            <option key={sector} value={sector}>
-              {sector}
-            </option>
-          ))}
-        </Select>
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Program Details
+            </Text>
+          </Flex>
+          <Flex direction="column" gap={4}>
+            <Flex direction="column" gap={2}>
+              <Text fontSize="xs" fontWeight="semibold">Name *</Text>
+              <Input
+                placeholder="Program Name"
+                value={values.name || ''}
+                onChange={(e) => onChange('name', e.target.value)}
+                bg="white"
+                borderColor="gray.300"
+                borderRadius="md"
+                fontSize="xs"
+                size="xs"
+              />
+            </Flex>
+            <Flex direction="column" gap={2}>
+              <Text fontSize="xs" fontWeight="semibold">Description *</Text>
+              <Textarea
+                placeholder="Description"
+                value={values.description || ''}
+                onChange={(e) => onChange('description', e.target.value)}
+                fontSize="xs"
+                size="xs"
+                bg="white"
+                borderColor="gray.300"
+                borderRadius="md"
+              />
+            </Flex>
+            <Flex direction="column">
+              <Text fontSize="xs" fontWeight="semibold">Program ID</Text>
+              <Input
+                placeholder="Program ID"
+                value={values.programId || ''}
+                onChange={(e) => onChange('programId', e.target.value)}
+                fontSize="xs"
+                size="xs"
+                bg="white"
+                borderColor="gray.300"
+                borderRadius="md"
+              />
+            </Flex>
+          </Flex>
 
-        <Flex alignItems="center" gap={4}>
-          <Text fontSize="sm">Private</Text>
-          <Switch
-            size="md"
-            colorScheme="teal"
-            isChecked={values.isPublic}
-            onChange={(e) => onChange('isPublic', e.target.checked)}
-          />
-          <Text fontSize="sm">Public</Text>
-        </Flex>
-
-        {/* Security Dropdown Menu */}
-        <Select
-          placeholder="Select a security"
-          size="sm"
-          fontSize="xs"
-          value=""
-          bg="white"
-          onChange={(e) => {
-            const selectedSecurity = e.target.value;
-            if (!Array.isArray(values.security)) {
-              values.security = []; // Initialize as an empty array if undefined
-            }
-            if (!values.security.includes(selectedSecurity)) {
-              onChange('security', [...values.security, selectedSecurity]);
-            }
-          }}
-        >
-          <option value="Public">Public</option>
-          <option value="Private">Private</option>
-        </Select>
-
-
-        {/* Program ID Section */}
-        <Flex direction="column" gap={2}>
-          <Text fontSize="xs" fontWeight="medium">Program ID</Text>
-          <Input
-            placeholder="Program ID"
-            value={values.programId || ''}
-            onChange={(e) => onChange('programId', e.target.value)}
-            fontSize="xs"
-            bg="white"
-          />
-        </Flex>
+          {/* Public/Private Toggle */}
+          <Flex alignItems="center" gap={4} mt={4}>
+            <Text fontSize="xs">Private</Text>
+            <Switch
+              size="sm"
+              colorScheme="blackAlpha"
+              isChecked={values.isPublic}
+              onChange={(e) => onChange('isPublic', e.target.checked)}
+            />
+            <Text fontSize="xs">Public</Text>
+          </Flex>
+        </Box>
 
         {/* Accounts Section */}
-        <Divider my={2} />
-        <Text fontSize="xs" fontWeight="medium">Accounts:</Text>
-        <Wrap>
-          {connectedAccounts.length > 0 ? (
-            connectedAccounts.map((account) => (
-              <WrapItem key={account.id}>
-                <Tag size="sm" fontSize="xs" variant="subtle" colorScheme="blue">
-                  <TagLabel>{account.name || 'Unnamed Account'}</TagLabel>
-                  <CloseButton
-                    size="2xs"
-                    onClick={() => handleRemoveAccount(account.id)}
-                    ml={2}
-                  />
-                </Tag>
-              </WrapItem>
-            ))
-          ) : (
-            <Text fontSize="xs" color="gray.500">No accounts connected</Text>
-          )}
-        </Wrap>
-        <Select
-          placeholder="Select an account to connect"
-          value=""
-          onChange={(e) => handleAddAccount(e.target.value)}
-          size="xs"
+        <Box 
+          padding="4" 
+          border="1px solid" 
+          borderColor="gray.200" 
+          borderRadius="md"
           fontSize="xs"
-          bg="white"
+          fontFamily="IBM Plex Mono"
         >
-          {accounts.length > 0 ? (
-            accounts.map((account) => (
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Accounts
+            </Text>
+          </Flex>
+          <Wrap spacing={2} mb={3}>
+            {connectedAccounts.length > 0 ? (
+              connectedAccounts.map((account) => (
+                <WrapItem key={account.id}>
+                  <Tag size="xs" fontSize="xs" px="1" variant="subtle" bg="gray.50" border="1px solid" borderColor="#80a3ff" color="gray.800">
+                    <TagLabel fontSize="2xs">{account.name || 'Unnamed Account'}</TagLabel>
+                    <IconButton
+                      icon={<IoMdClose />}
+                      size="xs"
+                      fontSize="xs"
+                      ml={1}
+                      mr={-1}
+                      bg="transparent"
+                      aria-label="Remove account"
+                      onClick={() => handleRemoveAccount(account.id)}
+                    />
+                  </Tag>
+                </WrapItem>
+              ))
+            ) : (
+              <Text fontSize="sm" color="gray.500">
+                No accounts connected
+              </Text>
+            )}
+          </Wrap>
+          <Select
+            placeholder="Select an account to connect"
+            onChange={(e) => handleAddAccount(e.target.value)}
+            size="xs"
+            fontSize="xs"
+            padding="2"
+            bg="white"
+            borderColor="gray.300"
+            borderRadius="md"
+          >
+            {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
               </option>
-            ))
-          ) : (
-            <option disabled>No accounts available</option>
-          )}
-        </Select>
+            ))}
+          </Select>
+        </Box>
 
         {/* Instructions Section */}
-        <Divider my={4} />
-        <Text fontSize="xs" fontWeight="medium">Instructions:</Text>
-        <Wrap>
-          {connectedInstructions.length > 0 ? (
-            connectedInstructions.map((instruction) => (
-              <WrapItem key={instruction.id}>
-                <Tag size="sm" fontSize="xs" variant="subtle" colorScheme="green">
-                  <TagLabel>{instruction.name || 'Unnamed Instruction'}</TagLabel>
-                  <CloseButton
-                    size="2xs"
-                    onClick={() => handleRemoveInstruction(instruction.id)}
-                    ml={2}
-                  />
-                </Tag>
-              </WrapItem>
-            ))
-          ) : (
-            <Text fontSize="xs" color="gray.500">
-              No instructions connected
+        <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontSize="xs" fontFamily="IBM Plex Mono">
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Instructions
             </Text>
-          )}
-        </Wrap>
-        <Select
-          placeholder="Select an instruction to connect"
-          value=""
-          onChange={(e) => handleAddInstruction(e.target.value)}
-          size="xs"
-          fontSize="xs"
-          bg="white"
-        >
-          {instructions.length > 0 ? (
-            instructions.map((instruction) => (
+          </Flex>
+          <Wrap spacing={2} mb={3}>
+            {connectedInstructions.length > 0 ? (
+              connectedInstructions.map((instruction) => (
+                <WrapItem key={instruction.id}>
+                  <Tag size="xs" fontSize="xs" px="1" variant="subtle" bg="gray.50" border="1px solid" borderColor="#80a3ff" color="gray.800">
+                    <TagLabel fontSize="2xs">{instruction.name || 'Unnamed Instruction'}</TagLabel>
+                    <IconButton
+                      icon={<IoMdClose />}
+                      size="xs"
+                      fontSize="xs"
+                      ml={1}
+                      mr={-1}
+                      bg="transparent"
+                      aria-label="Remove instruction"
+                      onClick={() => handleRemoveInstruction(instruction.id)}
+                    />
+                  </Tag>
+                </WrapItem>
+              ))
+            ) : (
+              <Text fontSize="sm" color="gray.500">
+                No instructions connected
+              </Text>
+            )}
+          </Wrap>
+          <Select
+            placeholder="Select an instruction to connect"
+            onChange={(e) => handleAddInstruction(e.target.value)}
+            size="xs"
+            fontSize="xs"
+            padding="2"
+            bg="white"
+            borderColor="gray.300"
+            borderRadius="md"
+          >
+            {instructions.map((instruction) => (
               <option key={instruction.id} value={instruction.id}>
                 {instruction.name}
               </option>
-            ))
-          ) : (
-            <option disabled>No instructions available</option>
-          )}
-        </Select>
-      </Flex>
+            ))}
+          </Select>
+        </Box>
+
+        {/* Events Section */}
+        <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontFamily="IBM Plex Mono">
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Events
+            </Text>
+          </Flex>
+          <Accordion allowToggle>
+            {events.length ? (
+              events.map((event, index) => (
+                <AccordionItem key={index} border="none" fontSize="xs">
+                  <h2>
+                    <AccordionButton
+                      padding="2"
+                      borderRadius="sm"
+                      bg="gray.50"
+                      fontSize="xs"
+                      _hover={{ bg: 'gray.100' }}
+                      _expanded={{ bg: 'blue.50', color: 'blue.700' }}
+                    >
+                      <Box flex="1" textAlign="left" display="flex" gap="2" alignItems="center">
+                        <Text fontWeight="semibold">{event.name}</Text>
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel paddingY="2" pl={4}>
+                    <VStack align="start" spacing={2} pl={4}>
+                      {event.fields?.map((field, idx) => (
+                        <Box key={idx} display="flex" alignItems="center" gap="2">
+                          <Badge colorScheme="blue">{field.type}</Badge>
+                          <Text fontSize="xs">{field.name}</Text>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </AccordionPanel>
+                </AccordionItem>
+              ))
+            ) : (
+              <Text fontSize="sm" color="gray.500">No events added</Text>
+            )}
+          </Accordion>
+        </Box>
+
+        {/* Error Codes Section */}
+        <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontFamily="IBM Plex Mono">
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Error Codes
+            </Text>
+          </Flex>
+          <Accordion allowToggle>
+            {errorCodes.length ? (
+              errorCodes.map((error, index) => (
+                <AccordionItem key={index} border="none">
+                  <h2>
+                    <AccordionButton
+                      padding="2"
+                      borderRadius="sm"
+                      bg="gray.50"
+                      fontSize="xs"
+                      _hover={{ bg: 'gray.100' }}
+                      _expanded={{ bg: 'red.50', color: 'red.700' }}
+                    >
+                      <Box flex="1" textAlign="left" display="flex" gap="2" alignItems="center">
+                        <Badge colorScheme="red">{error.code}</Badge>
+                        <Text fontWeight="semibold">{error.name}</Text>
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel paddingY="2" pl={4}>
+                    <Text fontSize="xs" color="gray.600">{error.msg}</Text>
+                  </AccordionPanel>
+                </AccordionItem>
+              ))
+            ) : (
+              <Text fontSize="sm" color="gray.500">No error codes added</Text>
+            )}
+          </Accordion>
+        </Box>
+      </VStack>
     );
   }
 
@@ -332,8 +413,9 @@ export class Program implements ProgramToolboxItem {
       'programId',
       'account',
       'instruction',
-      'sector',
-      'is_public',
+      'isPublic',
+      'events',
+      'errorCodes'
     ];
   }
 
@@ -344,8 +426,10 @@ export class Program implements ProgramToolboxItem {
       programId: this.programId || '',
       account: this.account || [],
       instruction: this.instruction || [],
-      sector: this.sector || [],
-      is_public: this.is_public || false,
+      isPublic: this.isPublic || false,
+      version: this.version || '',
+      events: this.events || [],
+      errorCodes: this.errorCodes || [],
     };
   }
 
@@ -353,6 +437,9 @@ export class Program implements ProgramToolboxItem {
     this.name = values.name;
     this.description = values.description;
     if (values.programId) this.programId = values.programId;
+    if (values.version) this.version = values.version;
+    this.events = values.events || [];
+    this.errorCodes = values.errorCodes || [];
   }
 
   getIcon(): IconType {
@@ -375,4 +462,23 @@ export class Program implements ProgramToolboxItem {
       </div>
     );
   });
+
+  getVersion(): string | undefined { return this.version; }
+  setVersion(version: string): void { this.version = version; }
+
+  getEvents(): { name: string; fields: { name: string; type: string }[] }[] | undefined { 
+    return this.events; 
+  }
+
+  setEvents(events: { name: string; fields: { name: string; type: string }[] }[]): void { 
+    this.events = events; 
+  }
+
+  getErrorCodes(): { code: number; name: string; msg: string }[] | undefined { 
+    return this.errorCodes; 
+  }
+
+  setErrorCodes(errorCodes: { code: number; name: string; msg: string }[]): void { 
+    this.errorCodes = errorCodes; 
+  }
 }

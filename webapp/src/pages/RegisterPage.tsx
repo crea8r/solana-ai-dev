@@ -18,6 +18,10 @@ import {
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import { useAuthContext } from '../contexts/AuthContext';
 import ParticlesContainer from './ParticlesContainer';
+import landingPageTheme from "../theme";
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
+
 
 
 const RegisterPage: React.FC = () => {
@@ -105,7 +109,7 @@ const RegisterPage: React.FC = () => {
   return (
     <Flex 
       h="100vh" w="100vw"
-      bgGradient="linear(to-b, blue.900, #80a3ff)"
+      bgGradient={bgGradient}
       justifyContent="center"
       alignItems="center"
     >
@@ -115,16 +119,16 @@ const RegisterPage: React.FC = () => {
           maxW="lg"
           h="lg"
           mx="auto"
-          bg="whiteAlpha.900"
-          backdropFilter="blur(10px)"
+          bg="rgba(255, 255, 255, 0.9)"
           rounded="lg"
           shadow="2xl"
           p="5"
-          zIndex="10"
+          zIndex="1"
+          fontFamily="IBM Plex Mono"
         >
           <CardHeader textAlign="center" pt="6" position="relative">
             <Link to="/landing" className="absolute left-0 top-0 p-5">
-              <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+              <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
             </Link>
             <Flex direction="column" justifyContent="center" alignItems="center" gap="2">
               <Heading as="h1" size="md" color="gray.700" fontWeight="400">Create an account</Heading>

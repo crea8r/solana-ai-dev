@@ -19,8 +19,8 @@ import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
 
 const toolboxItems = [
-  new Account('account-template', 'Account', '', { key: '', value: '' }, ''),
-  new Instruction('instruction-template', 'Instruction', '', [], [], []),
+  new Account('account-template', 'Account', '', true, false),
+  new Instruction('instruction-template', 'Instruction', '', [], []),
   new Program('program-template', 'Program', '', '11111111111111111111111111111111'),
 ];
 
@@ -70,14 +70,14 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           uiStructure: selectedProject.details.uiStructure,
         },
       }));
-      console.log('Selected Project:', selectedProject);
+      console.log('Selected Project:', selectedProject.details.nodes[0].data.item);
       console.log('Project Context:', projectContext);
     }
   };
 
   return (
     <Box
-      width="20%"
+      width="20w"
       bg="gray.50"
       py={4}
       px={6}      

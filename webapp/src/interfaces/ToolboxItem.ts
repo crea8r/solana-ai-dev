@@ -27,7 +27,10 @@ export interface ToolboxItem {
 export interface ProgramToolboxItem extends ToolboxItem {
   type: 'program';
   programId: string;
-  
+  account: string[];
+  instruction: string[];
+  isPublic: boolean;
+
   getProgramId(): string;
   setProgramId(programId: string): void;
 
@@ -41,14 +44,18 @@ export interface ProgramToolboxItem extends ToolboxItem {
     instructions: { id: string; name: string }[],
     connectedInstructions: { id: string; name: string }[],
     handleAddInstruction: (instructionId: string) => void,
-    handleRemoveInstruction: (instructionId: string) => void
+    handleRemoveInstruction: (instructionId: string) => void,
+    version: string,
+    description: string,
+    tags: string[],
+    events: { name: string; fields: { name: string; type: string }[] }[],
+    errorCodes: { code: number; name: string; msg: string }[]
   ): JSX.Element;
 }
 
 export interface InstructionToolboxItem extends ToolboxItem {
   type: 'instruction';
-  programId: string[];
-  category: string[];
+  accounts: string[];
   params: {
     name: string;
     type: string;
@@ -56,13 +63,6 @@ export interface InstructionToolboxItem extends ToolboxItem {
     default_value?: string;
     validation?: string[];
   }[];
-  logic: string[];
-  output: {
-    name: string;
-    type: string;
-    description: string;
-  }[];
-  error_handling: string[];
 
   renderInstructionProperties(
     programs: { id: string; name: string }[],
@@ -71,17 +71,10 @@ export interface InstructionToolboxItem extends ToolboxItem {
   ): JSX.Element;
 }
 
-
 export interface AccountToolboxItem extends ToolboxItem {
-  description: string;
   type: 'account';
-  structure: { key: string; value: string };
-  ownerProgramId: string;
-  category: string[];
   is_mutable: boolean;
   is_signer: boolean;
-  is_writable: boolean;
-  initialized_by: string[];
 
   renderAccountProperties(
     programs: { id: string; name: string }[],

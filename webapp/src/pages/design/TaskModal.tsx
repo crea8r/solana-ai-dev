@@ -5,7 +5,6 @@ import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
 import { FileTreeItemType } from "../../interfaces/file";
-import genStructure from "../../prompts/genStructure";
 import genFile from "../../prompts/genFile";
 import { promptAI, promptAI_v2 } from "../../services/prompt";
 import { 

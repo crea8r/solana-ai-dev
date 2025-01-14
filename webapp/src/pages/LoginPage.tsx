@@ -16,9 +16,6 @@ import {
   useToast
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
-import type { Container } from "@tsparticles/engine";
 import { useAuth } from '../hooks/useAuth';
 import { login } from '../services/authApi';
 import ParticlesContainer from './ParticlesContainer';
@@ -92,13 +89,13 @@ const LoginPage: React.FC = () => {
     >
         <ParticlesContainer isDarkMode={isDarkMode} />
         <Card
-          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
+          w="full" maxW="lg" h="lg" mx="auto" bg="rgba(255, 255, 255, 0.9)"
           rounded="lg" shadow="2xl" p="5" zIndex="10" 
           fontFamily="IBM Plex Mono"
         >
           <CardHeader textAlign="center" pt="6" position="relative" fontFamily="IBM Plex Mono">
             <Link to="/landing" className="absolute left-0 top-0 p-5">
-              <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+              <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
             </Link>
             <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
             <Text fontSize="md" color="gray.500" >Enter your details to login to your account</Text>

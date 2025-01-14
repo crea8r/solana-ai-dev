@@ -73,13 +73,15 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
         const account_data = account.data.item as Account;
         const account_name = account_data.getName();
         const account_desc = account_data.getDescription();
-        const account_structure = account_data.getStructure();
+        const account_is_mutable = account_data.getIsMutable();
+        const account_is_signer = account_data.getIsSigner();
         let account_text =
           account_name +
           ' is ' +
           account_desc +
           '; with data structure as ' +
-          account_structure;
+          account_is_mutable +
+          account_is_signer;
         const edge = accountEdges.find((edge) => edge.target === account.id);
         if (edge) {
           account_text += '; the seed is ' + edge.data?.label;
@@ -95,15 +97,15 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
         const instruction_name = instruction_data.getName();
         const instruction_desc = instruction_data.getDescription();
         const instruction_params = instruction_data.getParams();
-        const instruction_ai = instruction_data.getLogic();
+        const instruction_accounts = instruction_data.getAccounts();
         let instruction_text =
           instruction_name +
           ' is a instruction, ' +
           instruction_desc +
           ' with parameters:' +
           instruction_params +
-          '; and logic as following: ' +
-          instruction_ai;
+          '; and accounts as following: ' +
+          instruction_accounts;
         all_instruction_text += instruction_text + '\n';
       });
     }

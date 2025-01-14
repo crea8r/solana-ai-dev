@@ -50,50 +50,34 @@ const roadmapData: RoadmapItem[] = [
       { text: "Drag-and-drop design interface", status: "completed" },
       { text: "AI-powered code generation", status: "completed" },
       { text: "Basic Integrated Development Environment", status: "completed" }
-    ],
-    icon: MdFoundation,
+    ]
   },
   {
     title: "Train a team of AI agents",
-    description: "Developed the basic technical infrastructure.",
+    description: "Increase the expertise and improve the output quality of AI agents.",
     status: "in-progress",
     details: [
       { text: "Train on-chain developer agent/s", status: "in-progress" },
       { text: "Train frontend developer agent/s", status: "in-progress" },
       { text: "Train documentation writer agent/s", status: "in-progress" }
-    ],
-    icon: HiOutlineSparkles,
+    ]
   },
   {
-    title: "Create a Learning Center",
-    description: "With comprehensive and interactive tutorials on a range of topics, including Solana, Anchor, Rust.",
-    status: "in-progress",
+    title: "Customizable dApp UI Builder",
+    description: "A space for designing user-friendly dApp interfaces, powered by AI.",
+    status: "in-progress"
   },
   {
-    title: "Infrastructure and Technical Setup",
-    description: "Laid the technical foundations of the application.",
-    status: "completed",
-  },
-  {
-    title: "Design Phase",
-    description: "Created a drag and drop interface for Solana program visualization.",
-    status: "completed",
-  },
-  {
-    title: "AI-Powered Code Generation",
-    description: "Introduced AI-driven code generation to simplify development.",
-    status: "completed",
-  },
-  {
-    title: "Code Editor Integration",
-    description: "Introduced a basic IDE to build, edit, and deploy programs with ease.",
-    status: "completed",
+    title: "Solana Learning Center",
+    description: "Comprehensive and interactive tutorials, with a personalized AI tutor agent.",
+    status: "in-progress"
   },
 
 ];
 
 const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, index }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const hasDetails = item.details && item.details.length > 0;
 
   return (
     <Flex
@@ -126,8 +110,7 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
         position="relative"
         fontFamily="IBM Plex Mono"
       >
-       
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" mb={2}>
           <Heading 
             fontSize="xl" 
             fontWeight="bold" 
@@ -137,17 +120,20 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
           >
             {item.title}
           </Heading>
-          <Icon
-            as={isHovered ? ChevronUpIcon : ChevronDownIcon}
-            w={6}
-            h={6}
-            color="white"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            cursor="pointer"
-          />
+
+          {hasDetails && (
+            <Icon
+              as={isHovered ? ChevronUpIcon : ChevronDownIcon}
+              w={6}
+              h={6}
+              color="white"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              cursor="pointer"
+            />
+          )}
         </Flex>
-        <Flex direction="column" justify="flex-start" align="flex-start">
+        <Flex direction="column" justify="flex-start" align="flex-start" textAlign="left">
           <Text color="#e2eaff">{item.description}</Text>
           {item.status === "completed" && (
             <Flex align="center" mt={4} bg="whiteAlpha.200" p={2} borderRadius="md" gap={2}>
@@ -167,8 +153,8 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
           )}
         </Flex>
 
-        <Collapse in={isHovered} animateOpacity>
-          {item.details && (
+        {hasDetails && (
+          <Collapse in={isHovered} animateOpacity>
             <Flex
               mt={4} 
               borderTop="1px solid" 
@@ -182,7 +168,7 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
                 fontFamily="IBM Plex Mono"
                 textAlign="left"
               >
-                {item.details.map((detail, idx) => (
+                {item.details?.map((detail, idx) => (
                   <ListItem key={idx} color={completedColor} display="flex" justifyContent="space-between" alignItems="center">
                     <span>• {detail.text}</span>
                     <Icon as={detail.status === "completed" ? IoIosCheckmarkCircleOutline : TbProgress} color={completedColor} />
@@ -190,8 +176,8 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
                 ))}
               </List>
             </Flex>
-          )}
-        </Collapse>
+          </Collapse>
+        )}
       </Box>
     </Flex>
   );

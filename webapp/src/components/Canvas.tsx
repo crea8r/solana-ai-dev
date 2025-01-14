@@ -58,40 +58,24 @@ const Canvas: React.FC<CanvasProps> = ({
       const updatedNodes = applyNodeChanges(changes, prevProjectContext.details.nodes);
 
       updatedNodes.forEach((node) => {
+        console.log('node', node);
         if (node.type === "instruction" && node.data.item) {
-          const {
-            identifier,
-            name,
-            description,
-            programId,
-            category,
-            params,
-            logic,
-            output,
-            error_handling
-          } = node.data.item;
-        
+          const { identifier, name, description, accounts, params } = node.data.item;
+
           node.data.item = new Instruction(
             identifier || node.id,
             name || node.data.label || '',
             description || '',
-            programId || [],
-            category || [],
-            params || [],
-            logic || [],
-            output || [],
-            error_handling || []
+            accounts || [],
+            params || []
           );
-        
+
           const instruction = node.data.item as Instruction;
-        
+
           instruction.setName(node.data.label || '');
           if (node.data.description) instruction.setDescription(node.data.description);
-          if (node.data.programId) instruction.setProgramId(node.data.programId);
+          if (node.data.accounts) instruction.setAccounts(node.data.accounts);
           if (node.data.params) instruction.setParams(node.data.params);
-          if (node.data.logic) instruction.setLogic(node.data.logic);
-          if (node.data.output) instruction.setOutput(node.data.output);
-          if (node.data.error_handling) instruction.setErrorHandling(node.data.error_handling);
         }
         
         if (node.type === 'program' && node.data.item) {
@@ -102,8 +86,10 @@ const Canvas: React.FC<CanvasProps> = ({
             programId,
             account,
             instruction,
-            is_public,
-            sector
+            isPublic,
+            version,
+            events,
+            errorCodes
           } = node.data.item;
         
           node.data.item = new Program(
@@ -113,8 +99,10 @@ const Canvas: React.FC<CanvasProps> = ({
             programId || '11111111111111111111111111111111',
             account || [],
             instruction || [],
-            is_public || false,
-            sector || []
+            isPublic || false,
+            version || '',
+            events || [],
+            errorCodes || []
           );
         
           const program = node.data.item as Program;
@@ -124,43 +112,40 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.programId)  program.setProgramId(node.data.programId);
           if (node.data.account) program.setAccounts(node.data.account);
           if (node.data.instruction) program.setInstructions(node.data.instruction);
-          if (node.data.is_public) program.setIsPublic(node.data.is_public);
-          if (node.data.sector) program.setSector(node.data.sector);
+          if (node.data.isPublic) program.setIsPublic(node.data.isPublic);
+          if (node.data.version) program.setVersion(node.data.version);
+          if (node.data.events) {
+            console.log('node.data.events', node.data.events);
+            program.setEvents(node.data.events);
+          } else console.log('node.data.events is undefined');
+          if (node.data.errorCodes) {
+            console.log('node.data.errorCodes', node.data.errorCodes);
+            program.setErrorCodes(node.data.errorCodes);
+          } else console.log('node.data.errorCodes is undefined');
         }
         if (node.type === 'account' && node.data.item) {
           const {
             identifier,
             name,
             description,
-            json,
-            ownerProgramId,
-            category,
             is_mutable,
             is_signer,
-            is_writable,
-            initialized_by,
-            structure
           } = node.data.item;
-      
+        
           node.data.item = new Account(
             identifier || node.id,
             name || node.data.label || '',
             description || '',
-            structure || { key: '', value: '' },
-            ownerProgramId || '',
-            category || [],
             is_mutable ?? true,
-            is_signer ?? false,
-            is_writable ?? true,
-            initialized_by || [],
+            is_signer ?? false
           );
       
           const account = node.data.item as Account;
       
           account.setName(node.data.label || '');
           if (node.data.description) account.setDescription(node.data.description);
-          if (node.data.structure) account.setStructure(node.data.structure);
-          if (node.data.ownerProgramId) account.setOwnerProgramId(node.data.ownerProgramId);
+          if (node.data.is_mutable) account.setIsMutable(node.data.is_mutable);
+          if (node.data.is_signer) account.setIsSigner(node.data.is_signer);
         }
         
       });
@@ -198,7 +183,7 @@ const Canvas: React.FC<CanvasProps> = ({
         if (newNode.type === "instruction" && newNode.data.item) {
           const instruction = newNode.data.item as Instruction;
           instruction.setDescription("New instruction description");
-          instruction.setParams(["parameter1", "parameter2"]);
+          instruction.setParams([{ name: "param1", type: "u64" }]);
         }
 
         onAddNode(newNode);

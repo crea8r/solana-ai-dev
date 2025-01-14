@@ -21,15 +21,61 @@ const _nodes = [
     data: {
       label: 'Counter Program',
       item: {
-        id: 'program1-10001',
-        name: 'Counter Program',
-        description: 'Manages a shared counter with increment and reset functionality.',
-        programId: '11111111111111111111111111111111',
-        account: ['account1-10001', 'system_program_account'],
-        instruction: ['instruction1-10001', 'instruction2-10001', 'instruction3-10001'],
-        security: '',
-        sector: [sectorEnum.utility],
-      },
+        id: "program1-10001",
+        name: "Counter Program",
+        description: "Manages a shared counter with increment and reset functionality.",
+        programId: "11111111111111111111111111111111",
+        account: [
+          "account1-10001",
+          "system_program_account"
+        ],
+        instruction: [
+          "instruction1-10001",
+          "instruction2-10001",
+          "instruction3-10001"
+        ],
+        isPublic: true,
+        events: [
+          {
+            name: "CounterIncremented",
+            fields: [
+              { name: "previousValue", type: "u64" },
+              { name: "newValue", type: "u64" },
+              { name: "incrementBy", type: "u64" }
+            ]
+          },
+          {
+            name: "CounterReset",
+            fields: [
+              { name: "previousValue", type: "u64" },
+              { name: "resetByUser", type: "bool" }
+            ]
+          }
+        ],
+        errorCodes: [
+          {
+            code: 100,
+            name: "Unauthorized",
+            msg: "The caller is not authorized to perform this operation."
+          },
+          {
+            code: 101,
+            name: "InvalidInput",
+            msg: "The provided input is invalid (e.g., negative increment)."
+          },
+          {
+            code: 102,
+            name: "OverflowError",
+            msg: "Counter overflow: the value exceeded the maximum allowed."
+          },
+          {
+            code: 103,
+            name: "AlreadyReset",
+            msg: "The counter is already reset to 0."
+          }
+        ]
+      }
+      ,
     },
     selected: false,
     positionAbsolute: { x: 50, y: 200 },
@@ -44,20 +90,11 @@ const _nodes = [
     data: {
       label: 'CounterAccount',
       item: {
-        id: 'account1-10001',
-        name: 'CounterAccount',
-        description: 'Stores the counter value and initializer’s public key.',
-        publicKey: '11111111111111111111111111111111',
-        category: ['state'],
-        programId: ['program1-10001'],
+        id: "account1-10001",
+        name: "CounterAccount",
+        description: "Stores the counter value and initializer’s public key.",
         is_mutable: true,
-        is_signer: false,
-        is_writable: true,
-        structure: {
-          key: 'counter',
-          value: 'u64',
-        },
-        initialized_by: ['initializer'],
+        is_signer: false
       },
     },
     selected: false,
@@ -73,45 +110,18 @@ const _nodes = [
     data: {
       label: 'InitializeCounter',
       item: {
-        id: 'instruction1-10001',
-        name: 'InitializeCounter',
-        description: 'Initializes a new counter account with an initial value of zero.',
-        programId: ['program1-10001'],
-        category: [categoryEnum.number],
+        id: "instruction1-10001",
+        name: "InitializeCounter",
+        description: "Initializes a new counter account with an initial value of zero.",
+        accounts: ["initializer"],
         params: [
           {
-            name: 'initializer',
-            type: 'Pubkey',
-            input_source: [inputSource.user],
-            default_value: '11111111111111111111111111111111',
-            validation: ['isBase58', 'length=32'],
-          },
-        ],
-        logic: [
-          "Verify the initializer's signature to confirm the transaction is authorized.",
-          "Allocate a new CounterAccount and set its owner to the Counter Program.",
-          "Set the counter value in CounterAccount to zero.",
-          "Store the initializer's public key in the CounterAccount.",
-          "Deduct rent-exempt lamports from the initializer's account.",
-        ],
-        output: [
-          {
-            name: 'counter_account',
-            type: 'Pubkey',
-            description: 'The public key of the newly created CounterAccount.',
-          },
-          {
-            name: 'initializer',
-            type: 'Pubkey',
-            description: 'The public key of the initializer who created the CounterAccount.',
-          },
-        ],
-        error_handling: [
-          "Return an error if the initializer's public key is invalid.",
-          'Return an error if account allocation fails due to insufficient lamports.',
-          'Return an error if the CounterAccount already exists.',
-        ],
-      },
+            name: "initializer",
+            type: "Pubkey"
+          }
+        ]
+      }
+      ,
     },
     selected: true,
     positionAbsolute: { x: 300, y: 150 },
@@ -126,45 +136,22 @@ const _nodes = [
     data: {
       label: 'IncrementCounter',
       item: {
-        id: 'instruction2-10001',
-        name: 'IncrementCounter',
-        description: 'Increments the counter value by one in the specified CounterAccount.',
-        programId: ['program1-10001'],
-        category: [categoryEnum.number],
+        id: "instruction2-10001",
+        name: "IncrementCounter",
+        description: "Increments the counter value by one in the specified CounterAccount.",
+        accounts: ["counter_account", "user"],
         params: [
           {
-            name: 'counter_account',
-            type: 'AccountInfo',
-            input_source: [inputSource.program],
-            validation: ['exists'],
+            name: "counter_account",
+            type: "AccountInfo"
           },
           {
-            name: 'user',
-            type: 'Pubkey',
-            input_source: [inputSource.user],
-            validation: ['isBase58', 'length=32'],
-          },
-        ],
-        logic: [
-          'Verify that the user is authorized to update the counter.',
-          'Fetch the current counter value from the CounterAccount.',
-          'Increment the counter value by one.',
-          'Store the updated value back in the CounterAccount.',
-        ],
-        output: [
-          {
-            name: 'updated_counter',
-            type: 'u64',
-            description: 'The updated counter value after incrementing.',
-          },
-        ],
-        error_handling: [
-          'Return an error if the CounterAccount does not exist.',
-          'Return an error if the user is not authorized to increment the counter.',
-          'Return an error if the CounterAccount is not writable.',
-          'Return an error if there is an arithmetic overflow when incrementing the counter.',
-        ],
-      },
+            name: "user",
+            type: "Pubkey"
+          }
+        ]
+      }
+      ,
     },
     selected: true,
     positionAbsolute: { x: 300, y: 250 },
@@ -179,44 +166,20 @@ const _nodes = [
     data: {
       label: 'ResetCounter',
       item: {
-        id: 'instruction3-10001',
-        name: 'ResetCounter',
-        description: 'Resets the counter value to zero for a specified CounterAccount.',
-        programId: ['program1-10001'],
-        category: [categoryEnum.number],
+        id: "instruction3-10001",
+        name: "ResetCounter",
+        description: "Resets the counter value to zero for a specified CounterAccount.",
+        accounts: ["counter_account", "initializer"],
         params: [
           {
-            name: 'counter_account',
-            type: 'AccountInfo',
-            input_source: [inputSource.program],
-            validation: ['exists'],
+            name: "counter_account",
+            type: "AccountInfo"
           },
           {
-            name: 'initializer',
-            type: 'Pubkey',
-            input_source: [inputSource.user],
-            validation: ['isBase58', 'length=32'],
-          },
-        ],
-        logic: [
-          'Verify that the initializer is authorized to reset the counter.',
-          'Fetch the current counter value from the CounterAccount.',
-          'Set the counter value to zero.',
-          'Log the reset operation for auditing.',
-        ],
-        output: [
-          {
-            name: 'reset_counter',
-            type: 'u64',
-            description: 'The counter value after being reset to zero.',
-          },
-        ],
-        error_handling: [
-          'Return an error if the CounterAccount does not exist.',
-          'Return an error if the initializer is not authorized to reset the counter.',
-          'Return an error if the CounterAccount is not writable.',
-          'Return an error if an unexpected failure occurs when logging the reset operation.',
-        ],
+            name: "initializer",
+            type: "Pubkey"
+          }
+        ]
       },
     },
     selected: true,

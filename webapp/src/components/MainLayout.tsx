@@ -23,10 +23,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const menuItems = [
     { icon: PiGraphLight, label: 'Design', path: '/design' },
     { icon: PiTerminalWindowLight, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
-    { icon: PiAppWindowLight, label: 'UI - Coming Soon', path: '/ui', disabled: false }, //!projectContext.details.genUiClicked ?
-    { icon: PiBookOpenText, label: 'Docs - Coming Soon', path: '/doc', disabled: true },
-    { icon: GoLightBulb, label: 'Learn', path: '/learn', disabled: false },
-    { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
+    { icon: PiAppWindowLight, label: 'UI - coming soon', path: '/ui', disabled: false }, //!projectContext.details.genUiClicked ?
+    { icon: PiBookOpenText, label: 'Docs - coming soon', path: '/doc', disabled: true },
+    { icon: GoLightBulb, label: 'Learn - coming soon', path: '/learn', disabled: true },
+    { icon: HiOutlineUserCircle, label: 'Account', path: '/account', disabled: true },
   ];
 
   const handleNavigation = (path: string) => {

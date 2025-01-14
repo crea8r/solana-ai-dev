@@ -14,25 +14,21 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
         accountData?.identifier || `account-${Date.now()}`,
         accountData?.name || 'Account',
         accountData?.description || '',
-        accountData?.structure || { key: '', value: '' },
-        accountData?.ownerProgramId || ''
+        accountData?.is_mutable ?? true,
+        accountData?.is_signer ?? false
       );
-      
+
       Object.assign(account, accountData);
       return account as AccountToolboxItem;
-    }  
+    }
     case 'instruction': {
       const instructionData = itemData as Partial<InstructionToolboxItem>;
       const instruction = new Instruction(
         instructionData?.identifier || `instruction-${Date.now()}`,
         instructionData?.name || 'Instruction',
         instructionData?.description || '',
-        instructionData?.programId || [],
-        instructionData?.category || [],
-        instructionData?.params || [],
-        instructionData?.logic || [],
-        instructionData?.output || [],
-        instructionData?.error_handling || []
+        instructionData?.accounts || [],
+        instructionData?.params || []
       );
 
       Object.assign(instruction, instructionData);
@@ -42,14 +38,14 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
       const programData = itemData as Partial<ProgramToolboxItem>;
       return Object.assign(
         new Program(
-          programData?.identifier || `program-${Date.now()}`, 
-          programData?.name || 'Program', 
-          programData?.description || '', 
+          programData?.identifier || `program-${Date.now()}`,
+          programData?.name || 'Program',
+          programData?.description || '',
           programData?.programId || '11111111111111111111111111111111'
         ),
         programData
       ) as ProgramToolboxItem;
-    }    
+    }
     default:
       return null;
   }
@@ -57,45 +53,38 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
 
 export function loadItem(type: string, data: any): ToolboxItemUnion | null {
   switch (type) {
-    
     case 'account':
       return new Account(
         data.identifier,
-        data.name,
-        data.description,
-        data.structure || { key: '', value: '' },
-        data.ownerProgramId || '',
-        data.category || [],
+        data.name || '',
+        data.description || '',
         data.is_mutable ?? true,
-        data.is_signer ?? false,
-        data.is_writable ?? true,
-        data.initialized_by || [],
+        data.is_signer ?? false
       ) as AccountToolboxItem;
-    
-      case 'instruction':
+
+    case 'instruction':
       return new Instruction(
         data.identifier,
         data.name || '',
         data.description || '',
-        data.programId || [],
-        data.category || [],
-        data.params || [],
-        data.logic || [],
-        data.output || [],
-        data.error_handling || []
+        data.accounts || [],
+        data.params || []
       ) as InstructionToolboxItem;
-    
-      case 'program':
+
+    case 'program':
       return new Program(
         data.identifier,
         data.name || '',
         data.description || '',
-        data.programId || '',
+        data.programId || '11111111111111111111111111111111',
         data.account || [],
         data.instruction || [],
         data.is_public || true,
-        data.sector || []
+        data.version || '',
+        data.events || [],
+        data.errorCodes || []
       ) as ProgramToolboxItem;
+
     default:
       return null;
   }
@@ -110,8 +99,8 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 
     return (
       <div style={style}>
-        <Handle type='target' position={Position.Left} />
-        <Handle type='source' position={Position.Right} />
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
 
         <div>{data.label}</div>
       </div>
@@ -127,7 +116,6 @@ export const getNodeTypes = (): NodeTypes => ({
     fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
-    //border: 'solid 2.5px #decae2', // purple
     border: '2px solid #a9b7ff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
@@ -139,7 +127,6 @@ export const getNodeTypes = (): NodeTypes => ({
     fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
-    //border: 'solid 2.5px #9de19f', // green
     border: '2px solid #a9b7ff',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   }),
@@ -151,7 +138,6 @@ export const getNodeTypes = (): NodeTypes => ({
     fontFamily: 'IBM Plex Mono',
     padding: 10,
     borderRadius: 5,
-    //border: 'solid 2.5px #ff9494', // red
     border: '2px solid #a9b7ff',
     boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.8)',
   }),
