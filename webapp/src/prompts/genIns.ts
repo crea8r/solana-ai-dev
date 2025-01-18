@@ -2,7 +2,7 @@ import { Instruction } from "../items/Instruction";
 import instructionSchema from "../data/ai_schema/instruction_schema.json";
 
 export const genIns = (instruction: Instruction) => {
-  const instructionName = instruction.getName();
+  const instructionName = instruction.getNamePascal();
   const contextStruct = `${instructionName}Context`;
   const paramsStruct = `${instructionName}Params`;
 

@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
+import React, { useContext, useEffect, useState } from 'react';
+import { AuthContext, useAuthContext } from '../contexts/AuthContext';
 import { 
     //Avatar,
     Box,
@@ -22,17 +22,6 @@ import {
     MenuDivider,
     FormControl,
     FormLabel,
-    FormErrorMessage,
-    FormHelperText,
-    Table,
-    Thead,
-    Tbody,
-    Tfoot,
-    Tr,
-    Th,
-    Td,
-    TableCaption,
-    TableContainer,
     Drawer,
     DrawerBody,
     DrawerFooter,
@@ -47,10 +36,12 @@ import { FaRegBell } from "react-icons/fa6";
 import { MdOutlineLogout } from "react-icons/md";
 import { IoMdMenu } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
-
+import { updateApiKey } from '../services/authApi';
+import { getUser } from '../services/authApi';
 const AccountPage: React.FC = () => {
     const authContext = useContext(AuthContext);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [newApiKey, setNewApiKey] = useState('');
 
     const placeholderUser = {
         username: 'exampleUser',
@@ -68,13 +59,13 @@ const AccountPage: React.FC = () => {
         orgName: placeholderUser.orgName,
     };
 
-    const teamMembers = [
-        { name: "Alex Johnson", role: "Product Manager", email: "alex@example.com" },
-        { name: "Sarah Lee", role: "UX Designer", email: "sarah@example.com" },
-        { name: "Michael Chen", role: "Full Stack Developer", email: "michael@example.com" },
-        { name: "Emily Davis", role: "Marketing Specialist", email: "emily@example.com" },
-        { name: "David Kim", role: "Data Analyst", email: "david@example.com" },
-    ];
+    useEffect(() => {
+        const fetchUser = async () => {
+            const user = await getUser();
+            console.log(user);
+        };
+        fetchUser();
+    }, []);
 
     return (
         <Flex className="flex h-screen bg-gray-100">
@@ -203,18 +194,31 @@ const AccountPage: React.FC = () => {
                             <CardBody>
                                 <FormControl className="space-y-4">
                                     <Box className="space-y-2">
-                                        <FormLabel htmlFor="username">Username</FormLabel>
-                                        <Input id="username" value={user.username} readOnly />
+                                        <FormLabel htmlFor="username" fontSize="sm">Username</FormLabel>
+                                        <Input id="username" fontSize="sm" value={user.username} readOnly disabled />
                                     </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="name">Full Name</FormLabel>
-                                        <Input id="name" placeholder={`${user.firstName} ${user.lastName}`} />
+                                    <Box className="space-y-2 flex flex-col items-left w-full">
+                                        <FormLabel htmlFor="apiKey" fontSize="sm">API Key</FormLabel>
+                                        <Box className="flex flex-row items-left w-full">
+                                            <Input 
+                                                id="apiKey" 
+                                                placeholder="Enter your API key" 
+                                                size="sm" 
+                                                fontSize="sm" 
+                                                value={newApiKey}
+                                                onChange={(e) => setNewApiKey(e.target.value)}
+                                            />
+                                            <Button 
+                                                size="sm" 
+                                                fontSize="xs" 
+                                                alignSelf="center" 
+                                                ml={2} 
+                                                onClick={() => updateApiKey(newApiKey)}
+                                            >
+                                                Save
+                                            </Button>
+                                        </Box>
                                     </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="email">Email</FormLabel>
-                                        <Input id="email" type="email" placeholder={user.email} />
-                                    </Box>
-                                    <Button>Save Changes</Button>
                                 </FormControl>
                             </CardBody>
                         </Card>

@@ -9,11 +9,12 @@ import {
     VStack, 
     Text, Flex, Select, Divider, Tag, TagLabel, Wrap, WrapItem, CloseButton, MenuItemOption, MenuOptionGroup, MenuList, Menu, MenuButton, Button, Checkbox, Switch, Box, IconButton, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Badge } from '@chakra-ui/react';
 import { IoMdClose } from "react-icons/io";
+import { pascalToSpaced } from '../utils/itemUtils';
 
 export class Program implements ProgramToolboxItem {
   identifier: string;
   type: 'program' = 'program';
-  name: string;
+  name: { snake: string; pascal: string };
   description: string;
   programId: string;
   account: string[];
@@ -25,7 +26,7 @@ export class Program implements ProgramToolboxItem {
 
   constructor(
     id: string,
-    name: string,
+    name: { snake: string; pascal: string },
     description: string,
     programId: string,
     account: string[] = [],
@@ -50,8 +51,10 @@ export class Program implements ProgramToolboxItem {
 
   getType(): 'program' { return this.type; }
 
-  getName(): string { return this.name; }
-  setName(name: string): void {  this.name = name; }
+  getNameSnake(): string { return this.name.snake; }
+  setNameSnake(name: string): void {  this.name.snake = name; }
+  getNamePascal(): string { return this.name.pascal; }
+  setNamePascal(name: string): void { this.name.pascal = name; }
 
   getDescription(): string { return this.description; }
   setDescription(description: string): void { this.description = description; }
@@ -91,7 +94,7 @@ export class Program implements ProgramToolboxItem {
           <Text fontSize="xs" fontWeight="semibold">Name *</Text>
           <Input
             placeholder="Name"
-            value={values.name || ""}
+            value={values.name?.pascal || ""}
             onChange={(e) => onChange("name", e.target.value)}
             fontSize="xs"
           />
@@ -164,7 +167,7 @@ export class Program implements ProgramToolboxItem {
               <Text fontSize="xs" fontWeight="semibold">Name *</Text>
               <Input
                 placeholder="Program Name"
-                value={values.name || ''}
+                value={values.name?.pascal || ''}
                 onChange={(e) => onChange('name', e.target.value)}
                 bg="white"
                 borderColor="gray.300"

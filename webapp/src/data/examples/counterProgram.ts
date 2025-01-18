@@ -1,14 +1,92 @@
-import { FileTreeItemType } from '../../interfaces/file';
-import { CodeFile } from '../../contexts/CodeFileContext';
-import { Project, ProjectDetails, sectorEnum, inputSource } from '../../interfaces/project';
-import { 
-  intervalEnum,
-  orderEnum,
-  triggerType,
-  categoryEnum,
-} from '../../interfaces/project';
-import { ProgramContext, InstructionContext, AccountContext } from '../../interfaces/project';
-import { Program } from '../../items/Program';
+import { Project, ProjectDetails } from '../../interfaces/project';
+import { ExtendedIdl } from '../../interfaces/extendedIdl';
+
+const description = `The Counter Program maintains an on-chain counter, allowing authorized users to increment its value and restricting reset functionality to the initializer. 
+A PDA-derived CounterAccount stores the counter value and its owner, with strict access control enforced through validated accounts and parameters.`
+
+const _idl: ExtendedIdl = {
+  version: "0.1.0",
+  name: "counter_program",
+  address: "11111111111111111111111111111111",
+  metadata: {},
+  instructions: [
+    {
+      name: "initialize_counter",
+      discriminator: "initialize_counter",
+      accounts: [
+        { name: "initializer", writable: true, signer: true },
+        {
+          name: "counter_account",
+          writable: true,
+          signer: false,
+          constraints: [
+            "init",
+            "seeds = [b\"counter\", initializer.key().as_ref()]",
+            "bump",
+            "payer = initializer",
+            "space = 8 + 16",
+          ],
+        },
+        { name: "system_program", writable: false, signer: false },
+        { name: "rent", writable: false, signer: false },
+      ],
+      args: [],
+    },
+    {
+      name: "increment_counter",
+      discriminator: "increment_counter",
+      accounts: [
+        { name: "user", writable: false, signer: true },
+        { name: "counter_account", writable: true, signer: false },
+      ],
+      args: [],
+    },
+    {
+      name: "reset_counter",
+      discriminator: "reset_counter",
+      accounts: [
+        { name: "initializer", writable: false, signer: true },
+        { name: "counter_account", writable: true, signer: false },
+      ],
+      args: [],
+    },
+  ],
+  accounts: [
+    {
+      name: "CounterAccount",
+      type: {
+        kind: "struct",
+        fields: [
+          { name: "counter", type: "u64" },
+          { name: "initializer", type: "publicKey" },
+        ],
+      },
+    },
+  ],
+  errors: [
+    { code: 100, name: "Unauthorized", msg: "The caller is not authorized to perform this operation." },
+    { code: 101, name: "AccountAlreadyInitialized", msg: "The counter account is already initialized." },
+    { code: 102, name: "OverflowError", msg: "The counter value overflowed." },
+    { code: 103, name: "AlreadyReset", msg: "The counter is already reset to 0." },
+  ],
+  events: [
+    {
+      name: "CounterIncremented",
+      fields: [
+        { name: "previousValue", type: "u64", index: false },
+        { name: "newValue", type: "u64", index: false },
+        { name: "incrementBy", type: "u64", index: false },
+      ],
+    },
+    {
+      name: "CounterReset",
+      fields: [
+        { name: "previousValue", type: "u64", index: false },
+        { name: "resetByUser", type: "bool", index: false },
+      ],
+    },
+  ],
+};
 
 const _nodes = [
   // Program Node
@@ -22,7 +100,7 @@ const _nodes = [
       label: 'Counter Program',
       item: {
         id: "program1-10001",
-        name: "Counter Program",
+        name: {snake: 'counter_program', pascal: 'CounterProgram'},
         description: "Manages a shared counter with increment and reset functionality.",
         programId: "11111111111111111111111111111111",
         account: [
@@ -80,7 +158,7 @@ const _nodes = [
     selected: false,
     positionAbsolute: { x: 50, y: 200 },
   },
-  // Account Node
+  // Account Node 1
   {
     width: 80,
     height: 44,
@@ -91,14 +169,64 @@ const _nodes = [
       label: 'CounterAccount',
       item: {
         id: "account1-10001",
-        name: "CounterAccount",
+        name: {snake: 'counter_account', pascal: 'CounterAccount'},
         description: "Stores the counter value and initializer’s public key.",
         is_mutable: true,
-        is_signer: false
+        is_signer: false,
+        fields: [
+          { name: "counter", type: "u64" },
+          { name: "initializer", type: "Pubkey" }
+        ]
       },
     },
     selected: false,
     positionAbsolute: { x: 300, y: 50 },
+  },
+  // Account Node 2
+  {
+    width: 80,
+    height: 44,
+    id: "account2-10001",
+    type: "account",
+    position: { x: 100, y: 50 },  // Adjusted to be near the program
+    data: {
+      label: "Initializer",
+      item: {
+        id: "account2-10001",
+        name: { snake: "initializer", pascal: "Initializer" },
+        description: "The account that initializes and owns the CounterAccount.",
+        is_mutable: true,
+        is_signer: true,
+        fields: [
+          { name: "public_key", type: "Pubkey" }
+        ]
+      }
+    },
+    selected: false,
+    positionAbsolute: { x: 100, y: 50 }
+  },
+  // Account Node 3
+  {
+    width: 80,
+    height: 44,
+    id: "account3-10001",
+    type: "account",
+    position: { x: 100, y: 120 },  // Adjusted to be near the program
+    data: {
+      label: "User",
+      item: {
+        id: "account3-10001",
+        name: { snake: "user", pascal: "User" },
+        description: "The account of the user performing counter increments.",
+        is_mutable: false,
+        is_signer: true,
+        fields: [
+          { name: "public_key", type: "Pubkey" }
+        ]
+      }
+    },
+    selected: false,
+    positionAbsolute: { x: 100, y: 120 }
   },
   // Instruction Node 1
   {
@@ -111,13 +239,56 @@ const _nodes = [
       label: 'InitializeCounter',
       item: {
         id: "instruction1-10001",
-        name: "InitializeCounter",
+        name: {snake: "initialize_counter", pascal: "InitializeCounter"},
         description: "Initializes a new counter account with an initial value of zero.",
-        accounts: ["initializer"],
-        params: [
+        docs_description: "This function initializes a counter account, setting its initial value to zero.",
+        accounts: [
           {
-            name: "initializer",
-            type: "Pubkey"
+            "name": "initializer",
+            "type": "Signer",
+            "constraints": [ "mut" ]
+          },
+          {
+            "name": "counter_account",
+            "type": "Account",
+            "constraints": [
+              "init",
+              "seeds = [b\"counter\", initializer.key().as_ref()]",
+              "bump",
+              "payer = initializer",
+              "space = 8 + 16"
+            ]
+          },
+          {
+            "name": "system_program",
+            "type": "Program",
+            "constraints": []
+          },
+          {
+            "name": "rent",
+            "type": "Sysvar",
+            "constraints": []
+          }
+        ],
+        params: [ { name: "initializer", type: "Pubkey" } ],
+        error_codes: [
+          {
+            code: 100,
+            name: "Unauthorized",
+            msg: "The caller is not authorized to perform this operation."
+          },
+          {
+            code: 101,
+            name: "AccountAlreadyInitialized",
+            msg: "The counter account is already initialized."
+          }
+        ],
+        events: [
+          {
+            name: "CounterInitialized",
+            fields: [
+              { name: "initializer", type: "Pubkey" }
+            ]
           }
         ]
       }
@@ -137,9 +308,25 @@ const _nodes = [
       label: 'IncrementCounter',
       item: {
         id: "instruction2-10001",
-        name: "IncrementCounter",
+        name: {snake: "increment_counter", pascal: "IncrementCounter"},
         description: "Increments the counter value by one in the specified CounterAccount.",
-        accounts: ["counter_account", "user"],
+        docs_description: "This function increments the counter value by one for the specified account.",
+        accounts: [
+          {
+            "name": "user",
+            "type": "AccountInfo",
+            "attributes": [
+              "signer"
+            ]
+          },
+          {
+            "name": "counter_account",
+            "type": "AccountInfo",
+            "attributes": [
+              "mut"
+            ]
+          }
+        ],
         params: [
           {
             name: "counter_account",
@@ -148,6 +335,33 @@ const _nodes = [
           {
             name: "user",
             type: "Pubkey"
+          }
+        ],
+        error_codes: [
+          {
+            code: 200,
+            name: "UnauthorizedUser",
+            msg: "The user is not authorized to increment the counter."
+          },
+          {
+            code: 201,
+            name: "AccountNotInitialized",
+            msg: "The counter account is not initialized."
+          },
+          {
+            code: 202,
+            name: "CounterOverflow",
+            msg: "The counter value overflowed."
+          }
+        ],
+        events: [
+          {
+            name: "CounterIncremented",
+            fields: [
+              { name: "previous_value", type: "u64" },
+              { name: "new_value", type: "u64" },
+              { name: "increment_by", type: "u64" }
+            ]
           }
         ]
       }
@@ -167,8 +381,9 @@ const _nodes = [
       label: 'ResetCounter',
       item: {
         id: "instruction3-10001",
-        name: "ResetCounter",
+        name: {snake: "reset_counter", pascal: "ResetCounter"},
         description: "Resets the counter value to zero for a specified CounterAccount.",
+        docs_description: "This function resets the counter value to zero, only the initializer can perform this action.",
         accounts: ["counter_account", "initializer"],
         params: [
           {
@@ -178,6 +393,27 @@ const _nodes = [
           {
             name: "initializer",
             type: "Pubkey"
+          }
+        ],
+        error_codes: [
+          {
+            code: 300,
+            name: "AlreadyReset",
+            msg: "The counter is already reset to zero."
+          },
+          {
+            code: 301,
+            name: "UnauthorizedReset",
+            msg: "Only the initializer can reset the counter."
+          }
+        ],
+        events: [
+          {
+            name: "CounterReset",
+            fields: [
+              { name: "previous_value", type: "u64" },
+              { name: "reset_by_user", type: "bool" }
+            ]
           }
         ]
       },
@@ -402,10 +638,11 @@ const counterProgram: Project = {
   id: '',
   rootPath: '',
   name: 'Counter Program',
-  description: 'A Solana program to increment or reset a shared counter, with restricted reset permissions.',
+  description: description,
   details: {
     nodes: _nodes,
     edges: _edges,
+    designIdl: _idl,
     uiStructure: _uiStructure,
     files: { name: '', type: 'directory', children: [] },
     codes: [],
@@ -414,8 +651,8 @@ const counterProgram: Project = {
     isAnchorInit: false,
     isCode: false,
     genUiClicked: false,
-    aiFilePaths: [],
-    aiStructure: '',
+    filePaths: [],
+    fileTree: { name: '', type: 'directory', children: [] },
     stateContent: '',
     uiResults: [],
     aiInstructions: [],
@@ -424,7 +661,7 @@ const counterProgram: Project = {
     deployStatus: false,
     isSdk: false,
     isUi: false,
-    idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+    idl: {},
     sdk: { fileName: '', content: '' },
     programId: null,
     pdas: [],

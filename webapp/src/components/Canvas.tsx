@@ -60,22 +60,26 @@ const Canvas: React.FC<CanvasProps> = ({
       updatedNodes.forEach((node) => {
         console.log('node', node);
         if (node.type === "instruction" && node.data.item) {
-          const { identifier, name, description, accounts, params } = node.data.item;
+          const { identifier, name, description, accounts, params, error_codes, events } = node.data.item;
 
           node.data.item = new Instruction(
             identifier || node.id,
-            name || node.data.label || '',
+            name || {snake: 'instruction', pascal: 'Instruction'},
             description || '',
             accounts || [],
-            params || []
+            params || [],
+            events || [],
+            error_codes || []
           );
 
           const instruction = node.data.item as Instruction;
 
-          instruction.setName(node.data.label || '');
+          instruction.setNamePascal(name.pascal || node.data.item.name.pascal || '');
           if (node.data.description) instruction.setDescription(node.data.description);
           if (node.data.accounts) instruction.setAccounts(node.data.accounts);
           if (node.data.params) instruction.setParams(node.data.params);
+          if (node.data.events) instruction.setEvents(node.data.events);
+          if (node.data.error_codes) instruction.setErrorCodes(node.data.error_codes);
         }
         
         if (node.type === 'program' && node.data.item) {
@@ -89,12 +93,12 @@ const Canvas: React.FC<CanvasProps> = ({
             isPublic,
             version,
             events,
-            errorCodes
+            error_codes
           } = node.data.item;
         
           node.data.item = new Program(
             identifier || node.id,
-            name || node.data.label || '',
+            name || {snake: 'program', pascal: 'Program'},
             description || '',
             programId || '11111111111111111111111111111111',
             account || [],
@@ -102,12 +106,12 @@ const Canvas: React.FC<CanvasProps> = ({
             isPublic || false,
             version || '',
             events || [],
-            errorCodes || []
+            error_codes || []
           );
         
           const program = node.data.item as Program;
         
-          program.setName(node.data.label || '');
+          program.setNamePascal(name.pascal || node.data.item.name.pascal || '');
           if (node.data.description)  program.setDescription(node.data.description);
           if (node.data.programId)  program.setProgramId(node.data.programId);
           if (node.data.account) program.setAccounts(node.data.account);
@@ -118,10 +122,10 @@ const Canvas: React.FC<CanvasProps> = ({
             console.log('node.data.events', node.data.events);
             program.setEvents(node.data.events);
           } else console.log('node.data.events is undefined');
-          if (node.data.errorCodes) {
-            console.log('node.data.errorCodes', node.data.errorCodes);
-            program.setErrorCodes(node.data.errorCodes);
-          } else console.log('node.data.errorCodes is undefined');
+          if (node.data.error_codes) {
+            console.log('node.data.error_codes', node.data.error_codes);
+            program.setErrorCodes(node.data.error_codes);
+          } else console.log('node.data.error_codes is undefined');
         }
         if (node.type === 'account' && node.data.item) {
           const {
@@ -130,22 +134,25 @@ const Canvas: React.FC<CanvasProps> = ({
             description,
             is_mutable,
             is_signer,
+            fields
           } = node.data.item;
         
           node.data.item = new Account(
             identifier || node.id,
-            name || node.data.label || '',
+            name || {snake: 'account', pascal: 'Account'},
             description || '',
             is_mutable ?? true,
-            is_signer ?? false
+            is_signer ?? false,
+            fields || []
           );
       
           const account = node.data.item as Account;
       
-          account.setName(node.data.label || '');
+          account.setNamePascal(name.pascal || node.data.item.name.pascal || '');
           if (node.data.description) account.setDescription(node.data.description);
           if (node.data.is_mutable) account.setIsMutable(node.data.is_mutable);
           if (node.data.is_signer) account.setIsSigner(node.data.is_signer);
+          if (node.data.fields) account.setFields(node.data.fields);
         }
         
       });

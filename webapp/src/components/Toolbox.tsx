@@ -19,9 +19,9 @@ import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
 
 const toolboxItems = [
-  new Account('account-template', 'Account', '', true, false),
-  new Instruction('instruction-template', 'Instruction', '', [], []),
-  new Program('program-template', 'Program', '', '11111111111111111111111111111111'),
+  new Account("", {snake: 'account', pascal: 'Account'}, 'Account', true, false, [{name: 'field1', type: 'u64'}, {name: 'field2', type: 'u64'}]),
+  new Instruction("", {snake: 'instruction', pascal: 'Instruction'}, 'Instruction', [], [], [], []),
+  new Program("", {snake: 'program', pascal: 'Program'}, 'Program', '11111111111111111111111111111111'),
 ];
 
 const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({ onExampleChange }) => {
@@ -113,7 +113,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
         <Divider mb={3} borderColor="gray.500"/>
         <SimpleGrid columns={2} spacing={4}>
           {toolboxItems.map((item) => (
-            <Tooltip key={item.identifier} label={item.getName()} placement="right"
+            <Tooltip key={item.identifier} label={item.getNamePascal()} placement="right"
               bg='#a9b7ff'
               color='white'
               shadow='sm'
@@ -140,7 +140,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 height="auto"
                 shadow="sm"
               >
-                <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getName()}</Text>
+                <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getNamePascal()}</Text>
               </Box>
             </Tooltip>
           ))}

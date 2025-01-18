@@ -8,6 +8,7 @@ import { useProjectContext } from '../../contexts/ProjectContext';
 import { Account } from '../../items/Account';
 import { Program } from '../../items/Program';
 import { Instruction } from '../../items/Instruction';
+import { pascalToSpaced } from '../../utils/itemUtils';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -75,7 +76,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         ...selectedNode,
         data: {
           ...selectedNode.data,
-          label: localValues.name || selectedNode.data.label,
+          label: localValues.name.pascal || selectedNode.data.label,
           localValues: {
             ...(selectedNode.data.item as ToolboxItem).getPropertyValues(),
             ...localValues,
@@ -230,7 +231,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             {/* Header Section */}
             <Flex direction="row" justify="space-evenly" align="center" fontFamily="IBM Plex Mono">
               <Text fontSize="md" fontWeight="semibold">
-                {(selectedNode.data.item as ToolboxItem).getName()}
+                {pascalToSpaced((selectedNode.data.item as ToolboxItem).getNamePascal())}
               </Text>
               <Flex gap={1}>
                 <Tooltip label="Save">
@@ -280,11 +281,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     }).filter((i) => i !== null) as { id: string; name: string }[],
                   (instructionId: string) => handleAddInstruction(instructionId),
                   (instructionId: string) => handleRemoveInstruction(instructionId),
+                  localValues.name,
                   localValues.version,
                   localValues.description,
+                  localValues.accounts || [],
                   localValues.tags,
                   localValues.events || [],
-                  localValues.errorCodes || []
+                  localValues.errorCodes || [],
                 )}
               </>
             )}
@@ -313,6 +316,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     ...localValues,
                     is_mutable: localValues.is_mutable ?? true,
                     is_signer: localValues.is_signer ?? false,
+                    fields: localValues.fields || []
                   }
                 )}
               </>

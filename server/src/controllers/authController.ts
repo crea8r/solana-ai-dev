@@ -363,3 +363,48 @@ export const getUser = (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const updateApiKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.user?.id; // Ensure `req.user` is populated by authentication middleware
+  const { apiKey } = req.body;
+
+  if (!userId) {
+    return next(new AppError('User ID not found', 400));
+  }
+
+  if (!apiKey) {
+    return next(new AppError('API key is required', 400));
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      'UPDATE Creator SET openAiApiKey = $1 WHERE id = $2 RETURNING openAiApiKey',
+      [apiKey, userId]
+    );
+
+    if (result.rowCount === 0) {
+      throw new AppError('User not found or API key not updated', 404);
+    }
+
+    await client.query('COMMIT');
+
+    res.status(200).json({
+      message: 'API key updated successfully',
+      openAiApiKey: result.rows[0].openAiApiKey,
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating API key:', error);
+    next(new AppError('Failed to update API key', 500));
+  } finally {
+    client.release();
+  }
+};

@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, createWallet, getWalletInfo, getPrivateKey, logout, getUser, airdropTokens } from '../controllers/authController';
+import { register, login, createWallet, getWalletInfo, getPrivateKey, logout, getUser, airdropTokens, updateApiKey } from '../controllers/authController';
 import { authMiddleware } from 'src/middleware/authMiddleware';
 
 const router = express.Router();
@@ -18,6 +18,7 @@ router.post('/wallet/airdrop', authMiddleware, (req, res, next) =>
     res.status(200).json({ message: 'Tokens airdropped successfully' })).catch(next));
 router.get('/wallet/info', authMiddleware, getWalletInfo);
 router.get('/wallet/private-key', authMiddleware, getPrivateKey);
+router.post('/update-api-key', authMiddleware, updateApiKey);
 
 
 export default router;

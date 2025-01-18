@@ -1,21 +1,18 @@
 import { api } from '../utils/apiHelper';
 
 export const promptAI = async (
-  text: string, 
-  model: string, 
+  prompt: string, 
+  schema: any,
   //apiKey: string = process.env.NEXT_PUBLIC_OPENAI_API_KEY || '', 
-  schema: any, 
-  promptType: string
 ) => {
   if (process.env.REACT_APP_OPENAI_API_KEY === '') {
     console.log('no api key provided in api call');
     throw new Error('No API key provided');
   }
   const apiKey = process.env.REACT_APP_OPENAI_API_KEY || 'no api key provided';
-  console.log('promptAI called');
-  console.log('model:', model);
-  console.log('apiKey:',  apiKey);
-  const body = { messages: [text], model, _apiKey: apiKey, _schema: schema, _promptType: promptType };
+  const model = 'gpt-4o';
+  const body = { messages: [prompt], model, _apiKey: apiKey, _schema: schema };
+  console.log('body:', body);
   const resp = await api.post('/ai/prompt', body);
   return resp.data?.data;
 };

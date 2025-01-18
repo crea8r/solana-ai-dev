@@ -136,4 +136,14 @@ export const fileApi = {
       throw error;
     }
   },
+
+  formatFiles: async (fileContents: string[]): Promise<TaskResponse> => {
+    try {
+      const response = await api.post('/files/format-code', { fileContents });
+      return response.data;
+    } catch (error) {
+      console.error('Error formatting files:', error);
+      throw error;
+    }
+  },
 };

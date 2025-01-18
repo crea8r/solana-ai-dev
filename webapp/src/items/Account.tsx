@@ -1,52 +1,54 @@
 import React, { memo } from 'react';
 import { Node } from 'react-flow-renderer';
 import { ToolboxItem } from '../interfaces/ToolboxItem';
-import { VStack, Input, Textarea, Text, Checkbox, Flex, Box, Switch } from '@chakra-ui/react';
+import { VStack, Input, Textarea, Text, Checkbox, Flex, Box, Switch, Button, IconButton } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 import { VscJson } from 'react-icons/vsc';
+import { pascalToSpaced } from '../utils/itemUtils';
+import { IoIosCloseCircleOutline } from 'react-icons/io';
 
 export class Account implements ToolboxItem {
   identifier: string;
   type: 'account' = 'account';
-  name: string;
+  name: { snake: string; pascal: string };
   description: string;
   is_mutable: boolean;
   is_signer: boolean;
+  fields: { name: string; type: string }[];
 
   constructor(
     id: string,
-    name: string,
+    name: { snake: string; pascal: string } = { snake: 'account', pascal: 'Account' },
     description: string = '',
     is_mutable: boolean = true,
-    is_signer: boolean = false
+    is_signer: boolean = false,
+    fields: { name: string; type: string }[] = [] 
   ) {
     this.identifier = id;
     this.name = name;
     this.description = description;
     this.is_mutable = is_mutable;
     this.is_signer = is_signer;
+    this.fields = fields;
   }
 
-  getName(): string {
-    return this.name;
-  }
+  getNameSnake(): string { return this.name.snake; }
+  setNameSnake(name: string): void { this.name.snake = name; }
 
-  setName(name: string): void {
-    this.name = name;
-  }
+  getNamePascal(): string { return this.name.pascal; }
+  setNamePascal(name: string): void { this.name.pascal = name; }
 
-  getDescription(): string {
-    return this.description;
-  }
+  getDescription(): string {  return this.description; }
 
   setDescription(description: string): void {
     this.description = description;
   }
 
-  getType(): 'account' {
-    return this.type;
-  }
+  getType(): 'account' { return this.type; }
+
+  getFields(): { name: string; type: string }[] { return this.fields; }
+  setFields(fields: { name: string; type: string }[]): void { this.fields = fields; }
 
   toNode(position: { x: number; y: number }): Node {
     return {
@@ -103,7 +105,7 @@ export class Account implements ToolboxItem {
               <Text fontSize="xs" fontWeight="semibold">Name *</Text>
               <Input
                 placeholder="Account Name"
-                value={values.name || ''}
+                value={values.name?.pascal || ''}
                 onChange={(e) => onChange('name', e.target.value)}
                 bg="white"
                 borderColor="gray.300"
@@ -152,6 +154,82 @@ export class Account implements ToolboxItem {
             </Flex>
           </Flex>
         </Box>
+
+        {/* Fields Section */}
+        <Box
+          padding="4"
+          border="1px solid"
+          borderColor="gray.200"
+          borderRadius="md"
+          fontSize="xs"
+          fontFamily="IBM Plex Mono"
+        >
+          <Flex direction="row" justifyContent="center" alignItems="center">
+            <Text fontSize="sm" fontWeight="semibold" mb={5}>
+              Fields
+            </Text>
+          </Flex>
+          <Flex gap={4} mb={2}>
+            <Text fontWeight="bold" fontSize="xs" flex="1" textAlign="center">Name</Text>
+            <Text fontWeight="bold" fontSize="xs" flex="1" textAlign="center">Type</Text>
+            <Box width="30px"></Box>
+          </Flex>
+          {values.fields?.map((field: any, index: number) => (
+            <Flex key={index} gap={2} mb={2} alignItems="center">
+              <Input
+                placeholder="Field Name"
+                value={field.name || ''}
+                onChange={(e) =>
+                  onChange('fields', [
+                    ...values.fields.slice(0, index),
+                    { ...field, name: e.target.value },
+                    ...values.fields.slice(index + 1),
+                  ])
+                }
+                fontSize="xs"
+                size="xs"
+                bg="white"
+              />
+              <Input
+                placeholder="Type (e.g., u64, String)"
+                value={field.type || ''}
+                onChange={(e) =>
+                  onChange('fields', [
+                    ...values.fields.slice(0, index),
+                    { ...field, type: e.target.value },
+                    ...values.fields.slice(index + 1),
+                  ])
+                }
+                fontSize="xs"
+                size="xs"
+                bg="white"
+              />
+              <IconButton
+                size="xs"
+                icon={<IoIosCloseCircleOutline />}
+                aria-label="Remove field"
+                bg="transparent"
+                color="red.400"
+                _hover={{ color: "red.600" }}
+                onClick={() =>
+                  onChange(
+                    'fields',
+                    values.fields.filter((_: any, i: number) => i !== index)
+                  )
+                }
+              />
+            </Flex>
+          ))}
+          <Button
+            size="xs"
+            mt={2}
+            onClick={() =>
+              onChange('fields', [...(values.fields || []), { name: '', type: '' }])
+            }
+          >
+            Add Field
+          </Button>
+        </Box>
       </VStack>
     );
   }
@@ -166,6 +244,7 @@ export class Account implements ToolboxItem {
       description: this.description || '',
       is_mutable: this.is_mutable,
       is_signer: this.is_signer,
+      fields: this.fields || []
     };
   }
 
@@ -174,6 +253,7 @@ export class Account implements ToolboxItem {
     this.description = values.description;
     this.is_mutable = values.is_mutable;
     this.is_signer = values.is_signer;
+    this.fields = values.fields || [];
   }
 
   getIcon(): IconType {

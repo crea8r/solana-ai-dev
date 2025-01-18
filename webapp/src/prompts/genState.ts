@@ -11,7 +11,7 @@ export const genState = (nodes: Node[], edges: Edge[]) => {
     const accountData = node.data.item as Account;
 
     return {
-      name: accountData.getName(),
+      name: accountData.getNamePascal(),
       description: accountData.getDescription(),
       is_mutable: accountData.getIsMutable(),
       is_signer: accountData.getIsSigner(),

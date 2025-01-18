@@ -5,6 +5,8 @@ import { Docs } from '../contexts/DocsContext';
 import { Account, Instruction } from '../types/uiTypes';
 import { PdaInfo } from '../types/uiTypes';
 import { UiStructure } from './ui';
+import { ExtendedIdl } from './extendedIdl';
+
 
 export enum sectorEnum {
   utility = 'utility',
@@ -58,10 +60,11 @@ export type ProjectInfoToSave = {
 export interface ProjectDetailsToSave {
   nodes: Node[];
   edges: Edge[];
+  designIdl: ExtendedIdl;
   uiStructure: UiStructure;
   isAnchorInit: boolean;
-  aiFilePaths: string[];
-  aiStructure: string;
+  filePaths: string[];
+  fileTree: FileTreeItemType;
   isCode: boolean;
   uiResults: any[];
   aiInstructions: {
@@ -76,7 +79,7 @@ export interface ProjectDetailsToSave {
     accounts: {
       name: string;
       type: string;
-      attributes: string[];
+      constraints: string[];
     }[];
   }[];
   sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
@@ -85,7 +88,7 @@ export interface ProjectDetailsToSave {
   isSdk: boolean;
   isUi: boolean;
   genUiClicked: boolean;
-  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  idl: any;
   sdk: { fileName: string; content: string; };
   programId: string | null;
   pdas: PdaInfo[];
@@ -148,14 +151,15 @@ export interface AccountContext {
 export interface ProjectDetails {
   nodes: Node[];
   edges: Edge[];
+  designIdl: ExtendedIdl;
   uiStructure: UiStructure;
   files: FileTreeItemType;
   codes: CodeFile[];
   docs: Docs[];
   isAnchorInit: boolean;
   isCode: boolean;
-  aiFilePaths: string[];
-  aiStructure: string;
+  filePaths: { name: string; path: string }[];
+  fileTree: FileTreeItemType;
   stateContent: string | undefined;
   uiResults: any[];
   aiInstructions: {
@@ -170,7 +174,7 @@ export interface ProjectDetails {
     accounts: {
       name: string;
       type: string;
-      attributes: string[];
+      constraints: string[];
     }[];
   }[];
   sdkFunctions: { function_name: string; params: { name: string; type: string }[]; }[];
@@ -179,7 +183,7 @@ export interface ProjectDetails {
   isSdk: boolean;
   isUi: boolean;
   genUiClicked: boolean;
-  idl: { fileName: string; content: string; parsed: { instructions: Instruction[]; accounts: Account[]; }; };
+  idl: any;
   sdk: { fileName: string; content: string; };
   programId: string | null;
   pdas: PdaInfo[];

@@ -18,6 +18,7 @@ import {
     processAIStateOutput,
     processAITestOutput,
 } from '../../utils/genCodeUtils';
+import { getInstructionNamesSnake } from '../../utils/genCodeUtils2';
 import { fileApi } from '../../api/file';
 import { useProjectContext, transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -33,7 +34,9 @@ import {
     //validateFileTree,
     processAIModRsOutput
  } from '../../utils/genCodeUtils';
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../../data/fileTemplates'; 
+import { getModRsTemplate } from '../../data/fileTemplates'; 
+import { getStateTemplate } from '../../data/templates/stateTemplate';
+import { getLibRsTemplate } from '../../data/templates/libTemplate';
 import instructionSchema from '../../data/ai_schema/instruction_schema.json';
 import stateSchema from '../../data/ai_schema/state_schema.json';
 import structureSchema from '../../data/ai_schema/structure_schema.json';
@@ -270,7 +273,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             return { name: name || "default_instruction_name" };
         });
 
-        const fileTree = predefinedFileStructure(normalizedProgramName, instructionNodes);
+        const instructionNames = getInstructionNamesSnake(projectContext.details.nodes);
+
+        const fileTree = predefinedFileStructure(normalizedProgramName, instructionNames);
         //console.log('fileTree', fileTree);
         try {
           if (fileTree) {
@@ -507,14 +512,16 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 //console.log('schema', _schema);
                 //console.log('promptType', _promptType);
       
-                const content = await promptAI(_promptContent, _model, _schema, _promptType);
+                const content = await promptAI(_promptContent, _model);
 
                 const anchorTomlPath = `Anchor.toml`;
+                /*
                 const programId = await extractProgramIdFromAnchorToml(
                   projectId,
                   anchorTomlPath,
-                  programDirName
+                  normalizedProgramName
                 );
+                */
       
                 let codeContent = '';
                 if (content) {
@@ -530,6 +537,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       params: aiData.params_struct as string,
                     });
 
+                    /*
                     setProjectContext((prevContext) => ({
                       ...prevContext,
                       details: {
@@ -549,6 +557,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       ],
                     },
                   }));
+                  */
 
                   } else if (isStateFile) {
                     codeContent = await processAIStateOutput(projectId, programDirName, aiContent);
@@ -605,11 +614,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             }
       
             const libRsPath = `programs/${programDirName}/src/lib.rs`;
-            const anchorTomlPath = `Anchor.toml`;
             const programId = await extractProgramIdFromAnchorToml(
               projectId,
-              anchorTomlPath,
-              programDirName
+              normalizedProgramName
             );
 
             setProjectContext((prevProjectContext) => ({

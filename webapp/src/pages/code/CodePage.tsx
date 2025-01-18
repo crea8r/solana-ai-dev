@@ -288,6 +288,8 @@ const CodePage = () => {
         <Box flex={1} position="absolute" top={12} right={0}>
           {showWallet && <Wallet />}
         </Box>
+
+        {/*
         <Box
           w="400px"
           maxHeight="100% !important"
@@ -295,13 +297,16 @@ const CodePage = () => {
           borderColor="gray.300"
           pb="2"
         >
+          
           <AIChat
             selectedFile={selectedFile}
             fileContent={fileContent}
             onSelectFile={_handleSelectFile}
             files={files?.children || []}
           />
+          
         </Box>
+        */}
       </Flex>
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
       <TaskModal 

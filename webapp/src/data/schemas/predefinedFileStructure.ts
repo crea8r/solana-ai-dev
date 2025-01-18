@@ -3,18 +3,15 @@ import { pascalToSnake } from "../../utils/uiUtils";
 
 export const predefinedFileStructure = (
     normalizedProgramName: string,
-    instructionNodes: { name: string }[],
+    instructionNames: string[],
   ): FileTreeItemType => {
-    
-    const customInstructionFiles: FileTreeItemType[] = instructionNodes.map((instructionNode) => ({
-      name: `run_${pascalToSnake(instructionNode.name)}.rs`,
+    const customInstructionFiles: FileTreeItemType[] = instructionNames.map((instructionName) => ({
+      name: `${instructionName}`,
       type: "file",
-      path: `programs/${normalizedProgramName}/src/instructions/run_${pascalToSnake(instructionNode.name)}.rs`,
+      path: `programs/${normalizedProgramName}/src/instructions/${instructionName}.rs`,
       ext: ".rs",
       children: undefined,
     }));
-    console.log('customInstructionFiles', customInstructionFiles);
-    console.log('snake name', pascalToSnake(instructionNodes[0].name));
   
     return {
       name: "programs",
@@ -58,18 +55,6 @@ export const predefinedFileStructure = (
                   ],
                 },
               ],
-            },
-            {
-              name: "Cargo.toml",
-              type: "file",
-              path: `programs/${normalizedProgramName}/Cargo.toml`,
-              ext: ".toml",
-            },
-            {
-              name: "Xargo.toml",
-              type: "file",
-              path: `programs/${normalizedProgramName}/Xargo.toml`,
-              ext: ".toml",
             },
           ],
         },

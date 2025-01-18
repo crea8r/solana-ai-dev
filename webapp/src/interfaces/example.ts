@@ -1,12 +1,8 @@
 import { counterProgram } from "../data/examples/counterProgram";
-import { stakingRewardsProgram } from "../data/examples/stakingRewardsProgram";
-import { transferTokenProgram } from "../data/examples/transferTokenProgram";
 import { Project } from "./project";
 
 export const predefinedProjects: Record<string, Project> = {
   Counter: counterProgram,
-  TransferToken: transferTokenProgram,
-  StakingRewards: stakingRewardsProgram,
 };  
 
 export interface ProjectExample {

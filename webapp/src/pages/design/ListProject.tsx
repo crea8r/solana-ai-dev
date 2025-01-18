@@ -25,6 +25,7 @@ import { shortenText } from '../../utils/text';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
+import { ExtendedIdl } from '../../interfaces/extendedIdl';
 
 interface ListProjectProps {
   isOpen: boolean;
@@ -89,6 +90,18 @@ const ListProject: React.FC<ListProjectProps> = ({
           details: {
             nodes: [],
             edges: [],
+            designIdl: {
+              version: "0.0.0",
+              name: "",
+              address: "",
+              metadata: {},
+              instructions: [],
+              accounts: [],
+              errors: [],
+              events: [],
+            },
+            filePaths: [],
+            fileTree: { name: '', type: 'directory', children: [] },
             uiStructure: {
               header: {
                 title: 'No Project Selected',
@@ -205,8 +218,6 @@ const ListProject: React.FC<ListProjectProps> = ({
             docs: [],
             isAnchorInit: false,
             isCode: false,
-            aiFilePaths: [],
-            aiStructure: '',
             stateContent: '',
             uiResults: [],
             aiInstructions: [],

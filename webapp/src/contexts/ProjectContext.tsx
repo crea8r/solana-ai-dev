@@ -11,11 +11,12 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
   details: {
     nodes: project.details.nodes,
     edges: project.details.edges,
+    designIdl: project.details.designIdl,
     uiStructure: project.details.uiStructure,
     isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
-    aiFilePaths: project.details.aiFilePaths,
-    aiStructure: project.details.aiStructure,
+    filePaths: project.details.filePaths.map(filePath => filePath.path),
+    fileTree: project.details.fileTree,
     uiResults: project.details.uiResults,
     aiInstructions: project.details.aiInstructions,
     sdkFunctions: project.details.sdkFunctions,
@@ -28,12 +29,11 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     sdk: project.details.sdk,
     programId: project.details.programId,
     pdas: project.details.pdas,
-    // New fields added
     keyFeatures: project.details.keyFeatures,
     userInteractions: project.details.userInteractions,
     sectorContext: project.details.sectorContext,
     optimizationGoals: project.details.optimizationGoals,
-    uiHints: project.details.uiHints, // Added uiHints for UI generation
+    uiHints: project.details.uiHints, 
   },
 });
 
@@ -65,13 +65,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           details: {
             nodes: [],
             edges: [],
+            designIdl: {},
             uiStructure: {},
             files: { name: '', type: 'directory', children: [] },
             codes: [],
             docs: [],
             isAnchorInit: false,
             isCode: false,
-            aiFilePaths: [],
+            filePaths: [],
+            fileTree: { name: '', type: 'directory', children: [] },
             aiStructure: '',
             stateContent: '',
             uiResults: [],

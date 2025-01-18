@@ -5,6 +5,7 @@ import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
+import { pascalToSpaced } from './itemUtils';
 
 export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): ToolboxItemUnion | null {
   switch (type) {
@@ -12,10 +13,11 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
       const accountData = itemData as Partial<AccountToolboxItem>;
       const account = new Account(
         accountData?.identifier || `account-${Date.now()}`,
-        accountData?.name || 'Account',
+        accountData?.name || {snake: 'account', pascal: 'Account'},
         accountData?.description || '',
         accountData?.is_mutable ?? true,
-        accountData?.is_signer ?? false
+        accountData?.is_signer ?? false,
+        accountData?.fields || []
       );
 
       Object.assign(account, accountData);
@@ -25,7 +27,7 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
       const instructionData = itemData as Partial<InstructionToolboxItem>;
       const instruction = new Instruction(
         instructionData?.identifier || `instruction-${Date.now()}`,
-        instructionData?.name || 'Instruction',
+        instructionData?.name || {snake: 'instruction', pascal: 'Instruction'},
         instructionData?.description || '',
         instructionData?.accounts || [],
         instructionData?.params || []
@@ -39,7 +41,7 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
       return Object.assign(
         new Program(
           programData?.identifier || `program-${Date.now()}`,
-          programData?.name || 'Program',
+          programData?.name || {snake: 'program', pascal: 'Program'},
           programData?.description || '',
           programData?.programId || '11111111111111111111111111111111'
         ),
@@ -56,25 +58,28 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
     case 'account':
       return new Account(
         data.identifier,
-        data.name || '',
+        data.name || {snake: 'account', pascal: 'Account'},
         data.description || '',
         data.is_mutable ?? true,
-        data.is_signer ?? false
+        data.is_signer ?? false,
+        data.fields || []
       ) as AccountToolboxItem;
 
     case 'instruction':
       return new Instruction(
         data.identifier,
-        data.name || '',
+        data.name || {snake: 'instruction', pascal: 'Instruction'},
         data.description || '',
         data.accounts || [],
-        data.params || []
+        data.params || [],
+        data.events || [],
+        data.error_codes || []
       ) as InstructionToolboxItem;
 
     case 'program':
       return new Program(
         data.identifier,
-        data.name || '',
+        data.name || {snake: 'program', pascal: 'Program'},
         data.description || '',
         data.programId || '11111111111111111111111111111111',
         data.account || [],
@@ -82,7 +87,7 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.is_public || true,
         data.version || '',
         data.events || [],
-        data.errorCodes || []
+        data.error_codes || []
       ) as ProgramToolboxItem;
 
     default:
@@ -124,7 +129,7 @@ export const getNodeTypes = (): NodeTypes => ({
     color: '#909de0',
     fontWeight: '600',
     letterSpacing: '0.05em',
-    fontFamily: 'IBM Plex Mono',
+    fontFamily: 'IBM Plex Mono', 
     padding: 10,
     borderRadius: 5,
     border: '2px solid #a9b7ff',

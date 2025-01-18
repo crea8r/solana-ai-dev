@@ -10,6 +10,7 @@ import {
   renameDirectory,
   getFilePath,
   updateFile,
+  formatFiles,
 } from '../controllers/fileController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
@@ -24,5 +25,6 @@ router.put('/update/:projectId/:filePath(*)', authMiddleware, updateFile);
 router.delete('/:projectId/:filePath(*)', authMiddleware, deleteFile);
 router.delete('/:rootPath', authMiddleware, deleteDirectory);
 router.post('/rename-directory', authMiddleware, renameDirectory);
+router.post('/format-code', authMiddleware, formatFiles);
 
 export default router;

@@ -110,4 +110,15 @@ export const getUser = async () => {
   }
 };
 
+export const updateApiKey = async (newApiKey: string): Promise<any> => {
+  try {
+    const response = await authApi.post('/auth/update-api-key', { apiKey: newApiKey });
+    console.log('API key updated successfully:', response);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating API key:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 export default authApi;

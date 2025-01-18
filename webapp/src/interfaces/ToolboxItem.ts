@@ -4,11 +4,13 @@ import { IconType } from 'react-icons';
 export interface ToolboxItem {
   identifier: string;
   type: 'account' | 'instruction' | 'program';
-  name: string;
+  name: { snake: string; pascal: string; };
   description: string;
 
-  getName(): string;
-  setName(name: string): void;
+  getNameSnake(): string;
+  setNameSnake(name: string): void;
+  getNamePascal(): string;
+  setNamePascal(name: string): void;
   getDescription(): string;
   setDescription(description: string): void;
   getType(): 'account' | 'instruction' | 'program';
@@ -55,7 +57,7 @@ export interface ProgramToolboxItem extends ToolboxItem {
 
 export interface InstructionToolboxItem extends ToolboxItem {
   type: 'instruction';
-  accounts: string[];
+  accounts: {name: string; type: string; constraints?: string[]}[];
   params: {
     name: string;
     type: string;
@@ -63,6 +65,8 @@ export interface InstructionToolboxItem extends ToolboxItem {
     default_value?: string;
     validation?: string[];
   }[];
+  events: any[];
+  error_codes: any[];
 
   renderInstructionProperties(
     programs: { id: string; name: string }[],
@@ -75,7 +79,7 @@ export interface AccountToolboxItem extends ToolboxItem {
   type: 'account';
   is_mutable: boolean;
   is_signer: boolean;
-
+  fields: { name: string; type: string }[];
   renderAccountProperties(
     programs: { id: string; name: string }[],
     onChange: (field: string, value: any) => void,

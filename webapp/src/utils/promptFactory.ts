@@ -71,7 +71,7 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
       all_account_text += `There are ${accountNodes.length} accounts in this program.\n`;
       accountNodes.forEach((account) => {
         const account_data = account.data.item as Account;
-        const account_name = account_data.getName();
+        const account_name = account_data.getNamePascal();
         const account_desc = account_data.getDescription();
         const account_is_mutable = account_data.getIsMutable();
         const account_is_signer = account_data.getIsSigner();
@@ -94,7 +94,7 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
       all_instruction_text += `There are ${instructionNodes.length} instructions in this program.\n`;
       instructionNodes.forEach((instruction) => {
         const instruction_data = instruction.data.item as Instruction;
-        const instruction_name = instruction_data.getName();
+        const instruction_name = instruction_data.getNamePascal();
         const instruction_desc = instruction_data.getDescription();
         const instruction_params = instruction_data.getParams();
         const instruction_accounts = instruction_data.getAccounts();
@@ -111,7 +111,7 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
     }
     all_text +=
       textGenerator(
-        program_data.getName(),
+        program_data.getNamePascal(),
         program_data.getDescription(),
         all_account_text,
         all_instruction_text
