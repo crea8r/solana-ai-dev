@@ -105,6 +105,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             borderColor="gray.300"
           >
               <option value="Counter"><Text>Counter Program</Text></option>
+              <option value="TokenTransfer"><Text>Token Transfer Program</Text></option>
           </Select>
         </Flex>
         <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>

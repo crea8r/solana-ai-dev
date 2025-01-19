@@ -18,7 +18,7 @@ export class Instruction implements ToolboxItem {
   params: { name: string; type: string }[];
   events: any[];
   error_codes: any[];
-
+  imports: { field: string; module: string; items: string[] }[];
   constructor(
     id: string,
     name: { snake: string; pascal: string } = { snake: 'instruction', pascal: 'Instruction' },
@@ -26,7 +26,8 @@ export class Instruction implements ToolboxItem {
     accounts: { name: string; type: string; constraints?: string[] }[] = [],
     params: { name: string; type: string }[] = [],
     events: any[] = [],
-    errorCodes: any[] = []
+    errorCodes: any[] = [],
+    imports: { field: string; module: string; items: string[] }[] = []
   ) {
     this.identifier = id;
     this.name = { snake: name.snake, pascal: name.pascal };
@@ -35,6 +36,7 @@ export class Instruction implements ToolboxItem {
     this.params = params;
     this.events = events;
     this.error_codes = errorCodes;
+    this.imports = imports;
   }
 
   getNameSnake(): string { return this.name.snake; }
@@ -62,6 +64,14 @@ export class Instruction implements ToolboxItem {
 
   setParams(params: { name: string; type: string }[]): void {
     this.params = params;
+  }
+
+  getImports(): { field: string; module: string; items: string[] }[] {
+    return this.imports;
+  }
+
+  setImports(imports: { field: string; module: string; items: string[] }[]): void {
+    this.imports = imports;
   }
 
   toNode(position: { x: number; y: number }): Node {
@@ -255,7 +265,7 @@ export class Instruction implements ToolboxItem {
             <Flex key={index} gap={2} mb={2} alignItems="center">
               <Input
                 placeholder="Parameter Name"
-                value={param.name.snake || ''}
+                value={param.name || ''}
                 onChange={(e) =>
                   onChange('params', [
                     ...values.params.slice(0, index),

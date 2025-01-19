@@ -60,7 +60,7 @@ const Canvas: React.FC<CanvasProps> = ({
       updatedNodes.forEach((node) => {
         console.log('node', node);
         if (node.type === "instruction" && node.data.item) {
-          const { identifier, name, description, accounts, params, error_codes, events } = node.data.item;
+          const { identifier, name, description, accounts, params, error_codes, events, imports } = node.data.item;
 
           node.data.item = new Instruction(
             identifier || node.id,
@@ -69,7 +69,8 @@ const Canvas: React.FC<CanvasProps> = ({
             accounts || [],
             params || [],
             events || [],
-            error_codes || []
+            error_codes || [],
+            imports || []
           );
 
           const instruction = node.data.item as Instruction;
@@ -80,6 +81,7 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.params) instruction.setParams(node.data.params);
           if (node.data.events) instruction.setEvents(node.data.events);
           if (node.data.error_codes) instruction.setErrorCodes(node.data.error_codes);
+          if (node.data.imports) instruction.setImports(node.data.imports);
         }
         
         if (node.type === 'program' && node.data.item) {

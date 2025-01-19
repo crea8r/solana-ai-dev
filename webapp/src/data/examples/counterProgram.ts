@@ -231,7 +231,7 @@ const _nodes = [
     selected: false,
     positionAbsolute: { x: 100, y: 120 }
   },
-  // Instruction Node 1
+  // Instruction Node 1 - InitializeCounter
   {
     width: 66,
     height: 44,
@@ -268,7 +268,7 @@ const _nodes = [
             "constraints": []
           }
         ],
-        params: [ { name: {snake: "authority", pascal: "Authority"}, type: "Pubkey" } ],
+        params: [ { name: "authority", type: "Pubkey" } ],
         error_codes: [
           {
             code: 100,
@@ -295,7 +295,7 @@ const _nodes = [
     selected: true,
     positionAbsolute: { x: 300, y: 150 },
   },
-  // Instruction Node 2
+  // Instruction Node 2 - IncrementCounter
   {
     width: 66,
     height: 44,
@@ -323,11 +323,11 @@ const _nodes = [
         ],
         params: [
           {
-            name: {snake: "counter_account", pascal: "CounterAccount"},
+            name: "counter_account",
             type: "Pubkey"
           },
           {
-            name: {snake: "user", pascal: "User"},
+            name: "user",
             type: "Pubkey"
           }
         ],
@@ -364,7 +364,7 @@ const _nodes = [
     selected: true,
     positionAbsolute: { x: 300, y: 250 },
   },
-  // Instruction Node 3
+  // Instruction Node 3 - ResetCounter
   {
     width: 66,
     height: 44,
@@ -392,11 +392,11 @@ const _nodes = [
         ],
         params: [
           {
-            name: {snake: "counter_account", pascal: "CounterAccount"},
+            name: "counter_account",
             type: "Pubkey"
           },
           {
-            name: {snake: "authority", pascal: "Authority"},
+            name: "authority",
             type: "Pubkey"
           }
         ],

@@ -31,7 +31,8 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
         instructionData?.name || {snake: 'instruction', pascal: 'Instruction'},
         instructionData?.description || '',
         instructionData?.accounts || [],
-        instructionData?.params || []
+        instructionData?.params || [],
+        instructionData?.imports || []
       );
 
       Object.assign(instruction, instructionData);
@@ -79,7 +80,8 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.accounts || [],
         data.params || [],
         data.events || [],
-        data.error_codes || []
+        data.error_codes || [],
+        data.imports || []
       ) as InstructionToolboxItem;
 
     case 'program':

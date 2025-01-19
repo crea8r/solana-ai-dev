@@ -57,6 +57,7 @@ export interface InstructionToolboxItem extends ToolboxItem {
   params: any[];
   events: any[];
   error_codes: any[];
+  imports: { field: string; module: string; items: string[] }[];
 
   renderInstructionProperties(
     programs: { id: string; name: string }[],

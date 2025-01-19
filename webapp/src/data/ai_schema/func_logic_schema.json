@@ -2,22 +2,30 @@
     "type": "object",
     "properties": {
         "instructions": {
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-            "instruction_name": {
-                "type": "string",
-                "description": "The name of the instruction as defined in the program."
-            },
-            "function_logic": {
-                "type": "string",
-                "description": "The function logic written in Anchor / Rust for the given instruction. Do not include the function signature, imports, or other code – just the function logic inside the curly braces."
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "instruction_name": {
+                        "type": "string",
+                        "description": "The name of the instruction as defined in the program."
+                    },
+                    "function_logic": {
+                        "type": "string",
+                        "description": "The function logic written in Anchor / Rust for the given instruction. Do not include the function signature, imports, or other code – just the function logic inside the curly braces."
+                    },
+                    "additional_imports": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "A list of additional imports required for the specific instruction."
+                        },
+                        "description": "Any additional imports needed for this instruction to function correctly. Don't include any pre-existing imports."
+                    }
+                },
+                "required": ["instruction_name", "function_logic", "additional_imports"],
+                "additionalProperties": false
             }
-            },
-            "required": ["instruction_name", "function_logic"],
-            "additionalProperties": false
-        }
         }
     },
     "required": ["instructions"],

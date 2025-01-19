@@ -19,22 +19,18 @@ import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react'; 
 import { Link as RouterLink } from 'react-router-dom';
 import { 
-  generateFileTreeAndPaths, 
   getFilesToGenerate, 
   setupProjectDirectory, 
-  getExistingFilePaths,
   fetchAndExtractFilePaths,
   updateOrCreateFile,
   generateFileContent,
   getInstructionNamesSnake,
-  aiGenLogic,
-  insertAiLogicIntoFiles,
+  aiGenOutput,
+  insertAiOutputIntoFiles,
 } from '../../utils/genCodeUtils2';
 import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils';
 import { mapFileTreeNodeToItemType } from '../../utils/codePageUtils';
 import { LogEntry, useTerminalLogs } from "../../hooks/useTerminalLogs";
-import authApi from '../../services/authApi';
-import { genLogicPrompt } from '../../prompts/genLogic';
 
 
 interface genTaskProps {
@@ -298,11 +294,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               .map((detail: any) => [detail.name, detail])
         );
 
-        console.log('allFileDetails', allFileDetails);
-        console.log('instructionDetailsMap', instructionDetailsMap);
-
-        const aiLogic = await aiGenLogic(fileSet, projectContext);
-        const updatedFileSet = await insertAiLogicIntoFiles(fileSet, aiLogic, instructionDetailsMap);
+        const aiOutput = await aiGenOutput(fileSet, projectContext);
+        const updatedFileSet = await insertAiOutputIntoFiles(fileSet, aiOutput, instructionDetailsMap);
         const updatedFileArray = Array.from(updatedFileSet);
 
         const formattedContents: any = await fileApi.formatFiles(updatedFileArray.map((file) => file.content));

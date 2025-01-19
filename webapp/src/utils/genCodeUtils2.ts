@@ -198,37 +198,72 @@ export async function updateOrCreateFile(
     }
 }
 
-export function processAiOutput(aiOutput: any): { instruction_name: string; function_logic: string }[] {
+export function processAiOutput(
+  aiOutput: { 
+    instructions: { 
+      instruction_name: string; 
+      function_logic: string; 
+      additional_imports: string[] 
+    }[] 
+  }
+): {
+  instructions: { 
+    instruction_name: string; 
+    function_logic: string; 
+    additional_imports: string[] 
+  }[];
+} {
   try {
     if (typeof aiOutput === "string") {
       aiOutput = JSON.parse(aiOutput);
     }
 
-
-    if (!aiOutput || !aiOutput.instructions || !Array.isArray(aiOutput.instructions)) {
-      throw new Error("Invalid AI output structure");
+    if (!aiOutput || typeof aiOutput !== "object") {
+      throw new Error("Invalid AI output structure: aiOutput is not an object");
     }
 
-    return aiOutput.instructions.map((instruction: any) => {
-      if (!instruction.instruction_name || !instruction.function_logic) {
-        console.warn("Instruction missing name or function logic:", instruction);
-        return null;
-      }
-      return {
-        instruction_name: instruction.instruction_name,
-        function_logic: instruction.function_logic,
-      };
-    }).filter((item: any) => item !== null);
+    const { instructions = [] } = aiOutput;
+
+    if (!Array.isArray(instructions)) {
+      throw new Error("Invalid AI output structure: instructions is not an array");
+    }
+
+    const processedInstructions = instructions
+      .map((instruction: any) => {
+        if (
+          !instruction.instruction_name ||
+          !instruction.function_logic ||
+          !Array.isArray(instruction.additional_imports)
+        ) {
+          console.warn("Instruction missing required fields or invalid structure:", instruction);
+          return null;
+        }
+
+        return {
+          instruction_name: instruction.instruction_name,
+          function_logic: instruction.function_logic,
+          additional_imports: instruction.additional_imports,
+        };
+      })
+      .filter((item: any) => item !== null);
+
+    return {
+      instructions: processedInstructions as { 
+        instruction_name: string; 
+        function_logic: string; 
+        additional_imports: string[] 
+      }[]
+    };
   } catch (error) {
     console.error("Error processing AI output:", error);
-    return [];
+    return { instructions: [] };
   }
 }
 
-export async function aiGenLogic(
+export async function aiGenOutput(
   fileSet: Set<{ name: string; path: string; content: string }>,
   projectContext: any
-): Promise<{ instruction_name: string; function_logic: string }[]> {
+): Promise<{ instruction_name: string; function_logic: string; additional_imports: string[] }[]> {
   try {
     const _idl = projectContext.details.designIdl;
     const _description = projectContext.description;
@@ -236,8 +271,7 @@ export async function aiGenLogic(
     const _schema = func_logic_schema;
 
     const aiOutput = await promptAI(_prompt, _schema);
-    // console.log('aiOutput', aiOutput);
-    return processAiOutput(aiOutput);
+    return processAiOutput(aiOutput).instructions;
   } catch (error) {
     console.error("Error calling AI API for function logic:", error);
     return [];
@@ -289,6 +323,7 @@ export async function getDetailsByFileType(
                 fields: event.fields,
               })) || [],
             function_logic: "",
+            imports: item.imports || [],
           };
         })
         .filter((detail: any) => detail !== null);
@@ -365,6 +400,7 @@ export async function generateFileContent(
       console.error(`No matching instruction details found for ${file_name}`);
       return { fileDetails: [], codeContent: '' };
     }
+    console.log("matchingInstructionDetails", matchingInstructionDetails);
     codeContent = getInstructionTemplate(matchingInstructionDetails);
   } else {
     switch (file_name) {
@@ -393,17 +429,22 @@ export async function generateFileContent(
   return { fileDetails, codeContent };
 }
 
-export async function insertAiLogicIntoFiles(
+export async function insertAiOutputIntoFiles(
   fileSet: Set<{ name: string; path: string; content: string }>,
-  aiLogic: { instruction_name: string; function_logic: string }[],
+  aiOutput: { instruction_name: string; function_logic: string }[],
   details: Map<string, any>
 ): Promise<Set<{ name: string; path: string; content: string }>> {
   const updatedFileSet = new Set<{ name: string; path: string; content: string }>();
 
-  const aiLogicMap = aiLogic.reduce((map, logic) => {
-    map[logic.instruction_name] = logic.function_logic;
+  console.log("aiOutput", aiOutput);
+
+  // Map AI output for quick access
+  const aiOutputMap = aiOutput.reduce((map, output) => {
+    map[output.instruction_name] = {
+      function_logic: output.function_logic,
+    };
     return map;
-  }, {} as Record<string, string>);
+  }, {} as Record<string, { function_logic: string }>);
 
   for (const file of fileSet) {
     const isInstructionFile = file.path.includes("/instructions/") && file.name !== "mod.rs";
@@ -411,19 +452,17 @@ export async function insertAiLogicIntoFiles(
 
     if (isInstructionFile) {
       const instructionName = file.name.replace(".rs", "");
-      const functionLogic = aiLogicMap[instructionName];
+      const instructionData = aiOutputMap[instructionName];
 
-      console.log('instructionName', instructionName);
-      console.log('functionLogic', functionLogic);
-      if (functionLogic && details) {
-        console.log('details', details);
+      if (instructionData && details.has(instructionName)) {
+        const { function_logic } = instructionData;
         const { context_name, params_name } = details.get(instructionName);
 
-        // Check if ctx or params are used in the logic
-        const usesCtx = /ctx\./.test(functionLogic);
-        const usesParams = /params\./.test(functionLogic);
+        // Check for `ctx` and `params` usage in the logic
+        const usesCtx = /ctx\./.test(function_logic);
+        const usesParams = /params\./.test(function_logic);
 
-        // Replace placeholders with adjusted function signature
+        // Update function signature based on `ctx` and `params` usage
         updatedContent = updatedContent.replace(
           /(pub fn \w+\()ctx: Context<\w+>, params: \w+\)/,
           (match, start) => {
@@ -433,8 +472,8 @@ export async function insertAiLogicIntoFiles(
           }
         );
 
-        console.log('updatedContent', updatedContent);
-        updatedContent = updatedContent.replace("// AI_FUNCTION_LOGIC", functionLogic);
+        // Replace the AI function logic placeholder
+        updatedContent = updatedContent.replace("// AI_FUNCTION_LOGIC", function_logic);
       } else {
         console.warn(`No AI logic or details found for instruction: ${instructionName}`);
       }

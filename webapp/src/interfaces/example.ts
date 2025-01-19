@@ -1,8 +1,11 @@
+import { Token } from "monaco-editor";
 import { counterProgram } from "../data/examples/counterProgram";
 import { Project } from "./project";
+import { tokenTransferProgram } from "../data/examples/tokenTransfer";
 
 export const predefinedProjects: Record<string, Project> = {
   Counter: counterProgram,
+  TokenTransfer: tokenTransferProgram,
 };  
 
 export interface ProjectExample {

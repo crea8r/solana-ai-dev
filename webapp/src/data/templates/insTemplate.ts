@@ -1,6 +1,6 @@
 export const getInstructionTemplate = (
     details: any,
-    _functionLogic: string = "// AI_FUNCTION_LOGIC"
+    _functionLogic: string = "// AI_FUNCTION_LOGIC",
   ): string => {
     const docComment = details.doc_description
     ? `#[doc = r"${details.doc_description}"]`
@@ -9,6 +9,13 @@ export const getInstructionTemplate = (
     const contextStructName = details.context_name;
     const paramsStructName = details.params_name;
     const errorEnumName = details.error_enum_name;
+
+    const parsedImports = details.imports
+      .map(
+        ({ module, items }: any) =>
+          `use ${module}::${items.length === 1 && items[0] === "*" ? "*" : `{${items.join(", ")}}`};`
+      )
+      .join("\n");
 
     const accountsStruct = (details.accounts || [])
       .map(({ name, type, constraints }: any) => {
@@ -26,12 +33,11 @@ export const getInstructionTemplate = (
           return `${accountConstraints}    pub ${name.snake}: Sysvar<'info, Rent>,`;
         }
         return `${accountConstraints}    pub ${name.snake}: ${type},`;
-      })
-      .join('\n');
+      }).join('\n');
   
     const paramsStruct = (details.params || [])
         .map(({ name, type }: any) => {
-            return `    pub ${name.snake}: ${type},`;
+            return `    pub ${name}: ${type},`;
         })
         .join('\n');
 
@@ -47,6 +53,7 @@ export const getInstructionTemplate = (
     return `
     use anchor_lang::prelude::*;
     use crate::state::*;
+    ${parsedImports}
   
     ${docComment}
     pub fn ${instructionName}(ctx: Context<${contextStructName}>, params: ${paramsStructName}) -> Result<()> {
