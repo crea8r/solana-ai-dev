@@ -264,6 +264,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         const filesToGenerate = getFilesToGenerate(programName, instructionNamesSnake);
 
         const fileSet = new Set<{ name: string; path: string; content: string }>();
+        let allFileDetails: any[] = [];
+
         for (const fileTask of filesToGenerate) {
           if (processedFilesSet.has(fileTask.path || '')) continue;
 
@@ -274,10 +276,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             if (!filePath || !fileName) throw new Error('File path or file name is undefined');
             const programId = await extractProgramIdFromAnchorToml(projectId, programName);
 
-            const fileContent = await generateFileContent(fileTask, programName, nodes, programId, projectContext);
-            console.log('fileContent', fileContent);
-            fileSet.add({ name: fileName, path: filePath, content: fileContent });
-            console.log('fileSet', fileSet);
+            const { fileDetails, codeContent } = await generateFileContent(fileTask, programName, nodes, programId, projectContext);
+
+            fileSet.add({ name: fileName, path: filePath, content: codeContent });
+            allFileDetails.push(fileDetails);
+            console.log('fileDetails', fileDetails);
   
             if (fileTask.path) processedFilesSet.add(fileTask.path);
             else throw new Error('File path is undefined');
@@ -287,8 +290,19 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           }
         }
 
+        const flatFileDetails = allFileDetails.flat();
+
+        const instructionDetailsMap = new Map(
+            flatFileDetails
+              .filter((detail: any) => detail.context_name && detail.params_name)
+              .map((detail: any) => [detail.name, detail])
+        );
+
+        console.log('allFileDetails', allFileDetails);
+        console.log('instructionDetailsMap', instructionDetailsMap);
+
         const aiLogic = await aiGenLogic(fileSet, projectContext);
-        const updatedFileSet = await insertAiLogicIntoFiles(fileSet, aiLogic);
+        const updatedFileSet = await insertAiLogicIntoFiles(fileSet, aiLogic, instructionDetailsMap);
         const updatedFileArray = Array.from(updatedFileSet);
 
         const formattedContents: any = await fileApi.formatFiles(updatedFileArray.map((file) => file.content));
@@ -297,9 +311,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           file.content = formattedContents[index];
         });
 
-        for (const file of updatedFileArray) {
-            await updateOrCreateFile(projectId, file.path, file.content, existingFilePaths);
-        }
+        for (const file of updatedFileArray) {  await updateOrCreateFile(projectId, file.path, file.content, existingFilePaths); }
 
         const programId = await extractProgramIdFromAnchorToml(projectId, programName);
         setProjectContext((prevProjectContext) => ({

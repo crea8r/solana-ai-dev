@@ -83,7 +83,7 @@ export async function setupProjectDirectory(
     await amendConfigFile(userId, projectId, "Cargo.toml", cargoFilePath, normalizedProgramName);
     await amendConfigFile(userId, projectId, "Anchor.toml", anchorFilePath, normalizedProgramName);
 
-    console.log(`Project directory setup completed for ${normalizedProgramName}`);
+    //console.log(`Project directory setup completed for ${normalizedProgramName}`);
   } catch (error) {
     console.error("Error during project directory setup:", error);
   }
@@ -187,10 +187,10 @@ export async function updateOrCreateFile(
     try {
       if (existingFilePaths.has(filePath)) {
         await fileApi.updateFile(projectId, filePath, codeContent);
-        console.log(`Updated file: ${filePath}`);
+        //console.log(`Updated file: ${filePath}`);
       } else {
         await fileApi.createFile(projectId, filePath, codeContent);
-        console.log(`Created new file: ${filePath}`);
+        //console.log(`Created new file: ${filePath}`);
       }
     } catch (error) {
       console.error(`Error handling file ${filePath}:`, error);
@@ -201,11 +201,9 @@ export async function updateOrCreateFile(
 export function processAiOutput(aiOutput: any): { instruction_name: string; function_logic: string }[] {
   try {
     if (typeof aiOutput === "string") {
-      console.log("Parsing aiOutput string into an object...");
       aiOutput = JSON.parse(aiOutput);
     }
 
-    console.log("Parsed aiOutput:", aiOutput);
 
     if (!aiOutput || !aiOutput.instructions || !Array.isArray(aiOutput.instructions)) {
       throw new Error("Invalid AI output structure");
@@ -238,7 +236,7 @@ export async function aiGenLogic(
     const _schema = func_logic_schema;
 
     const aiOutput = await promptAI(_prompt, _schema);
-    console.log('aiOutput', aiOutput);
+    // console.log('aiOutput', aiOutput);
     return processAiOutput(aiOutput);
   } catch (error) {
     console.error("Error calling AI API for function logic:", error);
@@ -253,10 +251,7 @@ export async function getDetailsByFileType(
   programId: string,
   projectContext: any
 ): Promise<any[] | any> {
-  if (!nodes) {
-    console.error("Invalid project context or missing nodes.");
-    return [];
-  }
+  if (!nodes) { console.error("Invalid project context or missing nodes."); return []; }
 
   switch (fileType) {
     case "instruction":
@@ -264,10 +259,7 @@ export async function getDetailsByFileType(
         .filter((node: any) => node.type === "instruction")
         .map((node: any) => {
           const item = node.data?.item;
-          if (!item) {
-            console.warn("Instruction node missing details:", node);
-            return null;
-          }
+          if (!item) { console.warn("Instruction node missing details:", node); return null;  }
           return {
             name: item.name.snake,
             context_name: `${item.name.pascal}`,
@@ -285,10 +277,11 @@ export async function getDetailsByFileType(
                 name: param.name,
                 type: param.type,
               })) || [],
-            error_codes:
+            error_codes: 
               item.error_codes?.map((error: any) => ({
+                code: error.code,
                 name: error.name,
-                description: error.description,
+                msg: error.msg, 
               })) || [],
             events:
               item.events?.map((event: any) => ({
@@ -311,8 +304,10 @@ export async function getDetailsByFileType(
           }
           return {
             account_name: item.name?.pascal,
-            struct_name: `${item.name?.pascal}Struct`,
+            struct_name: `${item.name?.pascal}`,
             fields: item.fields || [],
+            description: item.description || "",
+            role: item.role || "",
           };
         })
         .filter((detail: any) => detail !== null);
@@ -328,7 +323,7 @@ export async function getDetailsByFileType(
           }
           return {
             instruction_name: item.name.snake,
-            context: `${item.name.pascal}Context`,
+            context: `${item.name.pascal}`,
             params: `${item.name.pascal}Params`,
             description: item.description || "No description provided",
             program_name: programName,
@@ -358,7 +353,7 @@ export async function generateFileContent(
   nodes: any[],
   programId: string,
   projectContext: any
-): Promise<string> {
+): Promise<{ fileDetails: any[]; codeContent: string }> {
   let codeContent = '';
   let fileDetails: any[] = [];
   const file_name = fileTask.name.replace('.rs', '');
@@ -366,13 +361,15 @@ export async function generateFileContent(
   if (fileTask.path.includes('/instructions/') && file_name !== 'mod') {
     fileDetails = await getDetailsByFileType(nodes, 'instruction', programName, programId, projectContext);
     const matchingInstructionDetails = fileDetails.find((detail) => detail.name === file_name);
-    if (!matchingInstructionDetails) { console.error(`No matching instruction details found for ${file_name}`); return ''; }
+    if (!matchingInstructionDetails) {
+      console.error(`No matching instruction details found for ${file_name}`);
+      return { fileDetails: [], codeContent: '' };
+    }
     codeContent = getInstructionTemplate(matchingInstructionDetails);
   } else {
     switch (file_name) {
       case 'lib':
         fileDetails = await getDetailsByFileType(nodes, 'lib', programName, programId, projectContext);
-        console.log("fileDetails lib", fileDetails);
         codeContent = getLibRsTemplate(programName, programId, fileDetails);
         break;
 
@@ -384,25 +381,25 @@ export async function generateFileContent(
 
       case 'mod':
         fileDetails = await getDetailsByFileType(nodes, 'mod', programName, programId, projectContext);
-        console.log("fileDetails mod", fileDetails);
         codeContent = getModRsTemplate(fileDetails);
         break;
 
       default:
         console.warn('Unknown file type for:', fileTask.name);
-        return '';
+        return { fileDetails: [], codeContent: '' };
     }
   }
-  return codeContent;
+
+  return { fileDetails, codeContent };
 }
 
 export async function insertAiLogicIntoFiles(
   fileSet: Set<{ name: string; path: string; content: string }>,
-  aiLogic: { instruction_name: string; function_logic: string }[]
+  aiLogic: { instruction_name: string; function_logic: string }[],
+  details: Map<string, any>
 ): Promise<Set<{ name: string; path: string; content: string }>> {
   const updatedFileSet = new Set<{ name: string; path: string; content: string }>();
 
-  // Create a map for quick lookup of AI logic by instruction name
   const aiLogicMap = aiLogic.reduce((map, logic) => {
     map[logic.instruction_name] = logic.function_logic;
     return map;
@@ -413,19 +410,36 @@ export async function insertAiLogicIntoFiles(
     let updatedContent = file.content;
 
     if (isInstructionFile) {
-      // Extract the instruction name from the file name (remove `.rs` extension)
       const instructionName = file.name.replace(".rs", "");
       const functionLogic = aiLogicMap[instructionName];
 
-      if (functionLogic) {
-        // Replace the placeholder with the AI-generated logic
+      console.log('instructionName', instructionName);
+      console.log('functionLogic', functionLogic);
+      if (functionLogic && details) {
+        console.log('details', details);
+        const { context_name, params_name } = details.get(instructionName);
+
+        // Check if ctx or params are used in the logic
+        const usesCtx = /ctx\./.test(functionLogic);
+        const usesParams = /params\./.test(functionLogic);
+
+        // Replace placeholders with adjusted function signature
+        updatedContent = updatedContent.replace(
+          /(pub fn \w+\()ctx: Context<\w+>, params: \w+\)/,
+          (match, start) => {
+            const ctxPrefix = usesCtx ? "ctx" : "_ctx";
+            const paramsPrefix = usesParams ? "params" : "_params";
+            return `${start}${ctxPrefix}: Context<${context_name}>, ${paramsPrefix}: ${params_name})`;
+          }
+        );
+
+        console.log('updatedContent', updatedContent);
         updatedContent = updatedContent.replace("// AI_FUNCTION_LOGIC", functionLogic);
       } else {
-        console.warn(`No AI logic found for instruction: ${instructionName}`);
+        console.warn(`No AI logic or details found for instruction: ${instructionName}`);
       }
     }
 
-    // Add the updated file back to the set
     updatedFileSet.add({ ...file, content: updatedContent });
   }
 

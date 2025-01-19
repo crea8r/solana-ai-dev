@@ -13,6 +13,7 @@ export class Account implements ToolboxItem {
   type: 'account' = 'account';
   name: { snake: string; pascal: string };
   description: string;
+  role: string;
   is_mutable: boolean;
   is_signer: boolean;
   fields: { name: string; type: string }[];
@@ -21,13 +22,15 @@ export class Account implements ToolboxItem {
     id: string,
     name: { snake: string; pascal: string } = { snake: 'account', pascal: 'Account' },
     description: string = '',
+    role: string = '',
     is_mutable: boolean = true,
     is_signer: boolean = false,
-    fields: { name: string; type: string }[] = [] 
+    fields: { name: string; type: string }[] = [],
   ) {
     this.identifier = id;
     this.name = name;
     this.description = description;
+    this.role = role;
     this.is_mutable = is_mutable;
     this.is_signer = is_signer;
     this.fields = fields;
@@ -40,15 +43,21 @@ export class Account implements ToolboxItem {
   setNamePascal(name: string): void { this.name.pascal = name; }
 
   getDescription(): string {  return this.description; }
+  setDescription(description: string): void { this.description = description; }
 
-  setDescription(description: string): void {
-    this.description = description;
-  }
+  getRole(): string { return this.role; }
+  setRole(role: string): void { this.role = role; }
 
-  getType(): 'account' { return this.type; }
+  getIsMutable(): boolean { return this.is_mutable; }
+  setIsMutable(is_mutable: boolean): void { this.is_mutable = is_mutable; }
+
+  getIsSigner(): boolean { return this.is_signer; }
+  setIsSigner(is_signer: boolean): void { this.is_signer = is_signer; }
 
   getFields(): { name: string; type: string }[] { return this.fields; }
   setFields(fields: { name: string; type: string }[]): void { this.fields = fields; }
+
+  getType(): 'account' { return this.type; }
 
   toNode(position: { x: number; y: number }): Node {
     return {
@@ -270,19 +279,4 @@ export class Account implements ToolboxItem {
     );
   });
 
-  getIsMutable(): boolean {
-    return this.is_mutable;
-  }
-
-  getIsSigner(): boolean {
-    return this.is_signer;
-  }
-
-  setIsMutable(is_mutable: boolean): void {
-    this.is_mutable = is_mutable;
-  }
-
-  setIsSigner(is_signer: boolean): void {
-    this.is_signer = is_signer;
-  }
 }

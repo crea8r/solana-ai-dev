@@ -134,16 +134,18 @@ const Canvas: React.FC<CanvasProps> = ({
             description,
             is_mutable,
             is_signer,
-            fields
+            fields,
+            role
           } = node.data.item;
         
           node.data.item = new Account(
             identifier || node.id,
             name || {snake: 'account', pascal: 'Account'},
             description || '',
+            role || '',
             is_mutable ?? true,
             is_signer ?? false,
-            fields || []
+            fields || [],
           );
       
           const account = node.data.item as Account;
@@ -153,6 +155,7 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.is_mutable) account.setIsMutable(node.data.is_mutable);
           if (node.data.is_signer) account.setIsSigner(node.data.is_signer);
           if (node.data.fields) account.setFields(node.data.fields);
+          if (node.data.role) account.setRole(node.data.role);
         }
         
       });

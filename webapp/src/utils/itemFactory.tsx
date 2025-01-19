@@ -15,6 +15,7 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
         accountData?.identifier || `account-${Date.now()}`,
         accountData?.name || {snake: 'account', pascal: 'Account'},
         accountData?.description || '',
+        accountData?.role || '',
         accountData?.is_mutable ?? true,
         accountData?.is_signer ?? false,
         accountData?.fields || []
@@ -60,6 +61,7 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.identifier,
         data.name || {snake: 'account', pascal: 'Account'},
         data.description || '',
+        data.role || '',
         data.is_mutable ?? true,
         data.is_signer ?? false,
         data.fields || []

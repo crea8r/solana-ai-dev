@@ -1,28 +1,22 @@
 export const getStateTemplate = (
-  nodes: {
-    type: string;
-    data: {
-      item: {
-        name: { pascal: string };
-        description?: string;
-        fields: { name: string; type: string; attributes?: string[] }[];
-      };
-    };
+  fileDetails: {
+    account_name: string;
+    struct_name: string;
+    fields: { name: string; type: string; attributes?: string[] }[];
+    description?: string;
+    role: string;
   }[]
 ): string => {
-  const accountNodes = nodes.filter((node) => node.type === 'account');
+  // Filter program-defined accounts based on the 'role'
+  const programAccountDetails = fileDetails.filter((detail) => detail.role === 'program_account');
 
-  const accounts = accountNodes
-    .map(({ data: { item } }) => {
-      const account_name = item.name.pascal;
-      const struct_name = `${item.name.pascal}Struct`;
-      const description = item.description;
-      const fields = item.fields;
-
+  // Generate the Rust structs for each program-defined account
+  const accounts = programAccountDetails
+    .map(({ account_name, struct_name, fields, description }) => {
       const fieldsStr = fields
         .map(({ name, type, attributes }) => {
           const attributeStr = attributes?.length
-            ? attributes.map(attr => `    #[${attr}]`).join('\n') + '\n'
+            ? attributes.map((attr) => `    #[${attr}]`).join('\n') + '\n'
             : '';
           return `${attributeStr}    pub ${name}: ${type},`;
         })

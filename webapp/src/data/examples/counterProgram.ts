@@ -171,6 +171,7 @@ const _nodes = [
         id: "account1-10001",
         name: {snake: 'counter_account', pascal: 'CounterAccount'},
         description: "Stores the counter value and initializer’s public key.",
+        role: 'program_account',
         is_mutable: true,
         is_signer: false,
         fields: [
@@ -195,6 +196,7 @@ const _nodes = [
         id: "account2-10001",
         name: { snake: "initializer", pascal: "Initializer" },
         description: "The account that initializes and owns the CounterAccount.",
+        role: 'signer_account',
         is_mutable: true,
         is_signer: true,
         fields: [
@@ -218,6 +220,7 @@ const _nodes = [
         id: "account3-10001",
         name: { snake: "user", pascal: "User" },
         description: "The account of the user performing counter increments.",
+        role: 'signer_account',
         is_mutable: false,
         is_signer: true,
         fields: [
@@ -244,33 +247,28 @@ const _nodes = [
         docs_description: "This function initializes a counter account, setting its initial value to zero.",
         accounts: [
           {
-            "name": "initializer",
+            "name": {snake: "authority", pascal: "Authority"},
             "type": "Signer",
-            "constraints": [ "mut" ]
+            "constraints": ["mut"]
           },
           {
-            "name": "counter_account",
+            "name": {snake: "counter_account", pascal: "CounterAccount"},
             "type": "Account",
             "constraints": [
               "init",
-              "seeds = [b\"counter\", initializer.key().as_ref()]",
+              "seeds = [b\"counter\", authority.key().as_ref()]",
               "bump",
-              "payer = initializer",
+              "payer = authority",
               "space = 8 + 16"
             ]
           },
           {
-            "name": "system_program",
+            "name": { snake: "system_program", pascal: "System" },
             "type": "Program",
-            "constraints": []
-          },
-          {
-            "name": "rent",
-            "type": "Sysvar",
             "constraints": []
           }
         ],
-        params: [ { name: "initializer", type: "Pubkey" } ],
+        params: [ { name: {snake: "authority", pascal: "Authority"}, type: "Pubkey" } ],
         error_codes: [
           {
             code: 100,
@@ -313,27 +311,23 @@ const _nodes = [
         docs_description: "This function increments the counter value by one for the specified account.",
         accounts: [
           {
-            "name": "user",
-            "type": "AccountInfo",
-            "attributes": [
-              "signer"
-            ]
+            "name": {snake: "user", pascal: "User"},
+            "type": "Signer",
+            "constraints": []
           },
           {
-            "name": "counter_account",
-            "type": "AccountInfo",
-            "attributes": [
-              "mut"
-            ]
+            "name": {snake: "counter_account", pascal: "CounterAccount"},
+            "type": "Account",
+            "constraints": ["mut"]
           }
         ],
         params: [
           {
-            name: "counter_account",
-            type: "AccountInfo"
+            name: {snake: "counter_account", pascal: "CounterAccount"},
+            type: "Pubkey"
           },
           {
-            name: "user",
+            name: {snake: "user", pascal: "User"},
             type: "Pubkey"
           }
         ],
@@ -384,14 +378,25 @@ const _nodes = [
         name: {snake: "reset_counter", pascal: "ResetCounter"},
         description: "Resets the counter value to zero for a specified CounterAccount.",
         docs_description: "This function resets the counter value to zero, only the initializer can perform this action.",
-        accounts: ["counter_account", "initializer"],
-        params: [
+        accounts: [
           {
-            name: "counter_account",
-            type: "AccountInfo"
+            name: {snake: "counter_account", pascal: "CounterAccount"},
+            type: "Account",
+            constraints: ["mut"]
           },
           {
-            name: "initializer",
+            name: {snake: "authority", pascal: "Authority"},
+            type: "Signer",
+            constraints: []
+          }
+        ],
+        params: [
+          {
+            name: {snake: "counter_account", pascal: "CounterAccount"},
+            type: "Pubkey"
+          },
+          {
+            name: {snake: "authority", pascal: "Authority"},
             type: "Pubkey"
           }
         ],

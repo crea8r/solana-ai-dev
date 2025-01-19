@@ -57,14 +57,8 @@ export interface ProgramToolboxItem extends ToolboxItem {
 
 export interface InstructionToolboxItem extends ToolboxItem {
   type: 'instruction';
-  accounts: {name: string; type: string; constraints?: string[]}[];
-  params: {
-    name: string;
-    type: string;
-    input_source?: string[];
-    default_value?: string;
-    validation?: string[];
-  }[];
+  accounts: any[];
+  params: any[];
   events: any[];
   error_codes: any[];
 
@@ -77,6 +71,7 @@ export interface InstructionToolboxItem extends ToolboxItem {
 
 export interface AccountToolboxItem extends ToolboxItem {
   type: 'account';
+  role: string;
   is_mutable: boolean;
   is_signer: boolean;
   fields: { name: string; type: string }[];

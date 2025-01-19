@@ -10,12 +10,30 @@ export const getInstructionTemplate = (
     const paramsStructName = details.params_name;
     const errorEnumName = details.error_enum_name;
 
-    const accountsStruct = (details.accounts).map(({ name, type, constraints }: any) => {
+    const accountsStruct = (details.accounts || [])
+      .map(({ name, type, constraints }: any) => {
         const accountConstraints = constraints?.length > 0 ? `#[account(${constraints.join(", ")})]\n` : '';
-        return `${accountConstraints}    pub ${name}: ${type},`;
-    }).join('\n');
+        if (type === "Account") {
+          return `${accountConstraints}    pub ${name.snake}: Account<'info, ${name.pascal}>,`;
+        }
+        if (type === "Signer") {
+          return `${accountConstraints}    pub ${name.snake}: Signer<'info>,`;
+        }
+        if (type === "Program") {
+          return `${accountConstraints}    pub ${name.snake}: Program<'info, System>,`;
+        }
+        if (type === "Sysvar") {
+          return `${accountConstraints}    pub ${name.snake}: Sysvar<'info, Rent>,`;
+        }
+        return `${accountConstraints}    pub ${name.snake}: ${type},`;
+      })
+      .join('\n');
   
-    const paramsStruct = (details.params || []).map(({ name, type }: any) => `    pub ${name}: ${type},`).join('\n');
+    const paramsStruct = (details.params || [])
+        .map(({ name, type }: any) => {
+            return `    pub ${name.snake}: ${type},`;
+        })
+        .join('\n');
 
     const eventsStruct = (details.events || []).map((event: any) => `
         #[event]
