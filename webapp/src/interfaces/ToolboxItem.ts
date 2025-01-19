@@ -29,9 +29,10 @@ export interface ToolboxItem {
 export interface ProgramToolboxItem extends ToolboxItem {
   type: 'program';
   programId: string;
+  isPublic: boolean;
+  version: string;
   account: string[];
   instruction: string[];
-  isPublic: boolean;
 
   getProgramId(): string;
   setProgramId(programId: string): void;
@@ -47,11 +48,6 @@ export interface ProgramToolboxItem extends ToolboxItem {
     connectedInstructions: { id: string; name: string }[],
     handleAddInstruction: (instructionId: string) => void,
     handleRemoveInstruction: (instructionId: string) => void,
-    version: string,
-    description: string,
-    tags: string[],
-    events: { name: string; fields: { name: string; type: string }[] }[],
-    errorCodes: { code: number; name: string; msg: string }[]
   ): JSX.Element;
 }
 

@@ -88,12 +88,10 @@ const Canvas: React.FC<CanvasProps> = ({
             name,
             description,
             programId,
-            account,
-            instruction,
             isPublic,
             version,
-            events,
-            error_codes
+            account,
+            instruction,
           } = node.data.item;
         
           node.data.item = new Program(
@@ -101,12 +99,10 @@ const Canvas: React.FC<CanvasProps> = ({
             name || {snake: 'program', pascal: 'Program'},
             description || '',
             programId || '11111111111111111111111111111111',
-            account || [],
-            instruction || [],
             isPublic || false,
             version || '',
-            events || [],
-            error_codes || []
+            account || [],
+            instruction || [],
           );
         
           const program = node.data.item as Program;
@@ -114,18 +110,11 @@ const Canvas: React.FC<CanvasProps> = ({
           program.setNamePascal(name.pascal || node.data.item.name.pascal || '');
           if (node.data.description)  program.setDescription(node.data.description);
           if (node.data.programId)  program.setProgramId(node.data.programId);
-          if (node.data.account) program.setAccounts(node.data.account);
-          if (node.data.instruction) program.setInstructions(node.data.instruction);
           if (node.data.isPublic) program.setIsPublic(node.data.isPublic);
           if (node.data.version) program.setVersion(node.data.version);
-          if (node.data.events) {
-            console.log('node.data.events', node.data.events);
-            program.setEvents(node.data.events);
-          } else console.log('node.data.events is undefined');
-          if (node.data.error_codes) {
-            console.log('node.data.error_codes', node.data.error_codes);
-            program.setErrorCodes(node.data.error_codes);
-          } else console.log('node.data.error_codes is undefined');
+          if (node.data.account) program.setAccounts(node.data.account);
+          if (node.data.instruction) program.setInstructions(node.data.instruction);
+
         }
         if (node.type === 'account' && node.data.item) {
           const {

@@ -130,7 +130,7 @@ export class Instruction implements ToolboxItem {
                 <Flex direction="row" gap={4} mb={2} alignItems="center">
                   <Text fontWeight="bold" fontSize="xs">Account Name:</Text>
                   <Input
-                    value={account.name || ''}
+                    value={account.name.snake || ''}
                     placeholder="Account Name"
                     onChange={(e) =>
                       onChange('accounts', [
@@ -243,19 +243,19 @@ export class Instruction implements ToolboxItem {
           </Flex>
         </Box>
 
-        {/* Arguments Section */}
+        {/* Parameters Section */}
         <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontSize="xs" fontFamily="IBM Plex Mono">
-          <Text fontSize="sm" fontWeight="semibold" mb={5} textAlign="center">Arguments</Text>
+          <Text fontSize="sm" fontWeight="semibold" mb={5} textAlign="center">Parameters</Text>
           <Flex gap={4} mb={2}>
             <Text fontWeight="bold" fontSize="xs" flex="1" textAlign="center">Name</Text>
             <Text fontWeight="bold" fontSize="xs" flex="1" textAlign="center">Type</Text>
-            <Box width="30px"></Box> {/* Placeholder for spacing */}
+            <Box width="30px"></Box>
           </Flex>
           {values.params?.map((param: any, index: number) => (
             <Flex key={index} gap={2} mb={2} alignItems="center">
               <Input
-                placeholder="Argument Name"
-                value={param.name || ''}
+                placeholder="Parameter Name"
+                value={param.name.snake || ''}
                 onChange={(e) =>
                   onChange('params', [
                     ...values.params.slice(0, index),
@@ -284,7 +284,7 @@ export class Instruction implements ToolboxItem {
               <IconButton
                 size="xs"
                 icon={<IoIosCloseCircleOutline />}
-                aria-label="Remove argument"
+                aria-label="Remove parameter"
                 bg="transparent"
                 color="red.400"
                 _hover={{ color: 'red.600' }}

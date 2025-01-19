@@ -42,9 +42,13 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
       return Object.assign(
         new Program(
           programData?.identifier || `program-${Date.now()}`,
-          programData?.name || {snake: 'program', pascal: 'Program'},
+          programData?.name || { snake: 'program', pascal: 'Program' },
           programData?.description || '',
-          programData?.programId || '11111111111111111111111111111111'
+          programData?.programId || '11111111111111111111111111111111',
+          programData?.isPublic || true,
+          programData?.version || '',
+          programData?.account || [],
+          programData?.instruction || []
         ),
         programData
       ) as ProgramToolboxItem;
@@ -84,12 +88,10 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.name || {snake: 'program', pascal: 'Program'},
         data.description || '',
         data.programId || '11111111111111111111111111111111',
-        data.account || [],
-        data.instruction || [],
         data.is_public || true,
         data.version || '',
-        data.events || [],
-        data.error_codes || []
+        data.account || [],
+        data.instruction || [],
       ) as ProgramToolboxItem;
 
     default:

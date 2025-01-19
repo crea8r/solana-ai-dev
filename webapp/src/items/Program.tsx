@@ -20,7 +20,7 @@ export class Program implements ProgramToolboxItem {
   account: string[];
   instruction: string[];
   isPublic: boolean;
-  version?: string;
+  version: string;
   events?: { name: string; fields: { name: string; type: string }[] }[];
   errorCodes?: { code: number; name: string; msg: string }[];
 
@@ -29,24 +29,21 @@ export class Program implements ProgramToolboxItem {
     name: { snake: string; pascal: string },
     description: string,
     programId: string,
+    isPublic: boolean = true,
+    version: string = '',
     account: string[] = [],
     instruction: string[] = [],
-    isPublic: boolean = true,
-    version?: string,
-    events: { name: string; fields: { name: string; type: string }[] }[] = [],
-    errorCodes: { code: number; name: string; msg: string }[] = []
+
   ) {
     this.identifier = id;
     this.type = 'program';
     this.name = name;
     this.description = description;
     this.programId = programId;
-    this.account = account;
-    this.instruction = instruction;
     this.isPublic = isPublic;
     this.version = version;
-    this.events = events;
-    this.errorCodes = errorCodes;
+    this.account = account;
+    this.instruction = instruction;
   }
 
   getType(): 'program' { return this.type; }
@@ -62,17 +59,15 @@ export class Program implements ProgramToolboxItem {
   getProgramId(): string { return this.programId; }
   setProgramId(programId: string): void { this.programId = programId; }
 
-  setAccounts(accounts: { id: string; name: string }[]): void {
-    this.account = accounts.map((account) => account.id);
-  }
+  getIsPublic(): boolean { return this.isPublic; }
+  setIsPublic(isPublic: boolean): void { this.isPublic = isPublic; }
 
-  setInstructions(instructions: { id: string; name: string }[]): void {
-    this.instruction = instructions.map((instruction) => instruction.id);
-  }
+  getVersion(): string { return this.version || ''; }
+  setVersion(version: string): void { this.version = version; }
 
-  setIsPublic(isPublic: boolean): void {
-    this.isPublic = isPublic;
-  }
+  setAccounts(accounts: { id: string; name: string }[]): void {this.account = accounts.map((account) => account.id);}
+  setInstructions(instructions: { id: string; name: string }[]): void {this.instruction = instructions.map((instruction) => instruction.id);}
+
 
   toNode(position: { x: number; y: number }): Node {
     return {
@@ -132,11 +127,6 @@ export class Program implements ProgramToolboxItem {
     connectedInstructions: { id: string; name: string }[],
     handleAddInstruction: (instructionId: string) => void,
     handleRemoveInstruction: (instructionId: string) => void,
-    version: string,
-    description: string,
-    tags: string[],
-    events: { name: string; fields: { name: string; type: string }[] }[] = [],
-    errorCodes: { code: number; name: string; msg: string }[] = []
   ): JSX.Element {
     return (
       <VStack
@@ -324,87 +314,6 @@ export class Program implements ProgramToolboxItem {
           </Select>
         </Box>
 
-        {/* Events Section */}
-        <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontFamily="IBM Plex Mono">
-          <Flex direction="row" justifyContent="center" alignItems="center">
-            <Text fontSize="sm" fontWeight="semibold" mb={5}>
-              Events
-            </Text>
-          </Flex>
-          <Accordion allowToggle>
-            {events.length ? (
-              events.map((event, index) => (
-                <AccordionItem key={index} border="none" fontSize="xs">
-                  <h2>
-                    <AccordionButton
-                      padding="2"
-                      borderRadius="sm"
-                      bg="gray.50"
-                      fontSize="xs"
-                      _hover={{ bg: 'gray.100' }}
-                      _expanded={{ bg: 'blue.50', color: 'blue.700' }}
-                    >
-                      <Box flex="1" textAlign="left" display="flex" gap="2" alignItems="center">
-                        <Text fontWeight="semibold">{event.name}</Text>
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                  </h2>
-                  <AccordionPanel paddingY="2" pl={4}>
-                    <VStack align="start" spacing={2} pl={4}>
-                      {event.fields?.map((field, idx) => (
-                        <Box key={idx} display="flex" alignItems="center" gap="2">
-                          <Badge colorScheme="blue">{field.type}</Badge>
-                          <Text fontSize="xs">{field.name}</Text>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </AccordionPanel>
-                </AccordionItem>
-              ))
-            ) : (
-              <Text fontSize="sm" color="gray.500">No events added</Text>
-            )}
-          </Accordion>
-        </Box>
-
-        {/* Error Codes Section */}
-        <Box padding="4" border="1px solid" borderColor="gray.200" borderRadius="md" fontFamily="IBM Plex Mono">
-          <Flex direction="row" justifyContent="center" alignItems="center">
-            <Text fontSize="sm" fontWeight="semibold" mb={5}>
-              Error Codes
-            </Text>
-          </Flex>
-          <Accordion allowToggle>
-            {errorCodes.length ? (
-              errorCodes.map((error, index) => (
-                <AccordionItem key={index} border="none">
-                  <h2>
-                    <AccordionButton
-                      padding="2"
-                      borderRadius="sm"
-                      bg="gray.50"
-                      fontSize="xs"
-                      _hover={{ bg: 'gray.100' }}
-                      _expanded={{ bg: 'red.50', color: 'red.700' }}
-                    >
-                      <Box flex="1" textAlign="left" display="flex" gap="2" alignItems="center">
-                        <Badge colorScheme="red">{error.code}</Badge>
-                        <Text fontWeight="semibold">{error.name}</Text>
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                  </h2>
-                  <AccordionPanel paddingY="2" pl={4}>
-                    <Text fontSize="xs" color="gray.600">{error.msg}</Text>
-                  </AccordionPanel>
-                </AccordionItem>
-              ))
-            ) : (
-              <Text fontSize="sm" color="gray.500">No error codes added</Text>
-            )}
-          </Accordion>
-        </Box>
       </VStack>
     );
   }
@@ -414,11 +323,10 @@ export class Program implements ProgramToolboxItem {
       'name',
       'description',
       'programId',
+      'isPublic',
+      'version',
       'account',
       'instruction',
-      'isPublic',
-      'events',
-      'errorCodes'
     ];
   }
 
@@ -431,8 +339,6 @@ export class Program implements ProgramToolboxItem {
       instruction: this.instruction || [],
       isPublic: this.isPublic || false,
       version: this.version || '',
-      events: this.events || [],
-      errorCodes: this.errorCodes || [],
     };
   }
 
@@ -441,8 +347,9 @@ export class Program implements ProgramToolboxItem {
     this.description = values.description;
     if (values.programId) this.programId = values.programId;
     if (values.version) this.version = values.version;
-    this.events = values.events || [];
-    this.errorCodes = values.errorCodes || [];
+    this.account = values.account || [];
+    this.instruction = values.instruction || [];
+    this.isPublic = values.isPublic || false;
   }
 
   getIcon(): IconType {
@@ -465,9 +372,6 @@ export class Program implements ProgramToolboxItem {
       </div>
     );
   });
-
-  getVersion(): string | undefined { return this.version; }
-  setVersion(version: string): void { this.version = version; }
 
   getEvents(): { name: string; fields: { name: string; type: string }[] }[] | undefined { 
     return this.events; 

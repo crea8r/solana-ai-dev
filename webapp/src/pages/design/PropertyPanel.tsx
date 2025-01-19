@@ -281,13 +281,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     }).filter((i) => i !== null) as { id: string; name: string }[],
                   (instructionId: string) => handleAddInstruction(instructionId),
                   (instructionId: string) => handleRemoveInstruction(instructionId),
-                  localValues.name,
-                  localValues.version,
-                  localValues.description,
-                  localValues.accounts || [],
-                  localValues.tags,
-                  localValues.events || [],
-                  localValues.errorCodes || [],
                 )}
               </>
             )}
