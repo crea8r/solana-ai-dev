@@ -44,14 +44,16 @@ const Canvas: React.FC<CanvasProps> = ({
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const { setProjectContext } = useProjectContext();
+  const previousNodeCount = useRef(nodes.length);
 
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
   useEffect(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.7 }); 
+    if (reactFlowInstance && nodes.length !== previousNodeCount.current) {
+      reactFlowInstance.fitView({ padding: 0.7 });
+      previousNodeCount.current = nodes.length;
     }
-  }, [reactFlowInstance, nodes, edges]);
+  }, [reactFlowInstance, nodes.length]);
 
   const handleNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => {
