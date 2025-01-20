@@ -15,6 +15,8 @@ import { useProjectContext } from '../contexts/ProjectContext';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
 import { Account } from '../items/Account';
+import ELK from 'elkjs/lib/elk.bundled.js';
+import { TokenAccount } from '../items/Account/TokenAccount';
 
 interface CanvasProps {
   nodes: Node[];
@@ -31,6 +33,54 @@ const edgeTypes = {
   solana: CustomEdge,
 };
 
+const elk = new ELK();
+
+async function getLayoutedElements(nodes: Node[], edges: Edge[]) {
+  const graph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'radial',
+      'elk.spacing.nodeNode': '150',
+      'elk.radial.radius': '200',
+      'elk.direction': 'UNDEFINED',
+    },
+    children: nodes.map((node) => ({
+      id: node.id,
+      width: node.width || 180,
+      height: node.height || 60,
+    })),
+    edges: edges.map((edge) => ({
+      id: edge.id,
+      sources: [edge.source],
+      targets: [edge.target],
+    })),
+  };
+
+  const layoutedGraph = await elk.layout(graph);
+
+  console.log('ELK Layout Output:', layoutedGraph.children);
+  nodes.forEach((node) => {
+    const n = layoutedGraph.children?.find((c) => c.id === node.id);
+    if (!n) {
+      console.warn(`Node ${node.id} is missing in ELK layout output`);
+    }
+  });
+
+  const layoutedNodes = nodes.map((node) => {
+    const n = layoutedGraph.children?.find((c) => c.id === node.id);
+    return {
+      ...node,
+      position: { x: n?.x ?? node.position.x ?? 0, y: n?.y ?? node.position.y ?? 0 },
+      positionAbsolute: { x: n?.x ?? node.positionAbsolute?.x ?? 0, y: n?.y ?? node.positionAbsolute?.y ?? 0 },
+    };
+  });
+
+  return {
+    nodes: layoutedNodes,
+    edges,
+  };
+}
+
 const Canvas: React.FC<CanvasProps> = ({
   nodes,
   edges,
@@ -45,6 +95,7 @@ const Canvas: React.FC<CanvasProps> = ({
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const { setProjectContext } = useProjectContext();
   const previousNodeCount = useRef(nodes.length);
+  const previousEdgeCount = useRef(edges.length);
 
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
 
@@ -54,6 +105,41 @@ const Canvas: React.FC<CanvasProps> = ({
       previousNodeCount.current = nodes.length;
     }
   }, [reactFlowInstance, nodes.length]);
+
+  useEffect(() => {
+    if (!reactFlowInstance) return;
+
+    const nodeCountChanged = nodes.length !== previousNodeCount.current;
+    const edgeCountChanged = edges.length !== previousEdgeCount.current;
+
+    if (nodeCountChanged || edgeCountChanged) {
+      previousNodeCount.current = nodes.length;
+      previousEdgeCount.current = edges.length;
+
+      getLayoutedElements(nodes, edges)
+        .then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+          if (layoutedNodes.some((node) => !node.position || !node.positionAbsolute)) {
+            console.error('Invalid positions in layoutedNodes:', layoutedNodes);
+          }
+
+          setProjectContext((prev) => ({
+            ...prev,
+            details: {
+              ...prev.details,
+              nodes: layoutedNodes,
+              edges: layoutedEdges,
+            },
+          }));
+
+          requestAnimationFrame(() => {
+            reactFlowInstance.fitView({ padding: 0.8 });
+          });
+        })
+        .catch((error) => {
+          console.error('Error in ELK layout:', error);
+        });
+    }
+  }, [nodes, edges, reactFlowInstance, setProjectContext]);
 
   const handleNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => {
@@ -150,6 +236,34 @@ const Canvas: React.FC<CanvasProps> = ({
           if (node.data.fields) account.setFields(node.data.fields);
           if (node.data.role) account.setRole(node.data.role);
         }
+
+        if (node.type === 'token_account' && node.data.item) {
+          const {
+            identifier,
+            name,
+            description,
+            is_mutable,
+            is_signer,
+            fields,
+            role,
+            spl_type,
+            mint_address,
+            owner
+          } = node.data.item;
+
+          node.data.item = new TokenAccount(
+            identifier || node.id,
+            name || {snake: 'token_account', pascal: 'TokenAccount'},
+            description || '',
+            role || '',
+            is_mutable ?? true,
+            is_signer ?? false,
+            fields || [],
+            spl_type || 'token',
+            mint_address || '',
+            owner || ''
+          );
+        }
         
       });
 
@@ -181,12 +295,20 @@ const Canvas: React.FC<CanvasProps> = ({
 
       const newItem = createItem(type);
       if (newItem) {
+        console.log('newItem', newItem);
+        console.log("type", type);
         const newNode = newItem.toNode(position);
 
         if (newNode.type === "instruction" && newNode.data.item) {
           const instruction = newNode.data.item as Instruction;
           instruction.setDescription("New instruction description");
           instruction.setParams([{ name: "param1", type: "u64" }]);
+        }
+
+        if (newNode.type === "token_account" && newNode.data.item) {
+          const tokenAccount = newNode.data.item as TokenAccount;
+          tokenAccount.mint_address = "New mint address";
+          tokenAccount.owner = "New owner address";
         }
 
         onAddNode(newNode);

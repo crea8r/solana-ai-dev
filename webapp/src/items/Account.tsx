@@ -57,14 +57,16 @@ export class Account implements ToolboxItem {
   getFields(): { name: string; type: string }[] { return this.fields; }
   setFields(fields: { name: string; type: string }[]): void { this.fields = fields; }
 
-  getType(): 'account' { return this.type; }
+  getType(): 'account' | 'token_account' {
+    return 'account';
+  }
 
   toNode(position: { x: number; y: number }): Node {
     return {
       id: this.identifier,
       type: 'account',
       position,
-      data: { label: this.name, item: this },
+      data: { label: pascalToSpaced(this.name.pascal), item: this },
     };
   }
 

@@ -13,7 +13,6 @@ export interface ToolboxItem {
   setNamePascal(name: string): void;
   getDescription(): string;
   setDescription(description: string): void;
-  getType(): 'account' | 'instruction' | 'program';
   toNode(position: { x: number; y: number }): Node;
   renderProperties(
     programs: { id: string; name: string }[],
@@ -79,4 +78,16 @@ export interface AccountToolboxItem extends ToolboxItem {
   ): JSX.Element;
 }
 
-export type ToolboxItemUnion = ProgramToolboxItem | InstructionToolboxItem | AccountToolboxItem;
+export interface TokenAccountToolboxItem extends AccountToolboxItem {
+  type: 'account';
+  spl_type: 'mint' | 'token';
+  mint_address: string;
+  owner: string;
+}
+
+
+export type ToolboxItemUnion = 
+  ProgramToolboxItem |
+  InstructionToolboxItem |
+  AccountToolboxItem |
+  TokenAccountToolboxItem;

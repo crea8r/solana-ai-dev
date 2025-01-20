@@ -17,9 +17,11 @@ import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
+import { TokenAccount } from '../items/Account/TokenAccount';
 
 const toolboxItems = [
   new Account("", {snake: 'account', pascal: 'Account'}, 'Account', "", true, false, [{name: 'field1', type: 'u64'}, {name: 'field2', type: 'u64'}]),
+  new TokenAccount("", {snake: 'token_account', pascal: 'TokenAccount'}, 'Token Account', "", true, false, [{name: 'field1', type: 'u64'}, {name: 'field2', type: 'u64'}]),
   new Instruction("", {snake: 'instruction', pascal: 'Instruction'}, 'Instruction', [], [], [], []),
   new Program("", {snake: 'program', pascal: 'Program'}, 'Program', '11111111111111111111111111111111'),
 ];

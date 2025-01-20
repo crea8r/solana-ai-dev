@@ -74,7 +74,7 @@ export class Program implements ProgramToolboxItem {
       id: this.identifier,
       type: 'program',
       position,
-      data: { label: this.name, item: this },
+      data: { label: pascalToSpaced(this.name.pascal), item: this },
     };
   }
 

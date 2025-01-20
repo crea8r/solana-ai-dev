@@ -1,11 +1,12 @@
 import { NodeTypes } from 'react-flow-renderer';
-import { ToolboxItem, ToolboxItemUnion, ProgramToolboxItem, AccountToolboxItem, InstructionToolboxItem } from '../interfaces/ToolboxItem';
+import { ToolboxItem, ToolboxItemUnion, ProgramToolboxItem, AccountToolboxItem, InstructionToolboxItem, TokenAccountToolboxItem } from '../interfaces/ToolboxItem';
 import { Account } from '../items/Account';
 import { Instruction } from '../items/Instruction';
 import { Program } from '../items/Program';
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 import { pascalToSpaced } from './itemUtils';
+import { TokenAccount } from '../items/Account/TokenAccount';
 
 export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): ToolboxItemUnion | null {
   switch (type) {
@@ -23,6 +24,24 @@ export function createItem(type: string, itemData?: Partial<ToolboxItemUnion>): 
 
       Object.assign(account, accountData);
       return account as AccountToolboxItem;
+    }
+    case 'token_account': {
+      const tokenAccountData = itemData as Partial<TokenAccountToolboxItem>;
+      const tokenAccount = new TokenAccount(
+        tokenAccountData?.identifier || `token-account-${Date.now()}`,
+        tokenAccountData?.name || { snake: 'token_account', pascal: 'TokenAccount' },
+        tokenAccountData?.description || '',
+        tokenAccountData?.role || 'token_account',
+        tokenAccountData?.is_mutable ?? true,
+        tokenAccountData?.is_signer ?? false,
+        tokenAccountData?.fields || [],
+        tokenAccountData?.spl_type || 'token',
+        tokenAccountData?.mint_address || '',
+        tokenAccountData?.owner || ''
+      );
+
+      Object.assign(tokenAccount, tokenAccountData);
+      return tokenAccount as TokenAccountToolboxItem;
     }
     case 'instruction': {
       const instructionData = itemData as Partial<InstructionToolboxItem>;
@@ -72,6 +91,20 @@ export function loadItem(type: string, data: any): ToolboxItemUnion | null {
         data.fields || []
       ) as AccountToolboxItem;
 
+    case 'token_account':
+      return new TokenAccount(
+        data.identifier,
+        data.name || { snake: 'token_account', pascal: 'TokenAccount' },
+        data.description || '',
+        data.role || 'token_account',
+        data.is_mutable ?? true,
+        data.is_signer ?? false,
+        data.fields || [],
+        data.spl_type || 'token',
+        data.mint_address || '',
+        data.owner || ''
+      ) as TokenAccountToolboxItem;
+
     case 'instruction':
       return new Instruction(
         data.identifier,
@@ -120,6 +153,17 @@ const createNodeComponent = (defaultStyle: React.CSSProperties) =>
 
 export const getNodeTypes = (): NodeTypes => ({
   account: createNodeComponent({
+    background: 'white',
+    color: '#909de0',
+    fontWeight: '600',
+    letterSpacing: '0.05em',
+    fontFamily: 'IBM Plex Mono',
+    padding: 10,
+    borderRadius: 5,
+    border: '2px solid #a9b7ff',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+  }),
+  token_account: createNodeComponent({
     background: 'white',
     color: '#909de0',
     fontWeight: '600',

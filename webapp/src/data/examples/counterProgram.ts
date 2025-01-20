@@ -95,7 +95,8 @@ const _nodes = [
     height: 44,
     id: 'program1-10001',
     type: 'program',
-    position: { x: 50, y: 200 },
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: 'Counter Program',
       item: {
@@ -156,7 +157,6 @@ const _nodes = [
       ,
     },
     selected: false,
-    positionAbsolute: { x: 50, y: 200 },
   },
   // Account Node 1
   {
@@ -164,7 +164,8 @@ const _nodes = [
     height: 44,
     id: 'account1-10001',
     type: 'account',
-    position: { x: 300, y: 50 },
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: 'CounterAccount',
       item: {
@@ -181,7 +182,6 @@ const _nodes = [
       },
     },
     selected: false,
-    positionAbsolute: { x: 300, y: 50 },
   },
   // Account Node 2
   {
@@ -189,7 +189,8 @@ const _nodes = [
     height: 44,
     id: "account2-10001",
     type: "account",
-    position: { x: 100, y: 50 },  // Adjusted to be near the program
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: "Initializer",
       item: {
@@ -205,7 +206,6 @@ const _nodes = [
       }
     },
     selected: false,
-    positionAbsolute: { x: 100, y: 50 }
   },
   // Account Node 3
   {
@@ -213,7 +213,8 @@ const _nodes = [
     height: 44,
     id: "account3-10001",
     type: "account",
-    position: { x: 100, y: 120 },  // Adjusted to be near the program
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: "User",
       item: {
@@ -229,7 +230,6 @@ const _nodes = [
       }
     },
     selected: false,
-    positionAbsolute: { x: 100, y: 120 }
   },
   // Instruction Node 1 - InitializeCounter
   {
@@ -237,7 +237,8 @@ const _nodes = [
     height: 44,
     id: 'instruction1-10001',
     type: 'instruction',
-    position: { x: 300, y: 150 },
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: 'InitializeCounter',
       item: {
@@ -293,7 +294,6 @@ const _nodes = [
       ,
     },
     selected: true,
-    positionAbsolute: { x: 300, y: 150 },
   },
   // Instruction Node 2 - IncrementCounter
   {
@@ -301,7 +301,8 @@ const _nodes = [
     height: 44,
     id: 'instruction2-10001',
     type: 'instruction',
-    position: { x: 300, y: 250 },
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 }, 
     data: {
       label: 'IncrementCounter',
       item: {
@@ -362,7 +363,6 @@ const _nodes = [
       ,
     },
     selected: true,
-    positionAbsolute: { x: 300, y: 250 },
   },
   // Instruction Node 3 - ResetCounter
   {
@@ -370,7 +370,8 @@ const _nodes = [
     height: 44,
     id: 'instruction3-10001',
     type: 'instruction',
-    position: { x: 300, y: 350 },
+    position: { x: 0, y: 0 },
+    positionAbsolute: { x: 0, y: 0 },
     data: {
       label: 'ResetCounter',
       item: {
@@ -424,43 +425,27 @@ const _nodes = [
       },
     },
     selected: true,
-    positionAbsolute: { x: 300, y: 350 },
   },
 ];
 
 const _edges = [
-  {
-    id: 'edge1-10001',
-    source: 'program1-10001',
-    target: 'account1-10001',
-    type: 'solana',
-    animated: false,
-    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
-  },
-  {
-    id: 'edge-2',
-    source: 'program1-10001',
-    target: 'instruction1-10001',
-    type: 'solana',
-    animated: false,
-    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
-  },
-  {
-    id: 'edge-3',
-    source: 'program1-10001',
-    target: 'instruction2-10001',
-    type: 'solana',
-    animated: false,
-    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
-  },
-  {
-    id: 'edge-4',
-    source: 'program1-10001',
-    target: 'instruction3-10001',
-    type: 'solana',
-    animated: false,
-    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
-  },
+  // Connect Program to Instructions
+  { id: 'edge1', source: 'program1-10001', target: 'instruction1-10001', type: 'solana' },
+  { id: 'edge2', source: 'program1-10001', target: 'instruction2-10001', type: 'solana' },
+  { id: 'edge3', source: 'program1-10001', target: 'instruction3-10001', type: 'solana' },
+
+  // Connect Accounts to InitializeCounter
+  { id: 'edge4', source: 'account2-10001', target: 'instruction1-10001', type: 'solana' }, // Initializer
+  { id: 'edge5', source: 'account1-10001', target: 'instruction1-10001', type: 'solana' }, // CounterAccount
+  { id: 'edge6', source: 'account3-10001', target: 'instruction1-10001', type: 'solana' }, // SystemProgram (if needed)
+
+  // Connect Accounts to IncrementCounter
+  { id: 'edge7', source: 'account3-10001', target: 'instruction2-10001', type: 'solana' }, // User
+  { id: 'edge8', source: 'account1-10001', target: 'instruction2-10001', type: 'solana' }, // CounterAccount
+
+  // Connect Accounts to ResetCounter
+  { id: 'edge9', source: 'account2-10001', target: 'instruction3-10001', type: 'solana' }, // Initializer
+  { id: 'edge10', source: 'account1-10001', target: 'instruction3-10001', type: 'solana' }, // CounterAccount
 ];
 
 const _uiStructure = {
