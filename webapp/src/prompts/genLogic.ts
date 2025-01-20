@@ -42,8 +42,15 @@ export const genLogicPrompt = (
     - PDA Payer Name: The account paying for the PDA initialization is referred to as \`authority\`. Be consistent with this naming convention in the logic.
     - Minimize Compute Units: Write concise logic to reduce compute costs and avoid unnecessary operations.
     - Enforce Access Control: Verify that the correct signer (authority) is authorized before performing sensitive actions.
-    - Handle Errors Gracefully: Use Anchor's \`Error\` macro to define meaningful error codes and ensure robust error handling.
+    - Handle Errors Gracefully:
+      - Use Anchor's \`Error\` macro to define meaningful error codes.
+      - When formatting error messages, **always use string literals** in macros like \`format!\`, \`panic!\`, \`assert_eq!\`, and \`assert!\`.
+        - Example: \`format!("{}", ErrorCode::SomeErrorCode)\`.
+        - Avoid passing values directly without a string literal placeholder.
     - Validate Program-Derived Addresses (PDAs): Derive and verify PDAs using seeds and bumps securely within the function logic.
+    - **Always Return Values Explicitly**: 
+      - Ensure every instruction's logic concludes with the appropriate return statement, such as \`Ok(())\`, \`return Ok(())\`, or the specified return type in the function signature.
+      - This ensures compliance with Rust's type system and avoids implicit return mismatches.
 
     Task:
     Based on the program's IDL and description, generate the following:
@@ -52,6 +59,8 @@ export const genLogicPrompt = (
         - Uses \`ctx.accounts\` for validated account access when \`params\` is not applicable.
         - Adheres to the naming convention of using \`authority\` for the PDA payer.
         - Uses SPL types such as \`TokenAccount\`, \`Mint\`, and \`Token\` wherever possible for compatibility and best practices.
+        - Replaces any references to \`global_assert!\` and \`global_assert_eq!\` with \`assert!\` and \`assert_eq!\`.
+        - Ensures all formatting in macros like \`format!\`, \`panic!\`, and \`assert_eq!\` includes a string literal with placeholders where necessary.
     2. *Imports*: A list of any additional imports for each instruction file, necessary for the generated logic to function correctly. 
         - **Do not include pre-existing imports** (\`use anchor_lang::prelude::*;\` and \`use crate::state::*;\`).
         - These additional imports should include modules, crates, or macros relevant to the logic, such as:

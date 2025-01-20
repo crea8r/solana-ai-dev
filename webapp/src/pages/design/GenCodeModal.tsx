@@ -4,13 +4,8 @@ import { RefreshCw, X, CornerDownRight } from 'lucide-react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
-import { FileTreeItemType } from "../../interfaces/file";
-import genFile from "../../prompts/genFile";
-import { promptAI, promptAI_v2 } from "../../services/prompt";
 import { 
-    ensureInstructionNaming, 
     extractProgramIdFromAnchorToml, 
-    getFileList, 
     normalizeName, 
 } from '../../utils/genCodeUtils';
 import { fileApi } from '../../api/file';
@@ -93,22 +88,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const initialTasks: Task[] = [
                 {
                     id: 1,
-                    name: 'Initialize Project',
-                    status: projectContext?.details.isAnchorInit ? 'completed' : 'loading',
-                    type: 'main' as 'main',
-                },
-                {
-                    id: 2,
                     name: 'Generate Files',
-                    status: projectContext?.details.isCode ? 'completed' : 'loading',
+                    status: genCodeTaskRun ? 'completed' : 'loading',
                     type: 'main' as 'main',
                 },
-                {
-                    id: 3,
-                    name: 'Install NPM Packages',
-                    status: 'loading',
-                    type: 'main' as 'main',
-                }
             ];
 
             setTasks(initialTasks);
@@ -249,7 +232,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       if (!userId || !rootPath || !_projectName) throw new Error('User, root path, or project name is undefined');
         
       try {
-        setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'loading' } : task)) );
 
         const instructionNamesSnake = getInstructionNamesSnake(projectContext.details.nodes);
         const processedFilesSet = new Set( projectContext.details.codes?.map((code) => code.path) || [] );
@@ -316,7 +298,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
           },
         }));
           
-        setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'completed' } : task)) );
+        setTasks((prevTasks) => prevTasks.map((task) => (task.id === 1 ? { ...task, status: 'completed' } : task)) );
           
         setProjectInfoToSave((prevInfo) => ({
           ...prevInfo,
@@ -330,7 +312,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       } catch (error) {
         console.error('Error generating files:', error);
         setTasks((prevTasks) =>
-          prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'failed' } : task))
+          prevTasks.map((task) => (task.id === 1 ? { ...task, status: 'failed' } : task))
         );
       }
     };
@@ -381,6 +363,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     //console.log('task', task);
 
                     if (task.status === 'succeed' || task.status === 'warning') {
+                        /*
                         setTasks((prevTasks) =>
                             prevTasks.map((prevTask) =>
                                 prevTask.type === 'main' && prevTask.id === 1
@@ -388,6 +371,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                                     : prevTask
                             )
                         );
+                        */
                         clearInterval(interval);
 
                         setProjectContext((prevProjectContext) => ({
@@ -438,6 +422,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         setIsRegenerating(true);
 
         try {
+            // 1. Delete the existing directory.
             await fileApi.deleteDirectory(rootPath);
 
             toast({
@@ -448,6 +433,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 isClosable: true,
             });
 
+            // 2. Reset project flags so we know we need to run Anchor init & code-gen again.
             setProjectContext((prev) => ({
                 ...prev,
                 details: {
@@ -459,6 +445,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
             setTasks([]);
             tasksInitializedRef.current = false;
+
+            setGenCodeTaskRun(false);
+
             await runTasksSequentially();
 
             toast({
@@ -468,7 +457,6 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 duration: 3000,
                 isClosable: true,
             });
-
         } catch (error) {
             console.error('Error regenerating files:', error);
             toast({
@@ -511,8 +499,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                             isLoading={isRegenerating}
                             height={30}
                         >
-                            <RefreshCw className="h-3 w-3 mr-1" style={{ color: '#5688e8' }} />
-                            <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
+                            <Flex align="center" gap={2}>
+                                <RefreshCw size={16} style={{ color: '#5688e8' }} />
+                                <Text fontSize="xs" color="blue.500">Regenerate Files</Text>
+                            </Flex>
                         </Button>
                     ) : ( <Box height={30} /> )}
                     <Button
@@ -525,7 +515,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         right={2}
                         isDisabled={isCloseDisabled}
                     >
-                        <X className="h-4 w-4" />
+                        <X size={16} />
                     </Button>
                 </ModalHeader>
                 <ModalBody>
@@ -566,8 +556,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                         <Box>
                             {(projectContext.details.isCode || existingDirectory) && (
                                 <Button as={RouterLink} to="/code" variant="ghost" size="sm" colorScheme="gray">
-                                    <Text fontSize="xs" color="blue.500">View Files</Text>
-                                    <CornerDownRight className="h-3 w-3 ml-1 text-blue-500" />
+                                    <Flex align="center" gap={2}>
+                                        <Text fontSize="xs" color="blue.500">View Files</Text>
+                                        <CornerDownRight size={16} style={{ color: '#5688e8' }} />
+                                    </Flex>
                                 </Button>
                             )}
                         </Box>

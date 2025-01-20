@@ -438,7 +438,6 @@ export async function insertAiOutputIntoFiles(
 
   console.log("aiOutput", aiOutput);
 
-  // Map AI output for quick access
   const aiOutputMap = aiOutput.reduce((map, output) => {
     map[output.instruction_name] = {
       function_logic: output.function_logic,
@@ -458,11 +457,9 @@ export async function insertAiOutputIntoFiles(
         const { function_logic } = instructionData;
         const { context_name, params_name } = details.get(instructionName);
 
-        // Check for `ctx` and `params` usage in the logic
         const usesCtx = /ctx\./.test(function_logic);
         const usesParams = /params\./.test(function_logic);
 
-        // Update function signature based on `ctx` and `params` usage
         updatedContent = updatedContent.replace(
           /(pub fn \w+\()ctx: Context<\w+>, params: \w+\)/,
           (match, start) => {
@@ -472,7 +469,6 @@ export async function insertAiOutputIntoFiles(
           }
         );
 
-        // Replace the AI function logic placeholder
         updatedContent = updatedContent.replace("// AI_FUNCTION_LOGIC", function_logic);
       } else {
         console.warn(`No AI logic or details found for instruction: ${instructionName}`);

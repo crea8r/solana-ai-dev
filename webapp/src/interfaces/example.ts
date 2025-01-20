@@ -5,7 +5,7 @@ import { tokenTransferProgram } from "../data/examples/tokenTransfer";
 
 export const predefinedProjects: Record<string, Project> = {
   Counter: counterProgram,
-  TokenTransfer: tokenTransferProgram,
+  //TokenTransfer: tokenTransferProgram,
 };  
 
 export interface ProjectExample {

@@ -5,4 +5,5 @@ export interface FileTreeItemType {
   type?: 'directory' | 'file';
   children?: FileTreeItemType[];
   path?: string;
+  status?: 'pending' | 'generating' | 'generated'; 
 }
