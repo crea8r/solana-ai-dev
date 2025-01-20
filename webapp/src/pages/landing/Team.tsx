@@ -170,7 +170,7 @@ const Team = () => {
       textAlign="center"
       zIndex={1}
       w="80%"
-      h="full"
+      h="100%"
       gap={10}
     >
       <Flex direction="column" align="center" justify="center" w="full" h="full">

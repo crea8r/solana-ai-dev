@@ -13,15 +13,14 @@ import {
   ListItem,
   Collapse,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronUpIcon, CheckCircleIcon } from "@chakra-ui/icons";
+import { CheckCircleIcon } from "@chakra-ui/icons";
 import { TbProgress } from "react-icons/tb";
-import { MdFoundation } from "react-icons/md";
 import { IoIosCheckmarkCircleOutline } from "react-icons/io";
-import { HiOutlineSparkles } from "react-icons/hi2";
-import { Link as RouterLink } from "react-router-dom";
-import ParticlesContainer from "../ParticlesContainer";
-import NavBar from "./Navbar";
 import landingPageTheme from "../../theme";
+import ParticlesContainer from "../ParticlesContainer";
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
+
 
 const boxBgColor = landingPageTheme.colors.brand.boxBgColor;
 const pageBgColor = landingPageTheme.colors.brand.pageBgColor;
@@ -87,6 +86,8 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
       w="full"
       maxW="800px"
       mx="auto"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Circle
         zIndex={10}
@@ -120,21 +121,9 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
           >
             {item.title}
           </Heading>
-
-          {hasDetails && (
-            <Icon
-              as={isHovered ? ChevronUpIcon : ChevronDownIcon}
-              w={6}
-              h={6}
-              color="white"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              cursor="pointer"
-            />
-          )}
         </Flex>
         <Flex direction="column" justify="flex-start" align="flex-start" textAlign="left">
-          <Text color="#e2eaff">{item.description}</Text>
+          <Text color={completedColor}>{item.description}</Text>
           {item.status === "completed" && (
             <Flex align="center" mt={4} bg="whiteAlpha.200" p={2} borderRadius="md" gap={2}>
               <CheckCircleIcon color={completedColor} style={{ marginRight: "2px" }} />
@@ -184,15 +173,11 @@ const RoadmapItem: React.FC<{ item: RoadmapItem; index: number }> = ({ item, ind
 };
 
 const Roadmap = () => {
-  const logo = require("../../assets/brand/solai_logo.png");
   return (
-    <Box height="100vh" overflowY="auto" bg={pageBgColor} color="white">
+    <Box id="roadmap" bg={pageBgColor} color="white">
       <ParticlesContainer isDarkMode={false} />
 
-      <NavBar logoSrc={logo} />
-
-      <Flex direction="column" align="center" textAlign="center" py={20} px={8}>
-
+      <Flex direction="column" align="center" textAlign="center" py={20} px={8} bg={bgGradient}>
         <Box maxW="1100px" w="full">
           {roadmapData.map((item, index) => (
             <RoadmapItem key={index} item={item} index={index} />

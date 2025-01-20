@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Box,
   Flex,
@@ -18,14 +18,12 @@ const textColor = "#e2eaff";
 const pageBgColor = landingPageTheme.colors.brand.pageBgColor;
 
 const Contact = () => {
-  const logo = require("../../assets/brand/solai_logo.png");
 
   return (
-    <Box height="100vh" overflowY="auto" bg={pageBgColor} color="white">
+    <Box height="auto" bg={pageBgColor} color="white">
       <ParticlesContainer isDarkMode={false} />
-      <NavBar logoSrc={logo} />
 
-      <Flex direction="column" align="center" textAlign="center" py={20} px={8}>
+      <Flex direction="column" align="center" textAlign="center" bg="rgba(63, 69, 135, 0.9)">
         <Flex
           direction="column"
           align="center"
@@ -36,8 +34,6 @@ const Contact = () => {
           gap={8}
         >
           <Team />
-
-         
         </Flex>
       </Flex>
     </Box>
