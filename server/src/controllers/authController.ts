@@ -341,21 +341,32 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 };
 
-export const getUser = (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
   try {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized: No user data' });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Unauthorized: No user data' });
+    }
+
+    // Query the database for the user's latest data
+    const result = await pool.query('SELECT * FROM Creator WHERE id = $1', [req.user.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = result.rows[0];
 
     res.status(200).json({
       user: {
-        id: req.user.id,
-        username: req.user.name,
-        org_id: req.user.org_id,
-        org_name: req.user.org_name,
-        wallet_created: req.user.wallet_created,
-        private_key_viewed: req.user.private_key_viewed,
-        wallet_public_key: req.user.wallet_public_key,  
-        wallet_private_key: req.user.wallet_private_key,
-        openai_api_key: req.user.openai_api_key,
+        id: user.id,
+        username: user.username,
+        org_id: user.org_id,
+        org_name: user.org_name,
+        wallet_created: user.wallet_created,
+        private_key_viewed: user.private_key_viewed,
+        wallet_public_key: user.wallet_public_key,
+        wallet_private_key: user.wallet_private_key,
+        openai_api_key: user.openaiapikey,
       },
     });
   } catch (error) {
@@ -386,7 +397,7 @@ export const updateApiKey = async (
     await client.query('BEGIN');
 
     const result = await client.query(
-      'UPDATE Creator SET openAiApiKey = $1 WHERE id = $2 RETURNING openAiApiKey',
+      'UPDATE Creator SET openaiapikey = $1 WHERE id = $2 RETURNING openaiapikey',
       [apiKey, userId]
     );
 
@@ -398,7 +409,7 @@ export const updateApiKey = async (
 
     res.status(200).json({
       message: 'API key updated successfully',
-      openAiApiKey: result.rows[0].openAiApiKey,
+      openAiApiKey: result.rows[0].openaiapikey,
     });
   } catch (error) {
     await client.query('ROLLBACK');
