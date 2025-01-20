@@ -46,7 +46,10 @@ const CodePage = () => {
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
 
   const _handleSelectFile = useCallback(
-    (file: FileTreeItemType) => { handleSelectFileUtil( file, projectContext, setSelectedFile, setFileContent, setIsLoading ); },
+    (file: FileTreeItemType) => { 
+      console.log("Selected File:", file);
+      handleSelectFileUtil( file, projectContext, setSelectedFile, setFileContent, setIsLoading ); 
+    },
     [projectContext, setSelectedFile, setFileContent, setIsLoading]
   );
 
@@ -59,11 +62,32 @@ const CodePage = () => {
     if (projectContext.details.deployStatus === true) updateProjectInDatabase(projectContext);
   }, [projectContext.details.deployStatus]);
 
+  const normalizePath = (path: string) => path.replace(/\\/g, "/").trim();
+
+  useEffect(() => {
+    const savedFile = sessionStorage.getItem('selectedFile');
+    if (savedFile) {
+      try {
+        const parsedFile: FileTreeItemType = JSON.parse(savedFile);
+        if (parsedFile?.path && parsedFile?.name) {
+          savedFileRef.current = savedFile;
+        } else {
+          console.warn("Invalid file data in session storage.");
+          sessionStorage.removeItem('selectedFile');
+        }
+      } catch (e) {
+        console.error("Error parsing saved file from session storage:", e);
+        sessionStorage.removeItem('selectedFile');
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const fetchFilesIfNeeded = async () => {
       try {
-        if (projectContext?.details?.files?.children?.length &&projectContext?.details?.files?.children?.length > 0) setFiles(projectContext.details.files);
-        else {
+        if (projectContext?.details?.files?.children?.length) {
+          setFiles(projectContext.details.files);
+        } else {
           await fetchDirectoryStructure(
             projectContext?.id,
             projectContext?.rootPath,
@@ -78,26 +102,15 @@ const CodePage = () => {
             _handleSelectFile
           );
         }
-       
-      } catch (error) { console.error("Error fetching files or updating project context:", error); }
+      } catch (error) {
+        console.error("Error fetching files or updating project context:", error);
+      }
     };
   
     if (projectContext) {
       fetchFilesIfNeeded();
     }
-  }, [
-    projectContext,          
-    setFiles, 
-    setSelectedFile,               
-    setProjectContext,       
-    setIsPolling,            
-    setIsLoading,            
-    addLog,                  
-    _handleSelectFile,  
-    projectContext?.details?.sdk?.content,
-    projectContext?.details?.genUiClicked,
-    projectContext?.details?.isSdk,
-  ]);
+  }, [projectContext, _handleSelectFile]);
 
   useEffect(() => {
     const selectFileAfterLoad = () => {
@@ -107,7 +120,7 @@ const CodePage = () => {
           setSelectedFile(parsedFile);
   
           const cachedContent = projectContext?.details?.codes?.find(
-            (code) => code.name === parsedFile.name
+            (code) => normalizePath(code.path || '') === normalizePath(parsedFile.path || '')
           );
   
           if (cachedContent?.content) {
@@ -150,7 +163,7 @@ const CodePage = () => {
 
   const _handleSave = async () => { 
     if (selectedFile) {
-      handleSave(selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); 
+      handleSave(setProjectContext, selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); 
 
       const updatedFile = { ...selectedFile, content: fileContent };
       sessionStorage.setItem('selectedFile', JSON.stringify(updatedFile));
@@ -160,14 +173,18 @@ const CodePage = () => {
       setProjectContext((prev) => {
         if (!prev) return prev;
         const updatedCodes = prev.details.codes.map((code) => {
-          if (code.name === updatedFile.name) {
+          if (normalizePath(code.path || '') === normalizePath(updatedFile.path || '')) {
             return { ...code, content: fileContent };
           }
+          console.log("Updated Codes Array After Save:", projectContext.details.codes);
+
           return code;
         });
         return { ...prev, details: { ...prev.details, codes: updatedCodes } };
       });
-    } else console.warn("No selected file to save.");
+    } else {
+      console.warn("No selected file to save.");
+    }
   };
   const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
   const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
