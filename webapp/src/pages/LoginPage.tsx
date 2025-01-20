@@ -94,16 +94,18 @@ const LoginPage: React.FC = () => {
           fontFamily="IBM Plex Mono"
         >
           <CardHeader textAlign="center" pt="6" position="relative" fontFamily="IBM Plex Mono">
-            <Link to="/landing" className="absolute left-0 top-0 p-5">
-              <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
-            </Link>
-            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
-            <Text fontSize="md" color="gray.500" >Enter your details to login to your account</Text>
+            <Flex justifyContent="flex-start" alignItems="center" px="5">
+              <Link to="/landing" className="absolute left-0 top-0 p-5">
+                <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
+              </Link>
+              </Flex>
+              <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
+            <Text fontSize="sm" color="gray.500" >Enter your details to login to your account</Text>
           </CardHeader>
           <CardBody fontWeight="300" fontSize="xs" fontFamily="IBM Plex Mono">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Box className="space-y-2">
-                <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Box className="space-y-2" pb="2">
+                <FormLabel htmlFor="username" fontSize="sm" fontWeight="normal">Username</FormLabel>
                 <Input 
                   id="username" 
                   type="text" 
@@ -113,9 +115,9 @@ const LoginPage: React.FC = () => {
                   autoComplete="off"
                 />
               </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
-                <Box className="relative flex flex-row gap-2 items-center">
+              <Box className="space-y-2" pb="2">
+                <FormLabel htmlFor="password" fontSize="sm" fontWeight="normal">Password</FormLabel>
+                <Flex direction="row" gap="2" alignItems="center">
                   <Input 
                     id="password" 
                     type={showPassword ? "text" : "password"} 
@@ -135,27 +137,43 @@ const LoginPage: React.FC = () => {
                       <ViewIcon className="h-5 w-5" />
                     )}
                   </Button>
-                </Box>
+                </Flex>
               </Box>
-              <Button 
-                type="submit" 
-                className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
-                fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
-                py="5"
-                bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
-              >
-                Sign in
-              </Button>
+              <Flex justifyContent="center" alignItems="center" py="5" px="2">
+                <Button 
+                  type="submit" 
+                  className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
+                  fontSize="sm" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                  py="5"
+                  width="100%"
+                  bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
+                >
+                  <Text fontSize="xs">Sign in</Text>
+                </Button>
+              </Flex>
             </form>
           </CardBody>
           <CardFooter className="flex flex-wrap items-center justify-between gap-2">
-            <Text className="text-sm text-muted-foreground">
-              <a href="#" className="hover:text-primary underline underline-offset-4">Forgot password?</a>
-            </Text>
-            <Text className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to='/register' className="hover:text-primary underline underline-offset-4 ml-2">Sign up</Link>
-            </Text>
+            <Flex width="full" direction="row" gap="2" justifyContent="space-between" alignItems="center" px="2">
+              <Text className="text-sm text-muted-foreground" fontSize="xs">
+                <a href="#" className="hover:text-primary underline underline-offset-4">Forgot password?</a>
+              </Text>
+              <Flex 
+                direction="row" 
+                alignItems="center" 
+                justifyContent="flex-end" 
+                wrap="nowrap" 
+                whiteSpace="nowrap"
+                gap="2"
+              >
+                <Text className="text-sm text-muted-foreground" fontSize="xs" display="inline">
+                  Don't have an account?{' '}
+                </Text>
+                <Link to='/register' className="hover:text-primary underline underline-offset-4 ml-2" >
+                  <Text fontSize="xs" color="blue.300">Sign up</Text>
+                </Link>
+              </Flex>
+            </Flex>
           </CardFooter>
         </Card>
     </Flex>

@@ -69,7 +69,7 @@ export default function LandingPage() {
                   color="gray.700"
                   _hover={{ bg: "#ffffff" }}
                 >
-                  Login
+                  <Text fontSize="sm" fontWeight="normal">Login</Text>
                 </Button>
                 <Button
                   fontSize="md" letterSpacing="0.05em"
@@ -81,13 +81,13 @@ export default function LandingPage() {
                   color="gray.700"
                   _hover={{ bg: "#ffffff" }}
                 >
-                  Register
+                  <Text fontSize="sm" fontWeight="normal">Register</Text>
                 </Button>
               </Flex>
               <Box mt="2" textAlign="center" w="full">
                 {activeTab === "login" ? (
                   <Button 
-                    w="full" size="lg" fontSize="md" fontWeight="bold" letterSpacing="0.05em"
+                    w="full" size="lg" fontSize="sm" fontWeight="normal" letterSpacing="0.05em"
                     bg="#80a3ff" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
                     py="5" mt="2"
                     as={RouterLink} to='/login'
@@ -96,7 +96,7 @@ export default function LandingPage() {
                   </Button>
                 ) : (
                   <Button 
-                    w="full" size="lg" fontSize="md" fontWeight="bold" letterSpacing="0.05em"
+                    w="full" size="lg" fontSize="sm" fontWeight="normal" letterSpacing="0.05em"
                     bg="#80a3ff" color="white" _hover={{ bg: "blue.400" }} alignItems="center"
                     py="5" mt="2"
                     as={RouterLink} to='/register'

@@ -109,37 +109,32 @@ const RegisterPage: React.FC = () => {
   return (
     <Flex 
       h="100vh" w="100vw"
-      bgGradient={bgGradient}
+      direction="column"
       justifyContent="center"
       alignItems="center"
+      fontFamily="IBM Plex Mono"
+      bgGradient={bgGradient}
     >
         <ParticlesContainer isDarkMode={isDarkMode} />  
         <Card
-          w="full"
-          maxW="lg"
-          h="lg"
-          mx="auto"
-          bg="rgba(255, 255, 255, 0.9)"
-          rounded="lg"
-          shadow="2xl"
-          p="5"
-          zIndex="1"
+          w="full" maxW="lg" h="lg" mx="auto" bg="rgba(255, 255, 255, 0.9)"
+          rounded="lg" shadow="2xl" p="5" zIndex="10"
           fontFamily="IBM Plex Mono"
         >
-          <CardHeader textAlign="center" pt="6" position="relative">
-            <Link to="/landing" className="absolute left-0 top-0 p-5">
-              <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
-            </Link>
-            <Flex direction="column" justifyContent="center" alignItems="center" gap="2">
-              <Heading as="h1" size="md" color="gray.700" fontWeight="400">Create an account</Heading>
-              <Text size="md" color="gray.500">Enter your details to create an account</Text>
+          <CardHeader textAlign="center" pt="6" position="relative" fontFamily="IBM Plex Mono">
+            <Flex justifyContent="flex-start" alignItems="center" px="5">
+              <Link to="/landing" className="absolute left-0 top-0 p-5">
+                <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
+              </Link>
             </Flex>
+            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Create an account</Heading>
+            <Text fontSize="sm" color="gray.500">Enter your details to create an account</Text>
           </CardHeader>
           <Box overflowY="auto" maxHeight="60vh" p="4">
-            <CardBody fontWeight="300">
+            <CardBody fontWeight="300" fontSize="xs" fontFamily="IBM Plex Mono" w="full">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="username" fontSize="sm" fontWeight="normal">Username</FormLabel>
                   <Input 
                     id="username" 
                     type="text" 
@@ -149,8 +144,8 @@ const RegisterPage: React.FC = () => {
                     autoComplete="off"
                   />
                 </Box>
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="orgName" fontSize="md">Organization Name</FormLabel>
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="orgName" fontSize="sm" fontWeight="normal">Organization Name</FormLabel>
                   <Input 
                     id="orgName" 
                     type="text" 
@@ -160,9 +155,9 @@ const RegisterPage: React.FC = () => {
                     autoComplete="off"
                   />
                 </Box>
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
-                  <Box className="relative flex flex-row items-center gap-2">
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="password" fontSize="sm" fontWeight="normal">Password</FormLabel>
+                  <Flex direction="row" gap="2" alignItems="center">
                     <Input 
                       id="password" 
                       type={showPassword ? "text" : "password"} 
@@ -173,21 +168,19 @@ const RegisterPage: React.FC = () => {
                     />
                     <Button
                       type="button"
-                      size="sm"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      fontWeight="300"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center border-none shadow-none bg-white hover:bg-gray-100 text-gray-400 hover:text-gray-600"
                     >
                       {showPassword ? (
-                        <ViewOffIcon className="h-8 w-8" color="blue.500"/>
+                        <ViewOffIcon className="h-5 w-5" />
                       ) : (
-                        <ViewIcon className="h-8 w-8" color="blue.500"/>
+                        <ViewIcon className="h-5 w-5" />
                       )}
                     </Button>
-                  </Box>
+                  </Flex>
                 </Box>
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="confirm-password" fontSize="md">Confirm Password</FormLabel>
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="confirm-password" fontSize="sm" fontWeight="normal">Confirm Password</FormLabel>
                   <Input 
                     id="confirm-password" 
                     type="password" 
@@ -197,8 +190,8 @@ const RegisterPage: React.FC = () => {
                     autoComplete="off"
                   />
                 </Box>
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="code" fontSize="md">Beta Registration Code</FormLabel>
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="code" fontSize="sm" fontWeight="normal">Beta Registration Code</FormLabel>
                   <Input
                     id="code"
                     type="text"
@@ -211,8 +204,8 @@ const RegisterPage: React.FC = () => {
                   />
                   {codeError && <Text color="red.500" fontSize="sm">{codeError}</Text>}
                 </Box>
-                <Box className="space-y-2">
-                  <FormLabel htmlFor="openAiApiKey" fontSize="md">OpenAI API Key</FormLabel>
+                <Box className="space-y-2" mb="2">
+                  <FormLabel htmlFor="openAiApiKey" fontSize="sm" fontWeight="normal">OpenAI API Key</FormLabel>
                   <Input
                     id="openAiApiKey"
                     type="text"
@@ -226,23 +219,27 @@ const RegisterPage: React.FC = () => {
                   {openAiApiKeyError && <Text color="red.500" fontSize="sm">{openAiApiKeyError}</Text>}
                 </Box>
                 {error && <Text color="red.500">{error}</Text>}
-                <Button
-                  type="submit"
-                  w="full"
-                  py="5"
-                  bg="blue.300"
-                  color="white"
-                  _hover={{ bg: 'blue.400' }}
-                >
-                  Create account
-                </Button>
+                <Flex justifyContent="center" alignItems="center" py="5" px="2">
+                  <Button
+                    type="submit"
+                    className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
+                    fontSize="sm" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                    py="5"
+                    width="100%"
+                    bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
+                  >
+                    <Text fontSize="xs">Create account</Text>
+                  </Button>
+                </Flex>
               </form>
             </CardBody>
           </Box>
-          <CardFooter>
-            <Text className="text-center text-muted-foreground w-full" fontSize="sm" letterSpacing="0.05em">
+          <CardFooter className="flex flex-wrap items-center justify-center gap-2" w="full" p="6">
+            <Text className="text-center text-muted-foreground w-full" fontSize="xs" letterSpacing="0.05em">
               Already have an account?{' '}
-              <Link to='/login' className="hover:text-primary underline underline-offset-4">Sign in</Link>
+              <Link to='/login' className="hover:text-primary underline underline-offset-4">
+                <Text fontSize="xs" fontWeight="normal" color="blue.300" display="inline">Sign in</Text>
+              </Link>
             </Text>
           </CardFooter>
         </Card>
