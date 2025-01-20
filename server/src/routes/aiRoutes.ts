@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/prompt', authMiddleware, generateAIResponse);
 router.post('/chat', authMiddleware, handleAIChat);
+//router.post('/init-agent', initSAK);
 
 export default router;

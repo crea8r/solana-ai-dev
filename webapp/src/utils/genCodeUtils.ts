@@ -2,7 +2,10 @@ import { fileApi } from '../api/file';
 import { taskApi } from '../api/task';
 import { FileTreeItemType } from '../interfaces/file';
 import { parse, stringify } from 'smol-toml'
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate, getTestTemplate } from '../data/fileTemplates';
+import { getModRsTemplate } from '../data/fileTemplates';
+import { getStateTemplate } from '../data/templates/stateTemplate';
+import { getInstructionTemplate } from '../data/templates/insTemplate';
+import { getLibRsTemplate } from '../data/templates/libTemplate';
 import instructionSchema from '../data/ai_schema/instruction_schema.json';
 import stateSchema from '../data/ai_schema/state_schema.json';
 import sdkSchema from '../data/ai_schema/sdk_schema.json';
@@ -292,9 +295,9 @@ export const snakeToPascal = (snakeStr: string): string => {
 
 export const extractProgramIdFromAnchorToml = async (
   projectId: string,
-  anchorTomlPath: string,
   programDirName: string
 ): Promise<string> => {
+  const anchorTomlPath = `Anchor.toml`;
   try {
     const anchorTomlContentResponse = await fileApi.getFileContent(projectId, anchorTomlPath);
     const anchorTomlContentTaskId = anchorTomlContentResponse.taskId;
@@ -557,8 +560,8 @@ export const processAIStateOutput = async (
       throw new Error('Invalid AI JSON structure.');
     }
 
-    const codeContent = getStateTemplate(aiData.accounts);
-
+    //const codeContent = getStateTemplate(aiData.accounts);
+    const codeContent = '';
     const filePath = `programs/${normalizedProgramName}/src/state.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
 
@@ -601,6 +604,7 @@ export const processAIInstructionOutput = async (
     const valid = validate(aiData);
     if (!valid) { console.error('AI JSON does not conform to schema:', validate.errors); throw new Error('Invalid AI JSON structure.'); }
 
+    /*
     const codeContent = getInstructionTemplate(
       instructionName,
       aiData.function_name,
@@ -611,6 +615,8 @@ export const processAIInstructionOutput = async (
       aiData.params_fields,
       aiData.error_codes
     );
+    */
+   const codeContent = 'instruction code2';
 
     const filePath = `programs/${normalizedProgramName}/src/instructions/${instructionName}.rs`;
     await fileApi.updateFile(projectId, filePath, codeContent);
@@ -810,12 +816,15 @@ export const processAITestOutput = async (
     }
 
     // Generate test file content using the template
+    /*
     const codeContent = getTestTemplate(
       aiData.program_name,
       aiData.program_id,
       aiData.instructions,
       aiData.accounts
     );
+    */
+    const codeContent = '';
 
     const filePath = `tests/${normalizedProgramName}.test.ts`;
     await fileApi.updateFile(projectId, filePath, codeContent);
@@ -898,3 +907,9 @@ export const parseSdkFunctions = (
 };
 
 
+export const pascalToSnake = (pascalStr: string): string => {
+  return pascalStr
+    .replace(/([A-Z])/g, '_$1') 
+    .toLowerCase()             
+    .replace(/^_/, '');        
+};

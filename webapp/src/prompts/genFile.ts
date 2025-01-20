@@ -118,7 +118,7 @@ const genFile = (
       {{instructionImports}}
 
       #[program]
-      pub mod ${program_data.getName()} {
+      pub mod ${program_data.getNamePascal()} {
           use super::*;
 
           {{programFunctions}}
@@ -169,12 +169,12 @@ const genFile = (
         accountNodes.forEach((account) => {
           const account_data = account.data.item as Account;
           //console.log('account_data', account_data);
-          const account_name = account_data.getName();
+          const account_name = account_data.getNamePascal();
           const account_desc = account_data.getDescription();
-          const account_json = account_data.getJson();
+          const account_structure = "";
           let account_text = account_name + ' is ' + account_desc +
             '; with data structure as ' +
-            account_json;
+            account_structure;
 
           const edge = accountEdges.find((edge) => edge.target === account.id);
           if (edge) account_text += '; the seed is ' + edge.data?.label;
@@ -191,10 +191,10 @@ const genFile = (
           const instruction_data = instruction.data.item as Instruction;
           
           const instruction_prompt = genIns(instruction_data);
-          const instruction_name = instruction_data.getName();
+          const instruction_name = instruction_data.getNamePascal();
           const instruction_desc = instruction_data.getDescription();
-          const instruction_params = instruction_data.getParameters();
-          const instruction_ai = instruction_data.getAiInstruction();
+          const instruction_params = instruction_data.getParams();
+          const instruction_ai = "";
           let instruction_text = `
           ${instruction_name} is an instruction, ${instruction_desc} with parameters:
           ${instruction_params}, and logic as follows:
@@ -214,7 +214,7 @@ const genFile = (
 
       all_text +=
         textGenerator(
-          program_data.getName(),
+          program_data.getNamePascal(),
           program_data.getDescription(),
           all_account_text,
           all_instruction_text,

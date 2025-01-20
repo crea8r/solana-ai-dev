@@ -5,7 +5,6 @@ import { CheckCircleIcon } from '@chakra-ui/icons';
 import { projectApi } from '../../api/project';
 import { taskApi } from '../../api/task';
 import { FileTreeItemType } from "../../interfaces/file";
-import genStructure from "../../prompts/genStructure";
 import genFile from "../../prompts/genFile";
 import { promptAI, promptAI_v2 } from "../../services/prompt";
 import { 
@@ -19,6 +18,7 @@ import {
     processAIStateOutput,
     processAITestOutput,
 } from '../../utils/genCodeUtils';
+import { getInstructionNamesSnake } from '../../utils/genCodeUtils2';
 import { fileApi } from '../../api/file';
 import { useProjectContext, transformToProjectInfoToSave } from '../../contexts/ProjectContext';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -34,7 +34,9 @@ import {
     //validateFileTree,
     processAIModRsOutput
  } from '../../utils/genCodeUtils';
-import { getInstructionTemplate, getLibRsTemplate, getModRsTemplate, getStateTemplate } from '../../data/fileTemplates'; 
+import { getModRsTemplate } from '../../data/fileTemplates'; 
+import { getStateTemplate } from '../../data/templates/stateTemplate';
+import { getLibRsTemplate } from '../../data/templates/libTemplate';
 import instructionSchema from '../../data/ai_schema/instruction_schema.json';
 import stateSchema from '../../data/ai_schema/state_schema.json';
 import structureSchema from '../../data/ai_schema/structure_schema.json';
@@ -261,7 +263,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         setTasks((prevTasks) => prevTasks.map((task) => (task.id === 2 ? { ...task, status: 'loading' } : task)) );
       
         const normalizedProgramName = normalizeName(projectContext.name);
-        console.log('normalizedProgramName', normalizedProgramName);
+        //('normalizedProgramName', normalizedProgramName);
 
         const instructionNodes = projectContext.details.nodes
           .filter((node) => node.type === "instruction")
@@ -271,8 +273,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             return { name: name || "default_instruction_name" };
         });
 
-        const fileTree = predefinedFileStructure(normalizedProgramName, instructionNodes);
-        console.log('fileTree', fileTree);
+        const instructionNames = getInstructionNamesSnake(projectContext.details.nodes);
+
+        const fileTree = predefinedFileStructure(normalizedProgramName, instructionNames);
+        //console.log('fileTree', fileTree);
         try {
           if (fileTree) {
             let files: FileTreeItemType;
@@ -285,7 +289,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             }
       
             setFileTreePaths(files);
-            console.log('files', files);
+            //console.log('files', files);
       
             let aiFilePaths = getFileList(files)
               .map((file) => file.path)
@@ -299,7 +303,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                 if (fileName) {
                   const directoryPath = pathParts.join('/');
                   const newFileName = `run_${pascalToSnake(fileName)}`;
-                  console.log('newFileName', newFileName);
+                  //console.log('newFileName', newFileName);
                   return `${directoryPath}/${newFileName}`;
                 }
               }
@@ -337,14 +341,14 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             })
             .filter((file) => file.path);
 
-            console.log('updatedFileList', updatedFileList);
+            //console.log('updatedFileList', updatedFileList);
       
             const filteredFileList = updatedFileList.filter((file) => {
               if (file.path?.includes('sdk/index.ts')) return false;
 
               return true;
             });
-            console.log('filteredFileList', filteredFileList);
+            //console.log('filteredFileList', filteredFileList);
       
             const sortedFilesToProcess = sortFilesByPriority(filteredFileList, programDirName);
       
@@ -353,10 +357,10 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             const uniqueFileMap = new Map(sortedFilesToProcess.map((file) => [file.path, file]));
             const uniqueFileList = Array.from(uniqueFileMap.values());
             let nextId = 3;
-            console.log('uniqueFileList', uniqueFileList);
+            //console.log('uniqueFileList', uniqueFileList);
       
             const processedFilesSet = new Set( projectContext.details.codes?.map((code) => code.path) || [] );
-            console.log('processedFilesSet', processedFilesSet);
+            //console.log('processedFilesSet', processedFilesSet);
       
             const instructionFileTasks: Task[] = [];
             const otherFileTasks: Task[] = [];
@@ -387,9 +391,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               });
       
             const fileTasks = [...instructionFileTasks, ...otherFileTasks] 
-            console.log('fileTasks', fileTasks);
-            console.log('instructionFileTasks', instructionFileTasks);
-            console.log('otherFileTasks', otherFileTasks);
+            //console.log('fileTasks', fileTasks);
+            //console.log('instructionFileTasks', instructionFileTasks);
+            //console.log('otherFileTasks', otherFileTasks);
 
             setTasks((prevTasks) => {
               const mainTasks = prevTasks.filter((task) => task.type !== 'file');
@@ -439,11 +443,11 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
               const isTestFile = fileTask.path?.includes('.test.ts');
               if (isLibFile) continue;
 
-              console.log('isInstructionFile', isInstructionFile);
-              console.log('isInstructionModFile', isInstructionModFile);
-              console.log('isStateFile', isStateFile);
-              console.log('isSdkFile', isSdkFile);
-              console.log('isTestFile', isTestFile);
+              //console.log('isInstructionFile', isInstructionFile);
+              //console.log('isInstructionModFile', isInstructionModFile);
+              //console.log('isStateFile', isStateFile);
+              //console.log('isSdkFile', isSdkFile);
+              //console.log('isTestFile', isTestFile);
 
               try {
                 const { nodes, edges } = projectContext.details || { nodes: [], edges: [] };
@@ -480,10 +484,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
                   continue;
                 }
-      
+                console.log('process.env.REACT_APP_OPENAI_API_KEY', process.env.REACT_APP_OPENAI_API_KEY);
                 const _promptContent = genFile(nodes, edges, fileName, filePath, '');
-                const _model = projectContext.aiModel;
-                const _apiKey = projectContext.apiKey;
+                const _apiKey = process.env.REACT_APP_OPENAI_API_KEY || '';
       
                 const _schema = isInstructionFile ? instructionSchema
                   : isStateFile ? stateSchema
@@ -501,20 +504,24 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
                 if (_schema === '') throw new Error('No schema for file generation');
 
-                console.log('prompt content', _promptContent);
-                console.log('model', _model);
-                console.log('apiKey', _apiKey);
-                console.log('schema', _schema);
-                console.log('promptType', _promptType);
+                const _model = 'gpt-4o';
+
+                //console.log('prompt content', _promptContent);
+                //console.log('model', _model);
+                //console.log('apiKey', _apiKey);
+                //console.log('schema', _schema);
+                //console.log('promptType', _promptType);
       
-                const content = await promptAI(_promptContent, _model, _apiKey, _schema, _promptType);
+                const content = await promptAI(_promptContent, _model);
 
                 const anchorTomlPath = `Anchor.toml`;
+                /*
                 const programId = await extractProgramIdFromAnchorToml(
                   projectId,
                   anchorTomlPath,
-                  programDirName
+                  normalizedProgramName
                 );
+                */
       
                 let codeContent = '';
                 if (content) {
@@ -530,6 +537,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       params: aiData.params_struct as string,
                     });
 
+                    /*
                     setProjectContext((prevContext) => ({
                       ...prevContext,
                       details: {
@@ -549,6 +557,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                       ],
                     },
                   }));
+                  */
 
                   } else if (isStateFile) {
                     codeContent = await processAIStateOutput(projectId, programDirName, aiContent);
@@ -569,7 +578,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     `/programs/${programDirName}/`
                   );
 
-                  console.log('updatedFilePath', updatedFilePath);
+                  //console.log('updatedFilePath', updatedFilePath);
       
                   if (existingFilePaths.has(updatedFilePath || '')) await fileApi.updateFile(projectId, updatedFilePath || '', codeContent);
                   else await fileApi.createFile(projectId, updatedFilePath || '', codeContent);
@@ -605,11 +614,9 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
             }
       
             const libRsPath = `programs/${programDirName}/src/lib.rs`;
-            const anchorTomlPath = `Anchor.toml`;
             const programId = await extractProgramIdFromAnchorToml(
               projectId,
-              anchorTomlPath,
-              programDirName
+              normalizedProgramName
             );
 
             setProjectContext((prevProjectContext) => ({
@@ -650,8 +657,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
       
               await ensureInstructionNaming(projectId, instructionPaths, programDirName);
 
-              console.log('instructionPaths', instructionPaths);
-              console.log('filteredFileList', filteredFileList);
+              //console.log('instructionPaths', instructionPaths);
+              //console.log('filteredFileList', filteredFileList);
             }
       
             setProjectContext((prevProjectContext) => ({

@@ -8,11 +8,13 @@ import ReactFlow, {
   ReactFlowInstance,
   applyNodeChanges,
 } from 'react-flow-renderer';
-import { Box } from '@chakra-ui/react';
+import { Box, Tag, TagLabel, Wrap, WrapItem } from '@chakra-ui/react';
 import { createItem, getNodeTypes } from '../utils/itemFactory';
 import CustomEdge from './CustomEdge';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { Instruction } from '../items/Instruction';
+import { Program } from '../items/Program';
+import { Account } from '../items/Account';
 
 interface CanvasProps {
   nodes: Node[];
@@ -56,25 +58,97 @@ const Canvas: React.FC<CanvasProps> = ({
       const updatedNodes = applyNodeChanges(changes, prevProjectContext.details.nodes);
 
       updatedNodes.forEach((node) => {
+        console.log('node', node);
         if (node.type === "instruction" && node.data.item) {
-          const { id, name, description, parameters, aiInstruction, ownerProgramId } = node.data.item;
+          const { identifier, name, description, accounts, params, error_codes, events, imports } = node.data.item;
+
           node.data.item = new Instruction(
-            id,
-            name || '',
+            identifier || node.id,
+            name || {snake: 'instruction', pascal: 'Instruction'},
             description || '',
-            parameters || '',
-            aiInstruction || '',
-            ownerProgramId || null
+            accounts || [],
+            params || [],
+            events || [],
+            error_codes || [],
+            imports || []
           );
+
           const instruction = node.data.item as Instruction;
-          instruction.setName(node.data.label);
-          if (node.data.description) {
-            instruction.setDescription(node.data.description);
-          }
-          if (node.data.parameters) {
-            instruction.setParameters(node.data.parameters);
-          }
+
+          instruction.setNamePascal(name.pascal || node.data.item.name.pascal || '');
+          if (node.data.description) instruction.setDescription(node.data.description);
+          if (node.data.accounts) instruction.setAccounts(node.data.accounts);
+          if (node.data.params) instruction.setParams(node.data.params);
+          if (node.data.events) instruction.setEvents(node.data.events);
+          if (node.data.error_codes) instruction.setErrorCodes(node.data.error_codes);
+          if (node.data.imports) instruction.setImports(node.data.imports);
         }
+        
+        if (node.type === 'program' && node.data.item) {
+          const {
+            identifier,
+            name,
+            description,
+            programId,
+            isPublic,
+            version,
+            account,
+            instruction,
+          } = node.data.item;
+        
+          node.data.item = new Program(
+            identifier || node.id,
+            name || {snake: 'program', pascal: 'Program'},
+            description || '',
+            programId || '11111111111111111111111111111111',
+            isPublic || false,
+            version || '',
+            account || [],
+            instruction || [],
+          );
+        
+          const program = node.data.item as Program;
+        
+          program.setNamePascal(name.pascal || node.data.item.name.pascal || '');
+          if (node.data.description)  program.setDescription(node.data.description);
+          if (node.data.programId)  program.setProgramId(node.data.programId);
+          if (node.data.isPublic) program.setIsPublic(node.data.isPublic);
+          if (node.data.version) program.setVersion(node.data.version);
+          if (node.data.account) program.setAccounts(node.data.account);
+          if (node.data.instruction) program.setInstructions(node.data.instruction);
+
+        }
+        if (node.type === 'account' && node.data.item) {
+          const {
+            identifier,
+            name,
+            description,
+            is_mutable,
+            is_signer,
+            fields,
+            role
+          } = node.data.item;
+        
+          node.data.item = new Account(
+            identifier || node.id,
+            name || {snake: 'account', pascal: 'Account'},
+            description || '',
+            role || '',
+            is_mutable ?? true,
+            is_signer ?? false,
+            fields || [],
+          );
+      
+          const account = node.data.item as Account;
+      
+          account.setNamePascal(name.pascal || node.data.item.name.pascal || '');
+          if (node.data.description) account.setDescription(node.data.description);
+          if (node.data.is_mutable) account.setIsMutable(node.data.is_mutable);
+          if (node.data.is_signer) account.setIsSigner(node.data.is_signer);
+          if (node.data.fields) account.setFields(node.data.fields);
+          if (node.data.role) account.setRole(node.data.role);
+        }
+        
       });
 
       return {
@@ -110,7 +184,7 @@ const Canvas: React.FC<CanvasProps> = ({
         if (newNode.type === "instruction" && newNode.data.item) {
           const instruction = newNode.data.item as Instruction;
           instruction.setDescription("New instruction description");
-          instruction.setParameters("parameter1, parameter2");
+          instruction.setParams([{ name: "param1", type: "u64" }]);
         }
 
         onAddNode(newNode);

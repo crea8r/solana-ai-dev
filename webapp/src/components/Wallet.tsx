@@ -60,15 +60,6 @@ export const WalletCreationModal: React.FC<WalletCreationModalProps> = ({ userId
         const privateKeyInfo = await getPrivateKey(userId);
         setPrivateKey(privateKeyInfo.privateKey);
 
-        setProjectContext({
-          ...projectContext,
-          details: {
-            ...projectContext.details,
-            walletPublicKey: info.publicKey,
-            walletSecretKey: privateKeyInfo.privateKey
-          }
-        });
-
         if (user) {
           setUser({
             ...user,

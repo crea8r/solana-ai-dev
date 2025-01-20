@@ -7,6 +7,7 @@ export interface JwtPayload {
   private_key_viewed: boolean;
   wallet_public_key: string;
   wallet_private_key: string;
+  openai_api_key: string; 
 }
 
 // export interface Organisation {

@@ -1,7 +1,6 @@
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
+import React, { useContext, useEffect, useState } from 'react';
+import { AuthContext, useAuthContext } from '../contexts/AuthContext';
 import { 
-    //Avatar,
     Box,
     Flex,
     Heading,
@@ -12,216 +11,163 @@ import {
     CardHeader, 
     CardBody, 
     CardFooter,
-    Menu,
-    MenuButton,
-    MenuList,
-    MenuItem,
-    MenuItemOption,
-    MenuGroup,
-    MenuOptionGroup,
-    MenuDivider,
     FormControl,
     FormLabel,
-    FormErrorMessage,
-    FormHelperText,
-    Table,
-    Thead,
-    Tbody,
-    Tfoot,
-    Tr,
-    Th,
-    Td,
-    TableCaption,
-    TableContainer,
-    Drawer,
-    DrawerBody,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerOverlay,
-    DrawerContent,
-    DrawerCloseButton,
+    Avatar,
+    useToast,
 } from '@chakra-ui/react';
-import { Avatar, ChevronDownIcon } from "@chakra-ui/icons";
-import { FaUserCircle } from "react-icons/fa";
-import { FaRegBell } from "react-icons/fa6";
-import { MdOutlineLogout } from "react-icons/md";
-import { IoMdMenu } from "react-icons/io";
-import { IoSettingsOutline } from "react-icons/io5";
+import { FaUserCircle, FaUser, FaKey } from "react-icons/fa";
+import { updateApiKey, getUser } from '../services/authApi';
 
 const AccountPage: React.FC = () => {
     const authContext = useContext(AuthContext);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [newApiKey, setNewApiKey] = useState('');
+    const [currentApiKey, setCurrentApiKey] = useState<string | null>(null);
+    const toast = useToast();
 
-    const placeholderUser = {
-        username: 'exampleUser',
-        email: 'user@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        orgName: 'Example Organization',
+    const fetchUser = async () => {
+        try {
+            const userData = await getUser();
+            if (!userData) throw new Error('User data not found');
+            setCurrentApiKey(userData.openai_api_key);
+            console.log("userData", userData);
+            console.log("currentApiKey", userData.openai_api_key);
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            toast({
+                title: 'Error fetching user details.',
+                description: 'Unable to retrieve the latest API key.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
     };
 
-    const user = {
-        username: authContext?.user?.username || placeholderUser.username,
-        email: placeholderUser.email,
-        firstName: placeholderUser.firstName,
-        lastName: placeholderUser.lastName,
-        orgName: placeholderUser.orgName,
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    const getAvatarInitial = (username: string) => {
+        return username.charAt(0).toUpperCase();
     };
 
-    const teamMembers = [
-        { name: "Alex Johnson", role: "Product Manager", email: "alex@example.com" },
-        { name: "Sarah Lee", role: "UX Designer", email: "sarah@example.com" },
-        { name: "Michael Chen", role: "Full Stack Developer", email: "michael@example.com" },
-        { name: "Emily Davis", role: "Marketing Specialist", email: "emily@example.com" },
-        { name: "David Kim", role: "Data Analyst", email: "david@example.com" },
-    ];
+    const maskApiKey = (key: string): string => {
+        if (key.length <= 8) return key;
+        return `${key.substring(0, 4)}••••••••${key.substring(key.length - 4)}`;
+    };
+
+    const handleUpdateApiKey = async () => {
+        try {
+            const response = await updateApiKey(newApiKey);
+            setCurrentApiKey(response.openAiApiKey);
+            console.log("response", response.openAiApiKey);
+            await fetchUser();
+            toast({
+                title: 'API Key updated successfully!',
+                description: 'Your API key has been saved and updated.',
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+            setNewApiKey('');
+        } catch (error) {
+            console.error('Error updating API key:', error);
+            toast({
+                title: 'Error updating API key.',
+                description: 'There was a problem saving your new API key.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    };
 
     return (
-        <Flex className="flex h-screen bg-gray-100">
-            <Box className="hidden w-64 bg-white border-r lg:block">
-                <Flex className="flex items-center justify-between p-4 border-b">
-                    <Text className="text-lg font-semibold">Organization Name</Text>
-                </Flex>
-                <Box as="nav" p={4}>
-                    <Box as="ul">
-                        <Box as="li" mb={2}>
-                        <Button
-                            as="a"
-                            href="#"
-                            variant="ghost"
-                            leftIcon={<FaUserCircle />}
-                            justifyContent="flex-start"
-                            w="full"
-                            p="2"
-                            color="gray.700"
-                            _hover={{ bg: "gray.100" }}
-                            borderRadius="lg"
-                            >
-                                Account
-                            </Button>
-                        </Box>
-                        <Box as="li">
-                        <Button
-                            as="a"
-                            href="#"
-                            variant="ghost"
-                            leftIcon={<IoSettingsOutline className="w-5 h-5 mr-3" />}
-                            justifyContent="flex-start"
-                            w="full"
-                            p="2"
-                            color="gray.700"
-                            _hover={{ bg: "gray.100" }}
-                            borderRadius="lg"
-                            >
-                                Settings
-                            </Button>
-                        </Box>
-                    </Box>
-                </Box>
+        <Box maxW="2xl" mx="auto" py={10}>
+            <Box mb={8}>
+                <Heading as="h1" size="lg" mb={2}>
+                    Account Settings
+                </Heading>
+                <Text color="gray.600">Manage your account details and preferences</Text>
             </Box>
 
-            <Drawer isOpen={isSidebarOpen} placement="left" onClose={() => setIsSidebarOpen(false)}>
-                <DrawerOverlay />
-                <DrawerContent>
-                    <DrawerCloseButton />
-                    <DrawerHeader>Company Name</DrawerHeader>
-                    <DrawerBody>
-                        <Box as="nav" p={4}>
-                            <Box as="ul">
-                                <Box as="li" mb={2}>
-                                    <Button
-                                        as="a"
-                                        href="#"
-                                        className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                                        onClick={() => setIsSidebarOpen(false)}
-                                    >
-                                        <FaUserCircle className="w-5 h-5 mr-3" />
-                                        Account
-                                    </Button>
-                                </Box>
-                                <Box as="li">
-                                    <Button
-                                        as="a"
-                                        href="#"
-                                        className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                                        onClick={() => setIsSidebarOpen(false)}
-                                    >
-                                        <IoSettingsOutline className="w-5 h-5 mr-3" />
-                                        Settings
-                                    </Button>
-                                </Box>
-                            </Box>
+            <Flex direction="column" gap={6}>
+                <Card bg="white" boxShadow="sm" borderRadius="md" borderWidth="1px">
+                    <CardHeader display="flex" alignItems="center" gap={4} pb={0}>
+                        <Avatar size="lg" bg="gray.300" icon={<FaUserCircle fontSize="2rem" />} />
+                        <Box>
+                            <Heading as="h2" size="md">
+                                Personal Information
+                            </Heading>
+                            <Text color="gray.600">Manage your personal details</Text>
                         </Box>
-                    </DrawerBody>
-                </DrawerContent>
-            </Drawer>
+                    </CardHeader>
 
-            <Box className="flex flex-col flex-1 overflow-hidden">
-                <Box className="flex items-center justify-between px-4 py-3 bg-white border-b lg:px-6">
-                    <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-                        <IoMdMenu className="w-6 h-6" />
-                        <Box className="sr-only">Open sidebar</Box>
-                    </Button>
-                    <Box className="flex items-center space-x-4">
-                        <Button variant="ghost" size="icon">
-                            <FaRegBell className="w-5 h-5" />
-                            <Box className="sr-only">Notifications</Box>
-                        </Button>
-                        <Menu>
-                            <MenuButton as={Button} variant="ghost" className="relative w-8 h-8 rounded-full">
-                                <Avatar className="w-8 h-8" />
-                            </MenuButton>
-                            <MenuList className="w-56">
-                                <Box className="flex flex-col space-y-1 p-2">
-                                    <Text className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</Text>
-                                    <Text className="text-xs leading-none text-muted-foreground">{user.email}</Text>
-                                </Box>
-                                <MenuDivider />
-                                <MenuItem icon={<FaUserCircle className="w-4 h-4 mr-2" />}>
-                                    Profile
-                                </MenuItem>
-                                <MenuItem icon={<IoSettingsOutline className="w-4 h-4 mr-2" />}>
-                                    Settings
-                                </MenuItem>
-                                <MenuDivider />
-                                <MenuItem icon={<MdOutlineLogout className="w-4 h-4 mr-2" />}>
-                                    Log out
-                                </MenuItem>
-                            </MenuList>
-                        </Menu>
-                    </Box>
-                </Box>
+                    <CardBody>
+                        <Flex direction="column" gap={6}>
+                            <FormControl>
+                                <FormLabel fontWeight="medium">
+                                    <Flex alignItems="center" gap={2}>
+                                        <FaUser />
+                                        Username
+                                    </Flex>
+                                </FormLabel>
+                                <Input value={authContext?.user?.username} isReadOnly />
+                            </FormControl>
 
-                <Box className="flex-1 overflow-y-auto p-4 lg:p-6">
-                    <Text className="text-2xl font-semibold mb-6">Account Details</Text>
-                    <Box className="grid gap-6 mb-6 md:grid-cols-2">
-                        <Card className="bg-white border border-gray-200">
-                            <CardHeader>
-                                <Text>Personal Information</Text>
-                                <Text>Manage your personal details</Text>
-                            </CardHeader>
-                            <CardBody>
-                                <FormControl className="space-y-4">
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="username">Username</FormLabel>
-                                        <Input id="username" value={user.username} readOnly />
-                                    </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="name">Full Name</FormLabel>
-                                        <Input id="name" placeholder={`${user.firstName} ${user.lastName}`} />
-                                    </Box>
-                                    <Box className="space-y-2">
-                                        <FormLabel htmlFor="email">Email</FormLabel>
-                                        <Input id="email" type="email" placeholder={user.email} />
-                                    </Box>
-                                    <Button>Save Changes</Button>
-                                </FormControl>
-                            </CardBody>
-                        </Card>
-                    </Box>
-                </Box>
-            </Box>
-        </Flex>
+                            <FormControl>
+                                <FormLabel fontWeight="medium">
+                                    Current API Key
+                                </FormLabel>
+                                <Text 
+                                    fontSize="md" 
+                                    fontWeight="medium" 
+                                    color="gray.700" 
+                                    bg="gray.100" 
+                                    px={3} 
+                                    py={2} 
+                                    borderRadius="md"
+                                >
+                                    {currentApiKey ? maskApiKey(currentApiKey) : 'No API Key Available'}
+                                </Text>
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel fontWeight="medium">
+                                    <Flex alignItems="center" gap={2}>
+                                        <FaKey />
+                                        Change API Key
+                                    </Flex>
+                                </FormLabel>
+                                <Input 
+                                    placeholder="Enter new API key" 
+                                    value={newApiKey} 
+                                    onChange={(e) => setNewApiKey(e.target.value)} 
+                                    type="password"
+                                />
+                                <Text fontSize="sm" color="gray.500" mt={2}>
+                                    Your API key is used to authenticate API requests
+                                </Text>
+                            </FormControl>
+                        </Flex>
+                    </CardBody>
+
+                    <CardFooter>
+                        <Flex justify="flex-end" w="full">
+                            <Button 
+                                colorScheme="blue" 
+                                onClick={handleUpdateApiKey}
+                                isDisabled={!newApiKey}
+                            >
+                                Save Changes
+                            </Button>
+                        </Flex>
+                    </CardFooter>
+                </Card>
+            </Flex>
+        </Box>
     );
 };
 

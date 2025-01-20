@@ -14,20 +14,17 @@ import { MdOutlineFeedback } from "react-icons/md";
 import TopPanel from './TopPanel';
 import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
-import PropertyPanel from '../../components/PropertyPanel';
+import PropertyPanel from './PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
 import FeedbackForm from '../../components/FeedbackForm';
 import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
-import genStructure from '../../prompts/genStructure';
-import { promptAI } from '../../services/prompt';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../interfaces/file';
 import { saveProject } from '../../utils/projectUtils';
 
-import { todoproject } from '../../data/mock';
 import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
 import { projectApi } from '../../api/project';
@@ -35,7 +32,7 @@ import ProjectBanner from './ProjectBanner';
 import { predefinedProjects } from '../../interfaces/example';
 import { SaveProjectResponse } from '../../interfaces/project';
 import { createItem } from '../../utils/itemFactory';
-import { TaskModal } from './TaskModal';
+import { TaskModal } from './GenCodeModal';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import InputModal from '../../components/InputModal';
 import { logout } from '../../services/authApi';  
@@ -63,8 +60,6 @@ const DesignPage: React.FC = () => {
   const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
-  const [aiModel, setAiModel] = useState('codestral-latest');
-  const [apiKey, setApiKey] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -86,13 +81,6 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-  const handleSelectModel = (model: string, apiKey: string) => {
-    setAiModel(model);
-    console.log('handleselectmodel model:', model);
-    console.log('handleselectmodel apiKey:', apiKey);
-    setProjectContext({ ...projectContext, aiModel: model });
-  };
   
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
@@ -329,7 +317,7 @@ const DesignPage: React.FC = () => {
     setIsLoading(true);
     try {
       const fetchedProject = await projectApi.getProjectDetails(projectId);
-      //console.log("fetchedProject", fetchedProject);
+      console.log("fetchedProject", fetchedProject);
 
       setProjectContext((prevProjectContext) => {
         const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
@@ -351,6 +339,7 @@ const DesignPage: React.FC = () => {
             ...prevProjectContext.details,
             nodes: nodesWithTypedItems || [],
             edges: fetchedProject.details.edges || [],
+            uiStructure: fetchedProject.details.uiStructure,
             isAnchorInit: fetchedProject.details.isAnchorInit,
             isCode: fetchedProject.details.isCode,
             aiFilePaths: fetchedProject.details.aiFilePaths,
@@ -418,11 +407,14 @@ const DesignPage: React.FC = () => {
   const handleExampleChange = (exampleName: string) => {
     if (exampleName && predefinedProjects[exampleName]) {
       const selectedProject = predefinedProjects[exampleName];
-      setProjectContext({
-        ...projectContext,
-        ...selectedProject,
-        aiModel: projectContext.aiModel || 'codestral-latest',
-      });
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          nodes: selectedProject.details.nodes,
+          edges: selectedProject.details.edges,
+        },
+      }));
     }
   };
 
@@ -492,7 +484,7 @@ const DesignPage: React.FC = () => {
         isOpen={isFeedbackFormOpen}
         onClose={() => setIsFeedbackFormOpen(false)}
       />
-      <Flex direction='column' height='100vh'>
+      <Flex direction='column' height='99vh' maxHeight='99vh !important' overflow='hidden'>
         <ProjectBanner
           isOpen={isListProjectModalShown}
           onClickSave={() => {}}
@@ -507,9 +499,8 @@ const DesignPage: React.FC = () => {
           onClickSave={handleSaveClick}
           onLogout={handleLogout}
           onToggleWallet={handleToggleWallet}
-          onSelectModel={handleSelectModel}
         />
-        <Flex flex={1}>
+        <Flex flex={1} maxHeight='99vh !important' overflow='hidden'>
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
           <Toolbox onExampleChange={handleExampleChange} />
           <Canvas
@@ -532,13 +523,14 @@ const DesignPage: React.FC = () => {
             onUpdateEdge={handleUpdateEdge}
             programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
             nodes={projectContext.details.nodes}
+            edges={projectContext.details.edges}
           />
         </Flex>
         
           <Button
             position='fixed'
             bottom='4'
-            right='10'
+            left='10'
             boxSizing='border-box'
             bg="white"
             border="2.5px solid"
@@ -557,7 +549,7 @@ const DesignPage: React.FC = () => {
           <Button
             position='fixed'
             bottom='4'
-            right='40'
+            left='40'
             boxSizing='border-box'
             bg="white"
             border="2.5px solid"

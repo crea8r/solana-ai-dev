@@ -23,7 +23,9 @@ import {
 import { Trash2 } from 'lucide-react';
 import { shortenText } from '../../utils/text';
 import { useProjectContext } from '../../contexts/ProjectContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
+import { ExtendedIdl } from '../../interfaces/extendedIdl';
 
 interface ListProjectProps {
   isOpen: boolean;
@@ -37,6 +39,7 @@ const ListProject: React.FC<ListProjectProps> = ({
   onProjectClick,
 }) => {
   const { projectContext, setProjectContext } = useProjectContext();
+  const { user } = useAuthContext();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,19 +87,137 @@ const ListProject: React.FC<ListProjectProps> = ({
           rootPath: '',
           name: '',
           description: '',
-          aiModel: 'codestral-latest',
-          apiKey: '',
-          walletPublicKey: '',
           details: {
             nodes: [],
             edges: [],
+            designIdl: {
+              version: "0.0.0",
+              name: "",
+              address: "",
+              metadata: {},
+              instructions: [],
+              accounts: [],
+              errors: [],
+              events: [],
+            },
+            filePaths: [],
+            fileTree: { name: '', type: 'directory', children: [] },
+            uiStructure: {
+              header: {
+                title: 'No Project Selected',
+                navigationMenu: ['Home', 'Projects', 'Settings'],
+                walletInfo: {
+                  connectedWalletAddress: {
+                    type: 'text',
+                    placeholder: 'Not Connected',
+                    description: 'Displays the connected wallet address if available. If not connected, show a "Connect Wallet" button.',
+                  },
+                  balanceDisplay: {
+                    type: 'text',
+                    description: 'Shows the balance of SOL and available SPL tokens.',
+                  },
+                  connectWalletButton: {
+                    type: 'button',
+                    label: 'Connect Wallet',
+                    description: 'Visible only when no wallet is connected.',
+                  },
+                },
+              },
+              mainSection: {
+                title: 'No Active Actions',
+                layout: 'vertical',
+                formElements: [],
+              },
+              confirmationModal: {
+                isModal: true,
+                title: 'Confirm Deletion',
+                content: {
+                  fields: [
+                    {
+                      id: 'confirmDeletionText',
+                      type: 'staticText',
+                      label: 'Confirm Deletion',
+                      description: 'Are you sure you want to delete this project?',
+                    },
+                  ],
+                },
+                buttons: [
+                  {
+                    id: 'confirmButton',
+                    type: 'button',
+                    label: 'Confirm',
+                    action: 'deleteProject',
+                    description: 'Confirms the deletion of the selected project.',
+                  },
+                  {
+                    id: 'cancelButton',
+                    type: 'button',
+                    label: 'Cancel',
+                    action: 'closeModal',
+                    description: 'Cancels the deletion and closes the confirmation modal.',
+                  },
+                ],
+              },
+              feedbackSection: {
+                title: 'Notifications',
+                elements: [
+                  {
+                    id: 'successNotification',
+                    type: 'notification',
+                    variant: 'success',
+                    message: 'Project successfully deleted!',
+                    description: 'Displays a success message when the project is deleted.',
+                  },
+                  {
+                    id: 'errorNotification',
+                    type: 'notification',
+                    variant: 'error',
+                    message: 'Project deletion failed!',
+                    description: 'Displays an error message when the project deletion fails.',
+                  },
+                ],
+              },
+              historySection: {
+                title: 'No Recent Activity',
+                list: {
+                  type: 'transactionHistoryList',
+                  fields: ['timestamp', 'action', 'status'],
+                  description: 'Displays recent actions taken in the selected project.',
+                  maxItems: 5,
+                  showPagination: true,
+                },
+              },
+              optionalFeatures: {
+                qrCodeScanner: {
+                  enabled: true,
+                  type: 'button',
+                  label: 'Scan QR Code',
+                  description: 'Opens a QR code scanner to autofill the wallet address.',
+                },
+                darkModeToggle: {
+                  enabled: true,
+                  type: 'switch',
+                  label: 'Dark Mode',
+                  description: 'Switch between light and dark modes for the UI.',
+                },
+                notificationsToggle: {
+                  enabled: true,
+                  type: 'switch',
+                  label: 'Enable Notifications',
+                  description: 'Toggle notifications on or off for project actions.',
+                },
+              },
+            },
+            keyFeatures: [],
+            userInteractions: [],
+            sectorContext: '',
+            optimizationGoals: [''],
+            uiHints: [''],
             files: { name: '', type: 'directory', children: [] },
             codes: [],
             docs: [],
             isAnchorInit: false,
             isCode: false,
-            aiFilePaths: [],
-            aiStructure: '',
             stateContent: '',
             uiResults: [],
             aiInstructions: [],
@@ -108,13 +229,12 @@ const ListProject: React.FC<ListProjectProps> = ({
             genUiClicked: false,
             idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
             sdk: { fileName: '', content: '' },
-            walletPublicKey: '',
-            walletSecretKey: '',
             programId: null,
             pdas: [],
           },
         });
       }
+      
 
       fetchProjects();
 

@@ -1,30 +1,11 @@
-import { airdropProgramProject } from "../data/examples/airdropProject";
-import { auctionProgramProject } from "../data/examples/auctionProject";
-import { counterProject } from "../data/examples/counterProject";
-import { crowdfundingProgramProject } from "../data/examples/crowdfundingProject";
-import { didVerificationProgramProject } from "../data/examples/didVerificationProject";
-import { lendingProgramProject } from "../data/examples/lendingProject";
-import { loanProgramProject } from "../data/examples/loanProject";
-import { nftMarketplaceProject } from "../data/examples/nftMarketplaceProject";
-import { stakingProgramProject } from "../data/examples/stakingProject";
-import { transferProject } from "../data/examples/transferProject";
-import { vestingProgramProject } from "../data/examples/vestingProject";
-import { votingProject } from "../data/examples/votingProject";
+import { Token } from "monaco-editor";
+import { counterProgram } from "../data/examples/counterProgram";
 import { Project } from "./project";
+import { tokenTransferProgram } from "../data/examples/tokenTransfer";
 
 export const predefinedProjects: Record<string, Project> = {
-  Counter: counterProject,
-  Voting: votingProject,
-  Transfer: transferProject,
-  Loan: loanProgramProject,
-  NFTMarketplace: nftMarketplaceProject,
-  Staking: stakingProgramProject,
-  Airdrop: airdropProgramProject, 
-  Auction: auctionProgramProject,
-  Crowdfunding: crowdfundingProgramProject,
-  Vesting: vestingProgramProject,
-  DIDVerification: didVerificationProgramProject,
-  Lending: lendingProgramProject,
+  Counter: counterProgram,
+  //TokenTransfer: tokenTransferProgram,
 };  
 
 export interface ProjectExample {

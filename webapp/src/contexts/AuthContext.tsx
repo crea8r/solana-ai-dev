@@ -15,6 +15,7 @@ export interface User {
   hasViewedWalletModal?: boolean;
   walletPublicKey?: string;
   walletPrivateKey?: string;
+  openAiApiKey?: string;
 }
 
 interface RegisterResponse {
@@ -23,6 +24,7 @@ interface RegisterResponse {
   user: {
     id: string;
     username: string;
+    openAiApiKey: string;
   };
 }
 
@@ -34,11 +36,13 @@ interface AuthContextType {
     orgName: string,
     username: string,
     password: string,
-    code: string
+    code: string,
+    openAiApiKey: string
   ) => Promise<RegisterResponse>;
   logout: () => void;
   firstLoginAfterRegistration: boolean;
   markWalletModalViewed: () => void;
+  updateApiKey: (newApiKey: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -71,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             hasViewedWalletModal: fetchedUser.hasViewedWalletModal,
             walletPublicKey: fetchedUser.walletPublicKey,
             walletPrivateKey: fetchedUser.walletPrivateKey,
+            openAiApiKey: fetchedUser.openAiApiKey,
           });
           setFirstLoginAfterRegistration(
             fetchedUser.walletCreated && !fetchedUser.hasViewedWalletModal
@@ -117,10 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     orgName: string,
     username: string,
     password: string,
-    code: string
+    code: string,
+    openAiApiKey: string
   ): Promise<RegisterResponse> => {
     try {
-      const response: RegisterResponse = await apiRegister(orgName, username, password, code);
+      const response: RegisterResponse = await apiRegister(orgName, username, password, code, openAiApiKey);
       setFirstLoginAfterRegistration(true);
       return response;
     } catch (error) {
@@ -135,6 +141,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setFirstLoginAfterRegistration(false);
   };
 
+  const updateApiKey = async (newApiKey: string) => {
+    if (!user) {
+      console.error("No user is logged in");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/update-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          apiKey: newApiKey,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update API key');
+      }
+
+      const updatedUser = { ...user, openAiApiKey: newApiKey };
+      setUser(updatedUser);
+      console.log('API key updated successfully');
+    } catch (error) {
+      console.error('Error updating API key:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -145,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         firstLoginAfterRegistration,
         markWalletModalViewed,
+        updateApiKey,
         loading,
       }}
     >

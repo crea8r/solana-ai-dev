@@ -1,21 +1,22 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
-import { Project, ProjectDetails, ProjectInfoToSave } from '../interfaces/project';
+import { Project, ProjectDetails, ProjectInfoToSave, triggerType } from '../interfaces/project';
 import { getWalletInfo } from '../api/wallet';
+import { ProgramContext, InstructionContext, AccountContext } from '../interfaces/project';
+import { intervalEnum, orderEnum } from '../interfaces/project';
 
 export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSave => ({
   id: project.id,
   name: project.name,
   description: project.description,
-  walletPublicKey: project.walletPublicKey,
-  aiModel: project.aiModel,
-  apiKey: project.apiKey,
   details: {
     nodes: project.details.nodes,
     edges: project.details.edges,
+    designIdl: project.details.designIdl,
+    uiStructure: project.details.uiStructure,
     isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
-    aiFilePaths: project.details.aiFilePaths,
-    aiStructure: project.details.aiStructure,
+    filePaths: project.details.filePaths.map(filePath => filePath.path),
+    fileTree: project.details.fileTree,
     uiResults: project.details.uiResults,
     aiInstructions: project.details.aiInstructions,
     sdkFunctions: project.details.sdkFunctions,
@@ -26,10 +27,13 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     genUiClicked: project.details.genUiClicked,
     idl: project.details.idl,
     sdk: project.details.sdk,
-    walletPublicKey: project.details.walletPublicKey,
-    walletSecretKey: project.details.walletSecretKey,
     programId: project.details.programId,
     pdas: project.details.pdas,
+    keyFeatures: project.details.keyFeatures,
+    userInteractions: project.details.userInteractions,
+    sectorContext: project.details.sectorContext,
+    optimizationGoals: project.details.optimizationGoals,
+    uiHints: project.details.uiHints, 
   },
 });
 
@@ -41,62 +45,100 @@ interface ProjectContextType {
   stateContent: string;
   setStateContent: Dispatch<SetStateAction<string>>;
   updateInstructions: (instructions: ProjectDetails['aiInstructions']) => void;
+  updateKeyFeatures: (features: string[]) => void; 
+  updateUserInteractions: (interactions: string[]) => void; 
+  updateUiHints: (hints: string[]) => void; 
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  let savedProject: Project | null = null;
   const [projectContext, setProjectContext] = useState<Project>(() => {
     const savedProject = sessionStorage.getItem('projectContext');
     return savedProject
       ? JSON.parse(savedProject)
       : {
-        id: '',
-        rootPath: '',
-        name: '',
-        description: '',
-        aiModel: 'codestral-latest',
-        apiKey: '',
-        walletPublicKey: '',
-        details: {
-          nodes: [],
-          edges: [],
-          files: { name: '', type: 'directory', children: [] },
-          codes: [],
-          docs: [],
-          isAnchorInit: false,
-          isCode: false,
-          aiFilePaths: [],
-          aiStructure: '',
-          stateContent: '',
-          uiResults: [],
-          aiInstructions: [],
-          sdkFunctions: [],
-          buildStatus: false,
-          deployStatus: false,
-          isSdk: false,
-          isUi: false,
-          genUiClicked: false,
-          idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
-          sdk: { fileName: '', content: '' },
-          walletPublicKey: '',
-          walletSecretKey: '',
-          programId: '',
-          pdas: [],
-        },
-      };
+          id: '',
+          rootPath: '',
+          name: '',
+          description: '',
+          details: {
+            nodes: [],
+            edges: [],
+            designIdl: {},
+            uiStructure: {},
+            files: { name: '', type: 'directory', children: [] },
+            codes: [],
+            docs: [],
+            isAnchorInit: false,
+            isCode: false,
+            filePaths: [],
+            fileTree: { name: '', type: 'directory', children: [] },
+            aiStructure: '',
+            stateContent: '',
+            uiResults: [],
+            aiInstructions: [],
+            sdkFunctions: [],
+            buildStatus: false,
+            deployStatus: false,
+            isSdk: false,
+            isUi: false,
+            genUiClicked: false,
+            idl: { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+            sdk: { fileName: '', content: '' },
+            programId: '',
+            pdas: [],
+            keyFeatures: [],
+            userInteractions: [],
+            sectorContext: '',
+            optimizationGoals: [],
+            uiHints: [],
+          },
+        };
   });
+
+  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
+  const [stateContent, setStateContent] = useState<string>('');
+
+  const updateKeyFeatures = (features: string[]) => {
+    setProjectContext((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        keyFeatures: features,
+      },
+    }));
+  };
+
+  const updateUserInteractions = (interactions: string[]) => {
+    setProjectContext((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        userInteractions: interactions,
+      },
+    }));
+  };
+
+  const updateUiHints = (hints: string[]) => {
+    setProjectContext((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        uiHints: hints,
+      },
+    }));
+  };
 
   const updateInstructions = (instructions: ProjectDetails['aiInstructions']) => {
     setProjectContext((prev) => ({
       ...prev,
-      aiInstructions: instructions,
+      details: {
+        ...prev.details,
+        aiInstructions: instructions,
+      },
     }));
   };
-
-  const [projectInfoToSave, setProjectInfoToSave] = useState<ProjectInfoToSave>(transformToProjectInfoToSave(projectContext));
-  const [stateContent, setStateContent] = useState<string>('');
 
   useEffect(() => {
     if (projectContext) sessionStorage.setItem('projectContext', JSON.stringify(projectContext));
@@ -129,6 +171,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         stateContent,
         setStateContent,
         updateInstructions,
+        updateKeyFeatures, 
+        updateUserInteractions, 
+        updateUiHints,
       }}
     >
       {children}

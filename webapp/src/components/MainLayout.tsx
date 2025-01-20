@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, Icon, Tooltip, Flex, Button } from '@chakra-ui/react';
 import { PiGraphLight } from "react-icons/pi";
 import { PiTerminalWindowLight } from "react-icons/pi";
+import { GoLightBulb } from "react-icons/go";
 import { PiBookOpenText } from "react-icons/pi";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 import { PiAppWindowLight } from "react-icons/pi";
@@ -22,9 +23,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const menuItems = [
     { icon: PiGraphLight, label: 'Design', path: '/design' },
     { icon: PiTerminalWindowLight, label: 'Code', path: '/code', disabled: !projectContext.details.isCode },
-    { icon: PiAppWindowLight, label: 'UI - Coming Soon', path: '/ui', disabled: true }, //!projectContext.details.genUiClicked
-    { icon: PiBookOpenText, label: 'Docs - Coming Soon', path: '/doc', disabled: true },
-    { icon: HiOutlineUserCircle, label: 'Account', path: '/account' },
+    { icon: PiAppWindowLight, label: 'UI - coming soon', path: '/ui', disabled: false }, //!projectContext.details.genUiClicked ?
+    { icon: PiBookOpenText, label: 'Docs - coming soon', path: '/doc', disabled: true },
+    { icon: GoLightBulb, label: 'Learn - coming soon', path: '/learn', disabled: true },
+    { icon: HiOutlineUserCircle, label: 'Account', path: '/account', disabled: false },
   ];
 
   const handleNavigation = (path: string) => {

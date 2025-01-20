@@ -117,7 +117,7 @@ export const generateSdk = async (
     const _projectFieldName = toLowerCaseFirstLetter(_projectClassName);
     let _idlPath = pascalToSnake(_projectClassName);
     _idlPath = `/target/idl/${_idlPath}.json`;
-    const _walletPublicKey = projectContext.walletPublicKey;
+    const _walletPublicKey = user?.walletPublicKey || '';
 
     console.log('instructions', instructions);
     console.log('param names', instructions.map(inst => inst.params.map(param => param.name)));

@@ -177,7 +177,7 @@ export const getPrivateKey = async (
 };
 
 export const register = async (req: Request, res: Response) => {
-  const { username, password, organisation, description, code } = req.body;
+  const { username, password, organisation, description, code, openAiApiKey } = req.body;
 
   if (!code) return res.status(200).json({ success: false, message: 'Registration code is required' });
   const validCodes = getValidBetaCodes();
@@ -222,8 +222,8 @@ export const register = async (req: Request, res: Response) => {
 
       const userId = uuidv4();
       await client.query(
-        'INSERT INTO Creator (id, username, password, org_id, role, wallet_created, private_key_viewed) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [userId, username, hashedPassword, orgId, 'admin', false, false]
+        'INSERT INTO Creator (id, username, password, org_id, role, wallet_created, private_key_viewed, openAiApiKey) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [userId, username, hashedPassword, orgId, 'admin', false, false, openAiApiKey]
       );
 
       await client.query('COMMIT');
@@ -237,6 +237,7 @@ export const register = async (req: Request, res: Response) => {
         private_key_viewed: false,
         wallet_public_key: '',
         wallet_private_key: '',
+        openai_api_key: openAiApiKey,
       });
 
       /*
@@ -259,9 +260,11 @@ export const register = async (req: Request, res: Response) => {
           id: userId, 
           username, 
           org_id: orgId, 
+          org_name: organisation,
           role: 'admin',
           wallet_public_key: '',
           wallet_private_key: '',
+          openai_api_key: openAiApiKey,
         },
       });
     } catch (error) {
@@ -300,6 +303,7 @@ export const login = async (req: Request, res: Response) => {
       private_key_viewed: user.private_key_viewed,
       wallet_public_key: user.wallet_public_key,
       wallet_private_key: user.wallet_private_key,
+      openai_api_key: user.openaiapikey,
     });
 
     /*
@@ -318,11 +322,13 @@ export const login = async (req: Request, res: Response) => {
         id: user.id,
         username: user.username,
         org_id: user.org_id,
+        org_name: user.org_name,
         role: user.role,
         wallet_created: user.wallet_created,
         private_key_viewed: user.private_key_viewed,
         wallet_public_key: user.wallet_public_key,
         wallet_private_key: user.wallet_private_key,
+        openai_api_key: user.openaiapikey,
       },
     });
   } catch (error) {
@@ -335,26 +341,81 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 };
 
-export const getUser = (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
   try {
-    if (!req.user) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Unauthorized: No user data' });
     }
 
+    // Query the database for the user's latest data
+    const result = await pool.query('SELECT * FROM Creator WHERE id = $1', [req.user.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
     res.status(200).json({
       user: {
-        id: req.user.id,
-        username: req.user.name,
-        org_id: req.user.org_id,
-        org_name: req.user.org_name,
-        wallet_created: req.user.wallet_created,
-        private_key_viewed: req.user.private_key_viewed,
-        wallet_public_key: req.user.wallet_public_key,
-        wallet_private_key: req.user.wallet_private_key,
+        id: user.id,
+        username: user.username,
+        org_id: user.org_id,
+        org_name: user.org_name,
+        wallet_created: user.wallet_created,
+        private_key_viewed: user.private_key_viewed,
+        wallet_public_key: user.wallet_public_key,
+        wallet_private_key: user.wallet_private_key,
+        openai_api_key: user.openaiapikey,
       },
     });
   } catch (error) {
     console.error('Error retrieving user:', error);
     return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const updateApiKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.user?.id; // Ensure `req.user` is populated by authentication middleware
+  const { apiKey } = req.body;
+
+  if (!userId) {
+    return next(new AppError('User ID not found', 400));
+  }
+
+  if (!apiKey) {
+    return next(new AppError('API key is required', 400));
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      'UPDATE Creator SET openaiapikey = $1 WHERE id = $2 RETURNING openaiapikey',
+      [apiKey, userId]
+    );
+
+    if (result.rowCount === 0) {
+      throw new AppError('User not found or API key not updated', 404);
+    }
+
+    await client.query('COMMIT');
+
+    res.status(200).json({
+      message: 'API key updated successfully',
+      openAiApiKey: result.rows[0].openaiapikey,
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating API key:', error);
+    next(new AppError('Failed to update API key', 500));
+  } finally {
+    client.release();
   }
 };

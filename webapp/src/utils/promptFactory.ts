@@ -71,15 +71,17 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
       all_account_text += `There are ${accountNodes.length} accounts in this program.\n`;
       accountNodes.forEach((account) => {
         const account_data = account.data.item as Account;
-        const account_name = account_data.getName();
+        const account_name = account_data.getNamePascal();
         const account_desc = account_data.getDescription();
-        const account_json = account_data.getJson();
+        const account_is_mutable = account_data.getIsMutable();
+        const account_is_signer = account_data.getIsSigner();
         let account_text =
           account_name +
           ' is ' +
           account_desc +
           '; with data structure as ' +
-          account_json;
+          account_is_mutable +
+          account_is_signer;
         const edge = accountEdges.find((edge) => edge.target === account.id);
         if (edge) {
           account_text += '; the seed is ' + edge.data?.label;
@@ -92,24 +94,24 @@ export const prompt = (nodes: Node[], edges: Edge[]) => {
       all_instruction_text += `There are ${instructionNodes.length} instructions in this program.\n`;
       instructionNodes.forEach((instruction) => {
         const instruction_data = instruction.data.item as Instruction;
-        const instruction_name = instruction_data.getName();
+        const instruction_name = instruction_data.getNamePascal();
         const instruction_desc = instruction_data.getDescription();
-        const instruction_params = instruction_data.getParameters();
-        const instruction_ai = instruction_data.getAiInstruction();
+        const instruction_params = instruction_data.getParams();
+        const instruction_accounts = instruction_data.getAccounts();
         let instruction_text =
           instruction_name +
           ' is a instruction, ' +
           instruction_desc +
           ' with parameters:' +
           instruction_params +
-          '; and logic as following: ' +
-          instruction_ai;
+          '; and accounts as following: ' +
+          instruction_accounts;
         all_instruction_text += instruction_text + '\n';
       });
     }
     all_text +=
       textGenerator(
-        program_data.getName(),
+        program_data.getNamePascal(),
         program_data.getDescription(),
         all_account_text,
         all_instruction_text

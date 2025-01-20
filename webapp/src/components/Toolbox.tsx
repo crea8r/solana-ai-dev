@@ -19,13 +19,13 @@ import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
 
 const toolboxItems = [
-  new Account('account-template', 'Account', '', '{}', ''),
-  new Instruction('instruction-template', 'Instruction', '', '', '', ''),
-  new Program('program-template', 'Program', ''),
+  new Account("", {snake: 'account', pascal: 'Account'}, 'Account', "", true, false, [{name: 'field1', type: 'u64'}, {name: 'field2', type: 'u64'}]),
+  new Instruction("", {snake: 'instruction', pascal: 'Instruction'}, 'Instruction', [], [], [], []),
+  new Program("", {snake: 'program', pascal: 'Program'}, 'Program', '11111111111111111111111111111111'),
 ];
 
 const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({ onExampleChange }) => {
-  const { setProjectContext } = useProjectContext();
+  const { setProjectContext, projectContext } = useProjectContext();
   const [selectedExample, setSelectedExample] = useState('');
 
   const handleExampleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -37,7 +37,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       const selectedProject = predefinedProjects[exampleName];
       if (!selectedProject) return;
 
-      //console.log('Selected Project Nodes:', selectedProject.details.nodes);
+      //console.log('Selected Project:', selectedProject);
 
       const instantiatedNodes = selectedProject.details.nodes.map((node): ReactFlowNode | null => {
           if (!node.type || !node.data.item) { console.error('Invalid node:', node); return null; }
@@ -46,7 +46,6 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             console.error('Failed to load item for node:', node);
             return null;
           }
-          //console.log('Loaded Item:', item);
           return {
             ...node,
             data: {
@@ -57,7 +56,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
         })
         .filter((node): node is ReactFlowNode => node !== null);
 
-      //console.log('Instantiated Nodes:', instantiatedNodes);
+      //console.log('Selected Project:', selectedProject);
 
       setProjectContext((prev) => ({
         ...prev,
@@ -68,20 +67,23 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           ...prev.details,
           nodes: instantiatedNodes,
           edges: selectedProject.details.edges,
+          uiStructure: selectedProject.details.uiStructure,
         },
       }));
+      console.log('Selected Project:', selectedProject.details.nodes[0].data.item);
+      console.log('Project Context:', projectContext);
     }
   };
 
   return (
     <Box
-      width="20%"
+      width="20w"
       bg="gray.50"
       py={4}
       px={6}      
       borderRight="1px solid"
       borderColor="gray.200"
-      fontFamily="Red Hat Display"
+      fontFamily="IBM Plex Mono"
       letterSpacing="0.05em"
     >
       <VStack spacing={2} align="stretch">
@@ -93,7 +95,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             size="sm"
             fontWeight="normal"
             letterSpacing="0.05em"
-            fontFamily="Red Hat Display"
+            fontFamily="IBM Plex Mono"
             bg="white"
             color="gray.700"
             mb={3}
@@ -103,24 +105,14 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
             borderColor="gray.300"
           >
               <option value="Counter"><Text>Counter Program</Text></option>
-              <option value="Voting"><Text>Voting Program</Text></option>
-              <option value="Transfer"><Text>Transfer Program</Text></option>
-              <option value="Loan"><Text>Loan Program</Text></option>
-              <option value="NFTMarketplace"><Text>NFT Marketplace Program</Text></option>
-              <option value="Staking"><Text>Staking Program</Text></option>
-              <option value="Airdrop"><Text>Airdrop Program</Text></option>
-              <option value="Auction"><Text>Auction Program</Text></option>
-              <option value="Crowdfunding"><Text>Crowdfunding Program</Text></option>
-              <option value="Vesting"><Text>Vesting Program</Text></option>
-              <option value="DIDVerification"><Text>DID Verification Program</Text></option>
-              <option value="Lending"><Text>Lending Program</Text></option>
+              <option value="TokenTransfer"><Text>Token Transfer Program</Text></option>
           </Select>
         </Flex>
         <Text fontWeight="normal" textAlign="left" fontSize="sm" color="gray.600">Drag items onto canvas</Text>
         <Divider mb={3} borderColor="gray.500"/>
         <SimpleGrid columns={2} spacing={4}>
           {toolboxItems.map((item) => (
-            <Tooltip key={item.id} label={item.getName()} placement="right"
+            <Tooltip key={item.identifier} label={item.getNamePascal()} placement="right"
               bg='#a9b7ff'
               color='white'
               shadow='sm'
@@ -135,7 +127,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 onDragStart={(e: any) => e.dataTransfer.setData('text/plain', item.getType())}
                 p={2}
                 letterSpacing="0.05em"
-                fontFamily="Red Hat Display"
+                fontFamily="IBM Plex Mono"
                 borderRadius="md"
                 border= '2px solid #a9b7ff'
                 bg="white"
@@ -147,7 +139,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
                 height="auto"
                 shadow="sm"
               >
-                <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getName()}</Text>
+                <Text fontSize="sm" fontWeight="600" color="#909de0">{item.getNamePascal()}</Text>
               </Box>
             </Tooltip>
           ))}

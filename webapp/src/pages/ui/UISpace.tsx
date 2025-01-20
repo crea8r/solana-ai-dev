@@ -1,8 +1,26 @@
 import React, { useMemo } from "react";
+import {
+  Box,
+  Flex,
+  Text,
+  Input,
+  Button,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  useToast,
+  Grid,
+  IconButton,
+  useColorMode,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+} from "@chakra-ui/react";
+import { ChevronDownIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { useProjectContext } from "../../contexts/ProjectContext";
-import { Box, Flex, Text, Switch, HStack } from "@chakra-ui/react";
-import InstructionCard from "./InstructionCard";
-import AccountCard from "./AccountCard";
 
 const UISpace = ({
   toggleState,
@@ -12,72 +30,153 @@ const UISpace = ({
   onToggleChange: (checked: boolean) => void;
 }) => {
   const { projectContext } = useProjectContext();
+  const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
 
-  const instructions = useMemo(() => {
-    const parsedInstructions =
-      projectContext.details.idl?.parsed?.instructions || [];
-    return parsedInstructions;
-  }, [projectContext.details.idl.parsed]);
+  const uiStructure = useMemo(() => {
+    console.log("projectContext:", projectContext);
+    return projectContext?.details?.uiStructure || {};
+  }, [projectContext.details]);
 
-  const accounts = useMemo(() => {
-    const parsedAccounts = projectContext.details.idl?.parsed?.accounts || [];
-    return parsedAccounts;
-  }, [projectContext.details.idl.parsed]);
+  const renderFormElement = (element: any) => {
+    switch (element.type) {
+      case "text":
+        return (
+          <Box key={element.id} mb={4}>
+            <Text fontWeight="bold">{element.label}</Text>
+            <Input
+              value={element.description || ""}
+              placeholder={element.placeholder}
+              isReadOnly
+              variant="filled"
+            />
+          </Box>
+        );
+      case "input":
+        return (
+          <Box key={element.id} mb={4}>
+            <Text fontWeight="bold">{element.label}</Text>
+            <Input
+              type={element.inputType || "text"}
+              placeholder={element.placeholder}
+              isRequired={element.validation?.required}
+            />
+            <Text fontSize="sm" color="gray.500">
+              {element.description}
+            </Text>
+          </Box>
+        );
+      case "button":
+        return (
+          <Button
+            key={element.id}
+            colorScheme="blue"
+            isDisabled={element.disabledByDefault}
+            onClick={() => handleButtonAction(element)}
+            mb={2}
+          >
+            {element.label}
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
 
-  const isUIGenerated = instructions.length > 0;
+  const handleButtonAction = (element: any) => {
+    toast({
+      title: `${element.label} clicked`,
+      description: element.description,
+      status: "info",
+      duration: 3000,
+    });
+  };
 
   return (
-    <Box width="100%" maxHeight="100%" overflowY="auto">
-      <HStack justifyContent="center" mt={4} mb={4} spacing={6}>
-        <Text fontSize="lg" fontWeight="medium" color="gray.600">
-          Simple
+    <Box p={6} maxWidth="900px" mx="auto">
+      <Flex
+        bg="gray.100"
+        p={4}
+        shadow="md"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Text fontSize="2xl" fontWeight="bold">
+          {uiStructure.header?.title || "Program Interface"}
         </Text>
-        <Switch
-          size="lg"
-          isChecked={toggleState}
-          onChange={(e) => onToggleChange(e.target.checked)}
-          sx={{
-            ".chakra-switch__track": {
-              backgroundColor: toggleState ? "#a9b7ff" : "gray.200",
-            },
-            ".chakra-switch__thumb": {
-              backgroundColor: "white",
-            },
-          }}
-        />
-        <Text fontSize="lg" fontWeight="medium" color="gray.600">
-          Advanced
-        </Text>
-      </HStack>
-
-      {isUIGenerated && (
-        <Flex
-          direction="row"
-          flexWrap="wrap"
-          justifyContent="space-evenly"
-          alignItems="flex-start"
-          gap={4}
-          p={4}
-          width="100%"
-          maxHeight="100%"
-          overflowY="auto"
-          bg="gray.50"
-          shadow="md"
-        >
-          {instructions.map((instruction) => (
-            <InstructionCard
-              key={instruction.name}
-              instruction={instruction}
-              isSimpleMode={!toggleState}
-            />
-          ))}
-          <AccountCard
-            key={accounts[0].name}
-            account={accounts[0]}
-            isSimpleMode={!toggleState}
+        <Flex alignItems="center" gap={4}>
+          <Menu>
+            <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+              Menu
+            </MenuButton>
+            <MenuList>
+              {uiStructure.header?.navigationMenu?.map((menuItem: string) => (
+                <MenuItem key={menuItem}>{menuItem}</MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+          <IconButton
+            aria-label="Toggle Dark Mode"
+            icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+            onClick={toggleColorMode}
           />
         </Flex>
-      )}
+      </Flex>
+
+      <Accordion allowMultiple mt={4}>
+        <AccordionItem>
+          <AccordionButton>
+            <Box flex="1" textAlign="left" fontWeight="bold">
+              {uiStructure.mainSection?.title || "Main Form"}
+            </Box>
+            <AccordionIcon />
+          </AccordionButton>
+          <AccordionPanel>
+            <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+              {uiStructure.mainSection?.formElements.map((element: any) =>
+                renderFormElement(element)
+              )}
+            </Grid>
+          </AccordionPanel>
+        </AccordionItem>
+
+        {uiStructure.confirmationModal && (
+          <AccordionItem>
+            <AccordionButton>
+              <Box flex="1" textAlign="left" fontWeight="bold">
+                {uiStructure.confirmationModal.title || "Confirmation"}
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel>
+              {uiStructure.confirmationModal.content.fields.map((field: any) =>
+                renderFormElement(field)
+              )}
+            </AccordionPanel>
+          </AccordionItem>
+        )}
+
+        <AccordionItem>
+          <AccordionButton>
+            <Box flex="1" textAlign="left" fontWeight="bold">
+              {uiStructure.feedbackSection?.title || "Transaction Status"}
+            </Box>
+            <AccordionIcon />
+          </AccordionButton>
+          <AccordionPanel>
+            {uiStructure.feedbackSection?.elements.map((element: any) =>
+              renderFormElement(element)
+            )}
+          </AccordionPanel>
+        </AccordionItem>
+      </Accordion>
+
+      <Flex mt={6} position="sticky" bottom="0" bg="white" py={4}>
+        <Button colorScheme="blue" mr={2}>
+          Submit
+        </Button>
+        <Button variant="outline">Cancel</Button>
+      </Flex>
     </Box>
   );
 };

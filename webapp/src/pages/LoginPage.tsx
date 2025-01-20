@@ -16,11 +16,12 @@ import {
   useToast
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
-import type { Container } from "@tsparticles/engine";
 import { useAuth } from '../hooks/useAuth';
 import { login } from '../services/authApi';
+import ParticlesContainer from './ParticlesContainer';
+import landingPageTheme from '../theme';
+
+const bgGradient = landingPageTheme.colors.brand.landingPageBgGradient;
 
 const style: React.CSSProperties = {
   position: "relative",
@@ -48,107 +49,6 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
     </div>
   );
 };
-
-const ParticlesContainer = memo(({ isDarkMode }: { isDarkMode: boolean }) => {
-  const [init, setInit] = useState(false);
-
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
-  }, []);
-
-  return (
-    <div>
-      {init && <Particles
-        id="tsparticles"
-        options={{
-          background: {
-            color: {
-              value: isDarkMode ? "#232734" : "#aac9fc",
-            },
-          },
-          fpsLimit: 130,
-          interactivity: {
-            events: {
-              onClick: {
-                enable: true,
-                mode: "repulse",
-              },
-              onHover: {
-                enable: true,
-                mode: ["grab"],
-              },
-            },
-            modes: {
-              grab: {
-                distance: 250,
-              },
-              bubble: {
-                color: "#ffffff",
-                distance: 400,
-                duration: 5,
-                opacity: 0.8,
-                size: 6,
-              },
-              attract: {
-                enable: true,
-                distance: 1000,
-              },
-              push: {
-                quantity: 4,
-              },
-              repulse: {
-                distance: 200,
-                duration: 0.3,
-              },
-            },
-          },
-          particles: {
-            color: {
-              value: "#ffffff",
-            },
-            links: {
-              color: "#ffffff",
-              distance: 280,
-              enable: true,
-              opacity: 0.4,
-              width: 1,
-            },
-            move: {
-              direction: "none",
-              enable: true,
-              outModes: {
-                default: "bounce",
-              },
-              random: true,
-              speed: 3,
-              straight: false,
-            },
-            number: {
-              density: {
-                enable: true,
-              },
-              value: 50,
-            },
-            opacity: {
-              value: 0.6,
-            },
-            shape: {
-              type: "circle",
-            },
-            size: {
-              value: { min: 4, max: 6 },
-            },
-          },
-          detectRetina: true,
-        }}
-      />}
-    </div>
-  );
-});
 
 const LoginPage: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -178,30 +78,34 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Flex h="100vh" w="100vw">
-        <Flex
-          w="50%"
-          justifyContent="center"
-          alignItems="center"
-          p="4"
-          bg={isDarkMode ? "#232734" : "#aac9fc"}
-        >
-          <ParticlesContainer isDarkMode={isDarkMode} />
+    <Flex 
+      h="100vh" w="100vw"
+      direction="column"
+      justifyContent="center"
+      alignItems="center"
+      fontFamily="IBM Plex Mono"
+      bgGradient={bgGradient}
+
+    >
+        <ParticlesContainer isDarkMode={isDarkMode} />
         <Card
-          w="full" maxW="lg" h="lg" mx="auto" bg="whiteAlpha.900" backdropFilter="blur(10px)"
-          rounded="lg" shadow="2xl" p="5" zIndex="10" fontFamily="Red Hat Display"
+          w="full" maxW="lg" h="lg" mx="auto" bg="rgba(255, 255, 255, 0.9)"
+          rounded="lg" shadow="2xl" p="5" zIndex="10" 
+          fontFamily="IBM Plex Mono"
         >
-          <CardHeader textAlign="center" pt="6" position="relative">
-            <Link to="/" className="absolute left-0 top-0 p-5">
-              <ArrowBackIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
-            </Link>
-            <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
-            <Text fontSize="md" color="gray.500" >Enter your details to login to your account</Text>
+          <CardHeader textAlign="center" pt="6" position="relative" fontFamily="IBM Plex Mono">
+            <Flex justifyContent="flex-start" alignItems="center" px="5">
+              <Link to="/landing" className="absolute left-0 top-0 p-5">
+                <ArrowBackIcon color="gray.800" className="h-7 w-7"/>
+              </Link>
+              </Flex>
+              <Heading as="h1" size="md" mb="4" color="gray.700" fontWeight="400">Login</Heading>
+            <Text fontSize="sm" color="gray.500" >Enter your details to login to your account</Text>
           </CardHeader>
-          <CardBody fontWeight="300" fontSize="xs">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Box className="space-y-2">
-                <FormLabel htmlFor="username" fontSize="md">Username</FormLabel>
+          <CardBody fontWeight="300" fontSize="xs" fontFamily="IBM Plex Mono">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Box className="space-y-2" pb="2">
+                <FormLabel htmlFor="username" fontSize="sm" fontWeight="normal">Username</FormLabel>
                 <Input 
                   id="username" 
                   type="text" 
@@ -211,9 +115,9 @@ const LoginPage: React.FC = () => {
                   autoComplete="off"
                 />
               </Box>
-              <Box className="space-y-2">
-                <FormLabel htmlFor="password" fontSize="md">Password</FormLabel>
-                <Box className="relative flex flex-row gap-2 items-center">
+              <Box className="space-y-2" pb="2">
+                <FormLabel htmlFor="password" fontSize="sm" fontWeight="normal">Password</FormLabel>
+                <Flex direction="row" gap="2" alignItems="center">
                   <Input 
                     id="password" 
                     type={showPassword ? "text" : "password"} 
@@ -233,35 +137,45 @@ const LoginPage: React.FC = () => {
                       <ViewIcon className="h-5 w-5" />
                     )}
                   </Button>
-                </Box>
+                </Flex>
               </Box>
-              <Button 
-                type="submit" 
-                className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
-                fontSize="md" letterSpacing="0.05em" fontFamily="Red Hat Display"
-                py="5"
-                bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
-              >
-                Sign in
-              </Button>
+              <Flex justifyContent="center" alignItems="center" py="5" px="2">
+                <Button 
+                  type="submit" 
+                  className="w-full text-white hover:opacity-90 px-4 py-2 rounded inline-block text-center"
+                  fontSize="sm" letterSpacing="0.05em" fontFamily="IBM Plex Mono"
+                  py="5"
+                  width="100%"
+                  bg="blue.300" color="white" _hover={{ bg: "blue.400" }}
+                >
+                  <Text fontSize="xs">Sign in</Text>
+                </Button>
+              </Flex>
             </form>
           </CardBody>
           <CardFooter className="flex flex-wrap items-center justify-between gap-2">
-            <Text className="text-sm text-muted-foreground">
-              <a href="#" className="hover:text-primary underline underline-offset-4">Forgot password?</a>
-            </Text>
-            <Text className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to='/register' className="hover:text-primary underline underline-offset-4 ml-2">Sign up</Link>
-            </Text>
+            <Flex width="full" direction="row" gap="2" justifyContent="space-between" alignItems="center" px="2">
+              <Text className="text-sm text-muted-foreground" fontSize="xs">
+                <a href="#" className="hover:text-primary underline underline-offset-4">Forgot password?</a>
+              </Text>
+              <Flex 
+                direction="row" 
+                alignItems="center" 
+                justifyContent="flex-end" 
+                wrap="nowrap" 
+                whiteSpace="nowrap"
+                gap="2"
+              >
+                <Text className="text-sm text-muted-foreground" fontSize="xs" display="inline">
+                  Don't have an account?{' '}
+                </Text>
+                <Link to='/register' className="hover:text-primary underline underline-offset-4 ml-2" >
+                  <Text fontSize="xs" color="blue.300">Sign up</Text>
+                </Link>
+              </Flex>
+            </Flex>
           </CardFooter>
         </Card>
-      </Flex>
-      <Flex w="50%" bg="white" zIndex="10" direction="column" justifyContent="center" alignItems="center">
-        <Flex borderWidth="1px" borderColor="gray.400" w="80%" h="50%" bg="whiteAlpha.900" backdropFilter="blur(10px)" shadow="md" direction="column" justifyContent="center" alignItems="center">
-          <VideoEmbed videoId="NbO50Rm8u6Q" />
-        </Flex>
-      </Flex>
     </Flex>
   );
 };

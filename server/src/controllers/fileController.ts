@@ -13,6 +13,7 @@ import {
   getProjectRootPath,
   findFileRecursive,
 } from '../utils/fileUtils';
+import { execSync } from 'child_process';
 
 dotenv.config();
 
@@ -442,5 +443,33 @@ export const renameDirectory = async (
     } else {
       next(new AppError('Failed to rename directory', 500));
     }
+  }
+};
+
+export const formatFiles = async (req: Request, res: Response, next: NextFunction) => {
+  const { fileContents } = req.body;
+
+  if (!Array.isArray(fileContents)) {
+    return res.status(400).json({ error: 'fileContents must be an array of strings' });
+  }
+
+  try {
+    const formattedContents = fileContents.map((codeContent, index) => {
+      try {
+        const formatted = execSync('rustfmt --emit stdout', {
+          input: codeContent,
+          encoding: 'utf8',
+        });
+        return formatted.trim(); // Ensure no extra whitespace
+      } catch (error: any) {
+        console.error(`Error formatting file at index ${index}:`, error.message);
+        return codeContent; // Return original if formatting fails
+      }
+    });
+
+    return res.status(200).json(formattedContents);
+  } catch (error) {
+    console.error('Error formatting files:', error);
+    return next(new Error('Failed to format files'));
   }
 };

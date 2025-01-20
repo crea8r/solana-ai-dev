@@ -296,6 +296,14 @@ export const fetchDirectoryStructure = async (
   }
 };
 
+const normalizePath = (path: string): string => {
+  return path
+    .replace(/\\/g, '/') // Convert backslashes to forward slashes
+    .replace(/\/+$/, '') // Remove trailing slashes
+    .replace(/^\//, '') // Remove leading slashes (optional, depending on your use case)
+    .trim(); // Remove extra whitespace
+};
+
 export const handleSelectFileUtil = async (
   file: FileTreeItemType,
   projectContext: any,
@@ -307,22 +315,31 @@ export const handleSelectFileUtil = async (
     setIsLoading(true);
     setSelectedFile(file);
     sessionStorage.setItem('selectedFile', JSON.stringify(file));
-    
+
+    console.log("file", file);
 
     if (projectContext?.details?.codes) {
-      const projectContextContent = projectContext?.details?.codes.find((child: any) => child.name === file.name);
+      const projectContextContent = projectContext.details.codes.find(
+        (child: any) => normalizePath(child.path || '') === normalizePath(file.path || '')
+      );
       if (projectContextContent?.content) {
-        setFileContent(projectContextContent?.content);
+        setFileContent(projectContextContent.content);
         setIsLoading(false);
-      } else { 
+      } else {
         console.warn(`No content found for file: ${file.name}`);
         setFileContent('');
       }
-    } else { console.error('No file content found in projectContext'); return; }
-  } catch (error) { console.error('Error handling selected file:', error); }
+    } else {
+      console.error('No file content found in projectContext');
+      return;
+    }
+  } catch (error) {
+    console.error('Error handling selected file:', error);
+  }
 };
 
 export const handleSave = async (
+  setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
   selectedFile: FileTreeItemType,
   projectContextId: string,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -331,19 +348,37 @@ export const handleSave = async (
   fileContent: string
 ) => {
   if (!selectedFile || !selectedFile.path || !projectContextId) {
-    addLog( 'No file selected or project context missing', 'error');
+    addLog('No file selected or project context missing', 'error');
     return;
   }
+
+  console.log("selectedFile", selectedFile);
 
   setIsLoading(true);
   const projectId = projectContextId;
   const filePath = selectedFile.path;
   const content = fileContent;
 
+  console.log("projectId", projectId);
+  console.log("filePath", filePath);
+  console.log("content", content);
+
   try {
     const response = await fileApi.updateFile(projectId, filePath, content);
     const taskId = response.taskId;
     startPollingTaskStatus(taskId, setIsPolling, setIsLoading, addLog);
+
+    setProjectContext((prev) => {
+      if (!prev) return prev;
+      const updatedCodes = prev.details.codes.map((code) => {
+        if (code.path === selectedFile.path) {
+          return { ...code, content: fileContent };
+        }
+        return code;
+      });
+      return { ...prev, details: { ...prev.details, codes: updatedCodes } };
+    });
+
   } catch (error) {
     addLog(`Error saving file: ${error}`, 'error');
   } finally {

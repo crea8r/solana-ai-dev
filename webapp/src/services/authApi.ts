@@ -44,6 +44,7 @@ export const login = async (
         hasViewedWalletModal: response.data.user.private_key_viewed,
         walletPublicKey: response.data.user.wallet_public_key,
         walletPrivateKey: response.data.user.wallet_private_key,
+        openAiApiKey: response.data.user.openai_api_key,
       });
       
     } else console.error('No token or user data received in response');
@@ -58,7 +59,8 @@ export const register = async (
   organisation: string,
   username: string,
   password: string,
-  code: string
+  code: string,
+  openAiApiKey: string
 ): Promise<any> => {
   try {
     const response = await authApi.post('/auth/register', {
@@ -66,6 +68,7 @@ export const register = async (
       username,
       password,
       code,
+      openAiApiKey
     });
 
     if (response.data.token) {
@@ -103,6 +106,16 @@ export const getUser = async () => {
     return response.data.user;
   } catch (error) {
     console.error('Error fetching user:', error);
+    throw error;
+  }
+};
+
+export const updateApiKey = async (newApiKey: string): Promise<any> => {
+  try {
+    const response = await authApi.post('/auth/update-api-key', { apiKey: newApiKey });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error updating API key:', error.response?.data || error.message);
     throw error;
   }
 };
