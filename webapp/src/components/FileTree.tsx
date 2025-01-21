@@ -1,4 +1,4 @@
-import { VStack, Text, Flex } from '@chakra-ui/react';
+import { VStack, Text, Flex, Box } from '@chakra-ui/react';
 import React, { useState, memo } from 'react';
 import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 import { FileTreeItemType } from '../interfaces/file';
@@ -81,17 +81,18 @@ const FileTree = memo(({
 }: FileTreeProps) => {
   //console.log('***FileTreeComponent files:', JSON.stringify(files, null, 2));
   return (
-    <VStack align='stretch' spacing={2} p={4}>
-      <Text fontWeight='bold'>Project Files</Text>
-      {files && (
-        <FileTreeItem
-          item={files}
-          onSelectFile={onSelectFile}
-          selectedItem={selectedItem}
-          level={0}
-        />
-      )}
-    </VStack>
+    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" maxWidth='20vw' minWidth='20vw' padding="10px">
+      <VStack align='stretch' spacing={2} p={4}>
+        {files && (
+          <FileTreeItem
+            item={files}
+            onSelectFile={onSelectFile}
+            selectedItem={selectedItem}
+              level={0}
+          />
+        )}
+      </VStack>
+    </Flex>
   );
 });
 

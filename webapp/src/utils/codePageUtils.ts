@@ -8,6 +8,8 @@ import { CodeFile } from "../contexts/CodeFileContext";
 import { LogEntry } from "../hooks/useTerminalLogs";
 import { transformToProjectInfoToSave } from "../contexts/ProjectContext";
 
+export const normalizePath1 = (path: string) => path.replace(/\\/g, "/").trim();
+
 export const updateProjectInDatabase = async (projectContext: Project) => {
   try {
       const projectInfoToSave = transformToProjectInfoToSave(projectContext);

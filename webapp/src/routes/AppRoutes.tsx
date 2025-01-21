@@ -33,22 +33,6 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path='/code'
-          element={
-            <ProtectedRoute>
-              <CodePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/ui'
-          element={
-            <ProtectedRoute>
-              <UIPage />
-            </ProtectedRoute>
-          }
-        />
         {/* 
         --- add back in later ---
         <Route

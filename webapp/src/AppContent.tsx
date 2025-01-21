@@ -49,38 +49,6 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/code"
-            element={
-              <ProtectedRoute>
-                <ProjectProvider>
-                  <CodeFileProvider>
-                    <DocsProvider>
-                      <MainLayout>
-                        <CodePage />
-                      </MainLayout>
-                    </DocsProvider>
-                  </CodeFileProvider>
-                </ProjectProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ui"
-            element={
-              <ProtectedRoute>
-                <ProjectProvider>
-                  <CodeFileProvider>
-                    <DocsProvider>
-                      <MainLayout>
-                        <UIPage />
-                      </MainLayout>
-                    </DocsProvider>
-                  </CodeFileProvider>
-                </ProjectProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/doc"
             element={
               <ProtectedRoute>

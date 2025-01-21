@@ -1,6 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useCallback, useEffect, useContext } from 'react';
-import { Button, Flex, TabPanels, TabList, Tab, Tabs, useDisclosure, useToast, TabPanel } from '@chakra-ui/react';
+import React, { useState, useCallback, useEffect, useContext, useRef } from 'react';
+import { 
+  Button, 
+  Flex, 
+  TabPanels, 
+  TabList, 
+  Tab, 
+  Tabs, 
+  useDisclosure, 
+  useToast, 
+  TabPanel, 
+  Text
+} from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -39,6 +50,22 @@ import { logout } from '../../services/authApi';
 import { Wallet, WalletCreationModal } from '../../components/Wallet';
 import { AuthContext } from '../../contexts/AuthContext';
 import UISpace from '../ui/UISpace';
+import CodeEditor from '../../components/CodeEditor';
+import { handleRunCommand, 
+  handleDeployProject, 
+  handleTestProject, 
+  handleBuildProject, 
+  handleSave, 
+  handleSelectFileUtil, 
+  normalizePath1,
+  fetchDirectoryStructure,
+  filterFiles,
+  mapFileTreeNodeToItemType
+} from '../../utils/codePageUtils';
+import { useTerminalLogs } from '../../hooks/useTerminalLogs';
+
+import FileTree from '../../components/FileTree';
+
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 const isProduction = (process.env.REACT_APP_ENV || 'development') === 'production';
@@ -58,8 +85,17 @@ function setFileTreePaths(
 }
 
 const DesignPage: React.FC = () => {
+  const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
   const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
+
+  // Code handlers state
+  const [fileContent, setFileContent] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
+  const [isPolling, setIsPolling] = useState(false);  
+  const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
+  const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
+
 
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
@@ -81,16 +117,106 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'design' | 'ui'>('design');
+  const [activeTab, setActiveTab] = useState<'design' | 'ui' | 'code'>('design');
 
   const tabIndexMap = {
     design: 0,
     ui: 1,
+    code: 2,
   };
 
   const handleTabChange = (index: number) => {
-    setActiveTab(index === 0 ? "design" : "ui");
+    setActiveTab(index === 0 ? "design" : index === 1 ? "ui" : "code");
   };
+
+  // Code handlers
+  const _handleSelectFile = useCallback(
+    (file: FileTreeItemType) => { 
+      console.log("Selected File:", file);
+      handleSelectFileUtil( file, projectContext, setSelectedFile, setFileContent, setIsLoading ); 
+    },
+    [projectContext, setSelectedFile, setFileContent, setIsLoading]
+  );
+  const _handleSave = async () => { 
+    if (selectedFile) {
+      handleSave(setProjectContext, selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); 
+
+      const updatedFile = { ...selectedFile, content: fileContent };
+      sessionStorage.setItem('selectedFile', JSON.stringify(updatedFile));
+      savedFileRef.current = JSON.stringify(updatedFile);
+
+      setSelectedFile(updatedFile);
+      setProjectContext((prev) => {
+        if (!prev) return prev;
+        const updatedCodes = prev.details.codes.map((code) => {
+          if (normalizePath1(code.path || '') === normalizePath1(updatedFile.path || '')) {
+            return { ...code, content: fileContent };
+          }
+          console.log("Updated Codes Array After Save:", projectContext.details.codes);
+
+          return code;
+        });
+        return { ...prev, details: { ...prev.details, codes: updatedCodes } };
+      });
+    } else {
+      console.warn("No selected file to save.");
+    }
+  };
+  const _handleBuildProject = () => { handleBuildProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
+  const _handleDeployProject = () => { handleDeployProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog, projectContext, setProjectContext); };
+  const _handleTestProject = () => { handleTestProject(projectContext?.id || '', setIsPolling, setIsLoading, addLog); };
+  const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
+  const handleContentChange = (newContent: string) => { setFileContent(newContent); };
+
+  // code useEffects
+  useEffect(() => {
+    const savedFile = sessionStorage.getItem('selectedFile');
+    if (savedFile) {
+      try {
+        const parsedFile: FileTreeItemType = JSON.parse(savedFile);
+        if (parsedFile?.path && parsedFile?.name) {
+          savedFileRef.current = savedFile;
+        } else {
+          console.warn("Invalid file data in session storage.");
+          sessionStorage.removeItem('selectedFile');
+        }
+      } catch (e) {
+        console.error("Error parsing saved file from session storage:", e);
+        sessionStorage.removeItem('selectedFile');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchFilesIfNeeded = async () => {
+      try {
+        if (projectContext?.details?.files?.children?.length) {
+          setFiles(projectContext.details.files);
+        } else {
+          await fetchDirectoryStructure(
+            projectContext?.id,
+            projectContext?.rootPath,
+            projectContext?.name,
+            mapFileTreeNodeToItemType,
+            filterFiles(projectContext?.rootPath),
+            setFiles,
+            setProjectContext,
+            setIsPolling,
+            setIsLoading,
+            addLog,
+            _handleSelectFile
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching files or updating project context:", error);
+      }
+    };
+  
+    if (projectContext) {
+      fetchFilesIfNeeded();
+    }
+  }, [projectContext, _handleSelectFile]);
+
   
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
@@ -511,15 +637,22 @@ const DesignPage: React.FC = () => {
           onToggleWallet={handleToggleWallet}
         />
         <Flex flex={1} maxHeight='99vh !important' overflow='hidden'>
-
-         {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
-          <Toolbox onExampleChange={handleExampleChange} />
-
+          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
+          {activeTab === 'code' ? (
+            <FileTree
+              onSelectFile={_handleSelectFile} 
+              files={files} 
+              selectedItem={selectedFile}
+            />
+          ) : (
+            <Toolbox onExampleChange={handleExampleChange} />
+          )}
           <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='50vw' height='100%'>
             <TabList height='5vh'>
               <Flex width='100%' justifyContent='center' alignItems='center'>
                 <Tab>Design</Tab>
                 <Tab>UI</Tab>
+                <Tab>Code</Tab>
               </Flex>
             </TabList>
             <TabPanels width='100%' height='100%'>
@@ -537,6 +670,19 @@ const DesignPage: React.FC = () => {
               </TabPanel>
               <TabPanel>
                 <UISpace />
+              </TabPanel>
+              <TabPanel>
+                {projectContext.details.isCode ? 
+                <CodeEditor 
+                  content={fileContent} 
+                  selectedFile={selectedFile} 
+                  terminalLogs={terminalLogs}
+                  clearLogs={clearLogs}
+                  onChange={handleContentChange}
+                  onSave={_handleSave}
+                  onRunCommand={_handleRunCommand}
+                  isPolling={isPolling}
+                /> : <Text>No code</Text>}
               </TabPanel>
             </TabPanels>
           </Tabs>

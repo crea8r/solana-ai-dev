@@ -203,7 +203,7 @@ const CodeEditor = ({
   }, []);
 
   return (
-    <Flex direction="column" height="100%" overflowY="hidden">
+    <Flex direction="column" overflowY="hidden" height='83vh'>
       <Flex direction="row" justifyContent="center" alignItems="center" py={1} height="auto">
         {selectedFile ? (
           <Box flex="1" py={2} px={2} borderBottom="1px" borderColor="gray.300">

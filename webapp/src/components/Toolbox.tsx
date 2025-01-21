@@ -14,6 +14,7 @@ import {
   VStack,
   Heading,
   Divider,
+  Flex,
 } from '@chakra-ui/react';
 import { SettingsIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { useProjectContext } from '../contexts/ProjectContext';
@@ -125,7 +126,17 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
   }
 
   return (
-    <Box p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='20vw' padding="10px">
+    <Flex 
+      padding="15px"
+      bg="gray.50" 
+      borderRadius="md" 
+      borderWidth="1px" 
+      maxWidth='20vw' 
+      minWidth='20vw' 
+      direction="column"
+      justifyContent="flex-start"
+      alignItems="center"
+    >
       <Tabs variant="enclosed" width='auto'  >
         <TabList width='auto'>
           <Tab {...tabStyle}>Programs</Tab>
@@ -169,7 +180,7 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
 
         </TabPanels>
       </Tabs>
-    </Box>
+    </Flex>
   );
 };
 
