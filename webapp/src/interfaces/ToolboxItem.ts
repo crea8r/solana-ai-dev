@@ -3,7 +3,6 @@ import { IconType } from 'react-icons';
 
 export interface ToolboxItem {
   identifier: string;
-  type: 'account' | 'instruction' | 'program';
   name: { snake: string; pascal: string; };
   description: string;
 
@@ -65,8 +64,8 @@ export interface InstructionToolboxItem extends ToolboxItem {
   ): JSX.Element;
 }
 
-export interface AccountToolboxItem extends ToolboxItem {
-  type: 'account';
+export interface AccountToolboxItem<T extends string = 'account'> extends ToolboxItem {
+  type: T;
   role: string;
   is_mutable: boolean;
   is_signer: boolean;
@@ -78,11 +77,21 @@ export interface AccountToolboxItem extends ToolboxItem {
   ): JSX.Element;
 }
 
-export interface TokenAccountToolboxItem extends AccountToolboxItem {
-  type: 'account';
+export interface TokenAccountToolboxItem extends AccountToolboxItem<'token_account'> {
   spl_type: 'mint' | 'token';
   mint_address: string;
   owner: string;
+
+  renderAccountProperties(
+    programs: { id: string; name: string }[],
+    onChange: (field: string, value: any) => void,
+    values: any
+  ): JSX.Element;
+}
+
+export interface MintAccountToolboxItem extends AccountToolboxItem<'mint_account'> {
+  decimals: number;
+  mintAuthority: string;
 }
 
 
@@ -90,4 +99,5 @@ export type ToolboxItemUnion =
   ProgramToolboxItem |
   InstructionToolboxItem |
   AccountToolboxItem |
-  TokenAccountToolboxItem;
+  TokenAccountToolboxItem |
+  MintAccountToolboxItem;

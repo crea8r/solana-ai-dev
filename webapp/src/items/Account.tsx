@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Node } from 'react-flow-renderer';
-import { ToolboxItem } from '../interfaces/ToolboxItem';
+import { AccountToolboxItem, ToolboxItem } from '../interfaces/ToolboxItem';
 import { VStack, Input, Textarea, Text, Checkbox, Flex, Box, Switch, Button, IconButton } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
@@ -8,9 +8,9 @@ import { VscJson } from 'react-icons/vsc';
 import { pascalToSpaced } from '../utils/itemUtils';
 import { IoIosCloseCircleOutline } from 'react-icons/io';
 
-export class Account implements ToolboxItem {
+export class Account<T extends string = 'account'> implements AccountToolboxItem<T> {
   identifier: string;
-  type: 'account' = 'account';
+  type: T;
   name: { snake: string; pascal: string };
   description: string;
   role: string;
@@ -26,6 +26,7 @@ export class Account implements ToolboxItem {
     is_mutable: boolean = true,
     is_signer: boolean = false,
     fields: { name: string; type: string }[] = [],
+    type: T = 'account' as T
   ) {
     this.identifier = id;
     this.name = name;
@@ -34,6 +35,7 @@ export class Account implements ToolboxItem {
     this.is_mutable = is_mutable;
     this.is_signer = is_signer;
     this.fields = fields;
+    this.type = type;
   }
 
   getNameSnake(): string { return this.name.snake; }
@@ -57,14 +59,12 @@ export class Account implements ToolboxItem {
   getFields(): { name: string; type: string }[] { return this.fields; }
   setFields(fields: { name: string; type: string }[]): void { this.fields = fields; }
 
-  getType(): 'account' | 'token_account' {
-    return 'account';
-  }
+  getType(): T { return this.type; }
 
   toNode(position: { x: number; y: number }): Node {
     return {
       id: this.identifier,
-      type: 'account',
+      type: this.type,
       position,
       data: { label: pascalToSpaced(this.name.pascal), item: this },
     };

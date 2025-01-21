@@ -2,33 +2,30 @@ import { Node } from 'react-flow-renderer';
 import { Account } from '../Account';
 import { Box, Input, Text, VStack, Flex } from '@chakra-ui/react';
 import { pascalToSpaced } from '../../utils/itemUtils';
-import { TokenAccountToolboxItem } from '../../interfaces/ToolboxItem';
 
-export class TokenAccount extends Account<'token_account'> implements TokenAccountToolboxItem {  spl_type: 'mint' | 'token';
-  mint_address: string;
-  owner: string;
+export class MintAccount extends Account<'mint_account'> {
+  decimals: number;
+  mintAuthority: string;
 
   constructor(
     id: string,
-    name: { snake: string; pascal: string } = { snake: 'token_account', pascal: 'TokenAccount' },
+    name: { snake: string; pascal: string } = { snake: 'mint_account', pascal: 'MintAccount' },
     description: string = '',
-    role: string = 'token_account',
+    role: string = 'mint_account',
     is_mutable: boolean = true,
     is_signer: boolean = false,
     fields: { name: string; type: string }[] = [],
-    spl_type: 'mint' | 'token' = 'token',
-    mint_address: string = '',
-    owner: string = ''
+    decimals: number = 0,
+    mintAuthority: string = ''
   ) {
     super(id, name, description, role, is_mutable, is_signer, fields);
     this.name = name;
-    this.spl_type = spl_type;
-    this.mint_address = mint_address;
-    this.owner = owner;
+    this.decimals = decimals;
+    this.mintAuthority = mintAuthority;
   }
 
-  getType(): 'token_account' {
-    return "token_account";
+  getType(): 'mint_account' {
+    return 'mint_account';
   }
 
   renderAccountProperties(
@@ -46,7 +43,7 @@ export class TokenAccount extends Account<'token_account'> implements TokenAccou
         boxShadow="sm"
         width="100%"
       >
-        {/* Token Account Details */}
+        {/* Mint Account Details */}
         <Box
           padding="4"
           border="1px solid"
@@ -57,16 +54,17 @@ export class TokenAccount extends Account<'token_account'> implements TokenAccou
         >
           <Flex direction="row" justifyContent="center" alignItems="center">
             <Text fontSize="sm" fontWeight="semibold" mb={5}>
-              Token Account Properties
+              Mint Account Properties
             </Text>
           </Flex>
           <Flex direction="column" gap={4}>
             <Flex direction="column" gap={2}>
-              <Text fontSize="xs" fontWeight="semibold">Mint Address</Text>
+              <Text fontSize="xs" fontWeight="semibold">Decimals</Text>
               <Input
-                placeholder="Mint Address"
-                value={values.mint_address || ''}
-                onChange={(e) => onChange('mint_address', e.target.value)}
+                placeholder="Decimals"
+                type="number"
+                value={values.decimals || ''}
+                onChange={(e) => onChange('decimals', parseInt(e.target.value, 10))}
                 bg="white"
                 borderColor="gray.300"
                 borderRadius="md"
@@ -76,11 +74,11 @@ export class TokenAccount extends Account<'token_account'> implements TokenAccou
             </Flex>
 
             <Flex direction="column" gap={2}>
-              <Text fontSize="xs" fontWeight="semibold">Owner Address</Text>
+              <Text fontSize="xs" fontWeight="semibold">Mint Authority</Text>
               <Input
-                placeholder="Owner Address"
-                value={values.owner || ''}
-                onChange={(e) => onChange('owner', e.target.value)}
+                placeholder="Mint Authority"
+                value={values.mintAuthority || ''}
+                onChange={(e) => onChange('mintAuthority', e.target.value)}
                 bg="white"
                 borderColor="gray.300"
                 borderRadius="md"
@@ -97,12 +95,12 @@ export class TokenAccount extends Account<'token_account'> implements TokenAccou
   }
 
   toNode(position: { x: number; y: number }): Node {
-    console.log('TokenAccount toNode label:', pascalToSpaced(this.name.pascal));
+    console.log('MintAccount toNode label:', pascalToSpaced(this.name.pascal));
     return {
       id: this.identifier,
       type: this.getType(),
       position,
-      data: { label: pascalToSpaced(this.name.pascal), item: this, isTokenAccount: true },
+      data: { label: pascalToSpaced(this.name.pascal), item: this, isMintAccount: true },
     };
   }
 }
