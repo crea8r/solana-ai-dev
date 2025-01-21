@@ -37,6 +37,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <Flex h='100vh !important' overflow='hidden'>
+      {/*
       <Box w='4vw' bg='white' p={4} pr={6} pl={6} borderRight="1px solid" borderColor="gray.300">
         <VStack spacing={4} align='center' h='full'>
           {menuItems.map((item) => (
@@ -70,6 +71,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           ))}
         </VStack>
       </Box>
+      */}
       <Box flex={1} overflow='auto'>
         {children}
       </Box>

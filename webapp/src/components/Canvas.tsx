@@ -353,7 +353,7 @@ const Canvas: React.FC<CanvasProps> = ({
   }, [nodes, edges, setProjectContext]);
 
   return (
-    <Box ref={reactFlowWrapper} flex={1} height='83vh' width='100%'>
+    <Box ref={reactFlowWrapper} flex={1} height='83vh' width='auto'>
       <ReactFlow
         nodes={nodes}
         edges={edges}

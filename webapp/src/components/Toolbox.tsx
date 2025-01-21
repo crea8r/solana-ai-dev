@@ -26,6 +26,7 @@ import { Program } from '../items/Program';
 import { Node as ReactFlowNode } from 'react-flow-renderer';
 import { TokenAccount } from '../items/Account/TokenAccount';
 import { MintAccount } from '../items/Account/MintAccount';
+import { tabStyle } from '../styles/baseStyles';
 
 const categorizedToolboxItems = {
   accounts: [
@@ -114,31 +115,20 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
     </Grid>
   );
 
-  const tabStyle = {
-    fontSize: 'sm',
-    bg: 'white',
-    borderRadius: 'md',
-    borderWidth: '1px',
-    borderColor: 'gray.300',
-    _selected: {
-      shadow: 'md',
-    },
-  }
-
   return (
     <Flex 
       padding="15px"
       bg="gray.50" 
       borderRadius="md" 
       borderWidth="1px" 
-      maxWidth='20vw' 
-      minWidth='20vw' 
+      width='100%' 
+      height='100%'
       direction="column"
       justifyContent="flex-start"
       alignItems="center"
     >
-      <Tabs variant="enclosed" width='auto'  >
-        <TabList width='auto'>
+      <Tabs variant="enclosed" width='100%' >
+        <TabList>
           <Tab {...tabStyle}>Programs</Tab>
           <Tab {...tabStyle}>Instructions</Tab>
           <Tab {...tabStyle}>Accounts</Tab>

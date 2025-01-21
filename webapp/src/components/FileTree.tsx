@@ -81,7 +81,7 @@ const FileTree = memo(({
 }: FileTreeProps) => {
   //console.log('***FileTreeComponent files:', JSON.stringify(files, null, 2));
   return (
-    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" maxWidth='20vw' minWidth='20vw' padding="10px">
+    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="10px">
       <VStack align='stretch' spacing={2} p={4}>
         {files && (
           <FileTreeItem

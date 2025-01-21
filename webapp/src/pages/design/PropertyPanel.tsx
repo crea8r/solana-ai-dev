@@ -223,8 +223,14 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
     const nodeItem = selectedNode.data.item as ToolboxItem;
 
     return (
-      <>
-        <Flex direction="row" justify="space-between" align="center" fontFamily="IBM Plex Mono">
+      <Flex 
+        direction='column' 
+        align='center' 
+        justify='center' 
+        maxWidth='100%'
+        boxSizing='border-box'
+      >
+        <Flex direction="row" justify="space-between" align="center" fontFamily="IBM Plex Mono" >
           <Text fontSize="md" fontWeight="semibold">
             {pascalToSpaced(nodeItem.getNamePascal())}
           </Text>
@@ -293,7 +299,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
               fields: localValues.fields || []
             }
           )}
-      </>
+      </Flex>
     );
   };
 
@@ -304,7 +310,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
     const toNode = nodes.find((n) => n.id === selectedEdge.target);
 
     return (
-      <>
+      <Flex direction='column' align='center' justify='center' width='100%'>
         <Text fontSize="lg" fontWeight="medium">Edge Properties</Text>
         <Flex align="center" justify="space-between">
           <Text fontSize="sm">From: {fromNode?.data.label || 'Unnamed Node'}</Text>
@@ -329,7 +335,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             Delete
           </Button>
         </Flex>
-      </>
+      </Flex>
     );
   };
 

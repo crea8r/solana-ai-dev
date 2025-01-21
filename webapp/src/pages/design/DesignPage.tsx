@@ -10,7 +10,8 @@ import {
   useDisclosure, 
   useToast, 
   TabPanel, 
-  Text
+  Text,
+  Box
 } from '@chakra-ui/react';
 import {
   Node,
@@ -60,11 +61,13 @@ import { handleRunCommand,
   normalizePath1,
   fetchDirectoryStructure,
   filterFiles,
-  mapFileTreeNodeToItemType
+  mapFileTreeNodeToItemType,
+  findFirstFile
 } from '../../utils/codePageUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 
 import FileTree from '../../components/FileTree';
+import { tabStyle } from '../../styles/baseStyles';
 
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
@@ -126,7 +129,10 @@ const DesignPage: React.FC = () => {
   };
 
   const handleTabChange = (index: number) => {
-    setActiveTab(index === 0 ? "design" : index === 1 ? "ui" : "code");
+    if (index === tabIndexMap.code && !projectContext.details.isCode) {
+      return;
+    }
+    setActiveTab(index === 0 ? 'design' : index === 1 ? 'ui' : 'code');
   };
 
   // Code handlers
@@ -192,7 +198,7 @@ const DesignPage: React.FC = () => {
       try {
         if (projectContext?.details?.files?.children?.length) {
           setFiles(projectContext.details.files);
-        } else {
+        } else if (projectContext?.details?.codes?.length) {
           await fetchDirectoryStructure(
             projectContext?.id,
             projectContext?.rootPath,
@@ -216,6 +222,54 @@ const DesignPage: React.FC = () => {
       fetchFilesIfNeeded();
     }
   }, [projectContext, _handleSelectFile]);
+
+  useEffect(() => {
+    const selectFileAfterLoad = () => {
+      try {
+        if (savedFileRef.current && projectContext?.details?.codes) {
+          const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
+          setSelectedFile(parsedFile);
+  
+          const cachedContent = projectContext?.details?.codes?.find(
+            (code) => normalizePath1(code.path || '') === normalizePath1(parsedFile.path || '')
+          );
+  
+          if (cachedContent?.content) {
+            setFileContent(cachedContent.content);
+            console.log(`Restored file content for ${parsedFile.name} from session storage.`);
+          } else {
+            console.warn(
+              `File content for ${parsedFile.name} not found in projectContext after mount.`
+            );
+          }
+        } else if (files?.children?.length && projectContext?.details?.codes?.length) {
+          const firstFile = findFirstFile(files.children);
+          if (firstFile) {
+            setSelectedFile(firstFile);
+  
+            const firstFileContent = projectContext.details.codes.find(
+              (code) => code.name === firstFile.name
+            )?.content;
+  
+            if (firstFileContent) {
+              setFileContent(firstFileContent);
+              console.log(`Loaded content for the first file: ${firstFile.name}.`);
+            } else {
+              console.warn(
+                `File content for ${firstFile.name} not found in projectContext after load.`
+              );
+            }
+          } else {
+            console.warn("No files found to select after load.");
+          }
+        }
+      } catch (error) {
+        console.error("Error selecting file after context update:", error);
+      }
+    };
+  
+    selectFileAfterLoad();
+  }, [files, projectContext?.details?.codes]);
 
   
   const onNodesChange = useCallback((changes: any) => {
@@ -636,8 +690,12 @@ const DesignPage: React.FC = () => {
           onLogout={handleLogout}
           onToggleWallet={handleToggleWallet}
         />
-        <Flex flex={1} maxHeight='99vh !important' overflow='hidden'>
+        <Flex flex={1} maxHeight='99vh !important' overflow='hidden' direction='row' width='100%'>
           {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
+          <Box 
+            width='25vw'
+            height='100%'
+          >
           {activeTab === 'code' ? (
             <FileTree
               onSelectFile={_handleSelectFile} 
@@ -647,12 +705,22 @@ const DesignPage: React.FC = () => {
           ) : (
             <Toolbox onExampleChange={handleExampleChange} />
           )}
-          <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='50vw' height='100%'>
+          </Box>
+          <Box
+            width='45vw'
+            height='100%'
+          >
+          <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='100%' height='100%' padding='5'>
             <TabList height='5vh'>
               <Flex width='100%' justifyContent='center' alignItems='center'>
-                <Tab>Design</Tab>
-                <Tab>UI</Tab>
-                <Tab>Code</Tab>
+                <Tab {...tabStyle}>Design</Tab>
+                <Tab {...tabStyle}>UI</Tab>
+                <Tab
+                  {...tabStyle}
+                  isDisabled={!projectContext.details.isCode}
+                >
+                  Code
+                </Tab>
               </Flex>
             </TabList>
             <TabPanels width='100%' height='100%'>
@@ -686,19 +754,24 @@ const DesignPage: React.FC = () => {
               </TabPanel>
             </TabPanels>
           </Tabs>
-            
+          </Box>
           {showWallet && <Wallet />}
-          <PropertyPanel
-            selectedNode={selectedNode}
-            selectedEdge={selectedEdge}
-            onDeleteNode={handleDeleteNode}
-            onDeleteEdge={handleDeleteEdge}
-            onUpdateNode={handleUpdateNode}
-            onUpdateEdge={handleUpdateEdge}
-            programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
-            nodes={projectContext.details.nodes}
-            edges={projectContext.details.edges}
-          />
+          <Box 
+            width='25vw' 
+            height='100%'
+          >
+            <PropertyPanel
+              selectedNode={selectedNode}
+              selectedEdge={selectedEdge}
+              onDeleteNode={handleDeleteNode}
+              onDeleteEdge={handleDeleteEdge}
+              onUpdateNode={handleUpdateNode}
+              onUpdateEdge={handleUpdateEdge}
+              programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
+              nodes={projectContext.details.nodes}
+              edges={projectContext.details.edges}
+            />
+          </Box>
         </Flex>
         
           <Button
