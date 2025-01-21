@@ -22,13 +22,7 @@ import {
 import { ChevronDownIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { useProjectContext } from "../../contexts/ProjectContext";
 
-const UISpace = ({
-  toggleState,
-  onToggleChange,
-}: {
-  toggleState: boolean;
-  onToggleChange: (checked: boolean) => void;
-}) => {
+const UISpace = () => {
   const { projectContext } = useProjectContext();
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();

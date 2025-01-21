@@ -39,7 +39,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   useEffect(() => {
     if (selectedNode) {
-      console.log('selectedNode', selectedNode);
       const item = selectedNode.data.item as ToolboxItem;
       const existingNode = projectContext?.details?.nodes?.find(
         (n) => n.id === selectedNode.id
@@ -55,7 +54,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           ...item.getPropertyValues(),
         });
       }
-    
     } else if (selectedEdge) {
       setEdgeLabel(selectedEdge.data?.label || '');
     } else {
@@ -63,8 +61,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       setEdgeLabel('');
     }
   }, [selectedNode, selectedEdge, projectContext]);
-
-  if (!selectedNode && !selectedEdge) return null;
 
   const handleChange = (field: string, value: any) => {
     setLocalValues((prev) => ({ ...prev, [field]: value }));
@@ -76,7 +72,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         ...selectedNode,
         data: {
           ...selectedNode.data,
-          label: localValues.name.pascal || selectedNode.data.label,
+          label: localValues.name || selectedNode.data.label,
           localValues: {
             ...(selectedNode.data.item as ToolboxItem).getPropertyValues(),
             ...localValues,
@@ -215,6 +211,128 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const fromNode = nodes.find((n) => n.id === selectedEdge?.source);
   const toNode = nodes.find((n) => n.id === selectedEdge?.target);
 
+  const renderDefaultContent = () => (
+    <Text fontSize="lg" color="gray.500">
+      Select a node or edge to view its properties.
+    </Text>
+  );
+
+  const renderNodeContent = () => {
+    if (!selectedNode) return null;
+
+    const nodeItem = selectedNode.data.item as ToolboxItem;
+
+    return (
+      <>
+        <Flex direction="row" justify="space-between" align="center" fontFamily="IBM Plex Mono">
+          <Text fontSize="md" fontWeight="semibold">
+            {pascalToSpaced(nodeItem.getNamePascal())}
+          </Text>
+          <Flex gap={1}>
+            <Tooltip label="Save">
+              <IconButton
+                aria-label="Save"
+                icon={<FaSave />}
+                variant="ghost"
+                size="md"
+                colorScheme="green"
+                onClick={handleSave}
+              />
+            </Tooltip>
+            <Tooltip label="Delete">
+              <IconButton
+                aria-label="Delete"
+                icon={<FaTrash />}
+                variant="ghost"
+                size="md"
+                colorScheme="blackAlpha"
+                onClick={handleDelete}
+              />
+            </Tooltip>
+          </Flex>
+        </Flex>
+        <Divider />
+        {nodeItem instanceof Program &&
+          nodeItem.renderProgramProperties(
+            nodes.filter((n) => n.type === 'account').map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })),
+            handleChange,
+            localValues,
+            (accountId: string) => handleAddAccount(accountId),
+            edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'account')
+              .map((edge) => {
+                const accountNode = nodes.find((n) => n.id === edge.target && n.type === 'account');
+                return accountNode ? { id: accountNode.id, name: accountNode.data.label || 'Unnamed Account' } : null;
+              }).filter((a) => a !== null) as { id: string; name: string }[],
+            (accountId: string) => handleRemoveAccount(accountId),
+            nodes.filter((n) => n.type === 'instruction').map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })),
+            edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'instruction')
+              .map((edge) => {
+                const instructionNode = nodes.find((n) => n.id === edge.target && n.type === 'instruction');
+                return instructionNode ? { id: instructionNode.id, name: instructionNode.data.label || 'Unnamed Instruction' } : null;
+              }).filter((i) => i !== null) as { id: string; name: string }[],
+            (instructionId: string) => handleAddInstruction(instructionId),
+            (instructionId: string) => handleRemoveInstruction(instructionId)
+          )}
+        {nodeItem instanceof Instruction &&
+          nodeItem.renderInstructionProperties(
+            nodes,
+            handleChange,
+            localValues
+          )}
+        {nodeItem instanceof Account &&
+          nodeItem.renderAccountProperties(
+            programs.map((p) => ({
+              id: p.id,
+              name: p.data.label || 'Unnamed Program',
+            })),
+            handleChange,
+            {
+              ...localValues,
+              is_mutable: localValues.is_mutable ?? true,
+              is_signer: localValues.is_signer ?? false,
+              fields: localValues.fields || []
+            }
+          )}
+      </>
+    );
+  };
+
+  const renderEdgeContent = () => {
+    if (!selectedEdge) return null;
+
+    const fromNode = nodes.find((n) => n.id === selectedEdge.source);
+    const toNode = nodes.find((n) => n.id === selectedEdge.target);
+
+    return (
+      <>
+        <Text fontSize="lg" fontWeight="medium">Edge Properties</Text>
+        <Flex align="center" justify="space-between">
+          <Text fontSize="sm">From: {fromNode?.data.label || 'Unnamed Node'}</Text>
+          <Text fontSize="sm">To: {toNode?.data.label || 'Unnamed Node'}</Text>
+        </Flex>
+        <Input
+          placeholder="Label"
+          value={edgeLabel}
+          onChange={(e) => setEdgeLabel(e.target.value)}
+          fontSize="sm"
+          color="gray.700"
+          _placeholder={{ color: 'gray.400' }}
+          py={0}
+          px={3}
+        />
+        <Divider my={4} />
+        <Flex justify="space-between">
+          <Button leftIcon={<IoSaveOutline />} colorScheme="teal" size="sm" onClick={handleSave}>
+            Save
+          </Button>
+          <Button leftIcon={<IoTrashOutline />} colorScheme="red" size="sm" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Flex>
+      </>
+    );
+  };
+
   return (
     <Box
       width="30vw"
@@ -226,137 +344,9 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       maxHeight="100vh"
     >
       <VStack spacing={4} align="stretch">
-        {selectedNode && (
-          <>
-            {/* Header Section */}
-            <Flex direction="row" justify="space-evenly" align="center" fontFamily="IBM Plex Mono">
-              <Text fontSize="md" fontWeight="semibold">
-                {pascalToSpaced((selectedNode.data.item as ToolboxItem).getNamePascal())}
-              </Text>
-              <Flex gap={1}>
-                <Tooltip label="Save">
-                  <IconButton
-                    aria-label="Save"
-                    icon={<FaSave />}
-                    variant= "ghost"
-                    size="md"
-                    colorScheme="green"
-                    onClick={handleSave}
-                  />
-                </Tooltip>
-                <Tooltip label="Delete">
-                  <IconButton
-                    aria-label="Delete"
-                    icon={<FaTrash />}
-                    variant= "ghost"
-                    size="md"
-                    colorScheme="blackAlpha"
-                    onClick={handleDelete}
-                  />
-                </Tooltip>
-              </Flex>
-            </Flex>
-
-            <Divider />
-
-            {/* Program properties */}
-            {selectedNode.data.item instanceof Program && (
-              <>
-                {selectedNode.data.item.renderProgramProperties(
-                  nodes.filter((n) => n.type === 'account').map((a) => ({ id: a.id, name: a.data.label || 'Unnamed Account' })),
-                  handleChange,
-                  localValues,
-                  (accountId: string) => handleAddAccount(accountId),
-                  edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'account')
-                    .map((edge) => {
-                      const accountNode = nodes.find((n) => n.id === edge.target && n.type === 'account');
-                      return accountNode ? { id: accountNode.id, name: accountNode.data.label || 'Unnamed Account' } : null;
-                    }).filter((a) => a !== null) as { id: string; name: string }[],
-                  (accountId: string) => handleRemoveAccount(accountId),
-                  nodes.filter((n) => n.type === 'instruction').map((i) => ({ id: i.id, name: i.data.label || 'Unnamed Instruction' })),
-                  edges.filter((edge) => edge.source === selectedNode.id && nodes.find((n) => n.id === edge.target)?.type === 'instruction')
-                    .map((edge) => {
-                      const instructionNode = nodes.find((n) => n.id === edge.target && n.type === 'instruction');
-                      return instructionNode ? { id: instructionNode.id, name: instructionNode.data.label || 'Unnamed Instruction' } : null;
-                    }).filter((i) => i !== null) as { id: string; name: string }[],
-                  (instructionId: string) => handleAddInstruction(instructionId),
-                  (instructionId: string) => handleRemoveInstruction(instructionId),
-                )}
-              </>
-            )}
-
-            {/* Instruction properties */}
-            {selectedNode.data.item instanceof Instruction && (
-              <>
-                {selectedNode.data.item.renderInstructionProperties(
-                  nodes, // Pass the entire `nodes` array to access all program, account, and instruction nodes
-                  handleChange, // Function to handle changes to the instruction's fields
-                  localValues // The values (name, description, accounts, etc.) associated with the instruction
-            )}
-              </>
-            )}
-
-            {/* Account properties */}
-            {selectedNode.data.item instanceof Account && (
-              <>
-                {selectedNode.data.item.renderAccountProperties(
-                  programs.map((p) => ({
-                    id: p.id,
-                    name: p.data.label || 'Unnamed Program',
-                  })),
-                  handleChange,
-                  {
-                    ...localValues,
-                    is_mutable: localValues.is_mutable ?? true,
-                    is_signer: localValues.is_signer ?? false,
-                    fields: localValues.fields || []
-                  }
-                )}
-              </>
-            )}
-          </>
-        )}
-
-        {/* Edge Properties */}
-        {selectedEdge && (
-          <>
-            <Divider my={2} />
-            <Text fontSize="lg" fontWeight="medium">Edge</Text>
-            <Flex align="center" justify="space-between">
-              <Text fontSize="sm">From: {nodes.find((n) => n.id === selectedEdge.source)?.data.label}</Text>
-              <Text fontSize="sm">To: {nodes.find((n) => n.id === selectedEdge.target)?.data.label}</Text>
-            </Flex>
-            <Input
-              placeholder="Label"
-              value={edgeLabel}
-              onChange={(e) => setEdgeLabel(e.target.value)}
-              fontSize="sm"
-              color="gray.700"
-              _placeholder={{ color: 'gray.400' }}
-              py={0}
-              px={3}
-            />
-            <Divider my={4} />
-            <Flex justify="space-between">
-              <Button
-                leftIcon={<IoSaveOutline />}
-                colorScheme="teal"
-                size="sm"
-                onClick={handleSave}
-              >
-                Save
-              </Button>
-              <Button
-                leftIcon={<IoTrashOutline />}
-                colorScheme="red"
-                size="sm"
-                onClick={handleDelete}
-              >
-                Delete
-              </Button>
-            </Flex>
-          </>
-        )}
+        {selectedNode && renderNodeContent()}
+        {selectedEdge && renderEdgeContent()}
+        {!selectedNode && !selectedEdge && renderDefaultContent()}
       </VStack>
     </Box>
   );

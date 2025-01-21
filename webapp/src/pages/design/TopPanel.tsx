@@ -51,7 +51,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
   }, [user?.openAiApiKey]);
 
   return (
-    <Flex as="header" h="14" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6}>
+    <Flex as="header" h="14" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6} height='8vh'>
       <Flex align="center" gap={4} bg="white" shadow="sm" border="1px solid" borderColor="gray.300" borderRadius="md" px={5} py={1}>
         <Tooltip label="Open Project" mt={2} bg="gray.100" size="xs" shadow="md" color="gray.700" fontSize="xs" fontWeight="normal">
           <IconButton 

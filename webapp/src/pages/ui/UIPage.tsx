@@ -86,10 +86,7 @@ const UIPage = () => {
             borderColor="gray.300"
             overflowY="auto"
           >
-            <UISpace
-              toggleState={toggleState}
-              onToggleChange={handleToggleUI}
-            />
+            <UISpace />
           </Flex>
 
           <Box flex={1} position="absolute" right={0} top={9}>

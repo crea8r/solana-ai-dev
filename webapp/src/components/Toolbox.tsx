@@ -125,9 +125,9 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
   }
 
   return (
-    <Box p={6} bg="gray.50" borderRadius="md" borderWidth="1px">
-      <Tabs variant="enclosed">
-        <TabList >
+    <Box p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='20vw' padding="10px">
+      <Tabs variant="enclosed" width='auto'  >
+        <TabList width='auto'>
           <Tab {...tabStyle}>Programs</Tab>
           <Tab {...tabStyle}>Instructions</Tab>
           <Tab {...tabStyle}>Accounts</Tab>

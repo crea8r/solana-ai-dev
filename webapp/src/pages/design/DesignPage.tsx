@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useCallback, useEffect, useContext } from 'react';
-import { Button, Flex, useDisclosure, useToast } from '@chakra-ui/react';
+import { Button, Flex, TabPanels, TabList, Tab, Tabs, useDisclosure, useToast, TabPanel } from '@chakra-ui/react';
 import {
   Node,
   Edge,
@@ -38,6 +38,7 @@ import InputModal from '../../components/InputModal';
 import { logout } from '../../services/authApi';  
 import { Wallet, WalletCreationModal } from '../../components/Wallet';
 import { AuthContext } from '../../contexts/AuthContext';
+import UISpace from '../ui/UISpace';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 const isProduction = (process.env.REACT_APP_ENV || 'development') === 'production';
@@ -72,7 +73,6 @@ const DesignPage: React.FC = () => {
   const { user, firstLoginAfterRegistration, markWalletModalViewed } = useContext(AuthContext)!;
   const [showWalletModal, setShowWalletModal] = useState(firstLoginAfterRegistration);
   const [loadingExample, setLoadingExample] = useState(false);
-
   const [isListProjectModalShown, setIsListProjectModalShown] = useState(false);
   const {
     isOpen: isProjectBannerOpen,
@@ -81,6 +81,16 @@ const DesignPage: React.FC = () => {
   } = useDisclosure();
   const toast = useToast();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'design' | 'ui'>('design');
+
+  const tabIndexMap = {
+    design: 0,
+    ui: 1,
+  };
+
+  const handleTabChange = (index: number) => {
+    setActiveTab(index === 0 ? "design" : "ui");
+  };
   
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
@@ -501,18 +511,36 @@ const DesignPage: React.FC = () => {
           onToggleWallet={handleToggleWallet}
         />
         <Flex flex={1} maxHeight='99vh !important' overflow='hidden'>
+
          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
           <Toolbox onExampleChange={handleExampleChange} />
-          <Canvas
-            nodes={projectContext.details.nodes}
-            edges={projectContext.details.edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onSelectNode={handleSelectNode}
-            onSelectEdge={handleSelectEdge}
-            onAddNode={handleAddNode}
-          />
+
+          <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='50vw' height='100%'>
+            <TabList height='5vh'>
+              <Flex width='100%' justifyContent='center' alignItems='center'>
+                <Tab>Design</Tab>
+                <Tab>UI</Tab>
+              </Flex>
+            </TabList>
+            <TabPanels width='100%' height='100%'>
+              <TabPanel>
+                <Canvas
+                  nodes={projectContext.details.nodes}
+                  edges={projectContext.details.edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onSelectNode={handleSelectNode}
+                  onSelectEdge={handleSelectEdge}
+                  onAddNode={handleAddNode}
+                />
+              </TabPanel>
+              <TabPanel>
+                <UISpace />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+            
           {showWallet && <Wallet />}
           <PropertyPanel
             selectedNode={selectedNode}
