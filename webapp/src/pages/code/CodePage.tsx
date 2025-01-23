@@ -21,7 +21,7 @@ import {
 } from '../../utils/codePageUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
-import ProjectStatus from './projectStatus';
+import ProjectStatus from '../design/projectStatus';
 import { logout } from '../../services/authApi';
 import { handleGenerateUI } from '../../utils/uiUtils';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -263,12 +263,18 @@ const CodePage = () => {
             <ProjectStatus 
               onBuild={_handleBuildProject} 
               onDeploy={_handleDeployProject} 
-              onGenerateUI={handleGenerateUIFromCodePage}
               setIsTaskModalOpen={setIsTaskModalOpen}
             />
           </Box>
           <Box flex="5" borderRight="1px" borderColor="gray.200" overflowY="auto">
-            <FileTree onSelectFile={_handleSelectFile} files={files} selectedItem={selectedFile} />
+            <FileTree 
+              onSelectFile={_handleSelectFile} 
+              files={files} 
+              selectedItem={selectedFile} 
+              onBuild={_handleBuildProject} 
+              onDeploy={_handleDeployProject} 
+              setIsTaskModalOpen={setIsTaskModalOpen} 
+            />
           </Box>
         </Flex>
         <Box

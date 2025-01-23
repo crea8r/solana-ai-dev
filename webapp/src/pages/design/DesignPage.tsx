@@ -183,6 +183,7 @@ const DesignPage: React.FC = () => {
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
 
+
   const handleLoadProject = async (projectId: string, projectName: string) => {
     logProjectContext(projectContext);
     setIsLoading(true);
@@ -735,6 +736,9 @@ const DesignPage: React.FC = () => {
               onSelectFile={_handleSelectFile} 
               files={files} 
               selectedItem={selectedFile}
+              onBuild={_handleBuildProject} 
+              onDeploy={_handleDeployProject} 
+              setIsTaskModalOpen={setIsTaskModalOpen} 
             />
           ) : (
             <Toolbox onExampleChange={handleExampleChange} />
@@ -793,11 +797,13 @@ const DesignPage: React.FC = () => {
             </TabPanels>
           </Tabs>
           </Box>
-          {showWallet && <Wallet />}
+          
           <Box 
             width='25vw !important' 
             height='100% !important'
+            bg='gray.50'
           >
+            {showWallet && <Wallet />}
             {activeTab === 'design' ? (
               <PropertyPanel
                 selectedNode={selectedNode}

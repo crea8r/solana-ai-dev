@@ -247,6 +247,8 @@ export const logProjectContext = (projectContext: Project) => {
       isCode,
       codes,
       files,
+      buildStatus,
+      deployStatus,
     }
   } = projectContext;
 
@@ -270,6 +272,12 @@ export const logProjectContext = (projectContext: Project) => {
   } else {
     console.log('No code files generated');
   }
+  console.groupEnd();
+
+  console.group('Build Status:', buildStatus);
+  console.groupEnd();
+
+  console.group('Deploy Status:', deployStatus);
   console.groupEnd();
 
   console.groupEnd(); // End of main group

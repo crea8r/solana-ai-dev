@@ -2,6 +2,7 @@ import { VStack, Text, Flex, Box } from '@chakra-ui/react';
 import React, { useState, memo } from 'react';
 import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 import { FileTreeItemType } from '../interfaces/file';
+import ProjectStatus from '../pages/design/projectStatus';
 
 export interface FileTreeItemProps {
   item: FileTreeItemType;
@@ -33,10 +34,10 @@ const FileTreeItem = memo(({
 
   return (
     <VStack
-      align='stretch'
-      ml={2}
-      pl={2}
-      borderLeft={isOpen && hasChildren ? "1px solid #ccc" : "none"}
+        align='stretch'
+        ml={2}
+        pl={2}
+        borderLeft={isOpen && hasChildren ? "1px solid #ccc" : "none"}
     >
       <Flex
         alignItems='center'
@@ -72,22 +73,29 @@ type FileTreeProps = {
   onSelectFile: (item: FileTreeItemType) => void;
   files?: FileTreeItemType;
   selectedItem?: FileTreeItemType;
+  onBuild: () => void;
+  onDeploy: () => void;
+  setIsTaskModalOpen: (isOpen: boolean) => void;
 };
 
 const FileTree = ({
   onSelectFile,
   files,
   selectedItem,
+  onBuild,
+  onDeploy,
+  setIsTaskModalOpen,
 }: FileTreeProps) => {
   console.log('FileTree props:', { files, selectedItem }); // Debugging re-renders
 
   return (
-    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="15px"
+    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="15px" 
     direction='column'
     justifyContent='flex-start'
     alignItems='flex-start'
     >
-      <VStack align='stretch' spacing={2} p={4} bg='white' borderRadius='md' borderWidth='1px' height='80%'>
+      <ProjectStatus onBuild={onBuild} onDeploy={onDeploy} setIsTaskModalOpen={setIsTaskModalOpen} />
+      <VStack align='stretch' spacing={2} p={4} bg='white' borderRadius='md' borderWidth='1px' height='80%' overflowY='auto'>
         {files && (
           <FileTreeItem
             item={files}

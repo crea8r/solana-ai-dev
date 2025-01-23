@@ -13,16 +13,16 @@ import { IoCheckmark } from "react-icons/io5";
 import { RxCrossCircled } from "react-icons/rx";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { useProjectContext } from '../../contexts/ProjectContext';
+import { saveProject } from '../../utils/projectUtils';
 
 interface ProjectStatusProps {  
   onBuild: () => void;
   onDeploy: () => void;
-  onGenerateUI: () => void;
   setIsTaskModalOpen: (isOpen: boolean) => void;
 }
 
-const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGenerateUI, setIsTaskModalOpen }) => {
-    const { projectContext } = useProjectContext();
+const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, setIsTaskModalOpen }) => {
+    const { projectContext, setProjectContext } = useProjectContext();
     const [buildStatus, setBuildStatus] = useState(projectContext?.details.buildStatus);
     const [deployStatus, setDeployStatus] = useState(projectContext?.details.deployStatus);
     const [isCopied, setIsCopied] = useState(false);
@@ -37,6 +37,20 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, onGene
         setBuildStatus(projectContext?.details.buildStatus);
         setDeployStatus(projectContext?.details.deployStatus);
     }, [projectContext]);
+
+    useEffect(() => {
+      if (buildStatus || deployStatus) {
+        try {
+          (async () => {
+            const response = await saveProject(projectContext, setProjectContext);
+            console.log('response', response);
+            if (!response) throw new Error('Failed to save project');
+          })();
+        } catch (error) {
+          console.error('Error updating project status:', error);
+        }
+      }
+    }, [buildStatus, deployStatus]);
 
   return (
     <Flex
