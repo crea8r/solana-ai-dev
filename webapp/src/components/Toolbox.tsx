@@ -73,8 +73,6 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
         })
         .filter((node): node is ReactFlowNode => node !== null);
 
-      //console.log('Selected Project:', selectedProject);
-
       setProjectContext((prev) => ({
         ...prev,
         id: selectedProject.id,
@@ -87,8 +85,6 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           uiStructure: selectedProject.details.uiStructure,
         },
       }));
-      //console.log('Selected Project:', selectedProject.details.nodes[0].data.item);
-      //console.log('Project Context:', projectContext);
     }
   };
 
@@ -117,7 +113,6 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
 
   return (
     <Flex 
-      padding="15px"
       bg="gray.50" 
       borderRadius="md" 
       borderWidth="1px" 

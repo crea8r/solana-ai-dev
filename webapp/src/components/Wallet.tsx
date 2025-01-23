@@ -254,12 +254,8 @@ export const Wallet: React.FC = () => {
 
   return (
     <Box
-      position="relative"
-      right={0}
-      top={0}
-      width="auto"
-      p={4}
-      zIndex="1000"
+      width="100%"
+      zIndex="10"
       overflowY="auto"
     >
       <Card width="full" bg="white" border="1px solid" borderColor="gray.200" shadow="lg" px={6} py={2}>

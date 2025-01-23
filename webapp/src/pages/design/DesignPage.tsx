@@ -11,7 +11,8 @@ import {
   useToast, 
   TabPanel, 
   Text,
-  Box
+  Box,
+  Tooltip
 } from '@chakra-ui/react';
 import {
   Node,
@@ -65,7 +66,7 @@ import { handleRunCommand,
 } from '../../utils/codePageUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import FileTree from '../../components/FileTree';
-import { tabStyle } from '../../styles/baseStyles';
+import { tabStyle, tooltipStyle } from '../../styles/baseStyles';
 import AIChat from '../../components/AIChat';
 import { fetchDirectoryStructure } from '../../utils/projectUtils';
 import { fetchFileInfo } from '../../utils/fileUtils';
@@ -754,7 +755,7 @@ const DesignPage: React.FC = () => {
           </Box>
 
           {/* Center panel */}
-          <Flex direction="column" width="50vw" height="100%" overflow="hidden" bg="gray.50" p={4}>
+          <Flex direction="column" width="50vw" height="100%" overflow="hidden" bg="gray.100" p={4}>
             <Tabs 
               display="flex" 
               flexDirection="column" 
@@ -770,10 +771,12 @@ const DesignPage: React.FC = () => {
               <TabList flex="0 0 auto">
                 <Flex width='100%' justifyContent='center' alignItems='center'>
                   <Tab {...tabStyle}>Design</Tab>
-                  <Tab 
-                  {...tabStyle}
-                  isDisabled={true}
-                  >UI</Tab>
+                  <Tooltip label="Coming soon" {...tooltipStyle}>
+                    <Tab 
+                    {...tabStyle}
+                    isDisabled={true}
+                    >UI</Tab>
+                  </Tooltip>
                   <Tab
                     {...tabStyle}
                     isDisabled={!projectContext.details.isCode}
@@ -816,13 +819,22 @@ const DesignPage: React.FC = () => {
           </Flex>
 
           {/* Right-side panel */}
-          <Box flex="1" height="100%" overflowY="auto" bg="gray.100" borderLeft="1px solid" borderColor="gray.200" overflowX="hidden">
+          <Box
+            flex="1"
+            height="100%"
+            overflowY="auto"
+            bg="gray.50"
+            borderLeft="1px solid"
+            borderColor="gray.200"
+            overflowX="hidden"
+            position="relative"
+          >
             {activeTab === 'code' ? (
               <AIChat
                 selectedFile={selectedFile}
                 fileContent={fileContent}
                 onSelectFile={_handleSelectFile}
-                files={files} 
+                files={files}
               />
             ) : (
               <PropertyPanel
@@ -832,10 +844,30 @@ const DesignPage: React.FC = () => {
                 onDeleteEdge={handleDeleteEdge}
                 onUpdateNode={handleUpdateNode}
                 onUpdateEdge={handleUpdateEdge}
-                programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
+                programs={projectContext.details.nodes.filter(
+                  (node) => node.type === 'program'
+                )}
                 nodes={projectContext.details.nodes}
                 edges={projectContext.details.edges}
               />
+            )}
+
+            {/* Wallet Overlay */}
+            {showWallet && (
+              <Box
+                position="absolute"
+                top="10px"
+                right="10px"
+                bg="gray.50"
+                border="1px solid"
+                borderColor="gray.400"
+                boxShadow="lg"
+                borderRadius="md"
+                zIndex="10"
+                shadow="lg"
+              >
+                <Wallet />
+              </Box>
             )}
           </Box>
         </Flex>

@@ -89,10 +89,11 @@ const FileTree = ({
   console.log('FileTree props:', { files, selectedItem });
 
   return (
-    <Flex p={6} bg="gray.100" borderWidth="1px" width='100%' height='100%' 
+    <Flex p={6} bg="gray.50" borderWidth="1px" width='100%' height='100%' 
     direction='column'
     justifyContent='flex-start'
     alignItems='flex-start'
+    overflowX='hidden'
     >
       <Flex 
         direction="column" 
@@ -102,9 +103,10 @@ const FileTree = ({
         borderColor="gray.200"
         bg="white"
         borderRadius="md"
+        overflowX='hidden'
       >
         <ProjectStatus onBuild={onBuild} onDeploy={onDeploy} setIsTaskModalOpen={setIsTaskModalOpen} />
-        <Flex align='flex-start' p={4} height='80%' overflowY='auto'>
+        <Flex align='flex-start' p={4} height='80%' overflowY='auto' overflowX='hidden'>
           {files && (
             <FileTreeItem
               item={files}

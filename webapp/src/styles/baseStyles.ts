@@ -10,4 +10,17 @@ export const tabStyle = {
   _selected: {
     shadow: 'md',
   },
+  cursor: 'pointer',
+  _disabled: {
+    cursor: 'default',
+    opacity: 0.6,
+  },
+}
+
+export const tooltipStyle = {
+  fontSize: 'xs',
+  fontFamily: 'Roboto Mono',
+  bg: '#a9b7ff',
+  color: 'white',
+  borderRadius: 'md',
 }

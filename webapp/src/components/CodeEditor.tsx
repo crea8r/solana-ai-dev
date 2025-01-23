@@ -250,7 +250,7 @@ const CodeEditor = ({
       {/* Content */}
       <Flex direction="column" flex="1" overflow="hidden">
         {/* Editor with fixed height */}
-        <Box flex="0 0 400px" overflow="hidden">
+        <Box flex="0 0 350px" overflow="hidden">
           {isLoadingCode ? (
             <Flex height="100%" width="100%" align="center" justify="center" bg="gray.100">
               <Spinner size="xl" color="gray.500" />
