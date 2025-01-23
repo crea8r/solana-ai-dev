@@ -66,6 +66,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           details: {
             nodes: [],
             edges: [],
+            nodesHydrated: false,
             designIdl: {},
             uiStructure: {},
             files: { name: '', type: 'directory', children: [] },

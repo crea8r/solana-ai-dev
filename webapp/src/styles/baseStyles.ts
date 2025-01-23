@@ -3,6 +3,7 @@ export const tabStyle = {
   fontFamily: 'Roboto Mono',
   fontWeight: 'medium',
   bg: 'white',
+  padding: '5px 10px',
   borderRadius: 'md',
   borderWidth: '1px',
   marginBottom: '5px',

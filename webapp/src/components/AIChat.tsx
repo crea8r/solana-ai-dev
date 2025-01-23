@@ -31,20 +31,37 @@ const CodeBlock = ({ children }: { children: string }) => {
   };
 
   return (
-    <Flex direction="column" height="100% !important" zIndex={10} position="relative" p={4} bg="gray.100" color="black" borderRadius="md" fontSize="sm" fontFamily="Red Hat Display" border="1px" borderColor="red.200">
+    <Flex 
+      direction="column" 
+      height="100% !important" 
+      zIndex={10} 
+      position="relative"
+      p={4} 
+      bg="gray.100" 
+      color="black" 
+      borderRadius="md" 
+      fontSize="sm" 
+      fontFamily="Roboto Mono" 
+      border="1px" 
+      borderColor="gray.200"
+      my={4}
+     >
       <Button
         size="xs"
+        fontSize="10px"
+        fontFamily="Roboto Mono" 
+        fontWeight="medium"
         position="absolute"
         top="4px"
         right="4px"
         onClick={handleCopy}
-        leftIcon={<Copy size={12} />}
         colorScheme="blue"
         variant="ghost"
       >
-        Copy
+        <Copy size={10} />
+        <Text ml={1}>Copy</Text>
       </Button>
-      <Text as="pre" fontSize="xs" whiteSpace="pre-wrap" overflowWrap="break-word">
+      <Text as="pre" fontSize="xs" whiteSpace="pre-wrap" overflowWrap="break-word" color="gray.600" fontFamily="Roboto Mono">
         {children}
       </Text>
     </Flex>
@@ -141,7 +158,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           })
         );
 
-        const response = await chatAI(messageWithContext, fileContexts, selectedModel);
+        const response = await chatAI(messageWithContext, fileContexts);
         const responseText = await response;
 
         setMessages((messages) => [
@@ -311,7 +328,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
       <Flex w="100%" direction="column" gap={2} mt={4}>
         <Flex direction="row" wrap="wrap" gap={2} alignItems="center">
           {localSelectedFile && (
-            <Flex alignItems="center" bg="gray.50" p={1} borderRadius="sm">
+            <Flex alignItems="center" p={1} border="1px solid" borderColor="gray.200" bg="white" borderRadius="md">
               <Text fontSize="xs" fontWeight="500">{localSelectedFile.name}</Text>
               <IconButton
                 size="xs"
@@ -319,11 +336,12 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                 icon={<X size={10} />}
                 onClick={() => setLocalSelectedFile(undefined)}
                 variant="ghost"
+                bg="white"
               />
             </Flex>
           )}
           {additionalFiles.map((file) => (
-            <Flex key={file.path} alignItems="center" bg="gray.50" p={1} borderRadius="sm">
+            <Flex key={file.path} alignItems="center" p={1} borderRadius="sm" border="1px solid" borderColor="gray.200" bg="white">
               <Text fontSize="xs" fontWeight="500">{file.name}</Text>
               <IconButton
                 size="xs"
@@ -331,6 +349,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                 icon={<X size={10} />}
                 onClick={() => removeFile(file.path ?? '')}
                 variant="ghost"
+                bg="white"
               />
             </Flex>
           ))}
@@ -342,18 +361,19 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
           placeholder="Message AI" 
           onKeyPress={handleKeyPress}
           resize="none"
+          bg="white"
         />
       </Flex>
 
       <Flex w="100%" direction="row" justifyContent="space-between" alignItems="center" >
         <Flex direction="row" justifyContent="flex-start" alignItems="center" width="100%">
-          <Box shadow="md">
             <Menu placement="auto">
               <MenuButton
                 as={Button}
                 size="xs"
                 leftIcon={<Plus size={13} />}
                 variant="ghost"
+                bg="white"
               />
               <Portal>
                 <MenuList
@@ -399,77 +419,12 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
                 </MenuList>
               </Portal>
             </Menu>
-          </Box>
           <input
             type="file"
             ref={fileInputRef}
             style={{ display: 'none' }}
             onChange={handleCustomFileUpload}
           />
-          <Box shadow="md" ml={2}>
-            <Menu placement="auto">
-              <MenuButton
-                as={Button}
-                size="xs"
-                variant="ghost"
-                leftIcon={<ChevronUp size={13} />}
-              >
-                <Text fontSize="xs" fontWeight="400">
-                  {selectedModel}
-                </Text>
-              </MenuButton>
-              <Portal>
-                <MenuList zIndex={9999}>
-                  <MenuItem
-                    onClick={() => setSelectedModel('Codestral')}
-                    sx={{
-                      _hover: {
-                        bg: 'blue.50',
-                      },
-                    }}
-                  >
-                    codestral
-                  </MenuItem>
-
-                  <Divider my={2} />
-
-                  <Tooltip
-                    label="Coming Soon"
-                    fontSize="xs"
-                    fontWeight="medium"
-                    placement="top"
-                    sx={{
-                      bg: 'white',
-                      color: '#5688e8',
-                      mt: '4px',
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                    }}
-                  >
-                    <Box>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        gpt-4o
-                      </MenuItem>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        claude 3.5 sonnet
-                      </MenuItem>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        gpt-4o mini
-                      </MenuItem>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        o1 mini
-                      </MenuItem>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        o1 preview
-                      </MenuItem>
-                      <MenuItem isDisabled _disabled={{ cursor: 'default', color: 'gray.500' }}>
-                        cursor small
-                      </MenuItem>
-                    </Box>
-                  </Tooltip>
-                </MenuList>
-              </Portal>
-            </Menu>
-          </Box>
         </Flex>
       </Flex>
     </Flex>

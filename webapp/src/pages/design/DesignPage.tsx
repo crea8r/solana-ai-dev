@@ -123,6 +123,9 @@ const DesignPage: React.FC = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'design' | 'ui' | 'code'>('design');
 
+  const resetToolboxSelectionRef = useRef<() => void>(() => {});
+  const fitViewRef = useRef<() => void>(() => {});
+
   // ---Tab Handlers---
   const tabIndexMap = {
     design: 0,
@@ -192,14 +195,10 @@ const DesignPage: React.FC = () => {
     try {
       const fetchedProject = await fetchProject(projectId, projectName);
       if (!fetchedProject) throw new Error('Failed to load project');
-      console.log('fetchedProject, from handleLoadProject()', fetchedProject);
       
       setFiles(fetchedProject.details.files);
-      console.log('set local files state in handleLoadProject()', fetchedProject.details.files);
-      console.log('files', files);
 
       const codes = await getCodes(fetchedProject?.id, fetchedProject.details.files);
-      console.log('codes from getCodes() in handleLoadProject()', codes);
       if (!codes) throw new Error('Failed to get codes');
 
       const projectContext = createProjectContext(fetchedProject);
@@ -574,6 +573,16 @@ const DesignPage: React.FC = () => {
   const handleNewClick = async () => {
     setIsLoading(true);
     try {
+      // Reset the selected node and edge
+      setSelectedNode(null);
+      setSelectedEdge(null);
+
+      // Reset the example selection in the Toolbox
+      if (resetToolboxSelectionRef.current) {
+        resetToolboxSelectionRef.current();
+      }
+
+      // Reset the project context
       setProjectContext((prevProjectContext) => ({
         ...prevProjectContext,
         id: '',
@@ -597,9 +606,13 @@ const DesignPage: React.FC = () => {
           stateContent: '',
         },
       }));
-    } 
-    catch (error) { console.error('Error creating new project:', error); } 
-    finally { setIsLoading(false); }
+
+      setActiveTab('design');
+    } catch (error) {
+      console.error('Error creating new project:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
  
@@ -701,6 +714,34 @@ const DesignPage: React.FC = () => {
     //console.log('projectContext:', projectContext);
   }, [projectContext]);
 
+
+  /*
+  useEffect(() => {
+    if (projectContext?.details?.nodes?.length) {
+      if (!projectContext.details.nodesHydrated) return;
+      const firstProgramNode = projectContext.details.nodes.find(
+        (node) => node.type === 'program'
+      );
+
+      if (firstProgramNode ) {
+        setSelectedNode(firstProgramNode);
+      }
+    }
+  }, [projectContext.details.nodes, projectContext.details.nodesHydrated]);
+  */
+
+
+  // Save the fitView function from Canvas
+  const setFitViewFunction = useCallback((fitView: () => void) => {
+    fitViewRef.current = fitView;
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'design') {
+      fitViewRef.current(); // Call fitView when switching to Design tab
+    }
+  }, [activeTab]);
+
   return (
     <>
       <PromptModal
@@ -750,13 +791,15 @@ const DesignPage: React.FC = () => {
                 setIsTaskModalOpen={setIsTaskModalOpen} 
               />
             ) : (
-              <Toolbox onExampleChange={handleExampleChange} />
+              <Toolbox onExampleChange={handleExampleChange} resetToolboxSelection={(resetFunc) => (resetToolboxSelectionRef.current = resetFunc)} />
             )}
           </Box>
 
           {/* Center panel */}
           <Flex direction="column" width="50vw" height="100%" overflow="hidden" bg="gray.100" p={4}>
             <Tabs 
+              index={tabIndexMap[activeTab]}
+              onChange={handleTabChange}
               display="flex" 
               flexDirection="column" 
               flex="1" 
@@ -766,15 +809,14 @@ const DesignPage: React.FC = () => {
               borderRadius="md" 
               border="1px solid" 
               borderColor="gray.200"
-              onChange={handleTabChange}
             >
               <TabList flex="0 0 auto">
                 <Flex width='100%' justifyContent='center' alignItems='center'>
                   <Tab {...tabStyle}>Design</Tab>
                   <Tooltip label="Coming soon" {...tooltipStyle}>
                     <Tab 
-                    {...tabStyle}
-                    isDisabled={true}
+                      {...tabStyle}
+                      isDisabled={false}
                     >UI</Tab>
                   </Tooltip>
                   <Tab
@@ -796,6 +838,7 @@ const DesignPage: React.FC = () => {
                     onSelectNode={handleSelectNode}
                     onSelectEdge={handleSelectEdge}
                     onAddNode={handleAddNode}
+                    fitView={setFitViewFunction}
                   />
                 </TabPanel>
                 <TabPanel display="flex" flexDirection="column" height="100%" overflow="hidden">
@@ -915,7 +958,13 @@ const DesignPage: React.FC = () => {
         onProjectClick={handleLoadProject}
       />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
-      <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} handleSelectFile={_handleSelectFile} setFiles={setFiles} />
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={toggleTaskModal} 
+        handleSelectFile={_handleSelectFile} 
+        setFiles={setFiles} 
+        setActiveTab={setActiveTab}
+      />
       <InputModal isOpen={isInputModalOpen} onClose={toggleInputModal} />
     </>
   );

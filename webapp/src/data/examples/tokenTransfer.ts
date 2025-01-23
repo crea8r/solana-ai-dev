@@ -551,6 +551,7 @@ const tokenTransferProgram: Project = {
   details: {
     nodes: _nodes,
     edges: _edges,
+    nodesHydrated: false,
     designIdl: _idl,
     uiStructure: _uiStructure,
     files: { name: '', type: 'directory', children: [] },

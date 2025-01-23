@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Tabs,
@@ -42,7 +42,7 @@ const categorizedToolboxItems = {
   ],
 };
 
-const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({ onExampleChange }) => {
+const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void, resetToolboxSelection: (resetFunc: () => void) => void }> = ({ onExampleChange, resetToolboxSelection }) => {
   const { setProjectContext, projectContext } = useProjectContext();
   const [selectedExample, setSelectedExample] = useState('');
 
@@ -55,9 +55,12 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       const selectedProject = predefinedProjects[exampleName];
       if (!selectedProject) return;
 
-
-      const instantiatedNodes = selectedProject.details.nodes.map((node): ReactFlowNode | null => {
-          if (!node.type || !node.data.item) { console.error('Invalid node:', node); return null; }
+      const instantiatedNodes = selectedProject.details.nodes
+        .map((node): ReactFlowNode | null => {
+          if (!node.type || !node.data.item) {
+            console.error('Invalid node:', node);
+            return null;
+          }
           const item = loadItem(node.type, node.data.item);
           if (!item) {
             console.error('Failed to load item for node:', node);
@@ -87,6 +90,14 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       }));
     }
   };
+
+  const resetSelection = () => {
+    setSelectedExample('');
+  };
+
+  useEffect(() => {
+    resetToolboxSelection(resetSelection);
+  }, [resetToolboxSelection]);
 
   const renderDraggableItems = (items: any[]) => (
     <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -123,11 +134,13 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
       alignItems="center"
     >
       <Tabs variant="enclosed" width='100%' >
-        <TabList>
-          <Tab {...tabStyle}>Programs</Tab>
-          <Tab {...tabStyle}>Instructions</Tab>
-          <Tab {...tabStyle}>Accounts</Tab>
-        </TabList>
+        <Flex justifyContent="center" pt={2} pb={1}>
+          <TabList>
+            <Tab {...tabStyle}>Programs</Tab>
+            <Tab {...tabStyle}>Instructions</Tab>
+            <Tab {...tabStyle}>Accounts</Tab>
+          </TabList>
+        </Flex>
 
         <TabPanels>
            {/* Programs Tab */}

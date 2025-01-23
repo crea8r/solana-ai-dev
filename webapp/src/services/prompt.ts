@@ -71,13 +71,14 @@ export const promptAI_v2 = async (
 export const chatAI = async (
   text: string, 
   fileContexts: { path: string; content: string }[], 
-  model: string
 ) => {
   const body = { 
     message: text,
     fileContext: fileContexts,
-    model,
+    apiKey: process.env.REACT_APP_OPENAI_API_KEY,
   };
+
+  console.log('body', body);
 
   try {
     const resp = await api.post('/ai/chat', body);

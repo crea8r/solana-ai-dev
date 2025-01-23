@@ -92,11 +92,11 @@ export const handleAIChat = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { message, fileContext, model } = req.body;
+  const { message, fileContext, apiKey } = req.body;
 
-  if (!message || model !== 'gpt-4o') {
-    return next(new AppError('Invalid input or unsupported model', 400));
-  }
+  if (!message) return next(new AppError('Invalid input', 400));
+  if (!fileContext) return next(new AppError('Invalid file context', 400));
+  if (!apiKey) return next(new AppError('Invalid API key', 400));
 
   let messageContent = `User's question:\n"${message}"\n\nPlease respond with markdown formatting. For code snippets, use triple backticks (\`\`\`) for block code and single backticks (\`) for inline code.`;
 
@@ -120,7 +120,7 @@ export const handleAIChat = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o',

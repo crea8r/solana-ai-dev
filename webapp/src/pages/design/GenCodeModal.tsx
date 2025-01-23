@@ -36,6 +36,7 @@ interface genTaskProps {
     disableClose?: boolean;
     handleSelectFile: (file: FileTreeItemType) => void;
     setFiles: React.Dispatch<React.SetStateAction<FileTreeItemType>> | undefined;
+    setActiveTab: React.Dispatch<React.SetStateAction<'code' | 'design' | 'ui'>>;
 }
 
 const configFiles = ['Cargo.toml', 'Xargo.toml', 'Anchor.toml', '.gitignore'];
@@ -67,7 +68,7 @@ const updateProjectInDatabase = async (projectContext: any) => {
     } catch (error) { console.error('Error updating project in the database:', error); }
 };
 
-export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose, handleSelectFile, setFiles }) => {
+export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose, handleSelectFile, setFiles, setActiveTab }) => {
     const { projectContext, setProjectContext, projectInfoToSave, setProjectInfoToSave } = useProjectContext();
     const { user } = useAuthContext();
     const [tasks, setTasks] = useState<Task[]>([]);

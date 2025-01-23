@@ -200,6 +200,7 @@ export const createProjectContext = (fetchedProject: any): Project => {
 
   const newProjectDetails: ProjectDetails = {
     nodes: nodesWithTypedItems || [],
+    nodesHydrated: true,
     edges: fetchedProject.details.edges || [],
     designIdl: fetchedProject.details.designIdl || {},
     uiStructure: fetchedProject.details.uiStructure || {},

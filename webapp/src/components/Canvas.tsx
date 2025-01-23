@@ -27,6 +27,7 @@ interface CanvasProps {
   onSelectNode: (node: Node | null) => void;
   onSelectEdge: (edge: Edge | null) => void;
   onAddNode: (node: Node) => void;
+  fitView: (fitView: () => void) => void;
 }
 
 const edgeTypes = {
@@ -90,6 +91,7 @@ const Canvas: React.FC<CanvasProps> = ({
   onSelectNode,
   onSelectEdge,
   onAddNode,
+  fitView,
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -98,6 +100,24 @@ const Canvas: React.FC<CanvasProps> = ({
   const previousEdgeCount = useRef(edges.length);
 
   const nodeTypes: NodeTypes = useMemo(() => getNodeTypes(), []);
+
+  const fitViewInternal = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.8 });
+    }
+  }, [reactFlowInstance]);
+
+  useEffect(() => {
+    if (reactFlowInstance) {
+      fitViewInternal();
+    }
+  }, [reactFlowInstance]);
+
+  useEffect(() => {
+    if (fitView) {
+      fitView(fitViewInternal);
+    }
+  }, [fitView, fitViewInternal]);
 
   useEffect(() => {
     if (reactFlowInstance && nodes.length !== previousNodeCount.current) {
@@ -360,9 +380,12 @@ const Canvas: React.FC<CanvasProps> = ({
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onEdgeClick={onEdgeClick}
-        onPaneClick={onPaneClick}
+        onNodeClick={(event, node) => onSelectNode(node)}
+        onEdgeClick={(event, edge) => onSelectEdge(edge)}
+        onPaneClick={() => {
+          onSelectNode(null);
+          onSelectEdge(null);
+        }}
         onInit={setReactFlowInstance}
         onDrop={onDrop}
         onDragOver={onDragOver}

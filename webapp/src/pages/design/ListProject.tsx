@@ -90,6 +90,7 @@ const ListProject: React.FC<ListProjectProps> = ({
           details: {
             nodes: [],
             edges: [],
+            nodesHydrated: false,
             designIdl: {
               version: "0.0.0",
               name: "",

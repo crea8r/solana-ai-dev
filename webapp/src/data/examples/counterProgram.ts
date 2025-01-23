@@ -164,8 +164,7 @@ const _nodes = [
     height: 44,
     id: 'account1-10001',
     type: 'account',
-    position: { x: 400, y: -100 },
-    positionAbsolute: { x: 400, y: -100 },
+    position: { x: 300, y: -250 },
     data: {
       label: 'CounterAccount',
       item: {
@@ -182,6 +181,7 @@ const _nodes = [
       },
     },
     selected: false,
+    positionAbsolute: { x: 300, y: 50 },
   },
   // Account Node 2
   {
@@ -189,8 +189,7 @@ const _nodes = [
     height: 44,
     id: "account2-10001",
     type: "account",
-    position: { x: 400, y: 50 },
-    positionAbsolute: { x: 400, y: 50 },
+    position: { x: 100, y: 50 },  // Adjusted to be near the program
     data: {
       label: "Initializer",
       item: {
@@ -206,6 +205,7 @@ const _nodes = [
       }
     },
     selected: false,
+    positionAbsolute: { x: 100, y: 50 }
   },
   // Account Node 3
   {
@@ -213,8 +213,7 @@ const _nodes = [
     height: 44,
     id: "account3-10001",
     type: "account",
-    position: { x: 400, y: 200 },
-    positionAbsolute: { x: 400, y: 200 },
+    position: { x: 100, y: 120 },  // Adjusted to be near the program
     data: {
       label: "User",
       item: {
@@ -230,6 +229,7 @@ const _nodes = [
       }
     },
     selected: false,
+    positionAbsolute: { x: 100, y: 120 }
   },
   // Instruction Node 1 - InitializeCounter
   {
@@ -237,8 +237,7 @@ const _nodes = [
     height: 44,
     id: 'instruction1-10001',
     type: 'instruction',
-    position: { x: 200, y: -150 },
-    positionAbsolute: { x: 200, y: -150 },
+    position: { x: 300, y: -150 },
     data: {
       label: 'InitializeCounter',
       item: {
@@ -294,6 +293,7 @@ const _nodes = [
       ,
     },
     selected: true,
+    positionAbsolute: { x: 300, y: 50 },
   },
   // Instruction Node 2 - IncrementCounter
   {
@@ -301,8 +301,7 @@ const _nodes = [
     height: 44,
     id: 'instruction2-10001',
     type: 'instruction',
-    position: { x: 200, y: 0 },
-    positionAbsolute: { x: 200, y: 0 },
+    position: { x: 300, y: -50 },
     data: {
       label: 'IncrementCounter',
       item: {
@@ -363,6 +362,7 @@ const _nodes = [
       ,
     },
     selected: true,
+    positionAbsolute: { x: 300, y: 250 },
   },
   // Instruction Node 3 - ResetCounter
   {
@@ -370,8 +370,7 @@ const _nodes = [
     height: 44,
     id: 'instruction3-10001',
     type: 'instruction',
-    position: { x: 200, y: 150 },
-    positionAbsolute: { x: 200, y: 150 },
+    position: { x: 300, y: 150 },
     data: {
       label: 'ResetCounter',
       item: {
@@ -425,19 +424,43 @@ const _nodes = [
       },
     },
     selected: true,
+    positionAbsolute: { x: 300, y: 350 },
   },
 ];
 
 const _edges = [
-  // Connect Program to Instructions
-  { id: 'edge1', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction1-10001', targetHandle: 'top', type: 'solana' },
-  { id: 'edge2', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction2-10001', targetHandle: 'top', type: 'solana' },
-  { id: 'edge3', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction3-10001', targetHandle: 'top', type: 'solana' },
-
-  // Connect Program to Accounts
-  { id: 'edge4', source: 'program1-10001', sourceHandle: 'left', target: 'account1-10001', targetHandle: 'right', type: 'solana' },
-  { id: 'edge5', source: 'program1-10001', sourceHandle: 'top', target: 'account2-10001', targetHandle: 'bottom', type: 'solana' },
-  { id: 'edge6', source: 'program1-10001', sourceHandle: 'right', target: 'account3-10001', targetHandle: 'left', type: 'solana' },
+  {
+    id: 'edge1-10001',
+    source: 'program1-10001',
+    target: 'account1-10001',
+    type: 'solana',
+    animated: false,
+    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
+  },
+  {
+    id: 'edge-2',
+    source: 'program1-10001',
+    target: 'instruction1-10001',
+    type: 'solana',
+    animated: false,
+    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
+  },
+  {
+    id: 'edge-3',
+    source: 'program1-10001',
+    target: 'instruction2-10001',
+    type: 'solana',
+    animated: false,
+    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
+  },
+  {
+    id: 'edge-4',
+    source: 'program1-10001',
+    target: 'instruction3-10001',
+    type: 'solana',
+    animated: false,
+    style: { stroke: '#ff0072', cursor: 'pointer', strokeWidth: 2 },
+  },
 ];
 
 const _uiStructure = {
@@ -624,6 +647,7 @@ const counterProgram: Project = {
   details: {
     nodes: _nodes,
     edges: _edges,
+    nodesHydrated: false,
     designIdl: _idl,
     uiStructure: _uiStructure,
     files: { name: '', type: 'directory', children: [] },

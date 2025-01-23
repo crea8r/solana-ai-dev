@@ -152,6 +152,7 @@ export interface AccountContext {
 export interface ProjectDetails {
   nodes: Node[];
   edges: Edge[];
+  nodesHydrated: boolean;
   designIdl: ExtendedIdl;
   uiStructure: UiStructure;
   files: FileTreeItemType;
