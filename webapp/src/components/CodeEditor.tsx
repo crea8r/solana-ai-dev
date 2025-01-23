@@ -31,6 +31,8 @@ const CodeEditor = ({
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
+  const [editorHeight, setEditorHeight] = useState(0);
+  const [terminalMinHeight, setTerminalMinHeight] = useState(0);
 
   // Add a state to manage the selected file
   const [currentFile, setCurrentFile] = useState<FileTreeItemType | undefined>(selectedFile);
@@ -85,6 +87,24 @@ const CodeEditor = ({
       definedThemes.add('wechatLightStyle');
     }
     monaco.editor.setTheme('wechatLightStyle');
+  }, []);
+
+  useEffect(() => {
+    const calculateHeights = () => {
+      const totalHeight = window.innerHeight;
+      const headerHeight = 50; // Adjust based on your header or padding
+      const editorFixedHeight = Math.min(500, totalHeight * 0.55); // Fixed height or max 50% of screen
+      const terminalMinHeight = Math.max(200, totalHeight * 0.3); // Min 20% of screen height
+
+      setEditorHeight(editorFixedHeight);
+      setTerminalMinHeight(terminalMinHeight);
+    };
+
+    calculateHeights();
+    window.addEventListener('resize', calculateHeights);
+    return () => {
+      window.removeEventListener('resize', calculateHeights);
+    };
   }, []);
 
   const editorDidMount = (editor: any) => {
@@ -205,43 +225,60 @@ const CodeEditor = ({
   }, []);
 
   return (
-    <Flex direction="column" overflowY="hidden" height='83vh'>
-      <Flex direction="row" justifyContent="center" alignItems="center" py={1} height="auto">
+    <Flex direction="column" height="100%" overflow="hidden">
+      {/* Header */}
+      <Flex direction="row" alignItems="center" py={1} height="auto">
         {selectedFile ? (
           <Box flex="1" py={2} px={2} borderBottom="1px" borderColor="gray.300">
-          {selectedFile.path}
-        </Box>
-      ) : null}
-      <Button fontSize="xs" fontWeight="normal" onClick={onSave} mr={2} bg='#a9b7ff' color='white' variant="solid" size="xs">Save File</Button>
+            {selectedFile.path}
+          </Box>
+        ) : null}
+        <Button
+          fontSize="xs"
+          fontWeight="normal"
+          onClick={onSave}
+          mr={2}
+          bg="#a9b7ff"
+          color="white"
+          variant="solid"
+          size="xs"
+        >
+          Save File
+        </Button>
       </Flex>
 
-      <Box overflow="hidden" height="auto">
-        {isLoadingCode ? (
-          <Flex height="75vh" width="100%" align="center" justify="center" bg="gray.100">
-            <Spinner size="xl" color="gray.500" />
-          </Flex>
-        ) : (
-          <MonacoEditor
-            height="75vh"
-            width="100%"
-            language={language}
-            theme="materialLighterHighContrast"
-            value={content}
-            options={options}
-            editorDidMount={editorDidMount}
-            onChange={handleEditorChange}
-          />
-        )}
-      </Box>
+      {/* Content */}
+      <Flex direction="column" flex="1" overflow="hidden">
+        {/* Editor with fixed height */}
+        <Box flex="0 0 400px" overflow="hidden">
+          {isLoadingCode ? (
+            <Flex height="100%" width="100%" align="center" justify="center" bg="gray.100">
+              <Spinner size="xl" color="gray.500" />
+            </Flex>
+          ) : (
+            <MonacoEditor
+              language={language}
+              theme="wechatLightStyle"
+              value={content}
+              options={options}
+              editorDidMount={editorDidMount}
+              onChange={handleEditorChange}
+              width='100%' 
+              height='100%'
+            />
+          )}
+        </Box>
 
-      <Box mb={0} maxHeight="30vh !important" minHeight="30vh !important">
-        <Terminal 
-          logs={terminalLogs} 
-          clearLogs={clearLogs} 
-          onRunCommand={onRunCommand} 
-          isPolling={isPolling}
-        />
-      </Box>
+        {/* Terminal stretches to fill leftover space */}
+        <Box flex="1" minH={0} overflow="auto">
+          <Terminal
+            logs={terminalLogs}
+            clearLogs={clearLogs}
+            onRunCommand={onRunCommand}
+            isPolling={isPolling}
+          />
+        </Box>
+      </Flex>
     </Flex>
   );
 };

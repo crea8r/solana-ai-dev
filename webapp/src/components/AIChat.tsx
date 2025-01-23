@@ -22,7 +22,7 @@ interface AIChatProps {
   selectedFile?: FileTreeItemType;
   fileContent: string;
   onSelectFile: (file: FileTreeItemType) => void;
-  files: FileTreeItemType[]; 
+  files?: FileTreeItemType; 
 }
 
 const CodeBlock = ({ children }: { children: string }) => {
@@ -69,12 +69,6 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
-  /*
-  useEffect(() => {
-    console.log('projectContext: ', projectContext);
-  }, [projectContext]);
-  */
 
   useEffect(() => {
     scrollToBottom();
@@ -197,7 +191,7 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
     return allFiles;
   };
 
-  const allFiles = getAllFiles(files);
+  const allFiles = files ? getAllFiles([files]) : [];
 
   const handleCustomFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -221,26 +215,31 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   return (
     <Flex 
       direction="column" 
-      minHeight="100%" 
-      maxHeight="100%" 
-      maxWidth="100%" 
+      flexGrow={1}
+      height="100%" 
+      width="100%" 
+      overflow="hidden"
       gap={2} 
       fontSize="xs" 
       justifyContent="space-between"
+      p={4}
     >
       <Box
         flex="1"
         flexGrow={1}
         w="100%"
         overflowY="auto"
-        p={4}
-        borderRadius="md"
+        p={2}
         sx={{
           '::-webkit-scrollbar': { width: '8px' },
           '::-webkit-scrollbar-thumb': { backgroundColor: '#888', borderRadius: '10px' },
           '::-webkit-scrollbar-thumb:hover': { backgroundColor: '#555' },
           '::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1', borderRadius: '10px' },
         }}
+        bg="white"
+        border="1px solid"
+        borderColor="gray.200"
+        borderRadius="md"
       >
         {messages.map((message, index) => (
           <Flex 

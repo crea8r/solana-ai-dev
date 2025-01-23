@@ -12,8 +12,8 @@ import { GoCheckCircle, GoCode, GoCopy } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { RxCrossCircled } from "react-icons/rx";
 import { HiOutlineSparkles } from "react-icons/hi2";
-import { useProjectContext } from '../../contexts/ProjectContext';
-import { saveProject } from '../../utils/projectUtils';
+import { useProjectContext } from '../contexts/ProjectContext';
+import { saveProject } from '../utils/projectUtils';
 
 interface ProjectStatusProps {  
   onBuild: () => void;
@@ -60,14 +60,10 @@ const ProjectStatus: React.FC<ProjectStatusProps> = ({ onBuild, onDeploy, setIsT
       gap={4}
       flex="1"
       p={4}
-      borderLeft="none !important"
-      borderTop="none !important"
-      border="1px solid"
-      borderColor="gray.200"
-      borderRadius="sm"
       height="100%"
       shadow="sm"
       fontWeight="medium"
+
     >
         
     {

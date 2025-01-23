@@ -1,5 +1,7 @@
 export const tabStyle = {
-  fontSize: 'sm',
+  fontSize: 'xs',
+  fontFamily: 'Roboto Mono',
+  fontWeight: 'medium',
   bg: 'white',
   borderRadius: 'md',
   borderWidth: '1px',

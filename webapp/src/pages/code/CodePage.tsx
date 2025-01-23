@@ -21,7 +21,7 @@ import {
 } from '../../utils/codePageUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
 import { Wallet } from '../../components/Wallet';
-import ProjectStatus from '../design/projectStatus';
+import ProjectStatus from '../../components/ProjectStatus';
 import { logout } from '../../services/authApi';
 import { handleGenerateUI } from '../../utils/uiUtils';
 import { useAuthContext } from '../../contexts/AuthContext';

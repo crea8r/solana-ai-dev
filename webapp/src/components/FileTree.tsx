@@ -2,7 +2,7 @@ import { VStack, Text, Flex, Box } from '@chakra-ui/react';
 import React, { useState, memo } from 'react';
 import { FaFolder, FaChevronDown, FaRegFile, FaChevronRight } from "react-icons/fa6";
 import { FileTreeItemType } from '../interfaces/file';
-import ProjectStatus from '../pages/design/projectStatus';
+import ProjectStatus from './ProjectStatus';
 
 export interface FileTreeItemProps {
   item: FileTreeItemType;
@@ -86,25 +86,35 @@ const FileTree = ({
   onDeploy,
   setIsTaskModalOpen,
 }: FileTreeProps) => {
-  console.log('FileTree props:', { files, selectedItem }); // Debugging re-renders
+  console.log('FileTree props:', { files, selectedItem });
 
   return (
-    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="15px" 
+    <Flex p={6} bg="gray.100" borderWidth="1px" width='100%' height='100%' 
     direction='column'
     justifyContent='flex-start'
     alignItems='flex-start'
     >
-      <ProjectStatus onBuild={onBuild} onDeploy={onDeploy} setIsTaskModalOpen={setIsTaskModalOpen} />
-      <VStack align='stretch' spacing={2} p={4} bg='white' borderRadius='md' borderWidth='1px' height='80%' overflowY='auto'>
-        {files && (
-          <FileTreeItem
-            item={files}
-            onSelectFile={onSelectFile}
-            selectedItem={selectedItem}
-            level={0}
-          />
-        )}
-      </VStack>
+      <Flex 
+        direction="column" 
+        width="100%" 
+        height="100%"
+        border="1px solid" 
+        borderColor="gray.200"
+        bg="white"
+        borderRadius="md"
+      >
+        <ProjectStatus onBuild={onBuild} onDeploy={onDeploy} setIsTaskModalOpen={setIsTaskModalOpen} />
+        <Flex align='flex-start' p={4} height='80%' overflowY='auto'>
+          {files && (
+            <FileTreeItem
+              item={files}
+              onSelectFile={onSelectFile}
+              selectedItem={selectedItem}
+              level={0}
+            />
+          )}
+        </Flex>
+      </Flex>
     </Flex>
   );
 };

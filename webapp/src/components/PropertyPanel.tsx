@@ -3,12 +3,12 @@ import { Box, VStack, Text, Input, Button, Flex, Tag, TagLabel, Wrap, WrapItem, 
 import { IoSaveOutline, IoTrashOutline } from "react-icons/io5";
 import { FaSave, FaTrash } from "react-icons/fa";
 import { Node, Edge } from 'react-flow-renderer';
-import { ToolboxItem } from '../../interfaces/ToolboxItem';
-import { useProjectContext } from '../../contexts/ProjectContext';
-import { Account } from '../../items/Account';
-import { Program } from '../../items/Program';
-import { Instruction } from '../../items/Instruction';
-import { pascalToSpaced } from '../../utils/itemUtils';
+import { ToolboxItem } from '../interfaces/ToolboxItem';
+import { useProjectContext } from '../contexts/ProjectContext';
+import { Account } from '../items/Account';
+import { Program } from '../items/Program';
+import { Instruction } from '../items/Instruction';
+import { pascalToSpaced } from '../utils/itemUtils';
 
 interface PropertyPanelProps {
   selectedNode: Node | null;
@@ -230,6 +230,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         maxWidth='100%'
         height='100% !important'
         boxSizing='border-box'
+        overflowX='hidden'
       >
         <Flex direction="row" justify="space-between" align="center" fontFamily="IBM Plex Mono" >
           <Text fontSize="md" fontWeight="semibold">

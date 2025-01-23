@@ -26,7 +26,7 @@ import { MdOutlineFeedback } from "react-icons/md";
 import TopPanel from './TopPanel';
 import Toolbox from '../../components/Toolbox';
 import Canvas from '../../components/Canvas';
-import PropertyPanel from './PropertyPanel';
+import PropertyPanel from '../../components/PropertyPanel';
 import { ToolboxItem } from '../../interfaces/ToolboxItem';
 import PromptModal from '../../components/PromptModal';
 import WalkthroughDialog from '../../components/WalkthroughDialog';
@@ -129,6 +129,7 @@ const DesignPage: React.FC = () => {
     code: projectContext.details.isCode ? 2 : -1,
   };
   const handleTabChange = (index: number) => {
+    console.log("Tab changed to index!!!!!!!!!!!!!!!!!!!!!!!!!:", index); // Debugging log
     if (index === tabIndexMap.code && !projectContext.details.isCode) {
       setActiveTab('design');
       return;
@@ -339,10 +340,15 @@ const DesignPage: React.FC = () => {
   }, [projectContext]);
 
   useEffect(() => {
+    
     if (!projectContext.details.isCode && activeTab === 'code') {
       setActiveTab('design');
     }
   }, [projectContext.details.isCode, activeTab]);
+
+  useEffect(() => {
+    console.log("activeTab", activeTab)
+  }, []);
 
   useEffect(() => {
     console.log('------ DesignPage - projectContext ------');
@@ -709,102 +715,116 @@ const DesignPage: React.FC = () => {
         isOpen={isFeedbackFormOpen}
         onClose={() => setIsFeedbackFormOpen(false)}
       />
-      <Flex direction='column' height='99vh' maxHeight='99vh !important' overflow='hidden'>
-        <ProjectBanner
-          isOpen={isListProjectModalShown}
-          onClickSave={() => {}}
-          closeBanner={closeProjectBanner}
-          project={projectContext}
-        />
-        <TopPanel
-          generatePrompt={handlePrompt}
-          onClickInput={handleInputModal} 
-          onClickNew={handleNewClick}
-          onClickOpen={handleOpenClick}
-          onClickSave={handleSaveClick}
-          onLogout={handleLogout}
-          onToggleWallet={handleToggleWallet}
-        />
-        <Flex flex={1} maxHeight='99vh !important' overflow='hidden' direction='row' width='100%'>
-          {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
-          <Box 
-            width='20vw'
-            height='100%'
-          >
-          {activeTab === 'code' ? (
-            <FileTree
-              onSelectFile={_handleSelectFile} 
-              files={files} 
-              selectedItem={selectedFile}
-              onBuild={_handleBuildProject} 
-              onDeploy={_handleDeployProject} 
-              setIsTaskModalOpen={setIsTaskModalOpen} 
-            />
-          ) : (
-            <Toolbox onExampleChange={handleExampleChange} />
-          )}
+      <Flex direction="column" height="100vh" overflow="hidden">
+        {/* Header area with no flex growth */}
+        <Flex direction="column" flex="0 0 auto">
+          <ProjectBanner
+            isOpen={isListProjectModalShown}
+            onClickSave={() => {}}
+            closeBanner={closeProjectBanner}
+            project={projectContext}
+          />
+          <TopPanel
+            generatePrompt={handlePrompt}
+            onClickInput={handleInputModal} 
+            onClickNew={handleNewClick}
+            onClickOpen={handleOpenClick}
+            onClickSave={handleSaveClick}
+            onLogout={handleLogout}
+            onToggleWallet={handleToggleWallet}
+          />
+        </Flex>
+
+        {/* Main content area takes the remaining height */}
+        <Flex flex="1" overflow="hidden">
+          {/* Left sidebar (files or toolbox) */}
+          <Box width="20vw" height="100%" overflowY="auto" overflowX="hidden">
+            {activeTab === 'code' ? (
+              <FileTree
+                onSelectFile={_handleSelectFile} 
+                files={files} 
+                selectedItem={selectedFile}
+                onBuild={_handleBuildProject} 
+                onDeploy={_handleDeployProject} 
+                setIsTaskModalOpen={setIsTaskModalOpen} 
+              />
+            ) : (
+              <Toolbox onExampleChange={handleExampleChange} />
+            )}
           </Box>
-          <Box
-            width='50vw'
-            height='100%'
-          >
-          <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='100%' height='100%' padding='5'>
-            <TabList height='5vh'>
-              <Flex width='100%' justifyContent='center' alignItems='center'>
-                <Tab {...tabStyle}>Design</Tab>
-                <Tab 
-                {...tabStyle}
-                isDisabled={true}
-                >UI</Tab>
-                <Tab
+
+          {/* Center panel */}
+          <Flex direction="column" width="50vw" height="100%" overflow="hidden" bg="gray.50" p={4}>
+            <Tabs 
+              display="flex" 
+              flexDirection="column" 
+              flex="1" 
+              overflow="hidden" 
+              bg="white" 
+              p={2} 
+              borderRadius="md" 
+              border="1px solid" 
+              borderColor="gray.200"
+              onChange={handleTabChange}
+            >
+              <TabList flex="0 0 auto">
+                <Flex width='100%' justifyContent='center' alignItems='center'>
+                  <Tab {...tabStyle}>Design</Tab>
+                  <Tab 
                   {...tabStyle}
-                  isDisabled={!projectContext.details.isCode}
-                >
-                  Code
-                </Tab>
-              </Flex>
-            </TabList>
-            <TabPanels width='100%' height='100%'>
-              <TabPanel>
-                <Canvas
-                  nodes={projectContext.details.nodes}
-                  edges={projectContext.details.edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  onSelectNode={handleSelectNode}
-                  onSelectEdge={handleSelectEdge}
-                  onAddNode={handleAddNode}
-                />
-              </TabPanel>
-              <TabPanel>
-                <UISpace />
-              </TabPanel>
-              <TabPanel>
-                {projectContext.details.isCode ? 
-                <CodeEditor 
-                  content={fileContent} 
-                  selectedFile={selectedFile} 
-                  terminalLogs={terminalLogs}
-                  clearLogs={clearLogs}
-                  onChange={handleContentChange}
-                  onSave={_handleSave}
-                  onRunCommand={_handleRunCommand}
-                  isPolling={isPolling}
-                  isLoadingCode={isLoadingCode}
-                /> : <Text>No code</Text>}
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-          </Box>
-          
-          <Box 
-            width='25vw !important' 
-            height='100% !important'
-            bg='gray.50'
-          >
-            {showWallet && <Wallet />}
-            {activeTab === 'design' ? (
+                  isDisabled={true}
+                  >UI</Tab>
+                  <Tab
+                    {...tabStyle}
+                    isDisabled={!projectContext.details.isCode}
+                  >
+                    Code
+                  </Tab>
+                </Flex>
+              </TabList>
+              <TabPanels flex="1" overflow="hidden">
+                <TabPanel display="flex" flexDirection="column" height="100%" overflow="hidden">
+                  <Canvas
+                    nodes={projectContext.details.nodes}
+                    edges={projectContext.details.edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onSelectNode={handleSelectNode}
+                    onSelectEdge={handleSelectEdge}
+                    onAddNode={handleAddNode}
+                  />
+                </TabPanel>
+                <TabPanel display="flex" flexDirection="column" height="100%" overflow="hidden">
+                  <UISpace />
+                </TabPanel>
+                <TabPanel display="flex" flexDirection="column" height="100%" overflow="hidden">
+                  <CodeEditor
+                    content={fileContent}
+                    selectedFile={selectedFile}
+                    terminalLogs={terminalLogs}
+                    clearLogs={clearLogs}
+                    onChange={handleContentChange}
+                    onSave={_handleSave}
+                    onRunCommand={_handleRunCommand}
+                    isPolling={isPolling}
+                    isLoadingCode={isLoadingCode}
+                  />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </Flex>
+
+          {/* Right-side panel */}
+          <Box flex="1" height="100%" overflowY="auto" bg="gray.100" borderLeft="1px solid" borderColor="gray.200" overflowX="hidden">
+            {activeTab === 'code' ? (
+              <AIChat
+                selectedFile={selectedFile}
+                fileContent={fileContent}
+                onSelectFile={_handleSelectFile}
+                files={files} 
+              />
+            ) : (
               <PropertyPanel
                 selectedNode={selectedNode}
                 selectedEdge={selectedEdge}
@@ -816,18 +836,10 @@ const DesignPage: React.FC = () => {
                 nodes={projectContext.details.nodes}
                 edges={projectContext.details.edges}
               />
-            ) : activeTab === 'code' ? (
-              <AIChat
-                selectedFile={selectedFile}
-                fileContent={fileContent}
-                onSelectFile={_handleSelectFile}
-                files={files ? files.children || [] : []}
-              />
-            ) : null}
+            )}
           </Box>
         </Flex>
-        
-          <Button
+        <Button
             position='fixed'
             bottom='4'
             left='10'
