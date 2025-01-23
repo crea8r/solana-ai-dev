@@ -219,7 +219,15 @@ const AIChat: React.FC<AIChatProps> = ({ selectedFile, fileContent, onSelectFile
   };
 
   return (
-    <Flex direction="column" minHeight="100%" maxHeight="100%" w="100%" p={2} pt={4} gap={2} fontSize="xs" justifyContent="space-between">
+    <Flex 
+      direction="column" 
+      minHeight="100%" 
+      maxHeight="100%" 
+      maxWidth="100%" 
+      gap={2} 
+      fontSize="xs" 
+      justifyContent="space-between"
+    >
       <Box
         flex="1"
         flexGrow={1}

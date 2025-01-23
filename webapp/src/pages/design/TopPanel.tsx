@@ -46,10 +46,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   const handleMouseEnter = () => setHover(true);
   const handleMouseLeave = () => setHover(false);
 
-  useEffect(() => {
-    console.log('apiKey:', user?.openAiApiKey);
-  }, [user?.openAiApiKey]);
-
   return (
     <Flex as="header" h="14" align="center" gap={4} borderBottomWidth="1px" bg="gray.50" px={6} height='8vh'>
       <Flex align="center" gap={4} bg="white" shadow="sm" border="1px solid" borderColor="gray.300" borderRadius="md" px={5} py={1}>

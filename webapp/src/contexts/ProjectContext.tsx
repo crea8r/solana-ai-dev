@@ -15,6 +15,7 @@ export const transformToProjectInfoToSave = (project: Project): ProjectInfoToSav
     uiStructure: project.details.uiStructure,
     isAnchorInit: project.details.isAnchorInit,
     isCode: project.details.isCode,
+    files: project.details.files,
     filePaths: project.details.filePaths.map(filePath => filePath.path),
     fileTree: project.details.fileTree,
     uiResults: project.details.uiResults,

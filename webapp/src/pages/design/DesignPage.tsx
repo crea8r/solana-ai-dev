@@ -35,7 +35,7 @@ import { FaQuestion } from 'react-icons/fa';
 import { initGA, logPageView } from '../../utils/analytics';
 import LoadingModal from '../../components/LoadingModal';
 import { FileTreeItemType } from '../../interfaces/file';
-import { saveProject } from '../../utils/projectUtils';
+import { createProjectContext, fetchProject, saveProject, getCodes, logProjectContext } from '../../utils/projectUtils';
 
 import { loadItem } from '../../utils/itemFactory';
 import ListProject from './ListProject';
@@ -59,16 +59,16 @@ import { handleRunCommand,
   handleSave, 
   handleSelectFileUtil, 
   normalizePath1,
-  fetchDirectoryStructure,
   filterFiles,
   mapFileTreeNodeToItemType,
   findFirstFile
 } from '../../utils/codePageUtils';
 import { useTerminalLogs } from '../../hooks/useTerminalLogs';
-
 import FileTree from '../../components/FileTree';
 import { tabStyle } from '../../styles/baseStyles';
-
+import AIChat from '../../components/AIChat';
+import { fetchDirectoryStructure } from '../../utils/projectUtils';
+import { fetchFileInfo } from '../../utils/fileUtils';
 
 const GA_MEASUREMENT_ID = 'G-L5P6STB24E';
 const isProduction = (process.env.REACT_APP_ENV || 'development') === 'production';
@@ -92,13 +92,13 @@ const DesignPage: React.FC = () => {
   const { projectContext, setProjectContext } = useProjectContext();
   const isSaveDisabled = !projectContext || !projectContext.id || !projectContext.name || !projectContext.details;
 
-  // Code handlers state
+  // Code state
   const [fileContent, setFileContent] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<FileTreeItemType | undefined>(undefined);
   const [isPolling, setIsPolling] = useState(false);  
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
   const [files, setFiles] = useState<FileTreeItemType | undefined>(undefined);
-
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
 
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
@@ -122,23 +122,26 @@ const DesignPage: React.FC = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'design' | 'ui' | 'code'>('design');
 
+  // ---Tab Handlers---
   const tabIndexMap = {
     design: 0,
     ui: 1,
-    code: 2,
+    code: projectContext.details.isCode ? 2 : -1,
   };
-
   const handleTabChange = (index: number) => {
     if (index === tabIndexMap.code && !projectContext.details.isCode) {
+      setActiveTab('design');
       return;
     }
     setActiveTab(index === 0 ? 'design' : index === 1 ? 'ui' : 'code');
   };
+  // ----------------
+
 
   // Code handlers
   const _handleSelectFile = useCallback(
     (file: FileTreeItemType) => { 
-      console.log("Selected File:", file);
+      //console.log("Selected File:", file);
       handleSelectFileUtil( file, projectContext, setSelectedFile, setFileContent, setIsLoading ); 
     },
     [projectContext, setSelectedFile, setFileContent, setIsLoading]
@@ -148,8 +151,14 @@ const DesignPage: React.FC = () => {
       handleSave(setProjectContext, selectedFile, projectContext?.id || '', setIsLoading, setIsPolling, addLog, fileContent); 
 
       const updatedFile = { ...selectedFile, content: fileContent };
-      sessionStorage.setItem('selectedFile', JSON.stringify(updatedFile));
-      savedFileRef.current = JSON.stringify(updatedFile);
+      sessionStorage.setItem(
+        'selectedFile',
+        JSON.stringify({ 
+          projectId: projectContext.id,
+          file: updatedFile
+        })
+      );
+      savedFileRef.current = JSON.stringify({ projectId: projectContext.id, file: updatedFile });
 
       setSelectedFile(updatedFile);
       setProjectContext((prev) => {
@@ -158,7 +167,7 @@ const DesignPage: React.FC = () => {
           if (normalizePath1(code.path || '') === normalizePath1(updatedFile.path || '')) {
             return { ...code, content: fileContent };
           }
-          console.log("Updated Codes Array After Save:", projectContext.details.codes);
+          //console.log("Updated Codes Array After Save:", projectContext.details.codes);
 
           return code;
         });
@@ -174,7 +183,45 @@ const DesignPage: React.FC = () => {
   const _handleRunCommand = (commandType: 'anchor clean' | 'cargo clean') => { handleRunCommand(projectContext?.id || '', setIsPolling, setIsLoading, addLog, commandType); };
   const handleContentChange = (newContent: string) => { setFileContent(newContent); };
 
+  const handleLoadProject = async (projectId: string, projectName: string) => {
+    logProjectContext(projectContext);
+    setIsLoading(true);
+    try {
+      const fetchedProject = await fetchProject(projectId, projectName);
+      if (!fetchedProject) throw new Error('Failed to load project');
+      console.log('fetchedProject, from handleLoadProject()', fetchedProject);
+      
+      setFiles(fetchedProject.details.files);
+      console.log('set local files state in handleLoadProject()', fetchedProject.details.files);
+      console.log('files', files);
+
+      const codes = await getCodes(fetchedProject?.id, fetchedProject.details.files);
+      console.log('codes from getCodes() in handleLoadProject()', codes);
+      if (!codes) throw new Error('Failed to get codes');
+
+      const projectContext = createProjectContext(fetchedProject);
+      setProjectContext(projectContext);
+      
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          files: fetchedProject.details.files,
+          codes: codes,
+        },
+      }));
+
+      logProjectContext(projectContext);
+    } catch (error) {
+      console.error('Error loading project:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // code useEffects
+  //set saved file reference as the file in the session storage
+  /*
   useEffect(() => {
     const savedFile = sessionStorage.getItem('selectedFile');
     if (savedFile) {
@@ -192,86 +239,118 @@ const DesignPage: React.FC = () => {
       }
     }
   }, []);
-
+  */
+ 
   useEffect(() => {
     const fetchFilesIfNeeded = async () => {
       try {
         if (projectContext?.details?.files?.children?.length) {
+          //console.log('setFiles - projectContext.details.files', projectContext.details.files);
+          setIsLoadingCode(true)
           setFiles(projectContext.details.files);
+          setIsLoadingCode(false)
         } else if (projectContext?.details?.codes?.length) {
-          await fetchDirectoryStructure(
+          //console.log('fetchDirectoryStructure - projectContext.details.codes', projectContext.details.codes);
+          setIsLoadingCode(true)
+          const data = await fetchDirectoryStructure(
             projectContext?.id,
             projectContext?.rootPath,
             projectContext?.name,
             mapFileTreeNodeToItemType,
             filterFiles(projectContext?.rootPath),
-            setFiles,
-            setProjectContext,
-            setIsPolling,
-            setIsLoading,
-            addLog,
-            _handleSelectFile
           );
+          //console.log('data', data);
+          setIsLoadingCode(false)
         }
       } catch (error) {
         console.error("Error fetching files or updating project context:", error);
       }
     };
   
-    if (projectContext) {
-      fetchFilesIfNeeded();
-    }
+    if (projectContext) fetchFilesIfNeeded();
+
   }, [projectContext, _handleSelectFile]);
 
+  // fetch files and codes if projectContext is updated and isCode is true
   useEffect(() => {
-    const selectFileAfterLoad = () => {
-      try {
-        if (savedFileRef.current && projectContext?.details?.codes) {
-          const parsedFile: FileTreeItemType = JSON.parse(savedFileRef.current);
-          setSelectedFile(parsedFile);
-  
-          const cachedContent = projectContext?.details?.codes?.find(
-            (code) => normalizePath1(code.path || '') === normalizePath1(parsedFile.path || '')
-          );
-  
-          if (cachedContent?.content) {
-            setFileContent(cachedContent.content);
-            console.log(`Restored file content for ${parsedFile.name} from session storage.`);
-          } else {
-            console.warn(
-              `File content for ${parsedFile.name} not found in projectContext after mount.`
-            );
-          }
-        } else if (files?.children?.length && projectContext?.details?.codes?.length) {
-          const firstFile = findFirstFile(files.children);
-          if (firstFile) {
-            setSelectedFile(firstFile);
-  
-            const firstFileContent = projectContext.details.codes.find(
-              (code) => code.name === firstFile.name
-            )?.content;
-  
-            if (firstFileContent) {
-              setFileContent(firstFileContent);
-              console.log(`Loaded content for the first file: ${firstFile.name}.`);
-            } else {
-              console.warn(
-                `File content for ${firstFile.name} not found in projectContext after load.`
-              );
-            }
-          } else {
-            console.warn("No files found to select after load.");
-          }
-        }
-      } catch (error) {
-        console.error("Error selecting file after context update:", error);
-      }
-    };
-  
-    selectFileAfterLoad();
-  }, [files, projectContext?.details?.codes]);
+    if (projectContext?.details?.isCode) {
+      (async () => {
+        try{
+          const {fileTree, filePaths, fileNames} = await fetchFileInfo(projectContext?.id, projectContext?.rootPath, projectContext?.name, mapFileTreeNodeToItemType, filterFiles(projectContext?.rootPath));
+          setFiles(fileTree);
 
+          const codes = await getCodes(projectContext?.id, fileTree);
+          if (!codes) throw new Error('Failed to fetch files and codes');
+          
+          setProjectContext((prev) => ({
+            ...prev,
+            details: {
+              ...prev.details,
+              files: fileTree,
+              codes: codes,
+            },
+          }));
+
+          //console.log('setFiles - projectContext.details.files', projectContext.details.files);
+          
+      
+        } catch (error) {
+          console.error('Error fetching files and codes:', error);
+        }
+      })();
+    }
+  }, [projectContext?.details?.isCode]);
+
+
+  useEffect(() => {
+    if (!projectContext) return;
+    // If we're opening a different project (by ID), clear or adjust your session storage logic:
+    const currentProjectId = projectContext.id; 
+    const storedData = sessionStorage.getItem('selectedFile');
+    if (storedData) {
+      try {
+        const { projectId: storedProjectId, file } = JSON.parse(storedData);
+        // If the stored project is not the current one, don't restore the old file
+        if (storedProjectId !== currentProjectId) {
+          sessionStorage.removeItem('selectedFile');
+          savedFileRef.current = null;
+        } else {
+          savedFileRef.current = JSON.stringify({ projectId: storedProjectId, file });
+        }
+      } catch (err) {
+        sessionStorage.removeItem('selectedFile');
+        savedFileRef.current = null;
+      }
+    }
+  }, [projectContext]);
+
+  useEffect(() => {
+    if (projectContext?.details?.files?.children?.length) {
+      const firstFile = findFirstFile(projectContext.details.files.children);
+      if (firstFile) {
+        setSelectedFile(firstFile);
+        const fileData = projectContext.details.codes.find(code =>
+          normalizePath1(code.path || '') === normalizePath1(firstFile.path || '')
+        );
+        setFileContent(fileData?.content || '');
+      }
+    }
+  }, [projectContext]);
+
+  useEffect(() => {
+    if (!projectContext.details.isCode && activeTab === 'code') {
+      setActiveTab('design');
+    }
+  }, [projectContext.details.isCode, activeTab]);
+
+  useEffect(() => {
+    console.log('------ DesignPage - projectContext ------');
+    logProjectContext(projectContext);
+    console.log('------------');
+  }, [projectContext]);
   
+  
+  // ---Canvas Handlers---
   const onNodesChange = useCallback((changes: any) => {
     setProjectContext((prevProjectContext) => ({
       ...prevProjectContext,
@@ -416,6 +495,7 @@ const DesignPage: React.FC = () => {
       },
     }));
   };
+  // ----------------
 
   const handlePrompt = () => {
     setIsTaskModalOpen((prev) => !prev);
@@ -454,6 +534,7 @@ const DesignPage: React.FC = () => {
   };
 
   const handleSaveClick = async () => {
+    logProjectContext(projectContext);
     const response = await saveProject(projectContext, setProjectContext);
     if (response) {
       toast({
@@ -462,6 +543,16 @@ const DesignPage: React.FC = () => {
         duration: 4000,
         isClosable: true,
       });
+
+      setProjectContext((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          id: response.projectId,
+          rootPath: response.rootPath,
+          isSaved: true,
+        },
+      }));
     } else {
       toast({
         title: 'Please enter a project name and description',
@@ -503,68 +594,7 @@ const DesignPage: React.FC = () => {
     finally { setIsLoading(false); }
   };
 
-  const handleLoadProject = async (projectId: string, projectName: string) => {
-    setIsLoading(true);
-    try {
-      const fetchedProject = await projectApi.getProjectDetails(projectId);
-      console.log("fetchedProject", fetchedProject);
-
-      setProjectContext((prevProjectContext) => {
-        const nodesWithTypedItems = fetchedProject.details.nodes.map((node: Node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            item: createItem(node.data.item.type, node.data.item),
-          },
-        }));
-        //console.log("nodesWithTypedItems", nodesWithTypedItems);
-      
-        return {
-          ...prevProjectContext,
-          id: fetchedProject.id,
-          name: fetchedProject.name,
-          description: fetchedProject.description,
-          rootPath: fetchedProject.root_path,
-          details: {
-            ...prevProjectContext.details,
-            nodes: nodesWithTypedItems || [],
-            edges: fetchedProject.details.edges || [],
-            uiStructure: fetchedProject.details.uiStructure,
-            isAnchorInit: fetchedProject.details.isAnchorInit,
-            isCode: fetchedProject.details.isCode,
-            aiFilePaths: fetchedProject.details.aiFilePaths,
-            uiResults: fetchedProject.details.uiResults,
-            aiInstructions: fetchedProject.details.aiInstructions,
-            sdkFunctions: fetchedProject.details.sdkFunctions,
-            buildStatus: fetchedProject.details.buildStatus,
-            deployStatus: fetchedProject.details.deployStatus,
-            isSdk: fetchedProject.details.isSdk,
-            isUi: fetchedProject.details.isUi,
-            genUiClicked: fetchedProject.details.genUiClicked,
-            idl: fetchedProject.details.idl,
-            sdk: fetchedProject.details.sdk,
-            isSaved: fetchedProject.details.isSaved,
-            files: { name: '', children: [] },
-            codes: [],
-            programId: fetchedProject.details.programId,
-          },
-        };
-      });
-      
-
-    } catch (e) {
-      toast({
-        title: 'Something went wrong!',
-        description: `Cannot load ${projectName} project`,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-      handleCloseWalkthrough();
-    }
-  };
+ 
 
   const toggleTaskModal = () => {
     setIsTaskModalOpen((prev) => !prev);
@@ -652,12 +682,16 @@ const DesignPage: React.FC = () => {
         }
       }));
     }
-    console.log('projectContext:', projectContext);
+    //console.log('projectContext:', projectContext);
   }, [projectContext.details.nodes, projectContext.details.edges, setProjectContext, loadingExample]);
 
   useEffect(() => {
-    console.log('user:', user);
+    //console.log('user:', user);
   }, [user]);
+
+  useEffect(() => {
+    //console.log('projectContext:', projectContext);
+  }, [projectContext]);
 
   return (
     <>
@@ -693,7 +727,7 @@ const DesignPage: React.FC = () => {
         <Flex flex={1} maxHeight='99vh !important' overflow='hidden' direction='row' width='100%'>
           {firstLoginAfterRegistration && <WalletCreationModal userId={user!.id} onClose={handleModalClose} />}
           <Box 
-            width='25vw'
+            width='20vw'
             height='100%'
           >
           {activeTab === 'code' ? (
@@ -707,14 +741,17 @@ const DesignPage: React.FC = () => {
           )}
           </Box>
           <Box
-            width='45vw'
+            width='50vw'
             height='100%'
           >
           <Tabs index={tabIndexMap[activeTab]} onChange={handleTabChange} width='100%' height='100%' padding='5'>
             <TabList height='5vh'>
               <Flex width='100%' justifyContent='center' alignItems='center'>
                 <Tab {...tabStyle}>Design</Tab>
-                <Tab {...tabStyle}>UI</Tab>
+                <Tab 
+                {...tabStyle}
+                isDisabled={true}
+                >UI</Tab>
                 <Tab
                   {...tabStyle}
                   isDisabled={!projectContext.details.isCode}
@@ -750,6 +787,7 @@ const DesignPage: React.FC = () => {
                   onSave={_handleSave}
                   onRunCommand={_handleRunCommand}
                   isPolling={isPolling}
+                  isLoadingCode={isLoadingCode}
                 /> : <Text>No code</Text>}
               </TabPanel>
             </TabPanels>
@@ -757,20 +795,29 @@ const DesignPage: React.FC = () => {
           </Box>
           {showWallet && <Wallet />}
           <Box 
-            width='25vw' 
-            height='100%'
+            width='25vw !important' 
+            height='100% !important'
           >
-            <PropertyPanel
-              selectedNode={selectedNode}
-              selectedEdge={selectedEdge}
-              onDeleteNode={handleDeleteNode}
-              onDeleteEdge={handleDeleteEdge}
-              onUpdateNode={handleUpdateNode}
-              onUpdateEdge={handleUpdateEdge}
-              programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
-              nodes={projectContext.details.nodes}
-              edges={projectContext.details.edges}
-            />
+            {activeTab === 'design' ? (
+              <PropertyPanel
+                selectedNode={selectedNode}
+                selectedEdge={selectedEdge}
+                onDeleteNode={handleDeleteNode}
+                onDeleteEdge={handleDeleteEdge}
+                onUpdateNode={handleUpdateNode}
+                onUpdateEdge={handleUpdateEdge}
+                programs={projectContext.details.nodes.filter((node) => node.type === 'program')}
+                nodes={projectContext.details.nodes}
+                edges={projectContext.details.edges}
+              />
+            ) : activeTab === 'code' ? (
+              <AIChat
+                selectedFile={selectedFile}
+                fileContent={fileContent}
+                onSelectFile={_handleSelectFile}
+                files={files ? files.children || [] : []}
+              />
+            ) : null}
           </Box>
         </Flex>
         
@@ -818,7 +865,7 @@ const DesignPage: React.FC = () => {
         onProjectClick={handleLoadProject}
       />
       <LoadingModal isOpen={isLoading} onClose={() => setIsLoading(false)} />
-      <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={toggleTaskModal} handleSelectFile={_handleSelectFile} setFiles={setFiles} />
       <InputModal isOpen={isInputModalOpen} onClose={toggleInputModal} />
     </>
   );

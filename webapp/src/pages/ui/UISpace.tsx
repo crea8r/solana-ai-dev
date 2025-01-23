@@ -28,7 +28,7 @@ const UISpace = () => {
   const { colorMode, toggleColorMode } = useColorMode();
 
   const uiStructure = useMemo(() => {
-    console.log("projectContext:", projectContext);
+    //console.log("projectContext:", projectContext);
     return projectContext?.details?.uiStructure || {};
   }, [projectContext.details]);
 

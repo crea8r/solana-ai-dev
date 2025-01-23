@@ -7,6 +7,7 @@ import { Project } from "../interfaces/project";
 import { CodeFile } from "../contexts/CodeFileContext";
 import { LogEntry } from "../hooks/useTerminalLogs";
 import { transformToProjectInfoToSave } from "../contexts/ProjectContext";
+import { fetchDirectoryStructure } from "./projectUtils";
 
 export const normalizePath1 = (path: string) => path.replace(/\\/g, "/").trim();
 
@@ -236,66 +237,6 @@ export const prefetchFileContents = async (
     }));
 
   } catch (error) { console.error('Error prefetching file contents:', error); }
-};
-
-export const fetchDirectoryStructure = async (
-  projectContextId: string,
-  projectContextRootPath: string,
-  projectContextName: string,
-  mapFileTreeNodeToItemType: (node: any) => FileTreeItemType,
-  filterFiles: (file: FileTreeItemType) => boolean,
-  setFiles: (files: FileTreeItemType) => void,
-  setProjectContext: React.Dispatch<React.SetStateAction<Project>>,
-  setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (message: string, type: LogEntry['type']) => void,
-  handleSelectFile: (file: FileTreeItemType) => void
-) => {
-  try {
-    setIsLoading(true);
-    if (!projectContextRootPath) { console.error('No project context root path found'); return; }
-    if (!projectContextId) { console.error('No project context ID found'); return; }
-    const directoryStructure = await fileApi.getDirectoryStructure(projectContextRootPath);
-    const mappedFiles = directoryStructure.map(mapFileTreeNodeToItemType).filter(filterFiles);
-
-    const rootNode: FileTreeItemType = {
-      name: projectContextName,
-      path: '',
-      type: 'directory',
-      children: mappedFiles,
-    };
-    setFiles(rootNode);
-
-    setProjectContext((prev) => ({
-      ...prev,
-      details: {
-        ...prev.details,
-        files: rootNode,
-        isCode: true,
-        isSaved: true,
-      },
-    }));
-
-    console.log("prefetching file contents...");
-    await prefetchFileContents(
-      mappedFiles, 
-      projectContextId, 
-      setProjectContext, 
-      setIsPolling, 
-      setIsLoading, 
-      addLog
-    );
-
-    if (mappedFiles.length > 0) {
-      const firstFile = findFirstFile(mappedFiles);
-      if (firstFile) {
-        handleSelectFile(firstFile);
-      }
-    }
-    setIsLoading(false);
-  } catch (error) {
-    console.error('Failed to fetch directory structure', error);
-  }
 };
 
 const normalizePath = (path: string): string => {
@@ -607,6 +548,7 @@ export const selectFileAfterLoad = (
   }
 };
 
+// not used
 export const fetchFilesIfNeeded = async (
   projectContext: Project,
   setFiles: React.Dispatch<React.SetStateAction<FileTreeItemType>>,
@@ -627,12 +569,6 @@ export const fetchFilesIfNeeded = async (
         projectContext?.name,
         mapFileTreeNodeToItemType,
         filterFiles(projectContext?.rootPath),
-        setFiles,
-        setProjectContext,
-        setIsPolling,
-        setIsLoading,
-        addLog,
-        handleSelectFile
       );
     }
   } catch (error: any) { 
@@ -640,3 +576,4 @@ export const fetchFilesIfNeeded = async (
     addLog(`Error fetching files: ${error.message}`, 'error');
   }
 };
+

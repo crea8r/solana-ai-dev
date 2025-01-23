@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const token = localStorage.getItem('token');
         
         if (token) {
-          console.log("token", token);
+          //console.log("token", token);
           const fetchedUser = await getUser(); 
           setUser({
             id: fetchedUser.id,
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setFirstLoginAfterRegistration(
             fetchedUser.walletCreated && !fetchedUser.hasViewedWalletModal
           );
-          console.log('User:', fetchedUser);
+          //console.log('User:', fetchedUser);
         } else {
           console.log("no token");
           setUser(null);

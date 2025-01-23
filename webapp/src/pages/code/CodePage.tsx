@@ -8,7 +8,6 @@ import LoadingModal from '../../components/LoadingModal';
 import AIChat from '../../components/AIChat';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import {
-  fetchDirectoryStructure, 
   filterFiles,
   mapFileTreeNodeToItemType,
   handleBuildProject,
@@ -27,7 +26,7 @@ import { logout } from '../../services/authApi';
 import { handleGenerateUI } from '../../utils/uiUtils';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { TaskModal } from '../ui/TaskModal';
-
+import { fetchDirectoryStructure } from '../../utils/projectUtils';
 
 const CodePage = () => {
   const toast = useToast();
@@ -44,6 +43,7 @@ const CodePage = () => {
   const [showWallet, setShowWallet] = useState(false);
   const [refreshFileTree, setRefreshFileTree] = useState(false);
   const savedFileRef = useRef(sessionStorage.getItem('selectedFile'));
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
 
   const _handleSelectFile = useCallback(
     (file: FileTreeItemType) => { 
@@ -94,12 +94,6 @@ const CodePage = () => {
             projectContext?.name,
             mapFileTreeNodeToItemType,
             filterFiles(projectContext?.rootPath),
-            setFiles,
-            setProjectContext,
-            setIsPolling,
-            setIsLoading,
-            addLog,
-            _handleSelectFile
           );
         }
       } catch (error) {
@@ -228,12 +222,6 @@ const CodePage = () => {
         projectContext.name,
         mapFileTreeNodeToItemType,
         filterFiles(projectContext.rootPath),
-        setFiles,
-        setProjectContext,
-        setIsPolling,
-        setIsLoading,
-        addLog,
-        _handleSelectFile
       );
   
       const sdkDirectory = updatedRootNode.children?.find((child: any) => child.name === 'sdk');
@@ -300,6 +288,7 @@ const CodePage = () => {
             onSave={_handleSave}
             onRunCommand={_handleRunCommand}
             isPolling={isPolling}
+            isLoadingCode={isLoadingCode}
           />
         </Box>
         <Box flex={1} position="absolute" top={12} right={0}>

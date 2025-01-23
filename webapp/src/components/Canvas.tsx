@@ -58,7 +58,7 @@ async function getLayoutedElements(nodes: Node[], edges: Edge[]) {
 
   const layoutedGraph = await elk.layout(graph);
 
-  console.log('ELK Layout Output:', layoutedGraph.children);
+  //console.log('ELK Layout Output:', layoutedGraph.children);
   nodes.forEach((node) => {
     const n = layoutedGraph.children?.find((c) => c.id === node.id);
     if (!n) {
@@ -146,7 +146,7 @@ const Canvas: React.FC<CanvasProps> = ({
       const updatedNodes = applyNodeChanges(changes, prevProjectContext.details.nodes);
 
       updatedNodes.forEach((node) => {
-        console.log('node', node);
+        //console.log('node', node);
         if (node.type === "instruction" && node.data.item) {
           const { identifier, name, description, accounts, params, error_codes, events, imports } = node.data.item;
 
@@ -295,8 +295,8 @@ const Canvas: React.FC<CanvasProps> = ({
 
       const newItem = createItem(type);
       if (newItem) {
-        console.log('newItem', newItem);
-        console.log("type", type);
+        //console.log('newItem', newItem);
+        //console.log("type", type);
         const newNode = newItem.toNode(position);
 
         if (newNode.type === "instruction" && newNode.data.item) {

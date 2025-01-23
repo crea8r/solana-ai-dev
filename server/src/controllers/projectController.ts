@@ -366,9 +366,12 @@ export const getProjectDetails = async (
   const userId = req.user?.id;
   const orgId = req.user?.org_id;
 
-  if (!userId || !orgId) { return next(new AppError('User information not found', 400)); }
+  if (!userId || !orgId) {
+    return next(new AppError('User information not found', 400));
+  }
 
   try {
+    // Fetch project details
     const projectResult = await pool.query(
       `
       SELECT id, name, description, org_id, root_path, details, last_updated, created_at
@@ -378,38 +381,51 @@ export const getProjectDetails = async (
       [id, orgId]
     );
 
-    if (projectResult.rows.length === 0) return next( new AppError( 'Project not found or you do not have permission to access it', 404 ) );
+    if (projectResult.rows.length === 0) {
+      return next(
+        new AppError('Project not found or you do not have permission to access it', 404)
+      );
+    }
 
     const project = projectResult.rows[0];
 
-    const tasksResult = await pool.query(
-      `
-      SELECT id, name, status, created_at, last_updated
-      FROM Task
-      WHERE project_id = $1
-      ORDER BY last_updated DESC
-      LIMIT 5
-    `,
-      [id]
-    );
-
-    const fileTreeResult = await pool.query(
-      `
-      SELECT result
-      FROM Task
-      WHERE project_id = $1 AND name = 'Generate File Tree'
-      ORDER BY last_updated DESC
-      LIMIT 1
-    `,
-      [id]
-    );
-
-    const fileTree = fileTreeResult.rows.length > 0 ? JSON.parse(fileTreeResult.rows[0].result) : null;
-
     const projectDetails = {
-      ...project,
-      recentTasks: tasksResult.rows,
-      fileTree: fileTree,
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      rootPath: project.root_path || '',
+      details: {
+        nodes: project.details?.nodes || [],
+        edges: project.details?.edges || [],
+        designIdl: project.details?.designIdl || {},
+        uiStructure: project.details?.uiStructure || {},
+        files: project.details?.files || [], // Default structure for files
+        codes: [],
+        docs: [],
+        isAnchorInit: project.details?.isAnchorInit || false,
+        isCode: project.details?.isCode || false,
+        filePaths: project.details?.filePaths || [],
+        fileTree: project.details?.fileTree || [], // Use the fetched file tree
+        aiStructure: project.details?.aiStructure || '',
+        stateContent: '',
+        uiResults: project.details?.uiResults || [],
+        aiInstructions: project.details?.aiInstructions || [],
+        sdkFunctions: project.details?.sdkFunctions || [],
+        buildStatus: project.details?.buildStatus || false,
+        deployStatus: project.details?.deployStatus || false,
+        isSdk: project.details?.isSdk || false,
+        isUi: project.details?.isUi || false,
+        genUiClicked: project.details?.genUiClicked || false,
+        idl: project.details?.idl || { fileName: '', content: '', parsed: { instructions: [], accounts: [] } },
+        sdk: project.details?.sdk || { fileName: '', content: '' },
+        programId: project.details?.programId || '',
+        pdas: project.details?.pdas || [],
+        keyFeatures: project.details?.keyFeatures || [],
+        userInteractions: project.details?.userInteractions || [],
+        sectorContext: project.details?.sectorContext || '',
+        optimizationGoals: project.details?.optimizationGoals || [],
+        uiHints: project.details?.uiHints || [],
+      },
     };
 
     res.status(200).json({

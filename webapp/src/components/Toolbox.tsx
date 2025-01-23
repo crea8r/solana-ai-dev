@@ -87,8 +87,8 @@ const Toolbox: React.FC<{ onExampleChange: (exampleName: string) => void }> = ({
           uiStructure: selectedProject.details.uiStructure,
         },
       }));
-      console.log('Selected Project:', selectedProject.details.nodes[0].data.item);
-      console.log('Project Context:', projectContext);
+      //console.log('Selected Project:', selectedProject.details.nodes[0].data.item);
+      //console.log('Project Context:', projectContext);
     }
   };
 

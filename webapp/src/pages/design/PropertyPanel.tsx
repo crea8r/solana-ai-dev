@@ -228,6 +228,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         align='center' 
         justify='center' 
         maxWidth='100%'
+        height='100% !important'
         boxSizing='border-box'
       >
         <Flex direction="row" justify="space-between" align="center" fontFamily="IBM Plex Mono" >
@@ -347,7 +348,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       borderLeft="1px solid"
       borderColor="gray.200"
       overflowY="auto"
-      maxHeight="100vh"
+      height="100% !important"
     >
       <VStack spacing={4} align="stretch">
         {selectedNode && renderNodeContent()}

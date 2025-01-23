@@ -16,22 +16,26 @@ import { Link as RouterLink } from 'react-router-dom';
 import { 
   getFilesToGenerate, 
   setupProjectDirectory, 
-  fetchAndExtractFilePaths,
   updateOrCreateFile,
   generateFileContent,
   getInstructionNamesSnake,
   aiGenOutput,
   insertAiOutputIntoFiles,
 } from '../../utils/genCodeUtils2';
-import { fetchDirectoryStructure, filterFiles } from '../../utils/codePageUtils';
+import { filterFiles, findFirstFile } from '../../utils/codePageUtils';
 import { mapFileTreeNodeToItemType } from '../../utils/codePageUtils';
 import { LogEntry, useTerminalLogs } from "../../hooks/useTerminalLogs";
-
-
+import { saveProject } from '../../utils/projectUtils';
+import { FileTreeItemType } from '../../interfaces/file';
+import { fetchDirectoryStructure } from '../../utils/projectUtils';
+import { fetchFileInfo } from '../../utils/fileUtils';
+import { getCodes } from '../../utils/projectUtils';
 interface genTaskProps {
     isOpen: boolean;
     onClose: () => void;
     disableClose?: boolean;
+    handleSelectFile: (file: FileTreeItemType) => void;
+    setFiles: React.Dispatch<React.SetStateAction<FileTreeItemType>> | undefined;
 }
 
 const configFiles = ['Cargo.toml', 'Xargo.toml', 'Anchor.toml', '.gitignore'];
@@ -45,8 +49,25 @@ type Task = {
     type: 'main' | 'file';
 };
 
+const updateProjectInDatabase = async (projectContext: any) => {
+    try {
+        const projectInfoToSave = transformToProjectInfoToSave(projectContext);
+        const response = await projectApi.updateProject(projectContext.id, projectInfoToSave);
 
-export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose }) => {
+        const projectId = response.projectId;
+        const rootPath = response.rootPath;
+
+        //console.log('Project updated successfully in the database.', response);
+
+        return {
+            id: projectId,
+            rootPath: rootPath,
+            isSaved: true,
+        };
+    } catch (error) { console.error('Error updating project in the database:', error); }
+};
+
+export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClose, handleSelectFile, setFiles }) => {
     const { projectContext, setProjectContext, projectInfoToSave, setProjectInfoToSave } = useProjectContext();
     const { user } = useAuthContext();
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -62,44 +83,59 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
     const isCloseDisabled = tasks.some(task => task.status === 'loading');
     const { logs: terminalLogs, addLog, clearLogs } = useTerminalLogs();
 
+
     useEffect(() => {
-        if (projectContext) {
-            setContextReady(true);
-        }
+        if (projectContext) setContextReady(true);
         //console.log('projectContext', projectContext);
     }, [projectContext]);
 
+    // save project if not already saved
     useEffect(() => {
         if (isOpen && contextReady && !tasksInitializedRef.current) {
-            if (!projectContext) return;
+            (async () => {
+                let localProjectContext = { ...projectContext };
+            try{
+                if (!projectContext) throw new Error('Project context not found');
+                if(!projectContext.id || !projectContext.rootPath) {
+                    
+                    const data = await saveProject(localProjectContext, setProjectContext);
+                    if (!data) throw new Error('Error creating project in the database');
 
-            if (!projectContext.id || !projectContext.rootPath) {
-                toast({
-                    title: 'Project not saved',
-                    description: 'Please save the project first.',
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                });
-                onClose(); 
-                return;
-            }
+                    localProjectContext = {
+                        ...localProjectContext,
+                        id: data.projectId,
+                        rootPath: data.rootPath,
+                        details: {
+                        ...localProjectContext.details,
+                        },
+                    };
 
-            const initialTasks: Task[] = [
-                {
-                    id: 1,
-                    name: 'Generate Files',
-                    status: genCodeTaskRun ? 'completed' : 'loading',
-                    type: 'main' as 'main',
-                },
-            ];
+                    //console.log('projectContext after create orupdate', localProjectContext);
+                }
+                
 
-            setTasks(initialTasks);
-            tasksInitializedRef.current = true;
+                const initialTasks: Task[] = [
+                    {
+                        id: 1,
+                        name: 'Generate Files',
+                        status: genCodeTaskRun ? 'completed' : 'loading',
+                        type: 'main' as 'main',
+                    },
+                ];
 
-            if ((!projectContext?.details.isAnchorInit || !projectContext?.details.isCode) && contextReady) {
-                runTasksSequentially();
-            }
+                setTasks(initialTasks);
+                tasksInitializedRef.current = true;
+
+                if (
+                    (!localProjectContext?.details.isAnchorInit || !localProjectContext?.details.isCode) && 
+                    contextReady && 
+                    (localProjectContext.id || localProjectContext.rootPath)
+                ) {
+                    //console.log('projectContext', localProjectContext);
+                    runTasksSequentially(localProjectContext);
+                } else throw new Error('Project context id or root path not found');
+            } catch (error) { console.error('Error initializing tasks:', error); }
+        })();
         }
 
         if (!isOpen) {
@@ -108,69 +144,59 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         }
     }, [isOpen, projectContext, contextReady]);
 
+    // after code has been generated, update the project context and set the files
     useEffect(() => {
         if (genCodeTaskRun) {
-          if (genCodeTaskRun) {
-            const fetchAndSetProjectData = async () => {
-              try {
-                setIsLoading(true);
-        
-                const { id: projectId, rootPath } = projectContext;
-                if (!projectId || !rootPath) {
-                  console.error('Project context is missing essential data.');
-                  setIsLoading(false);
-                  return;
-                }
-        
-                await fetchDirectoryStructure(
-                  projectId,
-                  rootPath,
-                  projectContext.name,
-                  mapFileTreeNodeToItemType,
-                  filterFiles(rootPath),
-                  () => {},
-                  setProjectContext,
-                  setIsPolling,
-                  setIsLoading,
-                  addLog,
-                  (file) => {
-                    setProjectContext((prev) => ({
-                      ...prev,
-                      selectedFile: file,
-                      details: {
-                        ...prev.details,
-                        isCode: true,
-                        programId: prev.details.programId,
-                      },
-                    }));
-                  }
-                );
-        
-                setIsLoading(false);
-              } catch (error) {
-                console.error('Error updating project in Task Modal:', error);
-                setIsLoading(false);
-              }
-            };
-            fetchAndSetProjectData();
-            const updateProjectInDatabase = async () => {
-              try {
-                  const projectInfoToSave = transformToProjectInfoToSave(projectContext);
-                  await projectApi.updateProject(projectContext.id, projectInfoToSave);
-                  //console.log('Project updated successfully in the database.');
-              } catch (error) { console.error('Error updating project in the database:', error); }
-            };
+            //console.log('genCodeTaskRun', genCodeTaskRun);
+            (async () => {
+                try {
+                    setIsLoading(true);
+            
+                    const { id: projectId, rootPath } = projectContext;
+                    if (!projectId || !rootPath) {
+                        setIsLoading(false);
+                        throw new Error('Project ID or root path not found');
+                    }
+            
+                    const {fileTree, filePaths, fileNames} = await fetchFileInfo(projectId, rootPath, projectContext.name, mapFileTreeNodeToItemType, filterFiles(rootPath));
+                    if (setFiles) setFiles(fileTree);
+                    const codes = await getCodes(projectId, fileTree);
 
-          updateProjectInDatabase();
-          }
+                    //console.log('codes', codes);
+                    //console.log('fileTree', fileTree);
+                    //console.log('filePaths', filePaths);
+                    //console.log('fileNames', fileNames);
+
+                    const updatedProjectContext = {
+                        ...projectContext,
+                        details: {
+                            ...projectContext.details,
+                            files: fileTree,
+                            codes: codes || [],
+                            isCode: true,
+                            isSaved: true,
+                        },
+                    };
+
+                    setProjectContext(updatedProjectContext);
+                    const response = await saveProject(updatedProjectContext, setProjectContext);
+                    if (!response) throw new Error('Error saving project');
+
+
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error('Error updating project in Task Modal:', error);
+                    setIsLoading(false);
+                }
+            })();
         }
     }, [genCodeTaskRun]);
 
-    const runTasksSequentially = async () => {
-        if (!projectContext) { console.error("Project context not available."); return; }
+    const runTasksSequentially = async (_projectContext: any) => {
+        if (!_projectContext) { console.error("Project context not available."); return; }
 
         try {
-            const { id: projectId, rootPath, name: projectName } = projectContext;
+            const { id: projectId, rootPath, name: projectName } = _projectContext;
             if (!user) { throw new Error('User in auth context not found'); }
 
             if (!projectId || !rootPath || !projectName) {
@@ -206,7 +232,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
                     return; 
                 } else setExistingDirectory(false);
 
-              } catch (error) { console.error('Error checking directory existence:', error); }
+            } catch (error) { console.error('Error checking directory existence:', error); }
 
             if (!projectContext.details.isAnchorInit) await handleAnchorInitTask(projectId, rootPath, projectName);
 
@@ -238,7 +264,8 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
         const programName = normalizeName(_projectName);
   
         await setupProjectDirectory(rootPath, programName, userId, projectId);
-        const existingFilePaths = await fetchAndExtractFilePaths(rootPath);
+        const { fileTree, filePaths, fileNames } = await fetchFileInfo( projectId, rootPath, programName, mapFileTreeNodeToItemType, filterFiles(rootPath));
+        const existingFilePaths = filePaths;
         const filesToGenerate = getFilesToGenerate(programName, instructionNamesSnake);
 
         const fileSet = new Set<{ name: string; path: string; content: string }>();
@@ -258,7 +285,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
             fileSet.add({ name: fileName, path: filePath, content: codeContent });
             allFileDetails.push(fileDetails);
-            console.log('fileDetails', fileDetails);
+            //console.log('fileDetails', fileDetails);
   
             if (fileTask.path) processedFilesSet.add(fileTask.path);
             else throw new Error('File path is undefined');
@@ -448,7 +475,7 @@ export const TaskModal: React.FC<genTaskProps> = ({ isOpen, onClose, disableClos
 
             setGenCodeTaskRun(false);
 
-            await runTasksSequentially();
+            await runTasksSequentially(projectContext);
 
             toast({
                 title: 'Tasks restarted',

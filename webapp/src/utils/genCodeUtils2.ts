@@ -50,18 +50,6 @@ export function getInstructionNamesSnake(nodes: any[]): string[] {
       });
 }
 
-export const getExistingFilePaths = (_nodes: FileTreeItemType[]) => {
-    const existingFilePaths = new Set<string>();
-    for (const node of _nodes) {
-      if (node.type === 'file' && node.path) {
-        existingFilePaths.add(node.path);
-      } else if (node.type === 'directory' && node.children) {
-        getExistingFilePaths(node.children);
-      }
-    }
-    return existingFilePaths;
-};
-
 export async function setupProjectDirectory(
   rootPath: string,
   normalizedProgramName: string,
@@ -152,31 +140,7 @@ return {
 };
 }
 
-export async function fetchAndExtractFilePaths(rootPath: string): Promise<Set<string>> {
-  try {
-    const existingFilesResponse = await fileApi.getDirectoryStructure(rootPath);
-    if (!existingFilesResponse) throw new Error("Directory structure not found");
 
-    const traverseFileTree = (nodes: FileTreeItemType[], filePaths: Set<string>) => {
-      for (const node of nodes) {
-        if (node.type === "file" && node.path) {
-          filePaths.add(node.path); // Add file path to the set
-        } else if (node.type === "directory" && node.children) {
-          traverseFileTree(node.children, filePaths); // Recursively traverse directories
-        }
-      }
-    };
-
-    // Create a Set to store unique file paths
-    const existingFilePaths = new Set<string>();
-    traverseFileTree(existingFilesResponse, existingFilePaths);
-
-    return existingFilePaths; // Return the set of file paths
-  } catch (error) {
-    console.error("Error fetching or extracting file paths:", error);
-    throw error; // Propagate the error
-  }
-}
 
 export async function updateOrCreateFile(
     projectId: string,

@@ -164,8 +164,8 @@ const _nodes = [
     height: 44,
     id: 'account1-10001',
     type: 'account',
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 },
+    position: { x: 400, y: -100 },
+    positionAbsolute: { x: 400, y: -100 },
     data: {
       label: 'CounterAccount',
       item: {
@@ -189,8 +189,8 @@ const _nodes = [
     height: 44,
     id: "account2-10001",
     type: "account",
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 },
+    position: { x: 400, y: 50 },
+    positionAbsolute: { x: 400, y: 50 },
     data: {
       label: "Initializer",
       item: {
@@ -213,8 +213,8 @@ const _nodes = [
     height: 44,
     id: "account3-10001",
     type: "account",
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 },
+    position: { x: 400, y: 200 },
+    positionAbsolute: { x: 400, y: 200 },
     data: {
       label: "User",
       item: {
@@ -237,8 +237,8 @@ const _nodes = [
     height: 44,
     id: 'instruction1-10001',
     type: 'instruction',
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 },
+    position: { x: 200, y: -150 },
+    positionAbsolute: { x: 200, y: -150 },
     data: {
       label: 'InitializeCounter',
       item: {
@@ -301,8 +301,8 @@ const _nodes = [
     height: 44,
     id: 'instruction2-10001',
     type: 'instruction',
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 }, 
+    position: { x: 200, y: 0 },
+    positionAbsolute: { x: 200, y: 0 },
     data: {
       label: 'IncrementCounter',
       item: {
@@ -370,8 +370,8 @@ const _nodes = [
     height: 44,
     id: 'instruction3-10001',
     type: 'instruction',
-    position: { x: 0, y: 0 },
-    positionAbsolute: { x: 0, y: 0 },
+    position: { x: 200, y: 150 },
+    positionAbsolute: { x: 200, y: 150 },
     data: {
       label: 'ResetCounter',
       item: {
@@ -430,22 +430,14 @@ const _nodes = [
 
 const _edges = [
   // Connect Program to Instructions
-  { id: 'edge1', source: 'program1-10001', target: 'instruction1-10001', type: 'solana' },
-  { id: 'edge2', source: 'program1-10001', target: 'instruction2-10001', type: 'solana' },
-  { id: 'edge3', source: 'program1-10001', target: 'instruction3-10001', type: 'solana' },
+  { id: 'edge1', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction1-10001', targetHandle: 'top', type: 'solana' },
+  { id: 'edge2', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction2-10001', targetHandle: 'top', type: 'solana' },
+  { id: 'edge3', source: 'program1-10001', sourceHandle: 'bottom', target: 'instruction3-10001', targetHandle: 'top', type: 'solana' },
 
-  // Connect Accounts to InitializeCounter
-  { id: 'edge4', source: 'account2-10001', target: 'instruction1-10001', type: 'solana' }, // Initializer
-  { id: 'edge5', source: 'account1-10001', target: 'instruction1-10001', type: 'solana' }, // CounterAccount
-  { id: 'edge6', source: 'account3-10001', target: 'instruction1-10001', type: 'solana' }, // SystemProgram (if needed)
-
-  // Connect Accounts to IncrementCounter
-  { id: 'edge7', source: 'account3-10001', target: 'instruction2-10001', type: 'solana' }, // User
-  { id: 'edge8', source: 'account1-10001', target: 'instruction2-10001', type: 'solana' }, // CounterAccount
-
-  // Connect Accounts to ResetCounter
-  { id: 'edge9', source: 'account2-10001', target: 'instruction3-10001', type: 'solana' }, // Initializer
-  { id: 'edge10', source: 'account1-10001', target: 'instruction3-10001', type: 'solana' }, // CounterAccount
+  // Connect Program to Accounts
+  { id: 'edge4', source: 'program1-10001', sourceHandle: 'left', target: 'account1-10001', targetHandle: 'right', type: 'solana' },
+  { id: 'edge5', source: 'program1-10001', sourceHandle: 'top', target: 'account2-10001', targetHandle: 'bottom', type: 'solana' },
+  { id: 'edge6', source: 'program1-10001', sourceHandle: 'right', target: 'account3-10001', targetHandle: 'left', type: 'solana' },
 ];
 
 const _uiStructure = {

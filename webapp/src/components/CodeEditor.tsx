@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Box, Button, Flex, MenuItem } from '@chakra-ui/react';
+import { Box, Button, Flex, MenuItem, Spinner } from '@chakra-ui/react';
 import MonacoEditor from 'react-monaco-editor';
 import * as monaco from 'monaco-editor';
 import { FileTreeItemType } from '../interfaces/file';
@@ -15,6 +15,7 @@ type CodeEditorProps = {
   onSave: () => void;
   onRunCommand: (commandType: 'anchor clean' | 'cargo clean') => void;
   isPolling: boolean;
+  isLoadingCode: boolean;
 };
 
 const CodeEditor = ({
@@ -26,6 +27,7 @@ const CodeEditor = ({
   onSave,
   onRunCommand,
   isPolling,
+  isLoadingCode,
 }: CodeEditorProps) => {
   const editorRef = useRef<any>(null);
   const [language, setLanguage] = useState('plaintext');
@@ -214,16 +216,22 @@ const CodeEditor = ({
       </Flex>
 
       <Box overflow="hidden" height="auto">
-        <MonacoEditor
-          height="75vh"
-          width="100%"
-          language={language}
-          theme="materialLighterHighContrast"
-          value={content}
-          options={options} 
-          editorDidMount={editorDidMount}
-          onChange={handleEditorChange}
-        />
+        {isLoadingCode ? (
+          <Flex height="75vh" width="100%" align="center" justify="center" bg="gray.100">
+            <Spinner size="xl" color="gray.500" />
+          </Flex>
+        ) : (
+          <MonacoEditor
+            height="75vh"
+            width="100%"
+            language={language}
+            theme="materialLighterHighContrast"
+            value={content}
+            options={options}
+            editorDidMount={editorDidMount}
+            onChange={handleEditorChange}
+          />
+        )}
       </Box>
 
       <Box mb={0} maxHeight="30vh !important" minHeight="30vh !important">

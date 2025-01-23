@@ -63,6 +63,7 @@ export interface ProjectDetailsToSave {
   designIdl: ExtendedIdl;
   uiStructure: UiStructure;
   isAnchorInit: boolean;
+  files: FileTreeItemType;
   filePaths: string[];
   fileTree: FileTreeItemType;
   isCode: boolean;

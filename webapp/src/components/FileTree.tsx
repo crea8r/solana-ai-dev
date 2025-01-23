@@ -74,26 +74,32 @@ type FileTreeProps = {
   selectedItem?: FileTreeItemType;
 };
 
-const FileTree = memo(({
+const FileTree = ({
   onSelectFile,
   files,
   selectedItem,
 }: FileTreeProps) => {
-  //console.log('***FileTreeComponent files:', JSON.stringify(files, null, 2));
+  console.log('FileTree props:', { files, selectedItem }); // Debugging re-renders
+
   return (
-    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="10px">
-      <VStack align='stretch' spacing={2} p={4}>
+    <Flex p={6} bg="gray.50" borderRadius="md" borderWidth="1px" width='100%' height='100%' padding="15px"
+    direction='column'
+    justifyContent='flex-start'
+    alignItems='flex-start'
+    >
+      <VStack align='stretch' spacing={2} p={4} bg='white' borderRadius='md' borderWidth='1px' height='80%'>
         {files && (
           <FileTreeItem
             item={files}
             onSelectFile={onSelectFile}
             selectedItem={selectedItem}
-              level={0}
+            level={0}
           />
         )}
       </VStack>
     </Flex>
   );
-});
+};
 
-export default React.memo(FileTree);
+// Temporarily remove memo for debugging
+export default FileTree;
