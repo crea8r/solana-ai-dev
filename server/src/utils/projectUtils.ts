@@ -20,17 +20,15 @@ export const runCommand = async (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const sanitizedTaskId = taskId.trim().replace(/,$/, '');
-    console.log(`Running command: ${command} in directory: ${cwd}`);
+    //console.log(`Running command: ${command} in directory: ${cwd}`);
     
     exec(command, { cwd }, async (error, stdout, stderr) => {
       let result = '';
 
-      console.log(`Command completed. Checking result for taskId: ${sanitizedTaskId}`);
-
       if (error) {
         // Handle errors
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
-        console.log(`Error occurred for taskId: ${sanitizedTaskId}: ${result}`);
+        //console.log(`Error occurred for taskId: ${sanitizedTaskId}: ${result}`);
         await updateTaskStatus(sanitizedTaskId, 'failed', result);
         resolve(result);
       } else {
@@ -42,7 +40,7 @@ export const runCommand = async (
           await updateTaskStatus(sanitizedTaskId, 'warning', result);
         } else {
           // Handle success
-          result = `Program Built Successfully`;
+          result = `Success`;
           //console.log(`Success for taskId: ${sanitizedTaskId}`);
           await updateTaskStatus(sanitizedTaskId, 'succeed', result);
         }
@@ -138,14 +136,14 @@ export const startAnchorDeployTask = async (
         return;
       }
 
-      console.log(`Result: ${result}`);
+      //console.log(`Result: ${result}`);
 
       const programIdMatch = result?.match(/Program Id:\s+([a-zA-Z0-9]+)/);
-      console.log(`Program ID match: ${programIdMatch}`);
+      //console.log(`Program ID match: ${programIdMatch}`);
       if (!programIdMatch) throw new Error('Program ID not found in deploy output. Deployment may have failed.');
 
       programId = programIdMatch[1];
-      console.log(`Program ID: ${programId}`);
+      //console.log(`Program ID: ${programId}`);
       if (programId) console.log(`Program successfully deployed with ID: ${programId}`);
       
       await updateTaskStatus(

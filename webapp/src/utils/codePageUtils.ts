@@ -406,24 +406,22 @@ export const handleDeployProject = async (
   projectId: string,
   setIsPolling: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  addLog: (log: string) => void,
+  addLog: (log: string, type: LogEntry['type'], color?: string) => void,
   projectContext: Project,
   setProjectContext: React.Dispatch<React.SetStateAction<Project>>
 ): Promise<void> => {
   try {
     setIsLoading(true);
-    addLog('Starting deployment process...');
+    addLog('Starting deployment process...', 'start', "blue");
 
     const response = await projectApi.deployProject(projectId);
     const taskId = response.taskId;
-    console.log(`Task ID: ${taskId.toString()}`);
-
     const sanitizedTaskId = taskId.toString().trim().replace(/,$/, '');
 
     const { status, fileContent } = await startPollingTaskStatus(sanitizedTaskId, setIsPolling, setIsLoading, addLog);
 
     if (status === 'succeed') {
-      addLog(`Program was successfully deployed. Program ID: ${projectContext.details.programId}`);
+      addLog('Program deployed successfully.', 'success', "green");
 
       setProjectContext((prev) => ({
         ...prev,
@@ -434,12 +432,12 @@ export const handleDeployProject = async (
       }));
       
     } else if (status === 'failed') { 
-      if (fileContent) addLog(`Deployment failed. ${fileContent}`);
-      else addLog('Deployment failed.'); 
+      if (fileContent) addLog(`Deployment failed. ${fileContent}`, 'error', "red");
+      else addLog('Deployment failed.', 'error'); 
     }
   } catch (error) {
     console.error('Error during deployment:', error);
-    addLog(`Error during deployment: ${error}`);
+    addLog(`Error during deployment: ${error}`, 'error', "red");
   } finally {
     setIsLoading(false);
   }
