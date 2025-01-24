@@ -1,5 +1,6 @@
 import { Project, ProjectDetails } from '../../interfaces/project';
 import { ExtendedIdl } from '../../interfaces/extendedIdl';
+import { UiStructure } from '../../interfaces/ui';
 
 const description = `The Token Transfer Program facilitates secure and efficient token transfers on-chain. 
 Authorized users can initialize token accounts and transfer tokens between accounts. 
@@ -372,43 +373,30 @@ const _edges = [
   },
 ];
 
-const _uiStructure = {
+const _uiStructure: UiStructure = {
   header: {
     title: 'Token Transfer Program',
     navigationMenu: ['Dashboard', 'Token Actions', 'History', 'Settings'],
-    walletInfo: {
-      connectedWalletAddress: {
-        type: 'text',
-        placeholder: 'Not Connected',
-        description: 'Displays the connected wallet address if available. Otherwise, show a "Connect Wallet" button.',
-      },
-      balanceDisplay: {
-        type: 'text',
-        description: 'Shows the balance of SOL and any relevant program-specific tokens.',
-      },
-      connectWalletButton: {
-        type: 'button',
-        label: 'Connect Wallet',
-        description: 'Visible only when no wallet is connected. Initiates wallet connection.',
-      },
-    },
   },
   mainSection: {
     title: 'Token Actions',
     layout: 'vertical',
-    formElements: [
+    elements: [
       {
         id: 'tokenBalanceDisplay',
-        type: 'staticText',
+        type: 'text',
         label: 'Current Token Balance',
         value: '0',
+        properties: {
+          fontSize: 'md',
+          color: 'black',
+        },
         description: 'Displays the current token balance fetched from the program.',
       },
       {
         id: 'initializeTokenButton',
         type: 'button',
         label: 'Initialize Token Account',
-        action: 'initializeToken',
         description: 'Initializes the token account with the current wallet address as the owner and associates it with a mint.',
         validation: {
           required: true,
@@ -420,7 +408,6 @@ const _uiStructure = {
         id: 'transferTokenButton',
         type: 'button',
         label: 'Transfer Tokens',
-        action: 'transferToken',
         description: 'Transfers a specified amount of tokens to another account.',
         validation: {
           required: true,
@@ -431,25 +418,24 @@ const _uiStructure = {
     ],
   },
   confirmationModal: {
-    isModal: true,
     title: 'Confirm Token Action',
     content: {
       fields: [
         {
           id: 'confirmationActionType',
-          type: 'staticText',
+          type: 'text',
           label: 'Action',
           description: 'Displays the type of action being performed (initialize, transfer).',
         },
         {
           id: 'confirmationAmount',
-          type: 'staticText',
+          type: 'text',
           label: 'Amount',
           description: 'Displays the amount of tokens involved in the action for user confirmation.',
         },
         {
           id: 'confirmationRecipient',
-          type: 'staticText',
+          type: 'text',
           label: 'Recipient',
           description: 'Displays the recipient address for transfer actions.',
         },
@@ -460,14 +446,12 @@ const _uiStructure = {
         id: 'confirmButton',
         type: 'button',
         label: 'Confirm',
-        action: 'submitAction',
         description: 'Confirms the action and submits the transaction.',
       },
       {
         id: 'cancelButton',
         type: 'button',
         label: 'Cancel',
-        action: 'closeModal',
         description: 'Cancels the action and closes the confirmation modal.',
       },
     ],
@@ -477,30 +461,14 @@ const _uiStructure = {
     elements: [
       {
         id: 'successNotification',
-        type: 'notification',
-        variant: 'success',
-        message: 'Action Completed Successfully!',
-        details: {
-          transactionHash: {
-            label: 'Transaction Hash',
-            type: 'link',
-            urlTemplate: 'https://explorer.solana.com/tx/{transactionHash}',
-          },
-        },
+        type: 'text',
+        label: 'Success',
         description: 'Displays a success message and transaction hash for verification.',
       },
       {
         id: 'errorNotification',
-        type: 'notification',
-        variant: 'error',
-        message: 'Action Failed!',
-        details: {
-          errorReason: {
-            label: 'Reason',
-            type: 'text',
-            description: 'Displays the reason for failure if available.',
-          },
-        },
+        type: 'text',
+        label: 'Error',
         description: 'Shows an error message if the transaction fails, along with any available failure reason.',
       },
     ],
@@ -510,37 +478,21 @@ const _uiStructure = {
     list: {
       type: 'transactionHistoryList',
       fields: ['timestamp', 'action', 'amount', 'status'],
-      description: 'A list showing recent token transactions, including timestamp, action, amount, and status.',
+      description: 'Displays recent token transactions, including timestamp, action, amount, and status.',
       maxItems: 10,
       showPagination: true,
     },
   },
   optionalFeatures: {
-    roleBasedAccess: {
-      enabled: true,
-      description: 'Restricts transfer-related actions to the authorized wallet.',
-    },
-    exportDataButton: {
-      enabled: true,
-      type: 'button',
-      label: 'Export Transaction History',
-      formatOptions: ['csv', 'json'],
-      description: 'Allows users to export the token transaction history in CSV or JSON format.',
-    },
     darkModeToggle: {
       enabled: true,
       type: 'switch',
       label: 'Dark Mode',
       description: 'Toggle between light and dark mode.',
     },
-    notificationsToggle: {
-      enabled: true,
-      type: 'switch',
-      label: 'Enable Notifications',
-      description: 'Enable or disable in-app notifications for transaction updates.',
-    },
   },
 };
+
 
 
 const tokenTransferProgram: Project = {

@@ -152,7 +152,7 @@ export const getCodes = async (
 
         // Get file content from the API
         const response = await fileApi.getFileContent(projectId, filePath);
-        console.log('response from fileApi.getFileContent()', response);
+        //console.log('response from fileApi.getFileContent()', response);
 
         if (!response) {
           throw new Error(`Failed to get file content for ${filePath}`);

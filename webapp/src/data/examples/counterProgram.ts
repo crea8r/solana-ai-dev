@@ -1,5 +1,7 @@
 import { Project, ProjectDetails } from '../../interfaces/project';
 import { ExtendedIdl } from '../../interfaces/extendedIdl';
+import { FaPlus, FaMinus } from "react-icons/fa";
+
 
 const description = `The Counter Program maintains an on-chain counter, allowing authorized users to increment its value and restricting reset functionality to the initializer. 
 A PDA-derived CounterAccount stores the counter value and its owner, with strict access control enforced through validated accounts and parameters.`
@@ -463,181 +465,62 @@ const _edges = [
   },
 ];
 
+
 const _uiStructure = {
   header: {
-    title: 'Counter Program',
-    navigationMenu: ['Dashboard', 'Counter Actions', 'History', 'Settings'],
-    walletInfo: {
-      connectedWalletAddress: {
-        type: 'text',
-        placeholder: 'Not Connected',
-        description: 'Displays the connected wallet address if available. Otherwise, show a "Connect Wallet" button.',
-      },
-      balanceDisplay: {
-        type: 'text',
-        description: 'Shows the balance of SOL and any relevant program-specific tokens.',
-      },
-      connectWalletButton: {
-        type: 'button',
-        label: 'Connect Wallet',
-        description: 'Visible only when no wallet is connected. Initiates wallet connection.',
-      },
-    },
+    title: "Counter Program",
   },
   mainSection: {
-    title: 'Counter Actions',
-    layout: 'vertical',
-    formElements: [
-      {
-        id: 'counterValueDisplay',
-        type: 'staticText',
-        label: 'Current Counter Value',
-        value: '0',
-        description: 'Displays the current counter value fetched from the program.',
-      },
-      {
-        id: 'initializeCounterButton',
-        type: 'button',
-        label: 'Initialize Counter',
-        action: 'initializeCounter',
-        description: 'Initializes the counter account with the current wallet address as the owner.',
-        validation: {
-          required: true,
-          walletConnected: true,
-          errorMessage: 'Please connect your wallet to initialize the counter.',
-        },
-      },
-      {
-        id: 'incrementCounterButton',
-        type: 'button',
-        label: 'Increment Counter',
-        action: 'incrementCounter',
-        description: 'Increments the counter value by 1.',
-        validation: {
-          required: true,
-          walletConnected: true,
-          errorMessage: 'Please connect your wallet to increment the counter.',
-        },
-      },
-      {
-        id: 'resetCounterButton',
-        type: 'button',
-        label: 'Reset Counter',
-        action: 'resetCounter',
-        description: 'Resets the counter value to zero. Only the initializer is allowed to perform this action.',
-        validation: {
-          walletConnected: true,
-          roleCheck: 'initializer',
-          errorMessage: 'Only the initializer can reset the counter.',
-        },
-      },
-    ],
-  },
-  confirmationModal: {
-    isModal: true,
-    title: 'Confirm Counter Action',
-    content: {
-      fields: [
-        {
-          id: 'confirmationActionType',
-          type: 'staticText',
-          label: 'Action',
-          description: 'Displays the type of action being performed (initialize, increment, reset).',
-        },
-        {
-          id: 'confirmationCounterValue',
-          type: 'staticText',
-          label: 'Counter Value',
-          description: 'Displays the counter value after the action for user confirmation.',
-        },
-      ],
-    },
-    buttons: [
-      {
-        id: 'confirmButton',
-        type: 'button',
-        label: 'Confirm',
-        action: 'submitAction',
-        description: 'Confirms the action and submits the transaction.',
-      },
-      {
-        id: 'cancelButton',
-        type: 'button',
-        label: 'Cancel',
-        action: 'closeModal',
-        description: 'Cancels the action and closes the confirmation modal.',
-      },
-    ],
-  },
-  feedbackSection: {
-    title: 'Transaction Status',
+    title: "Counter Actions",
+    layout: "vertical",
     elements: [
       {
-        id: 'successNotification',
-        type: 'notification',
-        variant: 'success',
-        message: 'Action Completed Successfully!',
-        details: {
-          transactionHash: {
-            label: 'Transaction Hash',
-            type: 'link',
-            urlTemplate: 'https://explorer.solana.com/tx/{transactionHash}',
-          },
+        id: "counterValueDisplay",
+        type: "text",
+        label: "Counter Value",
+        value: "10",
+        tooltip: "This is the current counter value",
+        properties: {
+          fontSize: "2xl",
+          color: "blue.500",
+          fontWeight: "bold",
         },
-        description: 'Displays a success message and transaction hash for verification.',
+        wrapperProperties: {
+          justifyContent: "center",
+          width: "100%",
+        },
       },
       {
-        id: 'errorNotification',
-        type: 'notification',
-        variant: 'error',
-        message: 'Action Failed!',
-        details: {
-          errorReason: {
-            label: 'Reason',
-            type: 'text',
-            description: 'Displays the reason for failure if available.',
-          },
+        id: "counterButtonsWrapper",
+        type: "buttonWrapper",
+        flexProperties: {
+          direction: "row",
+          gap: 4,
+          justifyContent: "center",
+          alignItems: "center",
         },
-        description: 'Shows an error message if the transaction fails, along with any available failure reason.',
+        buttons: [
+          {
+            id: "incrementButton",
+            label: "Increment",
+            icon: FaPlus,
+            colorScheme: "green",
+            actionDescription: "Increase the counter value",
+          },
+          {
+            id: "decrementButton",
+            label: "Decrement",
+            icon: FaMinus,
+            colorScheme: "red",
+            actionDescription: "Decrease the counter value",
+          },
+        ],
       },
     ],
   },
-  historySection: {
-    title: 'Recent Counter Transactions',
-    list: {
-      type: 'transactionHistoryList',
-      fields: ['timestamp', 'action', 'updatedValue', 'status'],
-      description: 'A list showing recent counter transactions, including timestamp, action, updated value, and status.',
-      maxItems: 10,
-      showPagination: true,
-    },
-  },
-  optionalFeatures: {
-    roleBasedAccess: {
-      enabled: true,
-      description: 'Restricts reset-related actions to the authorized initializer.',
-    },
-    exportDataButton: {
-      enabled: true,
-      type: 'button',
-      label: 'Export Transaction History',
-      formatOptions: ['csv', 'json'],
-      description: 'Allows users to export the counter transaction history in CSV or JSON format.',
-    },
-    darkModeToggle: {
-      enabled: true,
-      type: 'switch',
-      label: 'Dark Mode',
-      description: 'Toggle between light and dark mode.',
-    },
-    notificationsToggle: {
-      enabled: true,
-      type: 'switch',
-      label: 'Enable Notifications',
-      description: 'Enable or disable in-app notifications for transaction updates.',
-    },
-  },
 };
+
+
 
 const counterProgram: Project = {
   id: '',

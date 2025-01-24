@@ -133,7 +133,7 @@ const DesignPage: React.FC = () => {
     code: projectContext.details.isCode ? 2 : -1,
   };
   const handleTabChange = (index: number) => {
-    console.log("Tab changed to index!!!!!!!!!!!!!!!!!!!!!!!!!:", index); // Debugging log
+    //console.log("Tab changed to index:", index); // Debugging log
     if (index === tabIndexMap.code && !projectContext.details.isCode) {
       setActiveTab('design');
       return;
@@ -190,7 +190,7 @@ const DesignPage: React.FC = () => {
 
 
   const handleLoadProject = async (projectId: string, projectName: string) => {
-    logProjectContext(projectContext);
+    //logProjectContext(projectContext);
     setIsLoading(true);
     try {
       const fetchedProject = await fetchProject(projectId, projectName);
@@ -213,7 +213,7 @@ const DesignPage: React.FC = () => {
         },
       }));
 
-      logProjectContext(projectContext);
+      //logProjectContext(projectContext);
     } catch (error) {
       console.error('Error loading project:', error);
     } finally {
@@ -347,13 +347,12 @@ const DesignPage: React.FC = () => {
   }, [projectContext.details.isCode, activeTab]);
 
   useEffect(() => {
-    console.log("activeTab", activeTab)
+    //console.log("activeTab", activeTab)
   }, []);
 
   useEffect(() => {
-    console.log('------ DesignPage - projectContext ------');
-    logProjectContext(projectContext);
-    console.log('------------');
+    //logProjectContext(projectContext);
+    //console.log('------------');
   }, [projectContext]);
   
   
@@ -541,7 +540,7 @@ const DesignPage: React.FC = () => {
   };
 
   const handleSaveClick = async () => {
-    logProjectContext(projectContext);
+    //logProjectContext(projectContext);
     const response = await saveProject(projectContext, setProjectContext);
     if (response) {
       toast({
@@ -813,12 +812,12 @@ const DesignPage: React.FC = () => {
               <TabList flex="0 0 auto">
                 <Flex width='100%' justifyContent='center' alignItems='center'>
                   <Tab {...tabStyle}>Design</Tab>
-                  <Tooltip label="Coming soon" {...tooltipStyle}>
+                  {/*<Tooltip label="Coming soon" {...tooltipStyle}>*/}
                     <Tab 
                       {...tabStyle}
                       isDisabled={false}
                     >UI</Tab>
-                  </Tooltip>
+                  {/*</Tooltip>*/}
                   <Tab
                     {...tabStyle}
                     isDisabled={!projectContext.details.isCode}

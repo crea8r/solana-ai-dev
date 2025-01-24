@@ -18,9 +18,11 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  Tooltip,
 } from "@chakra-ui/react";
 import { ChevronDownIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { useProjectContext } from "../../contexts/ProjectContext";
+import { renderElement } from "../../utils/uiUtils2";
 
 const UISpace = () => {
   const { projectContext } = useProjectContext();
@@ -28,95 +30,71 @@ const UISpace = () => {
   const { colorMode, toggleColorMode } = useColorMode();
 
   const uiStructure = useMemo(() => {
-    //console.log("projectContext:", projectContext);
-    return projectContext?.details?.uiStructure || {};
+    return (
+      projectContext?.details?.uiStructure || {
+        header: { title: "Program Interface", navigationMenu: [] },
+        mainSection: { layout: "vertical", elements: [] },
+      }
+    );
   }, [projectContext.details]);
 
-  const renderFormElement = (element: any) => {
-    switch (element.type) {
-      case "text":
-        return (
-          <Box key={element.id} mb={4}>
-            <Text fontWeight="bold">{element.label}</Text>
-            <Input
-              value={element.description || ""}
-              placeholder={element.placeholder}
-              isReadOnly
-              variant="filled"
-            />
-          </Box>
-        );
-      case "input":
-        return (
-          <Box key={element.id} mb={4}>
-            <Text fontWeight="bold">{element.label}</Text>
-            <Input
-              type={element.inputType || "text"}
-              placeholder={element.placeholder}
-              isRequired={element.validation?.required}
-            />
-            <Text fontSize="sm" color="gray.500">
-              {element.description}
-            </Text>
-          </Box>
-        );
-      case "button":
-        return (
-          <Button
-            key={element.id}
-            colorScheme="blue"
-            isDisabled={element.disabledByDefault}
-            onClick={() => handleButtonAction(element)}
-            mb={2}
-          >
-            {element.label}
-          </Button>
-        );
-      default:
-        return null;
-    }
-  };
 
   const handleButtonAction = (element: any) => {
     toast({
       title: `${element.label} clicked`,
-      description: element.description,
+      description: element.description || "Button action triggered",
       status: "info",
       duration: 3000,
     });
   };
 
   return (
-    <Box p={6} maxWidth="900px" mx="auto">
+    <Box width="100%" shadow="md" borderRadius="md">
+      {/* Header */}
       <Flex
         bg="gray.100"
-        p={4}
+        width="100%"
+        p={2}
         shadow="md"
         justifyContent="space-between"
         alignItems="center"
+        border="1px solid"
+        borderColor="gray.200"
       >
-        <Text fontSize="2xl" fontWeight="bold">
+        <Text fontSize="sm" fontWeight="bold">
           {uiStructure.header?.title || "Program Interface"}
         </Text>
         <Flex alignItems="center" gap={4}>
-          <Menu>
-            <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-              Menu
-            </MenuButton>
-            <MenuList>
-              {uiStructure.header?.navigationMenu?.map((menuItem: string) => (
-                <MenuItem key={menuItem}>{menuItem}</MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
+          {uiStructure.header?.navigationMenu && uiStructure.header.navigationMenu.length > 0 && (
+            <Menu>
+              <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant="ghost">
+                Menu
+              </MenuButton>
+              <MenuList>
+                {uiStructure.header.navigationMenu.map((menuItem: string) => (
+                  <MenuItem key={menuItem}>{menuItem}</MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
+          )}
+          {/*
           <IconButton
             aria-label="Toggle Dark Mode"
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
           />
+          */}
         </Flex>
       </Flex>
 
+      {/* Main Section */}
+      <Flex direction={uiStructure.mainSection?.layout === "vertical" ? "column" : "row"} p={4}>
+        {uiStructure.mainSection?.elements?.map((element: any) =>
+          renderElement(element)
+        )}
+      </Flex>
+
+      {/*}
       <Accordion allowMultiple mt={4}>
         <AccordionItem>
           <AccordionButton>
@@ -164,13 +142,16 @@ const UISpace = () => {
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
+      */}
 
+      {/*
       <Flex mt={6} position="sticky" bottom="0" bg="white" py={4}>
         <Button colorScheme="blue" mr={2}>
           Submit
         </Button>
         <Button variant="outline">Cancel</Button>
       </Flex>
+      */}
     </Box>
   );
 };

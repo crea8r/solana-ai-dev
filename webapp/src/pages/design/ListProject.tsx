@@ -105,109 +105,36 @@ const ListProject: React.FC<ListProjectProps> = ({
             fileTree: { name: '', type: 'directory', children: [] },
             uiStructure: {
               header: {
-                title: 'No Project Selected',
-                navigationMenu: ['Home', 'Projects', 'Settings'],
-                walletInfo: {
-                  connectedWalletAddress: {
-                    type: 'text',
-                    placeholder: 'Not Connected',
-                    description: 'Displays the connected wallet address if available. If not connected, show a "Connect Wallet" button.',
-                  },
-                  balanceDisplay: {
-                    type: 'text',
-                    description: 'Shows the balance of SOL and available SPL tokens.',
-                  },
-                  connectWalletButton: {
-                    type: 'button',
-                    label: 'Connect Wallet',
-                    description: 'Visible only when no wallet is connected.',
-                  },
-                },
+                title: "",
+                navigationMenu: [],
               },
               mainSection: {
-                title: 'No Active Actions',
-                layout: 'vertical',
-                formElements: [],
+                title: "",
+                layout: "vertical",
+                elements: [],
               },
               confirmationModal: {
-                isModal: true,
-                title: 'Confirm Deletion',
+                title: "",
                 content: {
-                  fields: [
-                    {
-                      id: 'confirmDeletionText',
-                      type: 'staticText',
-                      label: 'Confirm Deletion',
-                      description: 'Are you sure you want to delete this project?',
-                    },
-                  ],
+                  fields: [],
                 },
-                buttons: [
-                  {
-                    id: 'confirmButton',
-                    type: 'button',
-                    label: 'Confirm',
-                    action: 'deleteProject',
-                    description: 'Confirms the deletion of the selected project.',
-                  },
-                  {
-                    id: 'cancelButton',
-                    type: 'button',
-                    label: 'Cancel',
-                    action: 'closeModal',
-                    description: 'Cancels the deletion and closes the confirmation modal.',
-                  },
-                ],
+                buttons: [],
               },
               feedbackSection: {
-                title: 'Notifications',
-                elements: [
-                  {
-                    id: 'successNotification',
-                    type: 'notification',
-                    variant: 'success',
-                    message: 'Project successfully deleted!',
-                    description: 'Displays a success message when the project is deleted.',
-                  },
-                  {
-                    id: 'errorNotification',
-                    type: 'notification',
-                    variant: 'error',
-                    message: 'Project deletion failed!',
-                    description: 'Displays an error message when the project deletion fails.',
-                  },
-                ],
+                title: "",
+                elements: [],
               },
               historySection: {
-                title: 'No Recent Activity',
+                title: "",
                 list: {
-                  type: 'transactionHistoryList',
-                  fields: ['timestamp', 'action', 'status'],
-                  description: 'Displays recent actions taken in the selected project.',
-                  maxItems: 5,
-                  showPagination: true,
+                  type: "",
+                  fields: [],
+                  description: "",
+                  maxItems: 0,
+                  showPagination: false,
                 },
               },
-              optionalFeatures: {
-                qrCodeScanner: {
-                  enabled: true,
-                  type: 'button',
-                  label: 'Scan QR Code',
-                  description: 'Opens a QR code scanner to autofill the wallet address.',
-                },
-                darkModeToggle: {
-                  enabled: true,
-                  type: 'switch',
-                  label: 'Dark Mode',
-                  description: 'Switch between light and dark modes for the UI.',
-                },
-                notificationsToggle: {
-                  enabled: true,
-                  type: 'switch',
-                  label: 'Enable Notifications',
-                  description: 'Toggle notifications on or off for project actions.',
-                },
-              },
+              optionalFeatures: {},
             },
             keyFeatures: [],
             userInteractions: [],
