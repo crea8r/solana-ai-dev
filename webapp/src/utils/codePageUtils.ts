@@ -380,6 +380,8 @@ export const handleBuildProject = async (
     if (response.taskId) {
       addLog('Building project. This may take a few minutes...', 'start');
       const { status, fileContent } = await startPollingTaskStatus(response.taskId, setIsPolling, setIsLoading, addLog);
+      console.log('status', status);
+      console.log('fileContent', fileContent);
       if (status === 'finished' || status === 'succeed' || status === 'warning') {
         setProjectContext((prev) => ({
         ...prev,
@@ -390,6 +392,9 @@ export const handleBuildProject = async (
         }));
         updateProjectInDatabase(projectContext);
       } else addLog('Build initiation failed.', 'error');
+      if (status === 'succeed') addLog('Program built successfully.', 'success');
+      if (status === 'warning') addLog('Warnings detected during build.', 'warning');
+      if (status === 'failed') addLog('Build initiation failed.', 'error');
     } else addLog('Build initiation failed.', 'error');
 
   } catch (error) {

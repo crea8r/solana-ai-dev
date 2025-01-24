@@ -8,6 +8,11 @@ import { getProjectRootPath } from './fileUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeProjectName } from './stringUtils';
 
+// Utility function to check for warnings in stdout or stderr
+function hasWarning(output: string): boolean {
+  return output.toLowerCase().includes('warning');
+}
+
 export const runCommand = async (
   command: string,
   cwd: string,
@@ -23,27 +28,27 @@ export const runCommand = async (
       console.log(`Command completed. Checking result for taskId: ${sanitizedTaskId}`);
 
       if (error) {
+        // Handle errors
         result = `Error: ${error.message}\n\nStdout: ${stdout}\n\nStderr: ${stderr}`;
         console.log(`Error occurred for taskId: ${sanitizedTaskId}: ${result}`);
         await updateTaskStatus(sanitizedTaskId, 'failed', result);
-        //reject(new Error(result)); // Explicit rejection to handle stuck tasks
         resolve(result);
       } else {
-        if (stderr) {
-          // Non-fatal warnings
-          result = `Warning: ${stderr}\n\nStdout: ${stdout}`;
-          console.log(`Warnings occurred for taskId: ${sanitizedTaskId}: ${stderr}`);
+        // Check for warnings in stdout or stderr
+        if (hasWarning(stdout) || (stderr && hasWarning(stderr))) {
+          // Handle warnings
+          result = `Warning detected:\n\nStdout: ${stdout.trim()}\n\nStderr: ${stderr.trim()}`;
+          //console.log(`Warnings occurred for taskId: ${sanitizedTaskId}: ${result}`);
           await updateTaskStatus(sanitizedTaskId, 'warning', result);
         } else {
-          // Success
-          result = `Stdout: ${stdout}`;
-          console.log(`Success for taskId: ${sanitizedTaskId}: ${stdout}`);
+          // Handle success
+          result = `Program Built Successfully`;
+          //console.log(`Success for taskId: ${sanitizedTaskId}`);
           await updateTaskStatus(sanitizedTaskId, 'succeed', result);
         }
       }
 
-      resolve(stdout.trim()); // Mark task as done, whether it succeeded or failed
-      console.log(`Task ${sanitizedTaskId} resolved`);
+      resolve(stdout.trim()); // Resolve with stdout as the final output
     });
   });
 };

@@ -86,7 +86,6 @@ const FileTree = ({
   onDeploy,
   setIsTaskModalOpen,
 }: FileTreeProps) => {
-  console.log('FileTree props:', { files, selectedItem });
 
   return (
     <Flex p={6} bg="gray.50" borderWidth="1px" width='100%' height='100%' 

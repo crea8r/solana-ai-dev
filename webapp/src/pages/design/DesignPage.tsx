@@ -351,7 +351,7 @@ const DesignPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    //logProjectContext(projectContext);
+    logProjectContext(projectContext);
     //console.log('------------');
   }, [projectContext]);
   
@@ -603,6 +603,8 @@ const DesignPage: React.FC = () => {
           aiFilePaths: [],
           aiStructure: '',
           stateContent: '',
+          buildStatus: false,
+          deployStatus: false,
         },
       }));
 
